@@ -1,0 +1,4 @@
+interface:
+  display_name: "Download Teams Transcripts"
+  short_description: "Automate authorized Teams transcript downloads"
+  default_prompt: "Use only $download-teams-transcripts to complete first-run setup when needed, find today's meeting recording by title and date, and save its authorized transcript in the project's Call Transcripts folder."
