@@ -6,8 +6,10 @@ The discovery skill owns `.codex/project-context/manifest.json`; retrieval consu
 
 - `project.objective`, `project.terms`, and `project.current_phase` expand the task query.
 - `source_policy` sets privacy and excerpt budgets.
-- `sources[].purpose`, `authority`, `priority`, `query_hints`, `include`, `exclude`, `time_window`, `freshness_hours`, `sensitivity`, and `enabled` control selection and scoring.
+- `sources[].purpose`, `authority`, `priority`, `query_hints`, `include`, `exclude`, `time_window`, `freshness_hours`, `sensitivity`, `enabled`, and `access` control selection and scoring.
 - Source `id` values are stable join keys for chunks and cached hierarchy paths.
+
+Only sources with `access.state: available` may be retrieved. A source with `access.state: unavailable` or `unknown` remains in the manifest and becomes an access gap for the current retrieval. Retrieval must preserve its label, locator, state, and short reason; it must not try another connector, request broader permissions, or widen the source search unless the user explicitly asks.
 
 See the discovery skill's `references/context-contract.md` for the full manifest shape. Version 1 accepts source kinds `local`, `slack`, `teams`, `sharepoint`, `web`, and `other`; authority values `canonical`, `supporting`, and `historical`; and priorities from 1 to 5.
 
@@ -73,3 +75,7 @@ After ranking, synthesize a pack:
 ```
 
 `persist_context.py` verifies source IDs, enforces excerpt limits, writes the hierarchy, and records manifest hash and refresh state. It intentionally retains cached source folders not touched by the current run; a narrow task must not erase unrelated context.
+
+## Access gaps
+
+Retrieval runs may include an `access_gaps` array in the pack, or pass the gap JSON emitted by `rank_context.py` to `persist_context.py`. Each gap contains `source_id`, `label`, `locator`, `state`, `reason`, and `recorded_at`. Gaps are written to `state.json` and a separate `Access Gaps` section in `index.md`; they are not mixed with retrieved findings or excerpts.

@@ -1,6 +1,6 @@
 ---
 name: discover-project-context
-description: Establish or refresh a reusable project brief and canonical source manifest before implementation work begins. Use when Codex is starting work in an unfamiliar project, repeatedly searching files for project references, onboarding to an existing effort, handing context to later skills, or when the user asks to identify local folders, Slack channels, Teams chats/channels, SharePoint locations, stakeholders, terminology, constraints, or other authoritative project context. Inspect high-signal metadata, interview only for unresolved details, resolve source locations without bulk-reading their contents, and persist the result under .codex/project-context.
+description: Establish or refresh a reusable project brief and canonical source manifest before implementation work begins. Use when Codex is starting work in an unfamiliar project, repeatedly searching files for project references, onboarding to an existing effort, handing context to later skills, or when the user asks to identify local folders, Slack channels, Teams chats/channels, SharePoint locations, stakeholders, terminology, constraints, or other authoritative project context. Run measured, lightweight per-system discovery to resolve source locations without bulk-reading their contents, then persist reusable references under .codex/project-context.
 ---
 
 # Discover Project Context
@@ -19,6 +19,8 @@ Write these files beneath the selected workspace root:
 ```
 
 Treat `manifest.json` as the machine-readable source of truth and `brief.md` as its compact human-readable projection. Read [references/context-contract.md](references/context-contract.md) before writing either file.
+
+Discovery is read-only and lightweight. It returns a shortlist of canonical source references and narrow retrieval hints—not file contents, message bodies, document bodies, transcripts, or connector payloads. Every recorded source carries a bounded access state (`available`, `unavailable`, or `unknown`) and a short reason.
 
 Use `scripts/project_context.py` for initialization, source updates, rendering, and validation. Do not invent a parallel context file when the manifest already exists.
 
@@ -69,7 +71,40 @@ Resolve these fields in order:
 
 Ask for names or links the user naturally knows; do not require connector IDs. Offer likely locations discovered in the metadata pass for confirmation. Read [references/interview-guide.md](references/interview-guide.md) for the gap rubric and examples.
 
-### 5. Resolve locations, not histories
+### 5. Run a measured, per-system source pass
+
+For each system that may contain project context, use the smallest available read operation to identify candidate locations. This is a source-discovery pass, not retrieval:
+
+- **Chat systems (Slack, Teams, or equivalent):** resolve the channel, chat, or team; inspect metadata and at most 10 recent or search-result messages per candidate, with a default cap of 30 preview items across the system.
+- **Document systems (SharePoint, drives, wikis, or equivalent):** validate the site or container and inspect at most 10 item names plus their metadata per candidate, with a default cap of 30 items across the system.
+- **Local workspaces:** inspect at most 30 top-level names, targeted filenames, and repository metadata. Do not bulk-read documents or recursively search text.
+- **Other systems:** use the closest equivalent metadata or short-preview operation, cap it at 10 items by default, and state the applied cap.
+
+These are per-system exploration caps, not retrieval budgets. Stop at the cap even if more candidates exist. If a different cap is necessary, state it before the pass and record the actual cap in `discovery_runs.exploration_caps`.
+
+Route by the runtime's exposed capabilities rather than assuming a connector name, API, tenant, or permission model. Never search private content without explicit consent. Stop once a canonical locator, stable ID, direct link, or local path is resolved; leave anything else as an `open_question`.
+
+Record only source references, access state/reason, and narrow retrieval hints in the manifest. Do not copy preview text, message bodies, document bodies, credentials, permission payloads, or opaque connector payloads into it.
+
+Measure the pass after the scan: count connector calls, candidate locations considered, locations recorded, preview items inspected, and inspected characters. Prefer a runtime-reported token count; otherwise estimate input tokens as inspected characters divided by four (rounded up). Record the totals and the stated per-system caps with:
+
+```bash
+python3 <skill-dir>/scripts/project_context.py record-discovery \
+  --root <workspace-root> \
+  --sources-considered 6 \
+  --sources-recorded 3 \
+  --connector-calls 4 \
+  --items-inspected 18 \
+  --characters-inspected 3200 \
+  --cap local=30 \
+  --cap chat=30 \
+  --cap document=30 \
+  --cap other=10
+```
+
+The resulting `discovery_runs` entry provides an auditable token estimate without retaining source content. If the supplied preview would exceed the bounds above, stop and hand off to `$retrieve-project-context` for a task-specific, ranked retrieval.
+
+### 6. Resolve locations, not histories
 
 For each user-provided remote source:
 
@@ -78,11 +113,11 @@ For each user-provided remote source:
 - Inspect only enough metadata to establish identity, accessibility, purpose, and scope.
 - Do not read a full Slack/Teams history or recursively fetch SharePoint documents here.
 - Do not search private Slack content without explicit consent.
-- Record unavailable or permission-blocked sources in `open_questions`; do not silently substitute a different location.
+- Record unavailable or permission-blocked sources with `access.state: unavailable` and a short `access.reason`; preserve the reference and add a concise `open_questions` gap when useful. Do not try broader access, change permissions, or silently substitute a different location. Use `unknown` when accessibility was not determined.
 
 Use source kinds `local`, `slack`, `teams`, `sharepoint`, `web`, or `other`. Put connector-specific search terms in `query_hints` so retrieval can remain narrow later.
 
-### 6. Persist and validate
+### 7. Persist and validate
 
 Set project fields, then add one source entry for each distinct canonical location:
 
@@ -101,7 +136,9 @@ python3 <skill-dir>/scripts/project_context.py upsert-source \
   --locator "specs/project/design.md" \
   --purpose "Canonical requirements and acceptance criteria" \
   --authority canonical \
-  --priority 5
+  --priority 5 \
+  --access-state available \
+  --access-reason "Access confirmed during discovery."
 
 python3 <skill-dir>/scripts/project_context.py render-brief --root <workspace-root>
 python3 <skill-dir>/scripts/project_context.py validate --root <workspace-root>
@@ -115,6 +152,6 @@ python3 <skill-dir>/scripts/project_context.py validate --root <workspace-root>
 
 ## Handoff
 
-Report the manifest path, confirmed source count by kind, any permission gaps, and the next recommended action. Tell later skills to read `brief.md` and `manifest.json` before searching. Invoke `$retrieve-project-context` only when the user needs source content gathered for a concrete task.
+Report the manifest path, confirmed source count by kind, discovery measurement (including estimated or reported tokens), any permission gaps, and the next recommended action. Tell later skills to read `brief.md` and `manifest.json` before searching. Invoke `$retrieve-project-context` only when the user needs source content gathered for a concrete task.
 
 Do not claim that remote content was reviewed when this skill only resolved its location.

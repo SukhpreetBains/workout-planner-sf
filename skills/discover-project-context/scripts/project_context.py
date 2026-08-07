@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import tempfile
@@ -17,6 +18,19 @@ SCHEMA_VERSION = 1
 KINDS = {"local", "slack", "teams", "sharepoint", "web", "other"}
 AUTHORITIES = {"canonical", "supporting", "historical"}
 SENSITIVITIES = {"public", "internal", "confidential", "restricted"}
+ACCESS_STATES = {"available", "unavailable", "unknown"}
+DISCOVERY_SYSTEMS = {"local", "chat", "document", "other"}
+DEFAULT_EXPLORATION_CAPS = {
+    "local": 30,
+    "chat": 30,
+    "document": 30,
+    "other": 10,
+}
+DEFAULT_ACCESS_REASONS = {
+    "available": "Access confirmed during discovery.",
+    "unavailable": "Access was not available during discovery.",
+    "unknown": "Access was not verified during discovery.",
+}
 
 
 def now_iso() -> str:
@@ -84,6 +98,7 @@ def new_manifest(root: str, name: str | None, objective: str | None) -> dict[str
             "allow_private_search": False,
         },
         "sources": [],
+        "discovery_runs": [],
         "open_questions": [],
         "created_at": timestamp,
         "updated_at": timestamp,
@@ -123,16 +138,18 @@ def render_brief(manifest: dict[str, Any]) -> str:
     lines.extend(["", "## Canonical Sources", ""])
     if sources:
         lines.extend([
-            "| Priority | Kind | Source | Purpose |",
-            "| ---: | --- | --- | --- |",
+            "| Priority | Kind | Access | Source | Purpose |",
+            "| ---: | --- | --- | --- | --- |",
         ])
         for source in sorted(sources, key=lambda item: (-int(item.get("priority", 0)), item.get("id", ""))):
             status = "" if source.get("enabled", True) else " (disabled)"
             locator = str(source.get("locator", "")).replace("|", "\\|")
             purpose = str(source.get("purpose", "")).replace("|", "\\|")
             label = str(source.get("label", source.get("id", "source"))).replace("|", "\\|")
+            access = source.get("access") or {"state": "available", "reason": "Legacy manifest; access state not recorded."}
+            access_state = str(access.get("state", "unknown"))
             lines.append(
-                f"| {source.get('priority', '')} | {source.get('kind', '')} | "
+                f"| {source.get('priority', '')} | {source.get('kind', '')} | {access_state} | "
                 f"{label}{status}: `{locator}` | {purpose} |"
             )
     else:
@@ -143,6 +160,19 @@ def render_brief(manifest: dict[str, Any]) -> str:
     lines.extend(f"- {question}" for question in questions)
     if not questions:
         lines.append("- None")
+
+    discovery_runs = manifest.get("discovery_runs") or []
+    if discovery_runs:
+        latest_run = discovery_runs[-1]
+        lines.extend([
+            "",
+            "## Latest Discovery Measurement",
+            "",
+            f"- Recorded: {latest_run.get('recorded_at', 'Unknown')}",
+            f"- Sources considered/recorded: {latest_run.get('sources_considered', '?')}/{latest_run.get('sources_recorded', '?')}",
+            f"- Connector calls: {latest_run.get('connector_calls', '?')}; items inspected: {latest_run.get('items_inspected', '?')}",
+            f"- Inspected characters: {latest_run.get('characters_inspected', '?')}; estimated tokens: {latest_run.get('estimated_tokens', '?')}",
+        ])
 
     lines.extend([
         "",
@@ -215,6 +245,16 @@ def validate_manifest(manifest: dict[str, Any], allow_incomplete: bool = False) 
             errors.append(f"{prefix}.priority must be an integer from 1 to 5")
         if source.get("sensitivity") not in SENSITIVITIES:
             errors.append(f"{prefix}.sensitivity must be one of {sorted(SENSITIVITIES)}")
+        access = source.get("access")
+        if access is not None:
+            if not isinstance(access, dict):
+                errors.append(f"{prefix}.access must be an object")
+            else:
+                if access.get("state") not in ACCESS_STATES:
+                    errors.append(f"{prefix}.access.state must be one of {sorted(ACCESS_STATES)}")
+                reason = access.get("reason")
+                if not isinstance(reason, str) or not reason.strip() or len(reason) > 240 or "\n" in reason:
+                    errors.append(f"{prefix}.access.reason must be a short single-line string of at most 240 characters")
         if not isinstance(source.get("enabled"), bool):
             errors.append(f"{prefix}.enabled must be a boolean")
         for field in ("query_hints", "include", "exclude"):
@@ -231,6 +271,37 @@ def validate_manifest(manifest: dict[str, Any], allow_incomplete: bool = False) 
         isinstance(item, str) for item in manifest.get("open_questions", [])
     ):
         errors.append("open_questions must be an array of strings")
+    discovery_runs = manifest.get("discovery_runs", [])
+    if not isinstance(discovery_runs, list):
+        errors.append("discovery_runs must be an array")
+    else:
+        numeric_fields = (
+            "sources_considered",
+            "sources_recorded",
+            "connector_calls",
+            "items_inspected",
+            "characters_inspected",
+            "estimated_tokens",
+        )
+        for index, run in enumerate(discovery_runs):
+            prefix = f"discovery_runs[{index}]"
+            if not isinstance(run, dict):
+                errors.append(f"{prefix} must be an object")
+                continue
+            if not isinstance(run.get("recorded_at"), str) or not run["recorded_at"].strip():
+                errors.append(f"{prefix}.recorded_at must be a non-empty string")
+            for field in numeric_fields:
+                if not isinstance(run.get(field), int) or run[field] < 0:
+                    errors.append(f"{prefix}.{field} must be a non-negative integer")
+            caps = run.get("exploration_caps")
+            if caps is not None and not isinstance(caps, dict):
+                errors.append(f"{prefix}.exploration_caps must be an object")
+            elif isinstance(caps, dict):
+                for system, cap in caps.items():
+                    if system not in DISCOVERY_SYSTEMS:
+                        errors.append(f"{prefix}.exploration_caps contains unknown system {system}")
+                    if not isinstance(cap, int) or cap < 1:
+                        errors.append(f"{prefix}.exploration_caps.{system} must be a positive integer")
     return errors
 
 
@@ -297,6 +368,10 @@ def command_upsert_source(args: argparse.Namespace) -> None:
         "sensitivity": args.sensitivity,
         "enabled": not args.disabled,
         "last_confirmed_at": timestamp,
+        "access": {
+            "state": args.access_state,
+            "reason": args.access_reason or DEFAULT_ACCESS_REASONS[args.access_state],
+        },
     }
     sources = manifest.setdefault("sources", [])
     for index, existing in enumerate(sources):
@@ -316,6 +391,77 @@ def command_render(args: argparse.Namespace) -> None:
     _, _, brief_path = paths(args.root)
     atomic_write(brief_path, render_brief(manifest))
     print(f"Rendered {brief_path}")
+
+
+def command_set_source_access(args: argparse.Namespace) -> None:
+    manifest_path, manifest = read_manifest(args.root)
+    for source in manifest.get("sources", []):
+        if source.get("id") == args.id:
+            source["access"] = {
+                "state": args.access_state,
+                "reason": args.access_reason or DEFAULT_ACCESS_REASONS[args.access_state],
+            }
+            timestamp = now_iso()
+            source["last_confirmed_at"] = timestamp
+            manifest["updated_at"] = timestamp
+            write_json(manifest_path, manifest)
+            print(f"Updated access for source {args.id} in {manifest_path}")
+            return
+    raise SystemExit(f"Source not found: {args.id}")
+
+
+def parse_caps(values: list[str] | None) -> dict[str, int]:
+    caps = dict(DEFAULT_EXPLORATION_CAPS)
+    for value in values or []:
+        if "=" not in value:
+            raise SystemExit("--cap must use SYSTEM=COUNT")
+        system, raw_count = value.split("=", 1)
+        if system not in DISCOVERY_SYSTEMS:
+            raise SystemExit(f"Unknown discovery system for --cap: {system}")
+        try:
+            count = int(raw_count)
+        except ValueError as exc:
+            raise SystemExit(f"Discovery cap must be an integer: {value}") from exc
+        if count < 1:
+            raise SystemExit("Discovery caps must be positive")
+        caps[system] = count
+    return caps
+
+
+def command_record_discovery(args: argparse.Namespace) -> None:
+    manifest_path, manifest = read_manifest(args.root)
+    values = (
+        args.sources_considered,
+        args.sources_recorded,
+        args.connector_calls,
+        args.items_inspected,
+        args.characters_inspected,
+    )
+    if any(value < 0 for value in values) or (args.estimated_tokens is not None and args.estimated_tokens < 0):
+        raise SystemExit("Discovery measurements must be non-negative")
+    if args.sources_recorded > args.sources_considered:
+        raise SystemExit("--sources-recorded cannot exceed --sources-considered")
+    estimated_tokens = args.estimated_tokens
+    if estimated_tokens is None:
+        estimated_tokens = math.ceil(args.characters_inspected / 4)
+    run = {
+        "recorded_at": now_iso(),
+        "sources_considered": args.sources_considered,
+        "sources_recorded": args.sources_recorded,
+        "connector_calls": args.connector_calls,
+        "items_inspected": args.items_inspected,
+        "characters_inspected": args.characters_inspected,
+        "estimated_tokens": estimated_tokens,
+        "exploration_caps": parse_caps(args.cap),
+    }
+    runs = manifest.setdefault("discovery_runs", [])
+    if not isinstance(runs, list):
+        raise SystemExit("discovery_runs must be an array")
+    runs.append(run)
+    manifest["discovery_runs"] = runs[-20:]
+    manifest["updated_at"] = run["recorded_at"]
+    write_json(manifest_path, manifest)
+    print(f"Recorded discovery estimate of {estimated_tokens} tokens in {manifest_path}")
 
 
 def command_validate(args: argparse.Namespace) -> None:
@@ -368,12 +514,32 @@ def build_parser() -> argparse.ArgumentParser:
     source_parser.add_argument("--end")
     source_parser.add_argument("--freshness-hours", type=int, default=168)
     source_parser.add_argument("--sensitivity", choices=sorted(SENSITIVITIES), default="internal")
+    source_parser.add_argument("--access-state", choices=sorted(ACCESS_STATES), default="unknown")
+    source_parser.add_argument("--access-reason")
     source_parser.add_argument("--disabled", action="store_true")
     source_parser.set_defaults(func=command_upsert_source)
 
     render_parser = subparsers.add_parser("render-brief", help="Render brief.md from the manifest")
     render_parser.add_argument("--root", default=".")
     render_parser.set_defaults(func=command_render)
+
+    access_parser = subparsers.add_parser("set-source-access", help="Record a bounded source access state")
+    access_parser.add_argument("--root", default=".")
+    access_parser.add_argument("--id", required=True)
+    access_parser.add_argument("--access-state", choices=sorted(ACCESS_STATES), required=True)
+    access_parser.add_argument("--access-reason")
+    access_parser.set_defaults(func=command_set_source_access)
+
+    discovery_parser = subparsers.add_parser("record-discovery", help="Record lightweight discovery measurements")
+    discovery_parser.add_argument("--root", default=".")
+    discovery_parser.add_argument("--sources-considered", type=int, required=True)
+    discovery_parser.add_argument("--sources-recorded", type=int, required=True)
+    discovery_parser.add_argument("--connector-calls", type=int, required=True)
+    discovery_parser.add_argument("--items-inspected", type=int, required=True)
+    discovery_parser.add_argument("--characters-inspected", type=int, required=True)
+    discovery_parser.add_argument("--estimated-tokens", type=int)
+    discovery_parser.add_argument("--cap", action="append", help="Override a system cap using SYSTEM=COUNT")
+    discovery_parser.set_defaults(func=command_record_discovery)
 
     validate_parser = subparsers.add_parser("validate", help="Validate the manifest")
     validate_parser.add_argument("--root", default=".")

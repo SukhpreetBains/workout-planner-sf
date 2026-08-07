@@ -62,13 +62,48 @@ def md(value: Any) -> str:
 
 def load_state(path: Path) -> dict[str, Any]:
     if not path.exists():
-        return {"schema_version": 1, "sources": {}, "runs": []}
+        return {"schema_version": 1, "sources": {}, "runs": [], "gaps": []}
     state = read_json(path)
     if not isinstance(state.get("sources", {}), dict):
         state["sources"] = {}
     if not isinstance(state.get("runs", []), list):
         state["runs"] = []
+    if not isinstance(state.get("gaps", []), list):
+        state["gaps"] = []
     return state
+
+
+def load_gaps(path: Path) -> list[dict[str, Any]]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"Unable to read access gaps {path}: {exc}") from exc
+    if not isinstance(value, list):
+        raise SystemExit(f"Access gaps must be a JSON array: {path}")
+    return value
+
+
+def validate_gap(gap: Any, index: int, manifest_sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    if not isinstance(gap, dict):
+        raise SystemExit(f"access_gaps[{index}] must be an object")
+    source_id = safe_id(require_string(gap, "source_id", f"access_gaps[{index}]"))
+    if source_id not in manifest_sources:
+        raise SystemExit(f"Unknown source_id in access gap: {source_id}")
+    state = gap.get("state")
+    if state not in {"unavailable", "unknown"}:
+        raise SystemExit(f"access_gaps[{index}].state must be unavailable or unknown")
+    reason = require_string(gap, "reason", f"access_gaps[{index}]")
+    if len(reason) > 240 or "\n" in reason:
+        raise SystemExit(f"access_gaps[{index}].reason must be a short single-line string of at most 240 characters")
+    normalized = dict(gap)
+    normalized.update({
+        "source_id": source_id,
+        "label": gap.get("label") or manifest_sources[source_id].get("label", source_id),
+        "locator": gap.get("locator") or manifest_sources[source_id].get("locator", ""),
+        "state": state,
+        "reason": reason,
+    })
+    return normalized
 
 
 def main() -> None:
@@ -76,6 +111,7 @@ def main() -> None:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--pack", type=Path, required=True)
     parser.add_argument("--context-dir", type=Path, required=True)
+    parser.add_argument("--gaps", type=Path, help="Optional JSON array of access gaps emitted by ranking")
     args = parser.parse_args()
 
     manifest = read_json(args.manifest)
@@ -97,6 +133,16 @@ def main() -> None:
         for source in manifest.get("sources", [])
         if isinstance(source, dict) and source.get("id")
     }
+    raw_gaps = pack.get("access_gaps", [])
+    if not isinstance(raw_gaps, list):
+        raise SystemExit("pack.access_gaps must be an array")
+    if args.gaps:
+        raw_gaps = [*raw_gaps, *load_gaps(args.gaps)]
+    gaps_by_source: dict[str, dict[str, Any]] = {}
+    for index, gap in enumerate(raw_gaps):
+        normalized_gap = validate_gap(gap, index, manifest_sources)
+        gaps_by_source[normalized_gap["source_id"]] = normalized_gap
+    access_gaps = list(gaps_by_source.values())
     policy = manifest.get("source_policy", {})
     max_excerpt = int(policy.get("max_excerpt_chars", 1200))
     max_total = int(policy.get("max_total_chars", 12000))
@@ -113,6 +159,9 @@ def main() -> None:
         source_id = safe_id(require_string(packed_source, "source_id", f"pack.sources[{position}]"))
         if source_id not in manifest_sources:
             raise SystemExit(f"Unknown source_id in pack: {source_id}")
+        access = manifest_sources[source_id].get("access")
+        if isinstance(access, dict) and access.get("state") in {"unavailable", "unknown"}:
+            raise SystemExit(f"Cannot persist excerpts from inaccessible source: {source_id}")
         summary = require_string(packed_source, "summary", f"pack.sources[{position}]")
         excerpts = packed_source.get("excerpts")
         if not isinstance(excerpts, list) or not excerpts:
@@ -197,6 +246,15 @@ def main() -> None:
     index_lines.extend(f"- {item}" for item in questions)
     if not questions:
         index_lines.append("- None identified")
+    index_lines.extend(["", "## Access Gaps", ""])
+    if access_gaps:
+        for gap in access_gaps:
+            index_lines.append(
+                f"- `{gap['source_id']}` {gap.get('label', gap['source_id'])} ({gap['state']}): {gap['reason']} "
+                f"(`{gap.get('locator', '')}`)"
+            )
+    else:
+        index_lines.append("- None recorded")
     index_lines.extend(["", "## Sources", "", "| Priority | Source | Summary |", "| ---: | --- | --- |"])
     for source, packed_source, excerpts in index_sections:
         link = f"sources/{source['id']}/summary.md"
@@ -219,10 +277,12 @@ def main() -> None:
     state["manifest_sha256"] = manifest_hash
     state["last_refresh_at"] = timestamp
     state["last_task"] = task
+    state["gaps"].extend(access_gaps)
+    state["gaps"] = state["gaps"][-20:]
     state["runs"].append({"task": task, "refreshed_at": timestamp, "source_ids": [item[0]["id"] for item in index_sections]})
     state["runs"] = state["runs"][-20:]
     atomic_write(state_path, json.dumps(state, indent=2, ensure_ascii=False) + "\n")
-    print(f"Persisted {len(index_sections)} sources and {total_chars} evidence characters -> {args.context_dir / 'index.md'}")
+    print(f"Persisted {len(index_sections)} sources, {total_chars} evidence characters, and {len(access_gaps)} access gaps -> {args.context_dir / 'index.md'}")
 
 
 if __name__ == "__main__":

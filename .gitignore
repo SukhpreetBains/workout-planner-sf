@@ -1,0 +1,5 @@
+# Machine-local project context assembled from authorized sources.
+.codex/project-context/
+
+# Downloaded meeting transcripts may contain project-specific content.
+Call Transcripts/

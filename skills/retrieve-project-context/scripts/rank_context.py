@@ -88,6 +88,34 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
     return items
 
 
+def source_access(source: dict[str, Any]) -> tuple[str, str]:
+    access = source.get("access")
+    if not isinstance(access, dict):
+        return "available", "Legacy manifest; access state not recorded."
+    state = access.get("state", "unknown")
+    reason = access.get("reason", "Access state has no recorded reason.")
+    return str(state), str(reason)
+
+
+def access_gaps(sources: dict[str, dict[str, Any]], task: str) -> list[dict[str, Any]]:
+    recorded_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    gaps = []
+    for source_id, source in sorted(sources.items()):
+        state, reason = source_access(source)
+        if state not in {"unavailable", "unknown"}:
+            continue
+        gaps.append({
+            "source_id": source_id,
+            "label": source.get("label", source_id),
+            "locator": source.get("locator", ""),
+            "state": state,
+            "reason": reason,
+            "task": task,
+            "recorded_at": recorded_at,
+        })
+    return gaps
+
+
 def recency_score(timestamp: datetime | None, freshness_hours: int, now: datetime) -> float:
     if freshness_hours == 0:
         return 1.0
@@ -162,20 +190,39 @@ def main() -> None:
     parser.add_argument("--top-n", type=int, default=24)
     parser.add_argument("--max-per-source", type=int, default=6)
     parser.add_argument("--min-score", type=float, default=15.0)
+    parser.add_argument("--gaps-output", type=Path, help="Write preserved unavailable/unknown source references as JSON")
     args = parser.parse_args()
 
     if args.top_n < 1 or args.max_per_source < 1:
         raise SystemExit("--top-n and --max-per-source must be positive")
     manifest = read_json(args.manifest)
-    sources = {
+    all_sources = {
         source["id"]: source
         for source in manifest.get("sources", [])
-        if isinstance(source, dict) and source.get("enabled", True) and source.get("id")
+        if isinstance(source, dict) and source.get("id")
+    }
+    sources = {
+        source_id: source
+        for source_id, source in all_sources.items()
+        if source.get("enabled", True) and source_access(source)[0] == "available"
     }
     chunks = read_jsonl(args.chunks)
-    unknown = sorted({chunk["source_id"] for chunk in chunks} - set(sources))
+    unknown = sorted({chunk["source_id"] for chunk in chunks} - set(all_sources))
     if unknown:
         raise SystemExit(f"Chunks reference missing or disabled sources: {', '.join(unknown)}")
+    disabled = sorted({chunk["source_id"] for chunk in chunks if not all_sources[chunk["source_id"]].get("enabled", True)})
+    if disabled:
+        raise SystemExit(f"Chunks reference missing or disabled sources: {', '.join(disabled)}")
+
+    gaps = access_gaps(all_sources, args.task)
+    inaccessible_chunk_ids = {
+        chunk["chunk_id"]
+        for chunk in chunks
+        if chunk["source_id"] not in sources
+    }
+    chunks = [chunk for chunk in chunks if chunk["chunk_id"] not in inaccessible_chunk_ids]
+    if args.gaps_output:
+        atomic_write(args.gaps_output, json.dumps(gaps, indent=2, ensure_ascii=False) + "\n")
 
     project = manifest.get("project", {})
     project_text = " ".join([
@@ -205,11 +252,15 @@ def main() -> None:
             continue
         if any(jaccard(item["text"], previous["text"]) >= 0.85 for previous in selected):
             continue
-        if len(item["text"]) > max_excerpt_chars:
+        remaining = max_total_chars - total_chars
+        if remaining <= 0:
+            break
+        excerpt_limit = min(max_excerpt_chars, remaining)
+        if len(item["text"]) > excerpt_limit:
             item = dict(item)
-            item["text"] = item["text"][: max_excerpt_chars - 1].rstrip() + "…"
+            item["text"] = item["text"][: max(0, excerpt_limit - 1)].rstrip() + "…"
         size = len(item["text"])
-        if selected and total_chars + size > max_total_chars:
+        if total_chars + size > max_total_chars:
             continue
         selected.append(item)
         counts[source_id] = counts.get(source_id, 0) + 1
@@ -219,7 +270,8 @@ def main() -> None:
 
     content = "".join(json.dumps(item, ensure_ascii=False) + "\n" for item in selected)
     atomic_write(args.output, content)
-    print(f"Ranked {len(chunks)} chunks; selected {len(selected)} ({total_chars} characters) -> {args.output}")
+    gap_note = f"; recorded {len(gaps)} access gaps" if gaps else ""
+    print(f"Ranked {len(chunks)} accessible chunks; selected {len(selected)} ({total_chars} characters){gap_note} -> {args.output}")
 
 
 if __name__ == "__main__":

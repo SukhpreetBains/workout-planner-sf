@@ -1367,3 +1367,18 @@ When the implementing agent finishes, it should report:
 - tests run and results;
 - any decisions that still require the user's approval.
 
+## Project-context skills acceptance mapping
+
+The focused implementation for `discover-project-context` and `retrieve-project-context` is complete on the checked-out branch. The following mapping records the story-level acceptance evidence without changing the broader repository acceptance criteria above:
+
+| Story requirement | Implemented contract or fixture | Evidence |
+|---|---|---|
+| Discovery is read-only and returns references only | Discovery contract explicitly forbids source content and records only locators, hints, access state, and reason | `skills/discover-project-context/SKILL.md`; `tests/context_skills_acceptance.py` |
+| Discovery has a per-system cap and measured token estimate | `discovery_runs.exploration_caps` plus counted items/characters and estimated tokens | `skills/discover-project-context/references/context-contract.md`; `project_context.py record-discovery` |
+| Permission outcomes are recorded without broader access | Source `access.state`/`access.reason`; unavailable references remain valid | `project_context.py upsert-source` and `set-source-access`; permission fixture |
+| Retrieval preserves unavailable references and separates gaps | Ranking emits `access-gaps.json`; persistence writes `Access Gaps` and `state.json.gaps`; no alternative connector or wider search is allowed | `skills/retrieve-project-context/SKILL.md`; `rank_context.py`; `persist_context.py` |
+| Dense retrieval stays within the character budget | Existing scoring, hierarchy, and diversity rules remain; bounded trimming is asserted | Dense-chunk fixture |
+| Cached context is reused deterministically | Freshness/access/task-overlap decision helper reuses the existing hierarchy without connector calls | `scripts/cache_context.py`; cache fixture |
+| Portability and deterministic validation | Relative repository paths, platform-neutral instructions, stdlib-only validators and scripts | `tests/validate_context_skills.py`; Python compilation and fixture runs |
+
+Validation run: the structural validator, Python compilation, manifest validation, and all five synthetic acceptance scenarios pass. The remaining evaluation decision is whether to add a separate model-based review later; deterministic contract/fixture coverage is the selected acceptance mechanism for this implementation and does not require that future evaluation choice to proceed.

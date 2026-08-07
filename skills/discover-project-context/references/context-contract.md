@@ -41,7 +41,28 @@ Use `.codex/project-context/manifest.json` as the stable handoff between discove
       "freshness_hours": 168,
       "sensitivity": "internal",
       "enabled": true,
+      "access": {
+        "state": "available",
+        "reason": "Access confirmed during discovery."
+      },
       "last_confirmed_at": "2026-08-04T12:00:00Z"
+    }
+  ],
+  "discovery_runs": [
+    {
+      "recorded_at": "2026-08-04T12:00:00Z",
+      "sources_considered": 6,
+      "sources_recorded": 3,
+      "connector_calls": 4,
+      "items_inspected": 18,
+      "characters_inspected": 3200,
+      "estimated_tokens": 800,
+      "exploration_caps": {
+        "local": 30,
+        "chat": 30,
+        "document": 30,
+        "other": 10
+      }
     }
   ],
   "open_questions": [],
@@ -82,11 +103,28 @@ Use `.codex/project-context/manifest.json` as the stable handoff between discove
 - `freshness_hours`: Per-source override. Use `0` only for immutable content.
 - `sensitivity`: `public`, `internal`, `confidential`, or `restricted`.
 - `enabled`: Keep a known source but skip retrieval when `false`.
+- `access`: A bounded access record with `state` `available`, `unavailable`, or `unknown`, and a short non-sensitive `reason`. New source records must include it. Older manifests may omit it and are treated as legacy sources until refreshed.
 - `last_confirmed_at`: When the source identity and intended scope were last confirmed.
+
+Discovery uses `access.state` to distinguish a resolved source from a permission or capability gap. An `unavailable` or `unknown` source remains a valid reference; it is not an invitation to search a different location.
+
+### Discovery runs
+
+`discovery_runs` is an append-only, bounded measurement log for lightweight source discovery. It stores counts only, never source content. Each entry records:
+
+- `recorded_at`: When the pass finished.
+- `sources_considered` and `sources_recorded`: Candidate locations assessed and references added or updated.
+- `connector_calls`, `items_inspected`, and `characters_inspected`: The bounded discovery work performed.
+- `estimated_tokens`: A runtime-reported input-token total when available, otherwise `ceil(characters_inspected / 4)`.
+- `exploration_caps`: Positive per-system item caps stated for the pass. The stable keys are `local`, `chat`, `document`, and `other`.
+
+Keep the most recent 20 entries. Older manifests without this optional field remain valid, but record a run whenever performing a new discovery pass.
 
 ## Invariants
 
 - Store locations and retrieval hints, not credentials or bulk source content.
+- Store only the source access state and a short reason; never store permission error payloads, previews, or source content.
+- Store discovery measurements as counts only; never add previews or source snippets to `discovery_runs`.
 - Keep source IDs stable so cached summaries remain addressable.
 - Preserve unknown values explicitly rather than inventing them.
 - Update `updated_at` whenever material fields change.

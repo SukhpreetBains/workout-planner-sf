@@ -36,9 +36,13 @@ Check `.codex/project-context/state.json` and `index.md`.
 
 If the cached index fully answers the task, return it with its retrieval timestamp and skip connector calls.
 
+For deterministic cache eligibility checks, use `scripts/cache_context.py` with the recorded manifest, context directory, source ID, and task. Treat a positive result as a reuse decision; do not fetch the source again unless the task requires newer facts.
+
+Before planning retrieval, inspect every task-relevant manifest source's `access` record. Select only `available` sources. For each `unavailable` or `unknown` source, preserve the reference and log an access gap containing its source ID, label, locator, state, and short reason. Do not try an alternative connector, change permissions, search outside the recorded scope, or use a broader source search unless the user explicitly requests that expansion. Continue with accessible evidence and keep access gaps visibly separate from findings.
+
 ### 3. Plan bounded retrieval
 
-Select only enabled sources whose `purpose`, `query_hints`, and filters overlap the task. Start with canonical sources, then add supporting sources only for gaps or corroboration.
+Select only enabled and accessible sources whose `purpose`, `query_hints`, and filters overlap the task. Start with canonical sources, then add supporting sources only for gaps or corroboration. If a selected source becomes inaccessible at runtime, stop reading it, preserve the reference, and add the retrieval gap without retrying through a broader path.
 
 For every selected source, define:
 
@@ -77,10 +81,13 @@ python3 <skill-dir>/scripts/rank_context.py \
   --task "<retrieval task>" \
   --output <temporary-dir>/ranked.jsonl \
   --top-n 24 \
-  --max-per-source 6
+  --max-per-source 6 \
+  --gaps-output <temporary-dir>/access-gaps.json
 ```
 
 The script combines task relevance, source fit, authority, source priority, recency, and low-signal penalties, then removes near-duplicates and enforces the manifest's total character budget. Review the ranked output: remove unsupported, mis-scoped, or access-inappropriate chunks. Do not promote a chunk merely because it is recent.
+
+`rank_context.py` excludes chunks from unavailable or unknown sources and writes their preserved references to `access-gaps.json`. Keep those gaps separate when building the pack; do not turn an access failure into a missing-source search.
 
 ### 6. Deep-trim dense histories when needed
 
@@ -91,6 +98,8 @@ Preserve unresolved disagreement, decision changes, dates, owners, and links. Dr
 ### 7. Synthesize and persist the hierarchy
 
 Create a pack JSON using the contract in [references/context-contract.md](references/context-contract.md). Every claim in the overview or a source summary must be supported by a persisted excerpt or clearly marked as an inference.
+
+Include the `access_gaps` emitted by ranking, even when accessible sources produced useful evidence. The gap list is part of the retrieval result and must not be omitted because it contains no source content.
 
 Run:
 
