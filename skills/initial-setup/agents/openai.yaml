@@ -1,4 +1,0 @@
-interface:
-  display_name: "Initial Setup"
-  short_description: "Bootstrap discovery environment and source-system context"
-  default_prompt: "Use $initial-setup to prepare my discovery environment and set me up for a new or existing project in my synced Account folder."
