@@ -8,13 +8,19 @@ from pathlib import Path
 
 
 INVALID_NAME_CHARACTERS = set('"*/:<>?\\|#%')
-TEMPLATE_FOLDERS = (
-    "Contract & SOW",
-    "Governance",
-    "Stakeholders",
-    "Working Docs",
-    "Deliverables",
-    "Reference",
+TEMPLATE_PATHS = (
+    ("Content Inbox",),
+    ("Content Inbox", "Transcripts"),
+    ("Content Inbox", "Email Threads"),
+    ("Content Inbox", "Client Docs"),
+    ("Agent Inbox",),
+    ("Agent Inbox", "In Progress"),
+    ("Agent Inbox", "Ready for Review"),
+    ("Deliverables",),
+    ("Deliverables", "Mobilize"),
+    ("Deliverables", "Discover"),
+    ("Deliverables", "Deliver"),
+    ("Deliverables", "Transition"),
 )
 WINDOWS_RESERVED_NAMES = {
     "CON",
@@ -49,8 +55,9 @@ def validate_opportunity_name(name: str) -> str:
 
 def print_template_status(opportunity_path: Path) -> list[str]:
     missing: list[str] = []
-    for folder_name in TEMPLATE_FOLDERS:
-        folder_path = opportunity_path / folder_name
+    for path_parts in TEMPLATE_PATHS:
+        folder_path = opportunity_path.joinpath(*path_parts)
+        folder_name = "/".join(path_parts)
         if folder_path.is_dir():
             print(f"ready: {folder_path}")
         else:
@@ -89,8 +96,8 @@ def prepare_new_opportunity(opportunity_path: Path) -> int:
 
     try:
         opportunity_path.mkdir()
-        for folder_name in TEMPLATE_FOLDERS:
-            (opportunity_path / folder_name).mkdir()
+        for path_parts in TEMPLATE_PATHS:
+            opportunity_path.joinpath(*path_parts).mkdir()
     except OSError as error:
         print(f"Could not prepare Opportunity folder: {error}", file=sys.stderr)
         return 1

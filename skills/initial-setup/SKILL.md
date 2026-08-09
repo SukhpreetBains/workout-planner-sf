@@ -68,21 +68,27 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 ```text
 <existing Account folder>/
   <project name>/
-    Contract & SOW/
-    Governance/
-    Stakeholders/
-    Working Docs/
+    Content Inbox/
+      Transcripts/
+      Email Threads/
+      Client Docs/
+    Agent Inbox/
+      In Progress/
+      Ready for Review/
     Deliverables/
-    Reference/
+      Mobilize/
+      Discover/
+      Deliver/
+      Transition/
 ```
 
-- If an Opportunity folder with that project name already exists, stop and ask the business user whether they meant to join that existing project. Do not add template folders to it.
+- Create this template only once, when the Opportunity folder does not exist. If an Opportunity folder with that project name already exists, stop and ask the business user whether they meant to join that existing project. Never recreate, overwrite, or fill in template folders inside an existing project.
 
 ### Join an existing project
 
 - Ask the business user to identify the existing Opportunity folder by name from the synced Account folder.
 - Ask the business user to confirm they have SharePoint **Edit** access to that Opportunity folder before treating it as ready for future file additions.
-- Run `scripts/prepare-opportunity-folder.py --mode existing --account-root <synced-account-path> --opportunity-name <project-name>` to verify the local folder and report the six template-folder statuses.
+- Run `scripts/prepare-opportunity-folder.py --mode existing --account-root <synced-account-path> --opportunity-name <project-name>` to verify the local folder and report the template-folder statuses.
 - Do not create, rename, move, or add folders in this path. If the Opportunity folder or a template folder is not present locally, report it as unavailable or still syncing and ask the business user to resolve it in the source system.
 
 - In both paths, do not guess the local synced path or use a normal downloaded copy of the Account folder. The business user must select or provide the path to the OneDrive-synced Account folder and grant Codex write access to it, usually by opening that folder as the workspace.
