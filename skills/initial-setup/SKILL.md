@@ -1,6 +1,6 @@
 ---
 name: initial-setup
-description: Bootstrap a non-technical business user's local discovery environment for accelerated discovery work. Use when Codex needs to verify or install Python and Node.js/npm; resolve an existing SharePoint Account folder; guide its one-time OneDrive connection; set up a business user who is starting a new project or joining an existing project; authenticate and verify usable Slack and Microsoft Teams channel access tied to that account or opportunity.
+description: Bootstrap a non-technical business user's local discovery environment for accelerated discovery work. Use when Codex needs to verify or install Python and Node.js/npm; resolve an existing SharePoint Account folder; guide its one-time OneDrive connection; set up a business user who is starting a new project or joining an existing project; authenticate and verify usable client messaging-channel access tied to that account or opportunity.
 ---
 
 # Initial Setup
@@ -20,9 +20,9 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 3. Guide the business user to connect that Account folder to OneDrive.
 4. Ask whether the business user is starting a new project or joining an existing project, then identify the correct local Opportunity-folder path.
 5. Confirm SharePoint Edit access and local write readiness for the selected path before creating folders or relying on the path for future files.
-6. Locate the matching Slack channel.
-7. Locate the matching Teams team/channel.
-8. Summarize the connected sources, their candidate locations, and any connector limitations for a later discovery task.
+6. Confirm whether the client uses the default messaging platforms—Slack and Microsoft Teams—and use their matching reference workflows to locate relevant channels.
+7. Confirm the relevant messaging channels with the business user.
+8. With the business user's confirmation, create or update the Opportunity folder's project communications record with the connected sources, their candidate locations, and any connector limitations for a later discovery task.
 
 ## Confirm the local toolchain
 
@@ -44,15 +44,15 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 - If the user is on Windows, avoid Homebrew-based instructions entirely.
 - If the user is on macOS, avoid `winget`-based instructions entirely.
 
-## Handle connector connections
+## Handle messaging-app connections
 
-- Treat Slack, Teams, and SharePoint connector authentication as Codex runtime setup rather than OS-specific local setup.
-- Before source discovery, ask for one known Slack channel and one known Teams team/channel or a distinctive account/workstream term. Use these as connection probes.
-- Treat a successful API response as proof that the connector is authenticated, not proof that it can access the required workspace or channels.
-- Mark a connector **usable** only after its metadata probe returns the user-identified Slack channel or Teams team/channel. Do not infer usability from unrelated results.
-- If a connector is unavailable, unauthenticated, or cannot see a channel the user says exists, direct the user through the Codex app flow: open **Settings → Plugins** (or the plugin directory), select the Slack or Microsoft Teams app, choose **Connect**, and complete OAuth with the intended work account. If the app is unavailable or the connection still lacks the expected source, ask a workspace admin to review **Workspace settings → Apps** for app enablement, role access, domain restrictions, and provider permissions. Return to rerun the same probe. Do not give shell commands.
-- Report a no-match result as **scope not verified**, not as evidence that the channel does not exist. Explain whether the likely issue is the signed-in account, app authorization, workspace/team membership, or connector indexing; do not guess which one applies.
-- Once a connector is usable, use the same workflow on both macOS and Windows.
+- Treat messaging-app authentication as Codex runtime setup rather than OS-specific local setup. SharePoint remains a separate, fixed source handled in this skill.
+- Start by asking: "For this project, should I look in Slack and Microsoft Teams for the relevant team conversations?" Treat Slack and Microsoft Teams as the default only when the user confirms them.
+- When the user confirms the default, request one known channel, team/channel, or distinctive account/workstream term for Slack and for Microsoft Teams, then read and follow both references: [Slack](references/slack.md) and [Microsoft Teams](references/microsoft-teams.md).
+- Only when the user declines the default, says one of those apps is not used, or asks to use different apps, ask which messaging app or apps the client uses. Read only the matching platform reference before searching.
+- If no reference exists for the client's messaging app, explain that the app is not yet supported by this skill, record it as not connected, and ask the user whether they want a separate integration added. Do not substitute another app's procedure or try generic web searches.
+- Treat a successful API response as proof that a connector is authenticated, not proof that it can access the required workspace or channels. Mark a connector **usable** only after its platform-specific metadata probe returns the user-identified source.
+- Report a no-match result as **scope not verified**, not as evidence that the channel does not exist. Explain the limitation in plain language without guessing its cause.
 
 ## Set up the Opportunity folder
 
@@ -126,48 +126,58 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 - For a new project, use the folder's later appearance in SharePoint after healthy OneDrive sync as the practical end-to-end verification.
 - For an existing project, do not create a test file or folder to verify access. Report the user-confirmed Edit access and local readiness separately.
 
-## Locate Slack context
+## Locate messaging context
 
-- Use `slack_search_channels` to find likely existing channels by the user-provided known-channel name, account, opportunity, project, or engagement name. Search the provided term as written first; the connector search is term-based, not an exact-match assertion.
-- Search public and private channels when the user indicates both may be in play.
-- Prefer exact or near-exact name matches before broader topical matches.
-- When the channel-metadata result is empty but the user says a matching source exists, ask for explicit consent before searching conversations. With consent, use `slack_search_public_and_private` for the same term across public channels, private channels, DMs, and group DMs; request no surrounding context and report only matched conversation locations, not message text or file contents.
-- If both the metadata and consented conversation searches are empty, do not conclude that Slack is set up. Record the probe as scope not verified, guide the user through the Slack reconnect flow, and rerun the same searches after reconnection.
-- Report the best candidates with channel name, purpose/topic when available, whether the channel is archived, and the account, project, or workstream terms that matched.
-- Do not read channel messages, files, threads, or other channel content while locating candidates, except for the explicit-consent conversation-search fallback above.
-- Do not retrieve Slack content outside the explicit-consent conversation-search fallback, even if the user identifies a preferred channel.
-- Do not create Slack channels in this skill.
-
-## Locate Teams context
-
-- Use `list_teams` first when the user names a team but the exact team ID is unknown. Request the largest supported result set and inspect it locally for the user-provided term.
-- Use `list_channels` after the team is resolved to find the likely channel.
-- If no returned team matches a user-identified team or workstream, ask for explicit consent before searching chats and channel conversations. With consent, use `microsoft_teams_search` for the same term across chats and channel threads, then report only matched conversation locations, not message text or file contents.
-- If both the metadata and consented conversation searches are empty, record the probe as scope not verified, guide the user through the Teams reconnect flow, and rerun the same searches. If the team appears but the named channel does not, report that separately as a membership or channel-visibility issue.
-- Report the best candidates with the resolved team and channel names, channel description when available, and the account, project, or workstream terms that matched.
-- Do not use message search or read channel messages, files, threads, or other channel content while locating candidates, except for the explicit-consent conversation-search fallback above.
-- Do not retrieve Teams content outside the explicit-consent conversation-search fallback, even if the user identifies a preferred team or channel.
-- Do not create Teams teams or channels in this skill.
+- For each client messaging app, follow its reference workflow to locate candidate sources and report only the metadata permitted by that workflow.
+- Do not read messages, files, or threads unless the relevant reference explicitly allows a consented fallback. Do not create, rename, or modify messaging channels in this skill.
 
 ## Inventory channel sources
 
-- Create a concise Slack and Teams source inventory using channel metadata; for an explicitly consented Slack or Teams conversation search, include only the matched conversation location and status.
-- For each candidate, record the platform, resolved team when applicable, channel name, available purpose or description, active or archived state, matched terms, and a status of confirmed, candidate, or excluded.
-- Include the connection state for each platform: **usable** (known source returned), **authenticated—scope not verified** (connector responded but known source was absent), or **not connected** (connector call could not authenticate).
+- Create a concise messaging-source inventory using channel metadata; for an explicitly consented conversation search, include only the matched conversation location and status.
+- For each candidate, record the platform, parent location when applicable, channel name, available purpose or description, active or archived state when available, matched terms, and a status of confirmed, candidate, or excluded.
+- Include the connection state for each platform: **usable** (known source returned), **authenticated—scope not verified** (connector responded but known source was absent), **not connected** (connector call could not authenticate), or **not yet supported** (no matching platform reference).
 - Mark a channel as confirmed only when the business user identifies it as relevant. Do not infer confirmation from a name match alone.
 - When a relevant channel name is vague or its description is missing, advise the business user to ask the channel owner to improve it. Recommend a name that distinguishes the account, project, and workstream or purpose, plus a short description of the channel's scope and intended use.
 - Do not rename channels, edit descriptions, create channels, or ask for message content in this skill.
 
+## Maintain the project communications record
+
+- Treat `<Opportunity folder>/Agent Inbox/source-context.yaml` as the implementation file for a project-owned, living project communications record of the relevant client messaging sources. Do not place this file in the reusable skill folder or treat it as a cross-project registry.
+- In user-facing language, call this the **project communications record**. Do not call it a config file, YAML file, metadata, or a source-context record; do not show its file path, IDs, or schema unless the user specifically asks for technical detail.
+- After the business user confirms the selected Opportunity folder and relevant sources, ask for confirmation in plain language: "Would you like me to save these confirmed messaging locations in the project communications record so they are easy to find next time?" Do not create or update it when the user declines or when the Opportunity folder is not locally writable.
+- On the first confirmed write, create a concise YAML record with the account and opportunity names, a `last_verified` date, each platform's connection state, and confirmed locations only. Use the platform's reference workflow to identify the safe metadata to record. Do not record message text, files, threads, credentials, or OAuth data.
+- On each later use of this skill for the same Opportunity folder, read the existing record before locating channels. Reconcile it against the current metadata probes: add newly confirmed relevant channels, refresh changed metadata and `last_verified`, and mark unavailable previously confirmed channels as `scope_not_verified` rather than deleting them.
+- Keep candidates and excluded channels in the conversational setup summary, not in the living record. Add a channel only after the business user confirms that it is relevant to the project.
+- Do not claim this record updates automatically when a new channel is created. It is refreshed only when this skill or a later authorized source-inventory workflow runs and the user approves the update.
+- Use this shape, omitting unavailable optional IDs or descriptions:
+
+  ```yaml
+  account: <account name>
+  opportunity: <opportunity name>
+  last_verified: <YYYY-MM-DD>
+  messaging_platforms:
+    - name: <platform name>
+      connection_state: usable
+      locations:
+        - name: <channel or location name>
+          parent_name: <team, workspace, or other parent when available>
+          identifiers:
+            channel_id: <available ID>
+            parent_id: <available parent ID>
+          description: <available purpose or description>
+          status: confirmed
+  ```
+
 ## Handoff to discovery
 
-- Treat source discovery as metadata-only except for an explicitly consented Slack or Teams conversation search. This skill ends after setup and candidate reporting.
-- State the discovered sources and the channel inventory in plain language for the next task, such as: "SharePoint: `Acme/<opportunity-name>`; Slack: `#account-acme` (confirmed); Teams: `Acme > Opportunity` (candidate)."
+- Treat source discovery as metadata-only except for an explicitly consented platform-specific conversation search. This skill ends after setup and candidate reporting.
+- State the discovered sources, channel inventory, and project communications record status in plain language for the next task, such as: "SharePoint: `Acme/<opportunity-name>`; messaging: `#account-acme` (confirmed); project communications record: updated."
 - Require the later discovery or analysis task to obtain explicit user confirmation before retrieving any messages, files, threads, or document contents.
 
 ## Output expectations
 
 - Keep status updates simple and encouraging for non-technical users.
-- End with a compact, visually scannable **Setup readiness** checklist covering local environment, OneDrive and Opportunity-folder, SharePoint, Slack, Teams, and channel inventory. Use this legend and order:
+- End with a compact, visually scannable **Setup readiness** checklist covering local environment, OneDrive and Opportunity-folder, SharePoint, client messaging apps, and channel inventory. Use this legend and order:
 
   ```text
   ✅ Completed automatically
@@ -177,4 +187,4 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 
 - Give every checklist item a status marker and a short plain-language result. Use `✅` only for work actually completed or for a known source returned by its connector probe; do not use it for a successful API response alone.
 - Follow the checklist with one concise **Next step** when any item is `🔎` or `⚠️`. Omit it only when every required setup item is complete.
-- State the next connector action whenever Slack or Teams is authenticated but scope is not verified.
+- State the next connector action whenever a client messaging app is authenticated but scope is not verified.
