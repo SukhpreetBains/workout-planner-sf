@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  analyze-org skill manifest.
+
+  Curated set of "important" metadata used to map an org's major features:
+  logic (Apex, Flows) + UI (LWC, Aura, FlexiPages, QuickActions, Layouts, Tabs,
+  Apps) + data model (Objects, Fields, Record Types) + config (Custom Metadata,
+  Labels, Static Resources) + access model (Permission Sets & Groups) +
+  Agentforce (Bots, Planners, Topics, Actions, Prompt Templates).
+
+  This scope also feeds the dependency-graph generator
+  (../scripts/build-dependency-graph.mjs), which parses the retrieved tree to
+  compute feature clusters. Widening scope here improves graph coverage.
+
+  This is intentionally NOT a full org dump. To widen or narrow coverage,
+  add/remove <types> blocks below and re-run the skill. Wildcards (*) pull
+  every component of that type, including managed-package metadata — see
+  SKILL.md for how to filter that noise out during analysis.
+-->
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <!-- Data model -->
+    <types>
+        <members>*</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>RecordType</name>
+    </types>
+
+    <!-- Logic / automation -->
+    <types>
+        <members>*</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>Flow</name>
+    </types>
+
+    <!-- UI -->
+    <types>
+        <members>*</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>FlexiPage</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>QuickAction</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>CustomApplication</name>
+    </types>
+
+    <!-- Config / cross-cutting (dependency edges Apex/LWC/Flow read at runtime).
+         CustomMetadataType definitions (*__mdt) retrieve via the CustomObject
+         wildcard above; CustomMetadata pulls the records. -->
+    <types>
+        <members>*</members>
+        <name>CustomMetadata</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>CustomLabels</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>StaticResource</name>
+    </types>
+
+    <!-- Access model -->
+    <types>
+        <members>*</members>
+        <name>PermissionSet</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>PermissionSetGroup</name>
+    </types>
+
+    <!-- Agentforce -->
+    <types>
+        <members>*</members>
+        <name>Bot</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>BotVersion</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPlanner</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPlannerBundle</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPlugin</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiFunction</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>GenAiPromptTemplate</name>
+    </types>
+
+    <version>66.0</version>
+</Package>
