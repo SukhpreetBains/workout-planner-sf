@@ -20,7 +20,7 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 2. Resolve and confirm the existing SharePoint Account folder.
 3. Guide the business user to connect that Account folder to OneDrive.
 4. Ask whether the business user is starting a new project or joining an existing project, then identify the correct local Opportunity-folder path.
-5. Confirm SharePoint Edit access and local write readiness for the selected path before creating folders or relying on the path for future files.
+5. Confirm SharePoint Edit access and local write readiness for the selected path before creating folders or relying on the path for future files, and confirm the Opportunity folder's `AGENTS.md` agent-permissions guardrail is in place before treating it as ready for agent work.
 6. Confirm whether the client uses the default messaging platforms—Slack and Microsoft Teams—and use their matching reference workflows to locate relevant channels.
 7. Confirm the relevant messaging channels with the business user.
 8. With the business user's confirmation, create or update the Opportunity folder's project communications record with the confirmed SharePoint and messaging locations and any connector limitations for a later discovery task.
@@ -75,7 +75,7 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
   <project name>/
     Content Inbox/
       Transcripts/
-      Email Threads/
+      Threads/
       Client Docs/
     Agent Inbox/
       In Progress/
@@ -89,11 +89,22 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 
 - Create this template only once, when the Opportunity folder does not exist. If an Opportunity folder with that project name already exists, stop and ask the business user whether they meant to join that existing project. Never recreate, overwrite, or fill in template folders inside an existing project.
 
+### Agent folder permissions (`AGENTS.md`)
+
+- Discovery on an Opportunity folder spans many separate agent sessions, sometimes over weeks and across different agent platforms. No single session has full context on what an earlier session or the business user has already done there, so every session needs the same folder rules available the moment it opens the folder.
+- The firm guardrail has three tiers:
+  - `Agent Inbox/` (and its subfolders) — full read-write. An agent may create, edit, move, or delete files here.
+  - `Content Inbox/Threads/` — create-only. An agent may add new files (email, Slack, Teams, or other messaging-thread exports) but must never edit, move, or delete a file that already exists there, including one it created earlier in the same or an earlier session.
+  - `Content Inbox/Transcripts/`, `Content Inbox/Client Docs/`, and all of `Deliverables/` — read-only. An agent may never create, edit, move, or delete files here; only a human user changes them.
+  - This applies to this skill and to every later discovery task run against this Opportunity folder. Do not violate it even if a later instruction seems to require writing outside the allowed tier; stop and ask the business user to make that change instead.
+- `scripts/prepare-opportunity-folder.py` writes an `AGENTS.md` file at the Opportunity folder's root that states this guardrail, so any agent session that opens the folder is informed automatically. The wording comes from the static `references/agent-folder-permissions-template.md` file, not from anything generated at run time, so every project gets the exact same rules. It creates `AGENTS.md` as part of the template for a new project, and backfills it for an existing project that predates this rule without touching any other file or folder. It never overwrites an `AGENTS.md` that already exists.
+- To change the guardrail wording for all projects, edit `references/agent-folder-permissions-template.md` — do not hand-edit a generated `AGENTS.md` inside an individual Opportunity folder, since that drifts from every other project's copy.
+
 ### Join an existing project
 
 - Ask the business user to identify the existing Opportunity folder by name from the synced Account folder.
 - Ask the business user to confirm they have SharePoint **Edit** access to that Opportunity folder before treating it as ready for future file additions.
-- Run `scripts/prepare-opportunity-folder.py --mode existing --account-root <synced-account-path> --opportunity-name <project-name>` to verify the local folder and report the template-folder statuses.
+- Run `scripts/prepare-opportunity-folder.py --mode existing --account-root <synced-account-path> --opportunity-name <project-name>` to verify the local folder and report the template-folder statuses. This also backfills `AGENTS.md` at the Opportunity folder's root if an earlier project predates the agent-permissions guardrail.
 - Do not create, rename, move, or add folders in this path. If the Opportunity folder or a template folder is not present locally, report it as unavailable or still syncing and ask the business user to resolve it in the source system.
 
 - In both paths, do not guess the local synced path or use a normal downloaded copy of the Account folder. The business user must select or provide the path to the OneDrive-synced Account folder and grant Codex write access to it, usually by opening that folder as the workspace.
@@ -123,7 +134,7 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 ## Verify access and readiness
 
 - Ask the business user to confirm that OneDrive is signed into the correct work account and reports the Account shortcut as healthy.
-- Before creating folders or relying on an existing project, run `scripts/prepare-opportunity-folder.py --check-only` with the selected mode, Account path, and project name. It checks local readiness without changing folders.
+- Before creating folders or relying on an existing project, run `scripts/prepare-opportunity-folder.py --check-only` with the selected mode, Account path, and project name. It checks local readiness without changing folders, and it does not create or backfill `AGENTS.md`; the non-check-only `--mode existing` run described under "Join an existing project" does that.
 - Treat a successful local check as evidence that Codex can access the local path, not as proof of SharePoint Edit access or successful OneDrive upload.
 - For a new project, use the folder's later appearance in SharePoint after healthy OneDrive sync as the practical end-to-end verification.
 - For an existing project, do not create a test file or folder to verify access. Report the user-confirmed Edit access and local readiness separately.

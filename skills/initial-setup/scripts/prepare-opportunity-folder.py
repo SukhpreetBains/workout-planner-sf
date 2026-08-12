@@ -11,7 +11,7 @@ INVALID_NAME_CHARACTERS = set('"*/:<>?\\|#%')
 TEMPLATE_PATHS = (
     ("Content Inbox",),
     ("Content Inbox", "Transcripts"),
-    ("Content Inbox", "Email Threads"),
+    ("Content Inbox", "Threads"),
     ("Content Inbox", "Client Docs"),
     ("Agent Inbox",),
     ("Agent Inbox", "In Progress"),
@@ -30,6 +30,28 @@ WINDOWS_RESERVED_NAMES = {
     *(f"COM{number}" for number in range(1, 10)),
     *(f"LPT{number}" for number in range(1, 10)),
 }
+AGENTS_FILE_NAME = "AGENTS.md"
+AGENTS_TEMPLATE_PATH = (
+    Path(__file__).resolve().parent.parent / "references" / "agent-folder-permissions-template.md"
+)
+
+
+def agents_md_content(opportunity_name: str) -> str:
+    template = AGENTS_TEMPLATE_PATH.read_text(encoding="utf-8")
+    return template.replace("{{OPPORTUNITY_NAME}}", opportunity_name)
+
+
+def ensure_agents_file(opportunity_path: Path, write: bool) -> bool:
+    agents_path = opportunity_path / AGENTS_FILE_NAME
+    if agents_path.is_file():
+        print(f"ready: {agents_path}")
+        return True
+    if not write:
+        print(f"missing: {agents_path}")
+        return False
+    agents_path.write_text(agents_md_content(opportunity_path.name), encoding="utf-8")
+    print(f"created: {agents_path}")
+    return True
 
 
 def validate_opportunity_name(name: str) -> str:
@@ -98,6 +120,7 @@ def prepare_new_opportunity(opportunity_path: Path) -> int:
         opportunity_path.mkdir()
         for path_parts in TEMPLATE_PATHS:
             opportunity_path.joinpath(*path_parts).mkdir()
+        ensure_agents_file(opportunity_path, write=True)
     except OSError as error:
         print(f"Could not prepare Opportunity folder: {error}", file=sys.stderr)
         return 1
@@ -108,7 +131,7 @@ def prepare_new_opportunity(opportunity_path: Path) -> int:
     return 0
 
 
-def inspect_existing_opportunity(opportunity_path: Path) -> int:
+def inspect_existing_opportunity(opportunity_path: Path, write_agents_file: bool = False) -> int:
     if not opportunity_path.is_dir():
         print(
             f"Existing Opportunity folder was not found: {opportunity_path}",
@@ -118,6 +141,8 @@ def inspect_existing_opportunity(opportunity_path: Path) -> int:
 
     print(f"using existing: {opportunity_path}")
     missing = print_template_status(opportunity_path)
+    if not ensure_agents_file(opportunity_path, write=write_agents_file):
+        missing.append(AGENTS_FILE_NAME)
     if missing:
         print(
             "No folders were created. Resolve missing folders in the source system or wait for OneDrive sync.",
@@ -187,7 +212,7 @@ def main() -> int:
         return inspect_existing_opportunity(opportunity_path)
     if not check_local_write_readiness(opportunity_path):
         return 1
-    return inspect_existing_opportunity(opportunity_path)
+    return inspect_existing_opportunity(opportunity_path, write_agents_file=True)
 
 
 if __name__ == "__main__":
