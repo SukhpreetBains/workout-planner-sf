@@ -1,6 +1,6 @@
 ---
 name: retrieve-project-context
-description: Retrieve, re-rank, trim, and persist task-relevant project context from an existing .codex/project-context/manifest.json. Use when Codex needs evidence from known local files, Slack channels or threads, Microsoft Teams chats or channels, SharePoint sites or folders, or other recorded sources; when long project histories would otherwise consume excessive context; when a cached project briefing should be refreshed; or when downstream work needs a compact summary-to-evidence hierarchy instead of repeated full-source searches. Consume the discovery manifest, prefer fresh cached context, fetch narrowly through available Codex connectors, rank chunks against the current task, and store bounded summaries with provenance.
+description: Retrieve, re-rank, trim, and persist task-relevant project context from sources recorded by initial setup and discovery. Use when Codex needs evidence from known local files, Slack or Teams conversations, SharePoint folders, or other confirmed sources; when long histories would otherwise consume excessive context; when a cached briefing should be refreshed; or when downstream work needs a compact evidence hierarchy. Import Agent Inbox/source-context.yaml into the local manifest, fetch narrowly, rank against the task, and store bounded summaries with provenance.
 ---
 
 # Retrieve Project Context
@@ -9,9 +9,9 @@ Build a task-specific evidence pack from sources already identified by `$discove
 
 ## Preconditions
 
-Require `.codex/project-context/manifest.json` beneath the project root. Read `.codex/project-context/brief.md` first, then validate the manifest with the discovery skill's validator when available.
+Require the setup-generated `Agent Inbox/source-context.yaml` beneath the project root. Validate it, initialize the local `.codex/project-context/manifest.json` projection when needed, and run the discovery skill's `import-source-context` command before planning retrieval. Read `.codex/project-context/brief.md`, then validate the imported manifest.
 
-If the manifest is absent or lacks the sources needed for the task, invoke `$discover-project-context` or ask only for the missing location. Do not compensate with an unbounded workspace or connector search.
+If the shared record is absent or lacks the sources needed for the task, invoke `$discover-project-context` or ask only for the missing location. Do not compensate with an unbounded workspace or connector search. Do not edit shared locations as an incidental retrieval side effect.
 
 Read these references before retrieval:
 
@@ -27,7 +27,7 @@ Write one sentence that captures the decision, deliverable, or question the cont
 
 ### 2. Reuse fresh context
 
-Check `.codex/project-context/state.json` and `index.md`.
+Check `.codex/project-context/state.json` and `index.md` after importing the shared source record.
 
 - Reuse a cached source when its purpose matches the task, it is within `freshness_hours`, and the current request does not demand newer facts.
 - Refresh mutable decision, status, issue, and conversation sources when freshness is uncertain.
@@ -59,7 +59,7 @@ Default to 20 search results or 50 history messages per remote source. Paginate 
 - For local sources, read exact files or narrowly match within recorded directories. Use `rg` for filenames or text; respect `include` and `exclude`.
 - For Slack, resolve named channels, search with channel/date/topic modifiers, and expand only relevant channels or threads. Obtain explicit consent before private Slack search unless `source_policy.allow_private_search` is already true.
 - For Teams, resolve the team/channel/chat, search narrowly, then fetch only relevant result objects or bounded history.
-- For SharePoint, validate the site or folder, browse exact locations when known, search within scope for keywords, and fetch only relevant files.
+- For SharePoint, use the recorded hostname and site path to validate the site, the recorded drive/library and folder path to browse the exact location, a folder-scoped keyword search when needed, and fetch only relevant files. Do not rediscover the tenant or widen beyond the recorded folder unless the user explicitly approves it.
 - For all connectors, use the current runtime's surfaced read tools. Do not hardcode a connector ID from this skill.
 
 Do not persist full connector payloads. Normalize candidates in a temporary JSONL file with one chunk per line:
@@ -133,5 +133,6 @@ Lead with the answer or briefing, then report:
 - evidence cutoff or retrieval timestamp
 - important access or freshness gaps
 - persisted index path
+- shared source-context import timestamp
 
 State uncertainty explicitly. Do not describe lexical ranking as embedding search, and do not claim connector scopes that were not visible at runtime.

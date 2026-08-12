@@ -1,6 +1,6 @@
 ---
 name: discover-project-context
-description: Establish or refresh a reusable project brief and canonical source manifest before implementation work begins. Use when Codex is starting work in an unfamiliar project, repeatedly searching files for project references, onboarding to an existing effort, handing context to later skills, or when the user asks to identify local folders, Slack channels, Teams chats/channels, SharePoint locations, stakeholders, terminology, constraints, or other authoritative project context. Run measured, lightweight per-system discovery to resolve source locations without bulk-reading their contents, then persist reusable references under .codex/project-context.
+description: Establish or refresh reusable project context before implementation work begins. Use when Codex is starting work in an unfamiliar project, repeatedly searching for project references, onboarding to an existing effort, handing context to later skills, or identifying local folders, Slack channels, Teams chats/channels, SharePoint folders, stakeholders, terminology, constraints, or authoritative sources. Run measured, metadata-only discovery, update the setup-generated Agent Inbox/source-context.yaml record, and generate a local .codex/project-context projection without ingesting dense histories.
 ---
 
 # Discover Project Context
@@ -9,20 +9,23 @@ Create the small, durable context map that later skills read before exploring a 
 
 ## Contract
 
-Write these files beneath the selected workspace root:
+Use the setup-generated project communications record as the shared source of truth and generate a machine-local projection for ranking and cache state:
 
 ```text
-.codex/project-context/
-├── .gitignore
-├── manifest.json
-└── brief.md
+<Opportunity folder>/
+├── Agent Inbox/
+│   └── source-context.yaml       # shared source locations from initial-setup
+└── .codex/project-context/
+    ├── .gitignore
+    ├── manifest.json             # generated local retrieval projection
+    └── brief.md                  # compact local projection
 ```
 
-Treat `manifest.json` as the machine-readable source of truth and `brief.md` as its compact human-readable projection. Read [references/context-contract.md](references/context-contract.md) before writing either file.
+Read the initial-setup [project communications record contract](../initial-setup/references/source-context.md) before changing shared locations. Read [references/context-contract.md](references/context-contract.md) before writing the local projection. Do not make `manifest.json` a second independently maintained source inventory.
 
 Discovery is read-only and lightweight. It returns a shortlist of canonical source references and narrow retrieval hints—not file contents, message bodies, document bodies, transcripts, or connector payloads. Every recorded source carries a bounded access state (`available`, `unavailable`, or `unknown`) and a short reason.
 
-Use `scripts/project_context.py` for initialization, source updates, rendering, and validation. Do not invent a parallel context file when the manifest already exists.
+Use the initial-setup `scripts/manage-source-context.py` for shared source updates. Use `scripts/project_context.py` to initialize, import, render, measure, and validate the machine-local projection.
 
 ## Workflow
 
@@ -34,19 +37,20 @@ Use `scripts/project_context.py` for initialization, source updates, rendering, 
 
 ### 2. Reuse before discovering
 
-- Check `.codex/project-context/manifest.json` first.
-- If it exists, validate it and identify only missing, stale, or task-relevant fields.
+- Check `Agent Inbox/source-context.yaml` first and validate it with the initial-setup manager.
+- Check `.codex/project-context/manifest.json` next. If it exists, validate it and import the shared record before identifying missing, stale, or task-relevant fields.
 - Read `brief.md` before any broader exploration. Refresh instead of restarting.
 
 Run:
 
 ```bash
 python3 <skill-dir>/scripts/project_context.py init --root <workspace-root>
+python3 <initial-setup-skill-dir>/scripts/manage-source-context.py validate --root <workspace-root>
+python3 <skill-dir>/scripts/project_context.py import-source-context --root <workspace-root> --allow-incomplete
 python3 <skill-dir>/scripts/project_context.py validate --root <workspace-root> --allow-incomplete
 ```
 
-`init` is non-destructive and does not overwrite an existing manifest.
-It also creates a directory-local `.gitignore` so manifests and later cached excerpts stay local by default. Tell the user that the context store is intentionally untracked.
+`init` is non-destructive and does not overwrite an existing local manifest. It also creates a directory-local `.gitignore` so manifests and later cached excerpts stay local by default. Tell the user that the ranked context cache is intentionally untracked while the project communications record remains project-owned.
 
 ### 3. Perform a bounded metadata pass
 
@@ -76,7 +80,8 @@ Ask for names or links the user naturally knows; do not require connector IDs. O
 For each system that may contain project context, use the smallest available read operation to identify candidate locations. This is a source-discovery pass, not retrieval:
 
 - **Chat systems (Slack, Teams, or equivalent):** resolve the channel, chat, or team; inspect metadata and at most 10 recent or search-result messages per candidate, with a default cap of 30 preview items across the system.
-- **Document systems (SharePoint, drives, wikis, or equivalent):** validate the site or container and inspect at most 10 item names plus their metadata per candidate, with a default cap of 30 items across the system.
+- **SharePoint:** validate a known hostname/site path, resolve the document library, and list immediate folder items. When the exact site is unknown, use a narrow metadata search first. Inspect at most 10 item names plus metadata per candidate, with a default cap of 30 items across the system. Record the canonical URL plus exposed hostname, site path, drive ID/name, and folder path.
+- **Other document systems:** validate the container and inspect at most 10 item names plus metadata per candidate, with a default cap of 30 items across the system.
 - **Local workspaces:** inspect at most 30 top-level names, targeted filenames, and repository metadata. Do not bulk-read documents or recursively search text.
 - **Other systems:** use the closest equivalent metadata or short-preview operation, cap it at 10 items by default, and state the applied cap.
 
@@ -84,7 +89,7 @@ These are per-system exploration caps, not retrieval budgets. Stop at the cap ev
 
 Route by the runtime's exposed capabilities rather than assuming a connector name, API, tenant, or permission model. Never search private content without explicit consent. Stop once a canonical locator, stable ID, direct link, or local path is resolved; leave anything else as an `open_question`.
 
-Record only source references, access state/reason, and narrow retrieval hints in the manifest. Do not copy preview text, message bodies, document bodies, credentials, permission payloads, or opaque connector payloads into it.
+Record only confirmed source references, access state/reason, and narrow retrieval hints in the project communications record. Keep unconfirmed candidates in the conversational report. Do not copy preview text, message bodies, document bodies, credentials, permission payloads, or opaque connector payloads into either output.
 
 Measure the pass after the scan: count connector calls, candidate locations considered, locations recorded, preview items inspected, and inspected characters. Prefer a runtime-reported token count; otherwise estimate input tokens as inspected characters divided by four (rounded up). Record the totals and the stated per-system caps with:
 
@@ -117,41 +122,46 @@ For each user-provided remote source:
 
 Use source kinds `local`, `slack`, `teams`, `sharepoint`, `web`, or `other`. Put connector-specific search terms in `query_hints` so retrieval can remain narrow later.
 
-### 7. Persist and validate
+### 7. Persist, import, and validate
 
-Set project fields, then add one source entry for each distinct canonical location:
+After user confirmation, add each distinct canonical location to the shared record, then import it into the local projection. For SharePoint, include every identifier the runtime exposed:
 
 ```bash
+python3 <initial-setup-skill-dir>/scripts/manage-source-context.py upsert-source \
+  --root <workspace-root> \
+  --id engagement-folder \
+  --kind sharepoint \
+  --name "Engagement folder" \
+  --locator "https://contoso.sharepoint.com/sites/Consulting/Shared%20Documents/Acme/Engagement" \
+  --identifier hostname=contoso.sharepoint.com \
+  --identifier site_path=/sites/Consulting \
+  --identifier drive_name="Shared Documents" \
+  --identifier folder_path="Acme/Engagement" \
+  --purpose "Canonical project workspace" \
+  --authority canonical \
+  --priority 5 \
+  --access-state available \
+  --access-reason "Folder identity was confirmed during discovery."
+
 python3 <skill-dir>/scripts/project_context.py set-project \
   --root <workspace-root> \
   --name "Project name" \
   --objective "Current objective" \
   --phase "Current phase"
 
-python3 <skill-dir>/scripts/project_context.py upsert-source \
-  --root <workspace-root> \
-  --id requirements \
-  --kind local \
-  --label "Requirements" \
-  --locator "specs/project/design.md" \
-  --purpose "Canonical requirements and acceptance criteria" \
-  --authority canonical \
-  --priority 5 \
-  --access-state available \
-  --access-reason "Access confirmed during discovery."
-
-python3 <skill-dir>/scripts/project_context.py render-brief --root <workspace-root>
+python3 <skill-dir>/scripts/project_context.py import-source-context --root <workspace-root>
 python3 <skill-dir>/scripts/project_context.py validate --root <workspace-root>
 ```
 
 - Use workspace-relative paths for local sources when possible.
-- Store no credentials, tokens, copied private messages, or full document content in the manifest.
+- Preserve the setup-generated `account`, `opportunity`, platform connection states, and unknown compatible fields.
+- Store no credentials, tokens, copied private messages, or full document content in the shared record or local projection.
 - Mark confidential source locations with the appropriate `sensitivity` value.
 - Keep unresolved but important gaps explicit in `open_questions`.
 - Keep `.codex/project-context/` excluded from version control when it contains internal or confidential locations. Do not remove or broaden its directory-local ignore rule without explicit user intent.
 
 ## Handoff
 
-Report the manifest path, confirmed source count by kind, discovery measurement (including estimated or reported tokens), any permission gaps, and the next recommended action. Tell later skills to read `brief.md` and `manifest.json` before searching. Invoke `$retrieve-project-context` only when the user needs source content gathered for a concrete task.
+Report the project communications record status, local manifest path, confirmed source count by kind, discovery measurement (including estimated or reported tokens), permission gaps, and next recommended action. Tell later skills to read the shared record, then `brief.md` and `manifest.json`, before searching. Invoke `$retrieve-project-context` only when the user needs source content gathered for a concrete task.
 
 Do not claim that remote content was reviewed when this skill only resolved its location.

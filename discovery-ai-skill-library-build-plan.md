@@ -1373,6 +1373,8 @@ The focused implementation for `discover-project-context` and `retrieve-project-
 
 | Story requirement | Implemented contract or fixture | Evidence |
 |---|---|---|
+| Discovery consumes setup output | Gada's `Agent Inbox/source-context.yaml` project communications record is the shared source-location contract; discovery imports it into a machine-local manifest | `skills/initial-setup/references/source-context.md`; `manage-source-context.py`; `project_context.py import-source-context` |
+| SharePoint folders retain retrievable locations | Shared records preserve the canonical URL and exposed hostname, site path, drive ID/name, and folder path without storing document contents | Source-context contract; SharePoint acceptance fixture |
 | Discovery is read-only and returns references only | Discovery contract explicitly forbids source content and records only locators, hints, access state, and reason | `skills/discover-project-context/SKILL.md`; `tests/context_skills_acceptance.py` |
 | Discovery has a per-system cap and measured token estimate | `discovery_runs.exploration_caps` plus counted items/characters and estimated tokens | `skills/discover-project-context/references/context-contract.md`; `project_context.py record-discovery` |
 | Permission outcomes are recorded without broader access | Source `access.state`/`access.reason`; unavailable references remain valid | `project_context.py upsert-source` and `set-source-access`; permission fixture |
@@ -1381,4 +1383,4 @@ The focused implementation for `discover-project-context` and `retrieve-project-
 | Cached context is reused deterministically | Freshness/access/task-overlap decision helper reuses the existing hierarchy without connector calls | `scripts/cache_context.py`; cache fixture |
 | Portability and deterministic validation | Relative repository paths, platform-neutral instructions, stdlib-only validators and scripts | `tests/validate_context_skills.py`; Python compilation and fixture runs |
 
-Validation run: the structural validator, Python compilation, manifest validation, and all five synthetic acceptance scenarios pass. The remaining evaluation decision is whether to add a separate model-based review later; deterministic contract/fixture coverage is the selected acceptance mechanism for this implementation and does not require that future evaluation choice to proceed.
+Validation run: the structural validator, Python compilation, shared YAML fallback parser, manifest validation, setup-to-discovery import, and synthetic retrieval scenarios pass. Live connector validation remains a separate production-readiness gate; deterministic contract/fixture coverage does not claim that a real SharePoint, Slack, or Teams source was accessed.

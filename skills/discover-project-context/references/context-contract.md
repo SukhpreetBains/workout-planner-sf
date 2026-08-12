@@ -1,6 +1,6 @@
 # Project Context Contract v1
 
-Use `.codex/project-context/manifest.json` as the stable handoff between discovery, retrieval, and downstream skills.
+Use `Agent Inbox/source-context.yaml`, created by `initial-setup`, as the project-owned source-location record. Use `.codex/project-context/manifest.json` as its machine-local retrieval projection and stable handoff to ranking scripts. Import the shared record before retrieval; do not maintain conflicting source identities in the local projection.
 
 ## Required shape
 
@@ -24,6 +24,11 @@ Use `.codex/project-context/manifest.json` as the stable handoff between discove
     "max_excerpt_chars": 1200,
     "max_total_chars": 12000,
     "allow_private_search": false
+  },
+  "source_context": {
+    "path": "Agent Inbox/source-context.yaml",
+    "last_imported_at": "2026-08-04T12:00:00Z",
+    "source_count": 3
   },
   "sources": [
     {
@@ -89,6 +94,14 @@ Use `.codex/project-context/manifest.json` as the stable handoff between discove
 - `max_total_chars`: Maximum persisted excerpt characters in one ranked context pack.
 - `allow_private_search`: Whether private-message search was explicitly permitted. `false` never prevents direct reads of a source the user explicitly supplied and authorized; it prevents unbounded private search.
 
+### Source-context projection
+
+- `path`: Workspace-relative path to the setup-generated project communications record when possible.
+- `last_imported_at`: When shared source references were last synchronized into this local manifest.
+- `source_count`: Number of shared source references present at import time.
+
+Run `project_context.py import-source-context` after setup or discovery changes the shared record. Import updates matching source IDs and preserves local-only entries; it never deletes an unrelated cached source merely because a narrow shared update omitted it.
+
 ### Sources
 
 - `id`: Unique lowercase identifier using letters, digits, and hyphens.
@@ -123,6 +136,7 @@ Keep the most recent 20 entries. Older manifests without this optional field rem
 ## Invariants
 
 - Store locations and retrieval hints, not credentials or bulk source content.
+- Treat the setup-generated project communications record as the shared source of truth and the manifest as a generated local projection.
 - Store only the source access state and a short reason; never store permission error payloads, previews, or source content.
 - Store discovery measurements as counts only; never add previews or source snippets to `discovery_runs`.
 - Keep source IDs stable so cached summaries remain addressable.

@@ -57,6 +57,8 @@ def main() -> None:
         result.update({"age_hours": age_hours, "freshness_hours": freshness_hours, "cached_at": cached.get("last_retrieved_at") if cached else None})
         if access.get("state") != "available":
             result["reason"] = "Source access is not available; preserve it as a retrieval gap."
+        elif cached and cached.get("locator") != source.get("locator"):
+            result["reason"] = "The recorded source locator changed after this cache was created."
         elif not (source_tokens & task_tokens):
             result["reason"] = "Cached source purpose does not overlap the task."
         elif retrieved is None:

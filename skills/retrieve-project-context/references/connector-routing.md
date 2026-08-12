@@ -12,6 +12,15 @@ Search private content only with explicit user consent or `source_policy.allow_p
 
 Validate a recorded site, workspace, library, or folder; browse the exact location; search only within that scope; then fetch selected documents as text. Prefer canonical URLs and returned stable paths. If keyword search has known file-type gaps, inspect the recorded folder metadata before widening scope.
 
+For SharePoint, route from the identifiers imported from the project communications record:
+
+1. Validate `hostname` plus `site_path` with the runtime's site-resolution capability.
+2. Resolve the recorded `drive_id` or `drive_name`; list site drives only when the shared record lacks that identifier.
+3. List immediate items at the recorded `folder_path` to confirm the folder boundary.
+4. Search with the same hostname, site path, and folder path, or fetch an exact URL returned from that scope.
+
+Do not use recent-document lists to rediscover a site, and do not treat connector authentication as proof that the recorded folder is accessible.
+
 ## Local sources
 
 Use the recorded workspace-relative path and its include/exclude filters. Search exact filenames or narrow text matches first, then read only selected files or sections.

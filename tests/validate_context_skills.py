@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the structure and local references of the two project-context skills."""
+"""Validate the structure and local references of setup and project-context skills."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ("discover-project-context", "retrieve-project-context")
+SKILLS = ("initial-setup", "discover-project-context", "retrieve-project-context")
 LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
 

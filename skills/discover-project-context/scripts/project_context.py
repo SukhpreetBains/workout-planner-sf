@@ -8,6 +8,8 @@ import json
 import math
 import os
 import re
+import subprocess
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -46,6 +48,10 @@ def paths(root: str) -> tuple[Path, Path, Path]:
     workspace = Path(root).expanduser().resolve()
     context_dir = workspace / ".codex" / "project-context"
     return context_dir, context_dir / "manifest.json", context_dir / "brief.md"
+
+
+def source_context_tool() -> Path:
+    return Path(__file__).resolve().parents[2] / "initial-setup" / "scripts" / "manage-source-context.py"
 
 
 def atomic_write(path: Path, content: str) -> None:
@@ -98,6 +104,11 @@ def new_manifest(root: str, name: str | None, objective: str | None) -> dict[str
             "allow_private_search": False,
         },
         "sources": [],
+        "source_context": {
+            "path": "Agent Inbox/source-context.yaml",
+            "last_imported_at": None,
+            "source_count": 0,
+        },
         "discovery_runs": [],
         "open_questions": [],
         "created_at": timestamp,
@@ -123,6 +134,17 @@ def render_brief(manifest: dict[str, Any]) -> str:
     lines.extend(f"- `{root}`" for root in roots)
     if not roots:
         lines.append("- Unresolved")
+
+    shared = manifest.get("source_context") or {}
+    if shared:
+        lines.extend([
+            "",
+            "## Shared Source Record",
+            "",
+            f"- Path: `{shared.get('path', 'Agent Inbox/source-context.yaml')}`",
+            f"- Last imported: {shared.get('last_imported_at') or 'Not imported'}",
+            f"- Shared references imported: {shared.get('source_count', 0)}",
+        ])
 
     for heading, key in (
         ("Technology", "technology"),
@@ -266,6 +288,19 @@ def validate_manifest(manifest: dict[str, Any], allow_incomplete: bool = False) 
         freshness = source.get("freshness_hours")
         if not isinstance(freshness, int) or freshness < 0:
             errors.append(f"{prefix}.freshness_hours must be a non-negative integer")
+
+    source_context = manifest.get("source_context")
+    if source_context is not None:
+        if not isinstance(source_context, dict):
+            errors.append("source_context must be an object")
+        else:
+            if not isinstance(source_context.get("path"), str) or not source_context["path"].strip():
+                errors.append("source_context.path must be a non-empty string")
+            imported_at = source_context.get("last_imported_at")
+            if imported_at is not None and not isinstance(imported_at, str):
+                errors.append("source_context.last_imported_at must be a string or null")
+            if not isinstance(source_context.get("source_count", 0), int) or source_context.get("source_count", -1) < 0:
+                errors.append("source_context.source_count must be a non-negative integer")
 
     if not isinstance(manifest.get("open_questions"), list) or not all(
         isinstance(item, str) for item in manifest.get("open_questions", [])
@@ -464,6 +499,58 @@ def command_record_discovery(args: argparse.Namespace) -> None:
     print(f"Recorded discovery estimate of {estimated_tokens} tokens in {manifest_path}")
 
 
+def command_import_source_context(args: argparse.Namespace) -> None:
+    manifest_path, manifest = read_manifest(args.root)
+    tool = source_context_tool()
+    if not tool.is_file():
+        raise SystemExit(f"Initial setup source-context manager not found: {tool}")
+    command = [sys.executable, str(tool), "export", "--root", args.root]
+    if args.file:
+        command.extend(["--file", args.file])
+    result = subprocess.run(command, text=True, capture_output=True, check=False)
+    if result.returncode:
+        raise SystemExit(result.stderr.strip() or result.stdout.strip() or "Unable to export project communications record")
+    try:
+        exported = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Invalid source-context export: {exc}") from exc
+    imported_sources = exported.get("sources")
+    if not isinstance(imported_sources, list):
+        raise SystemExit("Source-context export did not contain a sources array")
+    sources = manifest.setdefault("sources", [])
+    existing = {source.get("id"): index for index, source in enumerate(sources) if isinstance(source, dict)}
+    for source in imported_sources:
+        if not isinstance(source, dict) or not source.get("id"):
+            raise SystemExit("Source-context export contained an invalid source")
+        source_id = source["id"]
+        if source_id in existing:
+            sources[existing[source_id]] = source
+        else:
+            existing[source_id] = len(sources)
+            sources.append(source)
+    timestamp = now_iso()
+    workspace = Path(args.root).expanduser().resolve()
+    exported_path = Path(str(exported.get("path", ""))).expanduser().resolve()
+    try:
+        recorded_path = str(exported_path.relative_to(workspace))
+    except ValueError:
+        recorded_path = str(exported_path)
+    manifest["source_context"] = {
+        "path": recorded_path,
+        "last_imported_at": timestamp,
+        "source_count": len(imported_sources),
+    }
+    manifest["updated_at"] = timestamp
+    manifest["project"]["updated_at"] = timestamp
+    errors = validate_manifest(manifest, allow_incomplete=args.allow_incomplete)
+    if errors:
+        raise SystemExit("Imported source context produced an invalid manifest: " + "; ".join(errors))
+    write_json(manifest_path, manifest)
+    _, _, brief_path = paths(args.root)
+    atomic_write(brief_path, render_brief(manifest))
+    print(f"Imported {len(imported_sources)} shared source references into {manifest_path}")
+
+
 def command_validate(args: argparse.Namespace) -> None:
     manifest_path, manifest = read_manifest(args.root)
     errors = validate_manifest(manifest, allow_incomplete=args.allow_incomplete)
@@ -540,6 +627,12 @@ def build_parser() -> argparse.ArgumentParser:
     discovery_parser.add_argument("--estimated-tokens", type=int)
     discovery_parser.add_argument("--cap", action="append", help="Override a system cap using SYSTEM=COUNT")
     discovery_parser.set_defaults(func=command_record_discovery)
+
+    import_parser = subparsers.add_parser("import-source-context", help="Import the setup-generated project communications record")
+    import_parser.add_argument("--root", default=".")
+    import_parser.add_argument("--file")
+    import_parser.add_argument("--allow-incomplete", action="store_true")
+    import_parser.set_defaults(func=command_import_source_context)
 
     validate_parser = subparsers.add_parser("validate", help="Validate the manifest")
     validate_parser.add_argument("--root", default=".")
