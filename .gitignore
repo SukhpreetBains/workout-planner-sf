@@ -1,0 +1,8 @@
+# Machine-local project context assembled from authorized sources.
+.codex/project-context/
+
+# Machine-local skill eval fixtures and outputs.
+local-evals/
+
+# Downloaded meeting transcripts may contain project-specific content.
+Call Transcripts/

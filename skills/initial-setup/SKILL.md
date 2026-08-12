@@ -11,7 +11,8 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 
 - Run `scripts/bootstrap-environment.py --install-missing` to check the local baseline and install supported missing dependencies on both macOS and Windows.
 - Run `scripts/prepare-opportunity-folder.py` after the business user chooses whether they are starting a new project or joining an existing project.
-- Treat both scripts as safe local helpers. Explain what they do before running them.
+- Use `scripts/manage-source-context.py` to initialize, validate, or update the project communications record. Read [the source-context contract](references/source-context.md) before its first write.
+- Treat the bundled scripts as safe local helpers. Explain what they do before running them.
 
 ## Follow this workflow
 
@@ -22,7 +23,7 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 5. Confirm SharePoint Edit access and local write readiness for the selected path before creating folders or relying on the path for future files.
 6. Confirm whether the client uses the default messaging platforms—Slack and Microsoft Teams—and use their matching reference workflows to locate relevant channels.
 7. Confirm the relevant messaging channels with the business user.
-8. With the business user's confirmation, create or update the Opportunity folder's project communications record with the connected sources, their candidate locations, and any connector limitations for a later discovery task.
+8. With the business user's confirmation, create or update the Opportunity folder's project communications record with the confirmed SharePoint and messaging locations and any connector limitations for a later discovery task.
 
 ## Confirm the local toolchain
 
@@ -107,6 +108,7 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 - When the SharePoint site is ambiguous, stop and ask the user to choose the correct hostname or site path.
 - Do not claim to have inspected SharePoint permissions: the current connector does not expose a reliable permission-check action, and connector sign-in is separate from SharePoint Edit access.
 - Do not create folders through the SharePoint connector in this skill. Use OneDrive synchronization for the local-to-SharePoint handoff.
+- After the user confirms the Opportunity folder, retain its canonical SharePoint URL and all exposed identifiers—hostname, site path, drive ID/name, and folder path—in the project communications record. Omit identifiers the runtime did not expose.
 
 ## OneDrive prerequisite
 
@@ -142,14 +144,14 @@ Use this skill to stand up a repeatable discovery workspace with Codex as the pr
 
 ## Maintain the project communications record
 
-- Treat `<Opportunity folder>/Agent Inbox/source-context.yaml` as the implementation file for a project-owned, living project communications record of the relevant client messaging sources. Do not place this file in the reusable skill folder or treat it as a cross-project registry.
+- Treat `<Opportunity folder>/Agent Inbox/source-context.yaml` as the implementation file for a project-owned, living project communications record of confirmed SharePoint, messaging, and other project source locations. Do not place this file in the reusable skill folder or treat it as a cross-project registry.
 - In user-facing language, call this the **project communications record**. Do not call it a config file, YAML file, metadata, or a source-context record; do not show its file path, IDs, or schema unless the user specifically asks for technical detail.
 - After the business user confirms the selected Opportunity folder and relevant sources, ask for confirmation in plain language: "Would you like me to save these confirmed messaging locations in the project communications record so they are easy to find next time?" Do not create or update it when the user declines or when the Opportunity folder is not locally writable.
-- On the first confirmed write, create a concise YAML record with the account and opportunity names, a `last_verified` date, each platform's connection state, and confirmed locations only. Use the platform's reference workflow to identify the safe metadata to record. Do not record message text, files, threads, credentials, or OAuth data.
+- On the first confirmed write, initialize the record with `scripts/manage-source-context.py init`, then add the confirmed SharePoint and messaging locations with `upsert-source`. Use the platform's reference workflow and [source-context contract](references/source-context.md) to identify safe metadata. Do not record message text, files, threads, credentials, or OAuth data.
 - On each later use of this skill for the same Opportunity folder, read the existing record before locating channels. Reconcile it against the current metadata probes: add newly confirmed relevant channels, refresh changed metadata and `last_verified`, and mark unavailable previously confirmed channels as `scope_not_verified` rather than deleting them.
 - Keep candidates and excluded channels in the conversational setup summary, not in the living record. Add a channel only after the business user confirms that it is relevant to the project.
 - Do not claim this record updates automatically when a new channel is created. It is refreshed only when this skill or a later authorized source-inventory workflow runs and the user approves the update.
-- Use this shape, omitting unavailable optional IDs or descriptions:
+- The complete shape and SharePoint fields live in [the source-context contract](references/source-context.md). A messaging entry retains Gada's original shape, omitting unavailable optional IDs or descriptions:
 
   ```yaml
   account: <account name>
