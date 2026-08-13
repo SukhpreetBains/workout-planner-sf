@@ -7,7 +7,6 @@
 - Keep `.agents/skills`, `.claude/skills`, `.codex/skills`, `.cursor/skills`, and `.github/skills` as relative symlinks to `../skills`.
 - Keep skill instructions host-neutral.
 - Use minimal skill frontmatter containing only `name` and `description`.
-- Do not add a root `knowledge-hub/`; an Engagement folder is the project root.
 
 ## Current implementation state
 

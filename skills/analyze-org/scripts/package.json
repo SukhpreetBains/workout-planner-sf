@@ -1,0 +1,19 @@
+{
+  "name": "analyze-org-dependency-graph",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Deterministic dependency-graph + feature-cluster generator for the analyze-org skill. Replaces LLM-driven feature inference (Bootstrap Step 3).",
+  "bin": {
+    "build-dependency-graph": "./build-dependency-graph.mjs"
+  },
+  "scripts": {
+    "start": "node build-dependency-graph.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.10.1"
+  }
+}
