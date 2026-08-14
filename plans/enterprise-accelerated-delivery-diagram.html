@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enterprise Accelerated Delivery — Repo Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ================= THEME — Blueprint (light-first) ================= */
+  :root {
+    --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', Consolas, monospace;
+
+    --bg: #eef3fb;
+    --grid: rgba(10, 60, 150, 0.07);
+    --grid-major: rgba(10, 60, 150, 0.12);
+    --surface: #ffffff;
+    --surface2: #e9f0fb;
+    --surface-elevated: #f6f9ff;
+    --border: rgba(9, 51, 130, 0.18);
+    --border-bright: rgba(9, 51, 130, 0.38);
+    --text: #08234f;
+    --text-dim: #40598f;
+    --text-faint: #7286ab;
+
+    --accent: #0c62fb;      --accent-dim: rgba(12, 98, 251, 0.12);
+    --setup: #0c62fb;       --setup-dim: rgba(12, 98, 251, 0.12);
+    --synth: #7b53ff;       --synth-dim: rgba(123, 83, 255, 0.14);
+    --analyze: #009e8e;     --analyze-dim: rgba(0, 158, 142, 0.14);
+    --backlog: #d97706;     --backlog-dim: rgba(217, 119, 6, 0.14);
+    --deliver: #d6296b;     --deliver-dim: rgba(214, 41, 107, 0.13);
+    --sys: #5b6b8c;         --sys-dim: rgba(91, 107, 140, 0.14);
+    --ok: #0e8f5e;          --ok-dim: rgba(14, 143, 94, 0.14);
+    --warn: #d97706;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #071022;
+      --grid: rgba(120, 170, 255, 0.06);
+      --grid-major: rgba(120, 170, 255, 0.11);
+      --surface: #0e1c38;
+      --surface2: #13233f;
+      --surface-elevated: #16294a;
+      --border: rgba(150, 185, 255, 0.20);
+      --border-bright: rgba(170, 200, 255, 0.40);
+      --text: #e9f1ff;
+      --text-dim: #a9c0ea;
+      --text-faint: #7890b8;
+      --accent: #5b9dff;      --accent-dim: rgba(91, 157, 255, 0.20);
+      --setup: #5b9dff;       --setup-dim: rgba(91, 157, 255, 0.20);
+      --synth: #a488ff;       --synth-dim: rgba(164, 136, 255, 0.22);
+      --analyze: #35cbb9;     --analyze-dim: rgba(53, 203, 185, 0.20);
+      --backlog: #f5a94e;     --backlog-dim: rgba(245, 169, 78, 0.20);
+      --deliver: #ff6ba0;     --deliver-dim: rgba(255, 107, 160, 0.20);
+      --sys: #93a4c9;         --sys-dim: rgba(147, 164, 201, 0.20);
+      --ok: #45c98a;          --ok-dim: rgba(69, 201, 138, 0.20);
+      --warn: #f5a94e;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { min-width: 0; }
+
+  body {
+    background-color: var(--bg);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px);
+    background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.55;
+    overflow-wrap: break-word;
+    min-height: 100vh;
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  /* ================= HEADER / TABS ================= */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner { max-width: 1280px; margin: 0 auto; padding: 14px 32px 0; }
+  .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .brand .mark {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent);
+    border: 1px solid var(--border-bright); border-radius: 4px; padding: 3px 8px;
+  }
+  .brand h1 { font-size: 19px; font-weight: 700; letter-spacing: -0.4px; }
+  .brand .sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+  .tabs { display: flex; gap: 2px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    appearance: none; border: none; background: transparent; cursor: pointer;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+    color: var(--text-dim); padding: 11px 18px; border-radius: 8px 8px 0 0;
+    border: 1px solid transparent; border-bottom: none; white-space: nowrap;
+    display: flex; align-items: center; gap: 9px; transition: color .15s, background .15s;
+  }
+  .tab .idx { font-size: 10px; opacity: .6; }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    color: var(--text); background: var(--surface);
+    border-color: var(--border); position: relative;
+  }
+  .tab.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent);
+  }
+
+  .panel { display: none; max-width: 1280px; margin: 0 auto; padding: 34px 32px 90px; animation: fadeIn .3s ease; }
+  .panel.active { display: block; }
+
+  /* ================= SHARED ================= */
+  .lead { max-width: 760px; margin-bottom: 30px; }
+  .lead h2 { font-size: 30px; font-weight: 700; letter-spacing: -0.8px; margin-bottom: 10px; text-wrap: balance; }
+  .lead p { color: var(--text-dim); font-size: 15px; }
+  .kicker {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+  }
+  h3.sec { font-size: 13px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-dim); margin: 40px 0 16px;
+    padding-bottom: 8px; border-bottom: 1px dashed var(--border); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px 22px; animation: fadeUp .4s ease-out both; animation-delay: calc(var(--i,0) * .05s);
+  }
+  .card--hero { background: var(--surface-elevated); box-shadow: 0 4px 22px rgba(8,35,79,.07);
+    border-color: color-mix(in srgb, var(--border) 45%, var(--accent) 55%); }
+  .card--recessed { background: var(--surface2); box-shadow: inset 0 1px 3px rgba(8,35,79,.05); }
+  .card .clabel {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--text-dim);
+  }
+  .clabel .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .card h4 { font-size: 15px; margin-bottom: 6px; }
+  .card p { font-size: 13.5px; color: var(--text-dim); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+  @media (max-width: 860px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  code, .mono { font-family: var(--font-mono); }
+  p code, li code, td code {
+    font-family: var(--font-mono); font-size: .86em; background: var(--accent-dim);
+    color: var(--accent); padding: 1px 5px; border-radius: 4px; white-space: nowrap;
+  }
+
+  /* KPI row */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 8px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .kpi .n { font-size: 30px; font-weight: 700; letter-spacing: -1px; font-family: var(--font-mono); }
+  .kpi .l { font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  /* Pipeline */
+  .pipeline { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 6px 2px 14px; }
+  .pstep { min-width: 180px; flex: 1; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border);
+    border-top: 3px solid var(--accent); border-radius: 10px; padding: 16px; }
+  .pstep .snum { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-faint); }
+  .pstep .scmd { font-family: var(--font-mono); font-size: 14px; font-weight: 700; margin: 4px 0 6px; }
+  .pstep .sdesc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+  .pstep .sout { margin-top: 10px; font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); border-top: 1px dashed var(--border); padding-top: 8px; }
+  .parrow { display: flex; align-items: center; padding: 0 6px; color: var(--border-bright); font-size: 20px; flex-shrink: 0; }
+  .pstep.s-setup { border-top-color: var(--setup); } .pstep.s-setup .scmd { color: var(--setup); }
+  .pstep.s-synth { border-top-color: var(--synth); } .pstep.s-synth .scmd { color: var(--synth); }
+  .pstep.s-analyze { border-top-color: var(--analyze); } .pstep.s-analyze .scmd { color: var(--analyze); }
+  .pstep.s-backlog { border-top-color: var(--backlog); } .pstep.s-backlog .scmd { color: var(--backlog); }
+  .pstep.s-deliver { border-top-color: var(--deliver); } .pstep.s-deliver .scmd { color: var(--deliver); }
+
+  /* Lists */
+  ul.ticks { list-style: none; }
+  ul.ticks li { position: relative; padding-left: 20px; margin-bottom: 8px; font-size: 13.5px; color: var(--text-dim); }
+  ul.ticks li::before { content: '▸'; position: absolute; left: 2px; color: var(--accent); font-weight: 700; }
+  ul.ticks li strong { color: var(--text); font-weight: 600; }
+
+  /* Table */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data thead th {
+    position: sticky; top: 0; background: var(--surface2); font-family: var(--font-mono);
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim);
+    text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  table.data td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+  table.data tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface2) 45%, transparent); }
+  table.data tbody tr:hover { background: var(--accent-dim); }
+  table.data td strong { color: var(--text); font-weight: 600; }
+  table.data td small { color: var(--text-faint); font-size: 11.5px; }
+  .pill { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .5px;
+    padding: 2px 8px; border-radius: 20px; text-transform: uppercase; white-space: nowrap; }
+  .pill.workflow { background: var(--accent-dim); color: var(--accent); }
+  .pill.tool { background: var(--analyze-dim); color: var(--analyze); }
+  .pill.meta { background: var(--deliver-dim); color: var(--deliver); }
+
+  /* Callout */
+  .callout { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; font-size: 13.5px; color: var(--text-dim); margin: 18px 0; }
+  .callout strong { color: var(--text); }
+
+  /* Mermaid */
+  .mermaid-wrap { position: relative; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 26px 20px; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+  .mermaid-wrap::-webkit-scrollbar { width: 7px; height: 7px; }
+  .mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .mermaid-wrap .mermaid { transition: transform .2s ease; transform-origin: top center; display: flex; justify-content: center; }
+  .mermaid-wrap.is-zoomed { cursor: grab; }
+  .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
+  .zoom-controls { position: absolute; top: 10px; right: 10px; display: flex; gap: 2px; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 2px; }
+  .zoom-controls button { width: 28px; height: 28px; border: none; background: transparent; color: var(--text-dim);
+    font-family: var(--font-mono); font-size: 14px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+  .zoom-controls button:hover { background: var(--surface2); color: var(--text); }
+  .mermaid .nodeLabel { color: var(--text) !important; font-family: var(--font-body) !important; }
+  .mermaid .edgeLabel { color: var(--text-dim) !important; background-color: var(--bg) !important; font-family: var(--font-mono) !important; font-size: 12px !important; }
+  .mermaid .edgeLabel rect { fill: var(--bg) !important; }
+  .mermaid .cluster rect { fill: var(--surface2) !important; stroke: var(--border) !important; }
+  @media (prefers-reduced-motion: reduce) { .mermaid-wrap .mermaid { transition: none; } }
+
+  /* ================= EXPLORER ================= */
+  .explorer { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 940px) { .explorer { grid-template-columns: 1fr; } }
+  .tree-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px;
+    max-height: 74vh; overflow: auto; position: sticky; top: 118px; scrollbar-width: thin; }
+  @media (max-width: 940px) { .tree-pane { position: static; max-height: 52vh; } }
+  .tree-search { width: 100%; font-family: var(--font-mono); font-size: 12px; color: var(--text);
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; margin-bottom: 8px; outline: none; }
+  .tree-search:focus { border-color: var(--accent); }
+  .tree ul { list-style: none; margin: 0; padding-left: 15px; }
+  .tree > ul { padding-left: 2px; }
+  .tnode { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 12px;
+    padding: 3px 7px; border-radius: 6px; cursor: pointer; color: var(--text-dim); user-select: none; line-height: 1.4; }
+  .tnode:hover { background: var(--surface2); color: var(--text); }
+  .tnode.selected { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+  .tnode .tw { width: 12px; flex-shrink: 0; text-align: center; color: var(--text-faint); font-size: 9px; }
+  .tnode .ic { flex-shrink: 0; opacity: .8; }
+  .tnode .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tnode.folder .nm { color: var(--text); font-weight: 600; }
+  .tnode.hidden { display: none; }
+  .tchildren.collapsed { display: none; }
+
+  .detail-pane { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px 26px; min-height: 320px; }
+  .detail-empty { color: var(--text-faint); font-family: var(--font-mono); font-size: 13px; text-align: center; padding: 60px 20px; }
+  .detail-empty .big { font-size: 40px; margin-bottom: 14px; opacity: .5; }
+  .dpath { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-faint); word-break: break-all; margin-bottom: 6px; }
+  .dname { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .dbadges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .dbadge { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 20px; background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+  .dbadge.kind { background: var(--accent-dim); color: var(--accent); border-color: transparent; }
+  .dsum { font-size: 14.5px; color: var(--text); line-height: 1.6; margin-bottom: 20px; }
+  .dmeta { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .drow { border-top: 1px dashed var(--border); padding-top: 14px; }
+  .drow .dh { font-family: var(--font-mono); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text-faint); margin-bottom: 7px; display: flex; align-items: center; gap: 7px; }
+  .drow .dh .dhi { color: var(--accent); }
+  .drow p, .drow li { font-size: 13px; color: var(--text-dim); }
+  .drow ul { list-style: none; }
+  .drow ul li { position: relative; padding-left: 16px; margin-bottom: 5px; }
+  .drow ul li::before { content: '›'; position: absolute; left: 2px; color: var(--accent); font-weight: 700; }
+  .rel-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .rel-chip { font-family: var(--font-mono); font-size: 11.5px; color: var(--accent); background: var(--accent-dim);
+    border: none; border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+  .rel-chip:hover { background: var(--accent); color: #fff; }
+  .flow-tag { display: inline-block; font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    padding: 2px 8px; border-radius: 5px; text-transform: uppercase; }
+  .ft-setup { background: var(--setup-dim); color: var(--setup); }
+  .ft-synth { background: var(--synth-dim); color: var(--synth); }
+  .ft-analyze { background: var(--analyze-dim); color: var(--analyze); }
+  .ft-backlog { background: var(--backlog-dim); color: var(--backlog); }
+  .ft-deliver { background: var(--deliver-dim); color: var(--deliver); }
+  .ft-sys { background: var(--sys-dim); color: var(--sys); }
+
+  .footer-note { max-width: 1280px; margin: 0 auto; padding: 0 32px 40px; color: var(--text-faint);
+    font-family: var(--font-mono); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="mark">Repo Blueprint</span>
+      <h1>Enterprise Accelerated Delivery</h1>
+      <span class="sub">// discovery → prioritized backlog → handoff</span>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="overview" role="tab"><span class="idx">01</span> Overview</button>
+      <button class="tab" data-tab="deepdive" role="tab"><span class="idx">02</span> Deep Dive</button>
+      <button class="tab" data-tab="explorer" role="tab"><span class="idx">03</span> Connections &amp; Files</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ TAB 1: OVERVIEW ============================ -->
+<section class="panel active" id="overview">
+  <div class="lead">
+    <div class="kicker">What this repo is</div>
+    <h2>An AI-assisted discovery engine that turns raw client materials into a defensible backlog.</h2>
+    <p>This is a Codex-first <strong>knowledge hub + skill library</strong>. You drop discovery documents in, run guided agent workflows, and out comes a traceable, prioritized set of user stories the solutions team can build against — with narrative and evidence backing every item.</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi card" style="--i:0"><div class="n">5</div><div class="l">Pipeline stages</div></div>
+    <div class="kpi card" style="--i:1"><div class="n">19</div><div class="l">Agent skills</div></div>
+    <div class="kpi card" style="--i:2"><div class="n">4</div><div class="l">Excel registers</div></div>
+    <div class="kpi card" style="--i:3"><div class="n">4</div><div class="l">Phase playbooks</div></div>
+    <div class="kpi card" style="--i:4"><div class="n">~50</div><div class="l">Python engine scripts</div></div>
+  </div>
+
+  <h3 class="sec">The 5-stage pipeline</h3>
+  <p style="color:var(--text-dim); font-size:14px; margin-bottom:14px; max-width:760px;">Each stage produces the input for the next. You talk to the agent in plain English; it selects the matching skill and runs it against the knowledge hub.</p>
+  <div class="pipeline">
+    <div class="pstep s-setup"><div class="snum">STAGE 1 · once per project</div><div class="scmd">/setup</div><div class="sdesc">Onboard the repo, organize the inbox, and extract canonical entities from every discovery doc into the 4 Excel registers.</div><div class="sout">→ 100–200+ records</div></div>
+    <div class="parrow">→</div>
+    <div class="pstep s-synth"><div class="snum">STAGE 2</div><div class="scmd">/synthesize</div><div class="sdesc">Turn structured register data into a readable current-state narrative organized by theme, function, or system.</div><div class="sout">→ 02 - Current State/</div></div>
+    <div class="parrow">→</div>
+    <div class="pstep s-analyze"><div class="snum">STAGE 3</div><div class="scmd">/analyze</div><div class="sdesc">Answer structured questions — themes, gaps, priority bands, traceability — as a durable AnalysisCore + views.</div><div class="sout">→ AnalysisCore JSON</div></div>
+    <div class="parrow">→</div>
+    <div class="pstep s-backlog"><div class="snum">STAGE 4</div><div class="scmd">/manage-backlog</div><div class="sdesc">Seed the backlog workbook with epics → features → user stories, traced back to source pain points.</div><div class="sout">→ Backlog Tracker.xlsx</div></div>
+    <div class="parrow">→</div>
+    <div class="pstep s-deliver"><div class="snum">STAGE 5</div><div class="scmd">/compose-deliverable</div><div class="sdesc">Package client-facing deliverables (decks, workbooks, briefs) from approved templates.</div><div class="sout">→ .pptx / .xlsx / .md</div></div>
+  </div>
+  <div class="callout"><strong>Between capture and the pipeline:</strong> new knowledge flows through <code>/review</code>. Processing queues <em>proposals</em>; you accept / reject / edit them; <code>/review --apply</code> writes accepted items to the registers. Nothing lands in the authoritative registers without review.</div>
+
+  <h3 class="sec">The mental model</h3>
+  <div class="grid3">
+    <div class="card" style="--i:0"><div class="clabel"><span class="dot"></span>Knowledge Hub</div><h4>Your project's content</h4><p>Everything client-facing and durable: inbox, sessions, registers, current/future state, backlog, reference materials. This is what you read and share.</p></div>
+    <div class="card" style="--i:1"><div class="clabel"><span class="dot" style="background:var(--analyze)"></span>The .agents system</div><h4>The operating machine</h4><p>Skills, the Python engine, references, overlays, and prompts. It reads and writes the hub but stays out of the way. Rarely edited by hand.</p></div>
+    <div class="card" style="--i:2"><div class="clabel"><span class="dot" style="background:var(--deliver)"></span>Registers as truth</div><h4>4 Excel workbooks</h4><p>Current State, Future State, RAID+, and Stakeholders are the single source of truth. Everything downstream derives from them.</p></div>
+  </div>
+
+  <h3 class="sec">Four delivery phases</h3>
+  <div class="grid4">
+    <div class="card" style="--i:0"><div class="clabel"><span class="dot" style="background:var(--setup)"></span>Prepare · Wk 0–1</div><p><code>playbooks/01-prepare.md</code> — stand up the repo, load pre-discovery materials, plan sessions.</p></div>
+    <div class="card" style="--i:1"><div class="clabel"><span class="dot" style="background:var(--synth)"></span>Learn · Wk 2</div><p><code>playbooks/02-learn.md</code> — run workshops, process sessions, build current state.</p></div>
+    <div class="card" style="--i:2"><div class="clabel"><span class="dot" style="background:var(--analyze)"></span>Ideate · Wk 3–4</div><p><code>playbooks/03-ideate.md</code> — analyze, shape future state, explore solution directions.</p></div>
+    <div class="card" style="--i:3"><div class="clabel"><span class="dot" style="background:var(--backlog)"></span>Plan · Wk 5–6</div><p><code>playbooks/04-plan.md</code> — build the backlog, define MVP, package the handoff.</p></div>
+  </div>
+
+  <h3 class="sec">Where to start reading</h3>
+  <ul class="ticks">
+    <li><strong>Consultants / BAs:</strong> <code>START-HERE.md</code> — plain-English daily-use prompts, no commands to memorize.</li>
+    <li><strong>The big picture:</strong> <code>WORKFLOW.md</code> — the canonical 5-stage pipeline with trigger phrases.</li>
+    <li><strong>First-time setup:</strong> <code>README.md</code> — cloning, prerequisites, environment.</li>
+    <li><strong>Agents / engineers:</strong> <code>AGENTS.md</code> — universal operating rules and pointers to deeper references.</li>
+  </ul>
+</section>
+
+<!-- ============================ TAB 2: DEEP DIVE ============================ -->
+<section class="panel" id="deepdive">
+  <div class="lead">
+    <div class="kicker">How the machine actually works</div>
+    <h2>Under the hood: registers, the review loop, skills, overlays, and the engine.</h2>
+    <p>The repo separates <em>durable truth</em> (the 4 registers), <em>derived state</em> (mirrors, search index, graph), and <em>orchestration</em> (skills + the Python engine). Understanding those three layers explains almost everything.</p>
+  </div>
+
+  <h3 class="sec">The evidence → register → derived-state flow</h3>
+  <div class="mermaid-wrap">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this,1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this,0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+flowchart TD
+  IN["Discovery docs&lt;br/&gt;00 - Inbox"] --> PROC["process-inbox / process-session&lt;br/&gt;evidence-first observation"]
+  PROC --> PROP["Proposals queued&lt;br/&gt;99 - System/evidence"]
+  PROP --> REV{"/review"}
+  REV -->|"accept / edit"| APPLY["/review --apply&lt;br/&gt;write_registers.py"]
+  REV -->|"reject"| DROP["discarded"]
+  APPLY --> REG[("4 Excel Registers&lt;br/&gt;Current · Future · RAID+ · Stakeholders")]
+  REG --> RDS["refresh_derived_state.py"]
+  RDS --> MIR["register-mirrors"]
+  RDS --> IDX["search index"]
+  RDS --> GR["relationship graph"]
+  REG --> SYN["/synthesize"] --> CS["02 - Current State"]
+  REG --> ANA["/analyze"] --> CORE["AnalysisCore JSON"]
+  CORE --> BL["/manage-backlog"]
+  REG --> BL
+  BL --> BLX[("Backlog Tracker.xlsx")]
+  BLX --> DEL["/compose-deliverable"]
+  CORE --> DEL
+  CS --> DEL
+  DEL --> OUT["Client deliverables&lt;br/&gt;.pptx · .xlsx · .md"]
+
+  classDef reg fill:#0c62fb,stroke:#002faf,color:#fff;
+  classDef out fill:#009e8e,stroke:#036,color:#fff;
+  class REG,BLX reg;
+  class OUT out;
+    </pre>
+  </div>
+
+  <h3 class="sec">The four authoritative registers</h3>
+  <div class="table-wrap"><div class="table-scroll">
+    <table class="data">
+      <thead><tr><th>Register</th><th>Holds</th><th>Written by</th><th>Read by</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Current_State.xlsx</strong></td><td>Pain points, systems, requirements, evidence</td><td><code>/setup</code>, <code>/review --apply</code></td><td>synthesize, analyze, manage-backlog</td></tr>
+        <tr><td><strong>Future_State.xlsx</strong></td><td>Objectives, focus areas, solution directions</td><td><code>/setup</code>, <code>/review --apply</code></td><td>analyze, manage-backlog, compose</td></tr>
+        <tr><td><strong>RAID_Plus.xlsx</strong></td><td>Risks, assumptions, issues, decisions, constraints, tensions, open questions</td><td><code>/setup</code>, <code>/review --apply</code></td><td>hub-audit, conflict-check, compose</td></tr>
+        <tr><td><strong>Stakeholders.xlsx</strong></td><td>Stakeholders + relationships</td><td><code>/setup</code>, <code>/review --apply</code></td><td>prep-workshop, synthesize</td></tr>
+      </tbody>
+    </table>
+  </div></div>
+  <div class="callout">Register writes are <strong>governed</strong>: they only happen through <code>write_registers.py</code> under the write contract (<code>.agents/references/register-write-contract.md</code>). Direct hand-edits are discouraged because they bypass identity resolution, enum normalization, and the derived-state refresh.</div>
+
+  <h3 class="sec">Skills catalog</h3>
+  <p style="color:var(--text-dim); font-size:14px; margin-bottom:14px; max-width:760px;"><span class="pill workflow">workflow</span> orchestrates a multi-step job · <span class="pill tool">tool</span> a focused file operation · <span class="pill meta">meta</span> onboards the whole project.</p>
+  <div class="table-wrap"><div class="table-scroll">
+    <table class="data">
+      <thead><tr><th>Skill</th><th>Kind</th><th>When you'd use it</th></tr></thead>
+      <tbody>
+        <tr><td><strong>setup</strong></td><td><span class="pill meta">meta</span></td><td>One-time onboarding + seed registers from all discovery materials.</td></tr>
+        <tr><td><strong>process-inbox</strong></td><td><span class="pill workflow">workflow</span></td><td>Route + extract everything dropped in the inbox; queue proposals.</td></tr>
+        <tr><td><strong>process-session</strong></td><td><span class="pill workflow">workflow</span></td><td>Turn one transcript into a session note + queued proposals.</td></tr>
+        <tr><td><strong>review</strong></td><td><span class="pill workflow">workflow</span></td><td>Accept/reject/edit proposals; apply to registers; tune policy.</td></tr>
+        <tr><td><strong>synthesize</strong></td><td><span class="pill workflow">workflow</span></td><td>Narrative current-state summaries from register evidence.</td></tr>
+        <tr><td><strong>analyze</strong></td><td><span class="pill workflow">workflow</span></td><td>Durable AnalysisCore + derivative views (themes, gaps, scorecards).</td></tr>
+        <tr><td><strong>manage-backlog</strong></td><td><span class="pill workflow">workflow</span></td><td>Initialize / extend / restructure the backlog workbook.</td></tr>
+        <tr><td><strong>compose-deliverable</strong></td><td><span class="pill workflow">workflow</span></td><td>Generate client deliverables from approved templates.</td></tr>
+        <tr><td><strong>prep-workshop</strong></td><td><span class="pill workflow">workflow</span></td><td>Briefing materials + targeted questions for an upcoming session.</td></tr>
+        <tr><td><strong>hub-audit</strong></td><td><span class="pill workflow">workflow</span></td><td>Completeness, phase-gate readiness, deliverable QA checks.</td></tr>
+        <tr><td><strong>conflict-check</strong></td><td><span class="pill workflow">workflow</span></td><td>Find + validate contradictions across sources.</td></tr>
+        <tr><td><strong>diagram-process</strong></td><td><span class="pill workflow">workflow</span></td><td>Mermaid flow / sequence / state diagrams from workflows.</td></tr>
+        <tr><td><strong>generate-template</strong></td><td><span class="pill workflow">workflow</span></td><td>Draft a CLM contract template (CLM specialty).</td></tr>
+        <tr><td><strong>salesforce-demo-data</strong></td><td><span class="pill workflow">workflow</span></td><td>Seed believable Salesforce demo data for a sandbox/demo.</td></tr>
+        <tr><td><strong>author-overlay-package</strong></td><td><span class="pill workflow">workflow</span></td><td>Add/update a reusable capability or industry overlay.</td></tr>
+        <tr><td><strong>excel / docx / pdf / pptx</strong></td><td><span class="pill tool">tool</span></td><td>Read/convert/write those file types with format fidelity.</td></tr>
+      </tbody>
+    </table>
+  </div></div>
+
+  <h3 class="sec">Anatomy of a skill</h3>
+  <div class="grid3">
+    <div class="card" style="--i:0"><div class="clabel"><span class="dot"></span>SKILL.md</div><p>The playbook the agent reads: when to use it, the step-by-step procedure, and which references to load. Registered in <code>skills-catalog.yaml</code>.</p></div>
+    <div class="card" style="--i:1"><div class="clabel"><span class="dot" style="background:var(--synth)"></span>references/</div><p>Deep, load-on-demand docs — modes, patterns, schemas, sub-agent prompts. Kept out of the main file to stay context-light.</p></div>
+    <div class="card" style="--i:2"><div class="clabel"><span class="dot" style="background:var(--analyze)"></span>scripts/</div><p>Bundled Python helpers (excel, docx, pdf, pptx, analyze). Runtime copies live under <code>.agents/runtime/skills/</code>.</p></div>
+  </div>
+
+  <h3 class="sec">Overlays — how specialties plug in</h3>
+  <ul class="ticks">
+    <li><strong>Capability overlays</strong> (<code>salesforce</code>, <code>clm</code>): activated during setup; add backlog profiles, scaffolding actions, AGENTS.md blocks, and sometimes extra skills (e.g. <code>hubbl-query</code>).</li>
+    <li><strong>Industry overlays</strong> (<code>manufacturing</code>): layer domain guidance and follow-up fields on top of a capability.</li>
+    <li>Registered in <code>.agents/overlays/registry.yaml</code>; the active choice is recorded in the project state and backlog profile.</li>
+  </ul>
+
+  <h3 class="sec">The Python engine (.agents/scripts)</h3>
+  <p style="color:var(--text-dim); font-size:14px; margin-bottom:14px; max-width:760px;">Skills orchestrate; these scripts do the deterministic heavy lifting. Everything runs through the <code>py</code> / <code>py.cmd</code> launcher so the runtime is consistent.</p>
+  <div class="grid2">
+    <div class="card" style="--i:0"><div class="clabel"><span class="dot"></span>Intake &amp; writes</div><ul class="ticks" style="margin-top:4px">
+      <li><code>intake_engine.py</code> — evidence-first observation extraction</li>
+      <li><code>intake_review.py</code> — proposal review/apply mechanics</li>
+      <li><code>write_registers.py</code> — governed register writes</li>
+      <li><code>identity_resolution.py</code> — dedupe/merge entities</li>
+    </ul></div>
+    <div class="card" style="--i:1"><div class="clabel"><span class="dot" style="background:var(--analyze)"></span>Derived state &amp; query</div><ul class="ticks" style="margin-top:4px">
+      <li><code>refresh_derived_state.py</code> — rebuild all derived artifacts</li>
+      <li><code>build_graph.py</code> — relationship graph</li>
+      <li><code>refresh_search_index.py</code> — searchable index</li>
+      <li><code>query.py</code> — retrieval across the hub</li>
+    </ul></div>
+  </div>
+  <div class="callout">Open <strong>Tab 03</strong> to browse the full tree and click any file for its purpose, inputs/outputs, when it runs, and related files.</div>
+</section>
+
+<!-- ============================ TAB 3: CONNECTIONS & FILES ============================ -->
+<section class="panel" id="explorer">
+  <div class="lead">
+    <div class="kicker">How everything is connected</div>
+    <h2>Dependency map + a clickable file explorer.</h2>
+    <p>The map shows which skills read and write which folders. Below it, browse the full repo tree — click any file to see what it does, its inputs/outputs, when it runs, and related files.</p>
+  </div>
+
+  <div class="mermaid-wrap" style="margin-bottom:34px">
+    <div class="zoom-controls">
+      <button onclick="zoomDiagram(this,1.2)" title="Zoom in">+</button>
+      <button onclick="zoomDiagram(this,0.8)" title="Zoom out">&minus;</button>
+      <button onclick="resetZoom(this)" title="Reset">&#8634;</button>
+    </div>
+    <pre class="mermaid">
+flowchart LR
+  subgraph HUB["knowledge-hub"]
+    INB["00 - Inbox"]
+    REG[("00 - Registers&lt;br/&gt;4 workbooks")]
+    SESS["01 - Sessions"]
+    CS["02 - Current State"]
+    FS["03 - Future State"]
+    BL[("04 - Backlog")]
+    SYS["99 - System&lt;br/&gt;state · evidence · graph"]
+  end
+  subgraph SK["Skills library"]
+    SU["setup"]
+    PI["process-inbox"]
+    RV["review"]
+    SY["synthesize"]
+    AN["analyze"]
+    MB["manage-backlog"]
+    CD["compose-deliverable"]
+  end
+
+  INB --> PI --> SYS
+  SU --> REG
+  RV --> REG
+  SESS --> PI
+  REG --> SY --> CS
+  REG --> AN --> SYS
+  REG --> MB --> BL
+  CS --> CD
+  BL --> CD
+  SYS --> AN
+  CD --> DEL["Deliverables"]
+
+  classDef reg fill:#0c62fb,stroke:#002faf,color:#fff;
+  class REG,BL reg;
+    </pre>
+  </div>
+
+  <div class="explorer">
+    <div class="tree-pane">
+      <input type="text" class="tree-search" id="treeSearch" placeholder="filter files…">
+      <div class="tree" id="tree"></div>
+    </div>
+    <div class="detail-pane" id="detail">
+      <div class="detail-empty">
+        <div class="big">◫</div>
+        Select a file from the tree to see what it does.
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="footer-note">Generated blueprint of the Enterprise Accelerated Delivery repository · full tree · click-through file summaries · light + dark aware.</div>
+
+<!-- ================= MERMAID ================= -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    look: 'classic',
+    securityLevel: 'loose',
+    themeVariables: {
+      primaryColor: isDark ? '#16294a' : '#ffffff',
+      primaryBorderColor: isDark ? '#5b9dff' : '#0c62fb',
+      primaryTextColor: isDark ? '#e9f1ff' : '#08234f',
+      secondaryColor: isDark ? '#13233f' : '#e9f0fb',
+      tertiaryColor: isDark ? '#13233f' : '#f6f9ff',
+      lineColor: isDark ? '#35cbb9' : '#40598f',
+      fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
+      fontSize: '15px'
+    }
+  });
+
+  // Render lazily: diagrams inside display:none tabs can't be measured (getBBox
+  // returns 0), which makes Mermaid throw a generic "Syntax error" bomb. Render
+  // each diagram only once its tab is actually visible.
+  window.__renderMermaid = function(root){
+    var scope = root || document;
+    var nodes = scope.querySelectorAll('.mermaid:not([data-processed])');
+    if(nodes.length) mermaid.run({ nodes: nodes });
+  };
+  // Render whatever tab is active on load (Overview has none, but be safe).
+  var activePanel = document.querySelector('.panel.active');
+  if(activePanel) window.__renderMermaid(activePanel);
+</script>
+
+<!-- ================= APP LOGIC ================= -->
+<script>
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    var panel = document.getElementById(btn.dataset.tab);
+    panel.classList.add('active');
+    if(window.__renderMermaid) window.__renderMermaid(panel);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+/* ---------- Mermaid zoom ---------- */
+function updateZoomState(wrap){
+  var t = wrap.querySelector('.mermaid');
+  var z = parseFloat(t.dataset.zoom || '1');
+  wrap.classList.toggle('is-zoomed', z > 1);
+}
+function zoomDiagram(btn, factor){
+  var wrap = btn.closest('.mermaid-wrap');
+  var t = wrap.querySelector('.mermaid');
+  var cur = parseFloat(t.dataset.zoom || '1');
+  var next = Math.min(Math.max(cur * factor, 0.3), 5);
+  t.dataset.zoom = next; t.style.transform = 'scale(' + next + ')'; updateZoomState(wrap);
+}
+function resetZoom(btn){
+  var wrap = btn.closest('.mermaid-wrap');
+  var t = wrap.querySelector('.mermaid');
+  t.dataset.zoom = '1'; t.style.transform = 'scale(1)'; updateZoomState(wrap);
+}
+window.zoomDiagram = zoomDiagram; window.resetZoom = resetZoom;
+document.querySelectorAll('.mermaid-wrap').forEach(function(wrap){
+  wrap.addEventListener('wheel', function(e){
+    if(!e.ctrlKey && !e.metaKey) return; e.preventDefault();
+    var t = wrap.querySelector('.mermaid');
+    var cur = parseFloat(t.dataset.zoom || '1');
+    var next = Math.min(Math.max(cur * (e.deltaY < 0 ? 1.1 : 0.9), 0.3), 5);
+    t.dataset.zoom = next; t.style.transform = 'scale(' + next + ')'; updateZoomState(wrap);
+  }, { passive: false });
+  var sx, sy, sl, st;
+  wrap.addEventListener('mousedown', function(e){
+    if(e.target.closest('.zoom-controls')) return;
+    var t = wrap.querySelector('.mermaid');
+    if(parseFloat(t.dataset.zoom || '1') <= 1) return;
+    wrap.classList.add('is-panning'); sx = e.clientX; sy = e.clientY; sl = wrap.scrollLeft; st = wrap.scrollTop;
+  });
+  window.addEventListener('mousemove', function(e){
+    if(!wrap.classList.contains('is-panning')) return;
+    wrap.scrollLeft = sl - (e.clientX - sx); wrap.scrollTop = st - (e.clientY - sy);
+  });
+  window.addEventListener('mouseup', function(){ wrap.classList.remove('is-panning'); });
+});
+</script>
+
+<!-- ================= FILE TREE DATA + RENDER ================= -->
+<script>
+/* Each file: { n:name, s:summary, k:kind, flow:stageTag, io:[in,out], when:string, rel:[names] }
+   Folders: { n, d:desc, c:[children] } */
+const TREE = {
+  n: "enterprise-accelerated-delivery", d:"Repo root", c: [
+    { n:"AGENTS.md", s:"Universal operating rules for any AI agent working in this repo. Deliberately minimal — points to deeper references (hub-operating-guide, project-state-authority) that are loaded only when relevant.", k:"Instruction", flow:"sys", when:"Read at the start of every agent session.", rel:["hub-operating-guide.md","project-state-authority.md","skills-catalog.yaml"] },
+    { n:"README.md", s:"Technical setup + architecture guide. Covers cloning, prerequisites, Python environment, and the system overview for first-time repo setup.", k:"Doc", flow:"sys", when:"First-time repo setup by delivery leads/engineers.", rel:["START-HERE.md","WORKFLOW.md","requirements.txt"] },
+    { n:"START-HERE.md", s:"Plain-English daily-use guide for consultants and BAs. Example prompts organized by intent (after a workshop, prepping a session, finding gaps, building the backlog).", k:"Doc", flow:"sys", when:"Daily use once setup is done.", rel:["WORKFLOW.md","playbooks/"] },
+    { n:"WORKFLOW.md", s:"The canonical end-to-end pipeline description: the 5 stages, what each does, trigger phrases, and outputs. The single best map of how a project flows.", k:"Doc", flow:"sys", when:"Anytime you need the big picture.", rel:["README.md","START-HERE.md","skills-catalog.yaml"] },
+    { n:"skills-catalog.yaml", s:"Registry of every workflow skill: id, description, kind (workflow/tool/meta), supported platforms, path to SKILL.md, and optional scripts_dir/specialty. The agent reads this to choose the right skill.", k:"Config", flow:"sys", io:["—","skill selection"], when:"On every skill-selection decision.", rel:["AGENTS.md",".agents/skills/"] },
+    { n:"requirements.txt", s:"Python dependencies for the engine scripts (openpyxl, python-docx, etc.).", k:"Config", flow:"sys", when:"Environment setup / py bootstrap.", rel:["setup-python",".agents/scripts/python_runtime.py"] },
+    { n:".gitignore", s:"Standard ignore rules (Python caches, OS cruft, transient runtime data).", k:"Config", flow:"sys" },
+
+    { n:".agents", d:"The operating machine — skills, engine, references, overlays, prompts", c:[
+      { n:"agents", d:"Sub-agent prompt definitions", c:[
+        { n:"observe-intake.md", s:"Sub-agent prompt for the evidence-first observation pass: reads a source and emits candidate observations without writing to registers.", k:"Prompt", flow:"sys", when:"Invoked during inbox/session processing.", rel:["intake_engine.py","process-inbox/SKILL.md"] },
+        { n:".gitkeep", s:"Keeps the empty directory tracked in git.", k:"Placeholder", flow:"sys" }
+      ]},
+      { n:"data", d:"Runtime scratch space (analysis, graph, logs, meta) — kept via .gitkeep", c:[
+        { n:"analysis/.gitkeep", s:"Placeholder for transient analysis working data.", k:"Placeholder", flow:"sys" },
+        { n:"graph/.gitkeep", s:"Placeholder for transient graph build data.", k:"Placeholder", flow:"sys" },
+        { n:"logs/.gitkeep", s:"Placeholder for script run logs.", k:"Placeholder", flow:"sys" },
+        { n:"meta/.gitkeep", s:"Placeholder for runtime metadata.", k:"Placeholder", flow:"sys" }
+      ]},
+      { n:"overlays", d:"Capability + industry overlay packages that plug specialties into the base repo", c:[
+        { n:"README.md", s:"Explains the overlay model: how capability and industry packages layer onto the core repo.", k:"Doc", flow:"sys", rel:["registry.yaml","author-overlay-package/SKILL.md"] },
+        { n:"registry.yaml", s:"Master registry of available overlays. Setup reads this to offer/activate the right specialty.", k:"Config", flow:"setup", when:"During /setup overlay activation.", rel:["setup/SKILL.md","active-profile.yaml"] },
+        { n:"capabilities", d:"Technology-capability overlays", c:[
+          { n:"clm", d:"Contract Lifecycle Management overlay", c:[
+            { n:"overlay.yaml", s:"CLM overlay manifest: what it activates and where it patches.", k:"Config", flow:"sys", rel:["registry.yaml"] },
+            { n:"backlog/profile.patch.yaml", s:"Backlog profile patch adding CLM-specific epics/columns.", k:"Config", flow:"backlog", rel:["active-profile.yaml"] },
+            { n:"scaffolding/actions.yaml", s:"Setup scaffolding actions specific to CLM engagements.", k:"Config", flow:"setup" },
+            { n:"setup/agents-md-blocks.md", s:"AGENTS.md blocks injected when the CLM overlay is active.", k:"Doc", flow:"setup" },
+            { n:"setup/follow-up-fields.yaml", s:"Extra follow-up fields captured for CLM projects.", k:"Config", flow:"setup" }
+          ]},
+          { n:"salesforce", d:"Salesforce overlay", c:[
+            { n:"overlay.yaml", s:"Salesforce overlay manifest.", k:"Config", flow:"sys", rel:["registry.yaml"] },
+            { n:"backlog/profile.patch.yaml", s:"Backlog profile patch adding Salesforce-native epics/structure.", k:"Config", flow:"backlog", rel:["active-profile.yaml","manage-backlog/SKILL.md"] },
+            { n:"scaffolding/actions.yaml", s:"Salesforce-specific setup scaffolding actions.", k:"Config", flow:"setup" },
+            { n:"setup/agents-md-blocks.md", s:"AGENTS.md blocks injected for Salesforce engagements.", k:"Doc", flow:"setup" },
+            { n:"setup/follow-up-fields.yaml", s:"Extra follow-up fields for Salesforce projects.", k:"Config", flow:"setup" },
+            { n:"skills/hubbl-query/SKILL.md", s:"Overlay-provided skill for querying a Salesforce org (Hubbl).", k:"Skill", flow:"sys", rel:["hubbl-mcp.md"] },
+            { n:"skills/hubbl-query/references/hubbl-mcp.md", s:"Reference for the Hubbl MCP integration used by hubbl-query.", k:"Reference", flow:"sys" }
+          ]}
+        ]},
+        { n:"industries", d:"Industry overlays layered on top of a capability", c:[
+          { n:"manufacturing", d:"Manufacturing industry overlay", c:[
+            { n:"overlay.yaml", s:"Manufacturing overlay manifest.", k:"Config", flow:"sys" },
+            { n:"backlog/profile.patch.yaml", s:"Backlog profile patch for manufacturing themes.", k:"Config", flow:"backlog" },
+            { n:"instructions/manufacturing-guidance.md", s:"Domain guidance injected for manufacturing engagements.", k:"Doc", flow:"sys" },
+            { n:"setup/agents-md-blocks.md", s:"AGENTS.md blocks for manufacturing projects.", k:"Doc", flow:"setup" },
+            { n:"setup/follow-up-fields.yaml", s:"Extra follow-up fields for manufacturing.", k:"Config", flow:"setup" }
+          ]}
+        ]}
+      ]},
+      { n:"project", d:"Project-local steering", c:[
+        { n:"local-steering.yaml", s:"Project-specific steering overrides layered on default behavior (durable per-project preferences).", k:"Config", flow:"sys", rel:["project-state.yaml"] }
+      ]},
+      { n:"prompts", d:"Reusable operator prompts", c:[
+        { n:"automation-prompt.md", s:"Prompt for running automated/batch processing passes.", k:"Prompt", flow:"sys" },
+        { n:"first-time-setup-guide.md", s:"Guided prompt that walks a new user through first-time setup step by step.", k:"Prompt", flow:"setup", when:"First-time onboarding.", rel:["README.md","setup/SKILL.md"] },
+        { n:"maintenance-prompt.md", s:"Prompt for routine hub maintenance and derived-state refresh.", k:"Prompt", flow:"sys", rel:["maintain.sh","refresh_derived_state.py"] },
+        { n:"registers-to-stories.md", s:"Prompt bridging populated registers into backlog story generation.", k:"Prompt", flow:"backlog", rel:["manage-backlog/SKILL.md"] },
+        { n:"whats-next.md", s:"Prompt that inspects project state and recommends the next action/phase.", k:"Prompt", flow:"sys", rel:["project-state.yaml","playbooks/"] }
+      ]},
+      { n:"references", d:"Deep reference docs, loaded on demand by skills", c:[
+        { n:"backlog/defaults", d:"Default backlog behavior", c:[
+          { n:"backlog-best-practices.md", s:"Guidance on well-formed epics/features/stories.", k:"Reference", flow:"backlog" },
+          { n:"example-rows.yaml", s:"Example backlog rows used as few-shot structure.", k:"Reference", flow:"backlog" },
+          { n:"profile.yaml", s:"Default backlog profile (columns, hierarchy, defaults) before overlay patches.", k:"Config", flow:"backlog", rel:["active-profile.yaml","profile.patch.yaml"] },
+          { n:"restructure-rules.md", s:"Rules governing backlog restructure operations.", k:"Reference", flow:"backlog", rel:["restructure.md"] },
+          { n:"source-priority.md", s:"How to prioritize source signals when generating stories.", k:"Reference", flow:"backlog" },
+          { n:"story-slicing.md", s:"Heuristics for slicing large requirements into stories.", k:"Reference", flow:"backlog" },
+          { n:"write-schema.yaml", s:"Schema constraints for backlog workbook writes.", k:"Config", flow:"backlog", rel:["backlog_model.py"] }
+        ]},
+        { n:"backlog/specialties/.gitkeep", s:"Placeholder for specialty backlog references.", k:"Placeholder", flow:"backlog" },
+        { n:"deliverable-templates", d:"Source templates for compose-deliverable", c:[
+          { n:"Deployment Cutover Workbook.xlsx", s:"Template workbook for deployment/cutover planning deliverables.", k:"Template", flow:"deliver" },
+          { n:"Gap Analysis.xlsx", s:"Template workbook for gap-analysis deliverables.", k:"Template", flow:"deliver" },
+          { n:"RAID Log.xlsx", s:"Template workbook for RAID log deliverables.", k:"Template", flow:"deliver", rel:["RAID_Plus.xlsx"] },
+          { n:"README.md", s:"Explains the deliverable template set and annotation model.", k:"Doc", flow:"deliver" },
+          { n:"Requirements Traceability Matrix.xlsx", s:"Template for the RTM deliverable.", k:"Template", flow:"deliver" },
+          { n:"Test Cases.xlsx", s:"Template workbook for test-case deliverables.", k:"Template", flow:"deliver" },
+          { n:"current-state-assessment.xlsx", s:"Template for the current-state assessment workbook.", k:"Template", flow:"deliver", rel:["synthesize/SKILL.md"] },
+          { n:"executive-findings-readout.pptx", s:"Slide template for the executive findings readout deck.", k:"Template", flow:"deliver", rel:["compose-deliverable/SKILL.md"] },
+          { n:"executive-recommendation-brief.md", s:"Markdown template for the executive recommendation brief.", k:"Template", flow:"deliver" },
+          { n:"findings-share-out.pptx", s:"Slide template for the findings share-out deck.", k:"Template", flow:"deliver" },
+          { n:"_annotations/*.yaml", s:"Per-template annotation files that map register/analysis data into each template's slots (current-state-assessment, executive-findings-readout, executive-recommendation-brief, findings-share-out).", k:"Config", flow:"deliver", rel:["compose-deliverable/SKILL.md"] }
+        ]},
+        { n:"lane-cards", d:"One card per canonical entity lane — the schema + guidance for each register lane", c:[
+          { n:"pain-points.md", s:"Lane card for pain points: fields, enums, extraction guidance.", k:"Reference", flow:"analyze", rel:["Current_State.xlsx","lane-taxonomy.md"] },
+          { n:"systems.md", s:"Lane card for systems.", k:"Reference", flow:"analyze", rel:["System Landscape.md"] },
+          { n:"requirements.md", s:"Lane card for requirements.", k:"Reference", flow:"backlog" },
+          { n:"objectives.md", s:"Lane card for objectives.", k:"Reference", flow:"analyze" },
+          { n:"risks.md", s:"Lane card for risks.", k:"Reference", flow:"sys", rel:["RAID_Plus.xlsx"] },
+          { n:"decisions.md", s:"Lane card for decisions.", k:"Reference", flow:"sys" },
+          { n:"assumptions.md", s:"Lane card for assumptions.", k:"Reference", flow:"sys" },
+          { n:"constraints.md", s:"Lane card for constraints.", k:"Reference", flow:"sys" },
+          { n:"open-questions.md", s:"Lane card for open questions.", k:"Reference", flow:"sys" },
+          { n:"tensions.md", s:"Lane card for tensions.", k:"Reference", flow:"analyze", rel:["conflict-check/SKILL.md"] },
+          { n:"stakeholders.md", s:"Lane card for stakeholders.", k:"Reference", flow:"sys", rel:["Stakeholders.xlsx"] },
+          { n:"stakeholder-relationships.md", s:"Lane card for stakeholder relationships.", k:"Reference", flow:"sys" },
+          { n:"digest-fields.json", s:"Defines which fields appear in condensed lane digests.", k:"Config", flow:"sys" }
+        ]},
+        { n:"lane-taxonomy.md", s:"The master taxonomy of all entity lanes and how they relate — the ontology backbone.", k:"Reference", flow:"sys", rel:["ontology_registry.py","lane-cards/"] },
+        { n:"hub-operating-guide.md", s:"Hub layout, naming, routing, and write conventions. The main reference behind AGENTS.md.", k:"Reference", flow:"sys", rel:["AGENTS.md","project-state-authority.md"] },
+        { n:"project-state-authority.md", s:"Defines query behavior, refresh, write handoff, AnalysisCore, and where authoritative state lives.", k:"Reference", flow:"sys", rel:["project-state.yaml","AGENTS.md"] },
+        { n:"file-reading-guide.md", s:"How to read each file type correctly (which skill/script to use).", k:"Reference", flow:"sys", rel:["docx/SKILL.md","pdf/SKILL.md"] },
+        { n:"register-write-contract.md", s:"The contract governing all register writes — the rules write_registers.py enforces.", k:"Reference", flow:"sys", rel:["write_registers.py","generate_write_contract.py"] },
+        { n:"register-discovery.md", s:"How registers are discovered/located at runtime.", k:"Reference", flow:"sys" },
+        { n:"enum-compliance.md", s:"Rules for keeping enumerated field values normalized/compliant.", k:"Reference", flow:"sys", rel:["enum_normalization.py"] },
+        { n:"skill-support-issues.md", s:"Known issues + local workarounds for shipped template skills/scripts.", k:"Reference", flow:"sys" },
+        { n:"sub-agent-base.md", s:"Base instructions shared by all sub-agent prompts.", k:"Reference", flow:"sys", rel:["observe-intake.md"] },
+        { n:"which-skill-when.md", s:"Decision guide mapping user intent to the right skill.", k:"Reference", flow:"sys", rel:["skills-catalog.yaml"] },
+        { n:"python-runtime-setup.md", s:"How to repair/bootstrap the project Python runtime when it's missing or broken.", k:"Reference", flow:"sys", rel:["setup-python","python_runtime.py"] }
+      ]},
+      { n:"runtime", d:"Runtime copies of skill scripts (executed via the py launcher)", c:[
+        { n:"skills/analyze/scripts/validate_analysis_core.py", s:"Runtime copy: validates an AnalysisCore JSON against its schema.", k:"Script", flow:"analyze", rel:["analysis-core.schema.json"] },
+        { n:"skills/docx/scripts/*.py", s:"Runtime copies of the docx convert/write helpers.", k:"Script", flow:"sys" },
+        { n:"skills/excel/scripts/*.py", s:"Runtime copies of the excel read/write/verify/chart helpers.", k:"Script", flow:"sys" },
+        { n:"skills/index-hub/references/*", s:"Reference material (schemas, parsing guide, template entries) for the index-hub runtime skill.", k:"Reference", flow:"sys" }
+      ]},
+      { n:"scripts", d:"The Python engine — deterministic heavy lifting behind the skills", c:[
+        { n:"py", s:"POSIX launcher that runs project Python scripts in the correct runtime. Preferred entry point.", k:"Launcher", flow:"sys", when:"Wraps every script invocation.", rel:["py.cmd","python_runtime.py"] },
+        { n:"py.cmd", s:"Windows equivalent of the py launcher.", k:"Launcher", flow:"sys", rel:["py"] },
+        { n:"setup-python", s:"Bootstraps the project Python environment (POSIX).", k:"Launcher", flow:"setup", rel:["setup-python.cmd","requirements.txt"] },
+        { n:"setup-python.cmd", s:"Windows Python environment bootstrap.", k:"Launcher", flow:"setup" },
+        { n:"python_runtime.py", s:"Resolves and configures the Python runtime used by all scripts.", k:"Script", flow:"sys", rel:["py","module_loader.py"] },
+        { n:"module_loader.py", s:"Shared module-loading helper so scripts can import siblings reliably.", k:"Script", flow:"sys" },
+        { n:"script_runner.py", s:"Common entry harness for running engine scripts with consistent args/logging.", k:"Script", flow:"sys" },
+        { n:"intake_engine.py", s:"Core evidence-first observation extraction engine — turns source text into candidate observations.", k:"Script", flow:"sys", io:["source docs","observations"], when:"During process-inbox/process-session.", rel:["observe-intake.md","merge_extractions.py","intake_precision.py"] },
+        { n:"intake_precision.py", s:"Precision tuning/filtering of extracted observations.", k:"Script", flow:"sys", rel:["intake_engine.py","extraction-policy.yaml"] },
+        { n:"intake_review.py", s:"Mechanics of reviewing proposals and applying accepted ones.", k:"Script", flow:"sys", when:"During /review and /review --apply.", rel:["review/SKILL.md","write_registers.py"] },
+        { n:"merge_extractions.py", s:"Merges observations from multiple sources/sub-agents into a unified set.", k:"Script", flow:"sys", rel:["intake_engine.py","identity_resolution.py"] },
+        { n:"identity_resolution.py", s:"Deduplicates and merges entities that refer to the same real-world thing.", k:"Script", flow:"sys", rel:["merge_extractions.py","write_registers.py"] },
+        { n:"write_registers.py", s:"The only governed path for writing to the 4 Excel registers. Enforces the write contract, enums, and identity.", k:"Script", flow:"sys", io:["accepted proposals","register rows"], when:"On /setup and /review --apply.", rel:["register-write-contract.md","enum_normalization.py","refresh_derived_state.py"] },
+        { n:"generate_write_contract.py", s:"Generates/updates the register write contract from current schema.", k:"Script", flow:"sys", rel:["register-write-contract.md"] },
+        { n:"refresh_derived_state.py", s:"Rebuilds all derived artifacts — mirrors, search index, graph — after register changes.", k:"Script", flow:"sys", io:["registers","mirrors/index/graph"], when:"After any register write.", rel:["build_graph.py","refresh_search_index.py","derived_views.py"] },
+        { n:"refresh_result.py", s:"Represents/records the result of a derived-state refresh.", k:"Script", flow:"sys", rel:["refresh_derived_state.py"] },
+        { n:"build_graph.py", s:"Builds the relationship graph linking entities across lanes.", k:"Script", flow:"sys", rel:["graph_model.py","graph_views.py","refresh_derived_state.py"] },
+        { n:"graph_model.py", s:"Data model for the relationship graph.", k:"Script", flow:"sys", rel:["build_graph.py"] },
+        { n:"graph_inputs.py", s:"Gathers inputs feeding the graph build.", k:"Script", flow:"sys" },
+        { n:"graph_manifest.py", s:"Manifest describing the current graph build.", k:"Script", flow:"sys" },
+        { n:"graph_views.py", s:"Produces queryable views/projections from the graph.", k:"Script", flow:"sys" },
+        { n:"refresh_search_index.py", s:"Rebuilds the searchable index over hub content.", k:"Script", flow:"sys", rel:["search_index_lib.py","query.py"] },
+        { n:"search_index_lib.py", s:"Library powering search index construction.", k:"Script", flow:"sys", rel:["refresh_search_index.py"] },
+        { n:"search_input_authority.py", s:"Determines authoritative inputs to the search index.", k:"Script", flow:"sys" },
+        { n:"query.py", s:"Retrieval across the hub — the main query entry point used by skills.", k:"Script", flow:"sys", io:["query","matching evidence"], when:"Whenever a skill needs to retrieve context.", rel:["query_health.py","query_rehearsal.py","search_index_lib.py"] },
+        { n:"query_health.py", s:"Health checks for the query/index subsystem.", k:"Script", flow:"sys", rel:["query.py"] },
+        { n:"query_rehearsal.py", s:"Dry-run/rehearsal harness for queries.", k:"Script", flow:"sys" },
+        { n:"build_project.py", s:"Builds/updates the project state object from inputs.", k:"Script", flow:"sys", rel:["project-state.yaml","build_source_manifest.py"] },
+        { n:"build_source_manifest.py", s:"Builds a manifest of all source documents in the hub.", k:"Script", flow:"sys", rel:["build_project.py"] },
+        { n:"build_views.py", s:"Builds derived views for consumption by skills.", k:"Script", flow:"sys", rel:["derived_views.py","view_inputs.py"] },
+        { n:"derived_views.py", s:"Generates the derived register views/projections.", k:"Script", flow:"sys", rel:["build_views.py","register_projection_export.py"] },
+        { n:"view_inputs.py", s:"Resolves inputs required to build views.", k:"Script", flow:"sys" },
+        { n:"register_projection_export.py", s:"Exports register projections (mirrors) into consumable form.", k:"Script", flow:"sys", rel:["register-mirrors/"] },
+        { n:"backlog_model.py", s:"Data model for the backlog workbook (epics/features/stories).", k:"Script", flow:"backlog", rel:["manage-backlog/SKILL.md","backlog_paths.py"] },
+        { n:"backlog_paths.py", s:"Resolves backlog workbook + sidecar paths.", k:"Script", flow:"backlog", rel:["backlog_model.py","active-target.json"] },
+        { n:"canonical_workbook_preflight.py", s:"Preflight checks on register workbooks before writes.", k:"Script", flow:"sys", rel:["write_registers.py","workbook_normalization.py"] },
+        { n:"workbook_normalization.py", s:"Normalizes workbook structure/format for consistency.", k:"Script", flow:"sys" },
+        { n:"enum_normalization.py", s:"Normalizes enumerated field values to the canonical set.", k:"Script", flow:"sys", rel:["enum-compliance.md","write_registers.py"] },
+        { n:"ontology_registry.py", s:"Registry of the entity ontology (lanes, types, relationships).", k:"Script", flow:"sys", rel:["lane-taxonomy.md"] },
+        { n:"identity", s:"", k:"Script", flow:"sys" },
+        { n:"compatibility_redirects.py", s:"Redirects legacy paths/commands to current equivalents.", k:"Script", flow:"sys" },
+        { n:"consolidated_validator_core.py", s:"Core validation logic shared across validators.", k:"Script", flow:"sys", rel:["validate_consolidated_json.py"] },
+        { n:"validate_consolidated_json.py", s:"Validates consolidated extraction JSON before it becomes proposals.", k:"Script", flow:"sys", rel:["consolidated_validator_core.py","verify_extraction_handoff.py"] },
+        { n:"validate_system_manifest.py", s:"Validates the 99 - System manifest integrity.", k:"Script", flow:"sys", rel:["system_artifacts.py"] },
+        { n:"validate_skill_metadata.py", s:"Validates skill metadata against the catalog schema.", k:"Script", flow:"sys", rel:["skills-catalog.yaml"] },
+        { n:"verify_extraction_handoff.py", s:"Verifies the extraction→registers handoff is complete and valid.", k:"Script", flow:"sys", rel:["write_registers.py"] },
+        { n:"system_artifacts.py", s:"Manages 99 - System artifacts (state, evidence, graph files).", k:"Script", flow:"sys" },
+        { n:"staleness_check.py", s:"Detects stale derived state that needs a refresh.", k:"Script", flow:"sys", rel:["refresh_derived_state.py"] },
+        { n:"stakeholder_profiles.py", s:"Builds stakeholder profile projections for prep-workshop/synthesize.", k:"Script", flow:"sys", rel:["Stakeholders.xlsx","prep-workshop/SKILL.md"] },
+        { n:"generate_lane_cards.py", s:"Generates/refreshes the lane-card reference docs from the ontology.", k:"Script", flow:"sys", rel:["lane-cards/","ontology_registry.py"] },
+        { n:"index_hub_skeleton.py", s:"Builds the index-hub skeleton structure.", k:"Script", flow:"sys" },
+        { n:"path_contract.py", s:"Central definition of canonical hub paths.", k:"Script", flow:"sys", rel:["hub-operating-guide.md"] },
+        { n:"file_lock_retry.py", s:"Retry helper for locked files (e.g. open Excel workbooks).", k:"Script", flow:"sys" },
+        { n:"lane_judgment.yaml", s:"Config driving lane-assignment judgment during extraction.", k:"Config", flow:"sys", rel:["intake_engine.py"] },
+        { n:"maintain.sh", s:"Shell script for routine maintenance tasks.", k:"Script", flow:"sys", rel:["maintenance-prompt.md"] },
+        { n:".gitkeep", s:"Keeps the scripts directory tracked.", k:"Placeholder", flow:"sys" }
+      ]},
+      { n:"skills", d:"The workflow skill library — each is a SKILL.md playbook + references + scripts", c:[
+        { n:"setup", d:"Meta skill: one-time project onboarding", c:[
+          { n:"SKILL.md", s:"End-to-end onboarding: environment check, baseline intake, inbox organization, one-time evidence-first seed of all registers, and derived-state refresh.", k:"Skill", flow:"setup", io:["discovery docs","4 populated registers"], when:"Once, on a freshly cloned repo.", rel:["registry.yaml","write_registers.py","refresh_derived_state.py"] },
+          { n:"references/", s:"Stage-by-stage guides (environment, orientation, baseline, categorization, delegated extraction, refresh, follow-ups, summary) plus the startup state machine and state schema.", k:"Reference", flow:"setup", rel:["project-state.yaml"] }
+        ]},
+        { n:"process-inbox", d:"Route + extract everything in the inbox", c:[
+          { n:"SKILL.md", s:"Processes files dropped in 00 - Inbox end-to-end: routes them to the right folders, then runs evidence-first observation intake that queues register proposals.", k:"Skill", flow:"sys", io:["inbox files","queued proposals"], when:"When new files appear in the inbox.", rel:["intake_engine.py","review/SKILL.md","categorization-rules.md"] },
+          { n:"references/categorization-rules.md", s:"Rules for routing inbox files to the correct hub folder.", k:"Reference", flow:"sys" },
+          { n:"references/large-inbox-read-fanout.md", s:"Strategy for fanning out reads across a large inbox.", k:"Reference", flow:"sys" }
+        ]},
+        { n:"process-session", d:"One transcript → session note + proposals", c:[
+          { n:"SKILL.md", s:"Turns a single workshop transcript/meeting notes into a structured session note and queues candidate entities as reviewable proposals.", k:"Skill", flow:"sys", io:["transcript","session note + proposals"], when:"After a single workshop/meeting.", rel:["session-note.md","extraction-rules.md","review/SKILL.md"] },
+          { n:"references/extraction-rules.md", s:"Rules governing what to extract from a session and how.", k:"Reference", flow:"sys", rel:["extraction-policy.yaml"] },
+          { n:"references/sub-agent-prompts.md", s:"Sub-agent prompts used during session extraction.", k:"Reference", flow:"sys" }
+        ]},
+        { n:"review", d:"The gate: accept/reject/apply proposals", c:[
+          { n:"SKILL.md", s:"Reviews pending intake proposals, applies accepted ones to registers, audits a canonical lane, and tunes extraction policy/glossary.", k:"Skill", flow:"sys", io:["proposals","register updates"], when:"After processing; before anything lands in registers.", rel:["intake_review.py","write_registers.py","extraction-policy.yaml"] }
+        ]},
+        { n:"synthesize", d:"Narrative current-state", c:[
+          { n:"SKILL.md", s:"Produces narrative synthesis / current-state summaries from hub evidence, organized by theme, function, or system.", k:"Skill", flow:"synth", io:["registers","02 - Current State docs"], when:"Stage 2, after registers are populated.", rel:["Current_State.xlsx","System Landscape.md"] },
+          { n:"references/patterns/", s:"Synthesis patterns: full-current-state, stakeholder-group, topic, weekly-rollup, plus an index.", k:"Reference", flow:"synth" },
+          { n:"references/sub-agent-prompts.md", s:"Sub-agent prompts for parallel synthesis.", k:"Reference", flow:"synth" }
+        ]},
+        { n:"analyze", d:"AnalysisCore + derivative views", c:[
+          { n:"SKILL.md", s:"Creates one durable AnalysisCore per analytical job (the machine-readable source of truth) and renders requested views — themes, gaps, scorecards, option comparisons.", k:"Skill", flow:"analyze", io:["registers","AnalysisCore JSON + views"], when:"Stage 3, to decide what the backlog should focus on.", rel:["analysis-core.schema.json","validate_analysis_core.py","modes/"] },
+          { n:"references/modes/", s:"Analysis modes: coverage, decision, diagnostic, prioritization, themeing.", k:"Reference", flow:"analyze" },
+          { n:"references/views/", s:"View renderers: decision-note, exec-brief, workbook, working-memo.", k:"Reference", flow:"analyze", rel:["compose-deliverable/SKILL.md"] },
+          { n:"references/analysiscore-contract.md", s:"The AnalysisCore contract — its guaranteed shape and semantics.", k:"Reference", flow:"analyze", rel:["analysis-core.schema.json"] },
+          { n:"references/analysis-patterns.md", s:"Reusable analytical patterns.", k:"Reference", flow:"analyze" },
+          { n:"schemas/analysis-core.schema.json", s:"JSON Schema for AnalysisCore; enforced by the validator.", k:"Schema", flow:"analyze", rel:["validate_analysis_core.py"] },
+          { n:"schemas/view-metadata.schema.json", s:"JSON Schema for view metadata.", k:"Schema", flow:"analyze" },
+          { n:"scripts/validate_analysis_core.py", s:"Validates an AnalysisCore file against the schema.", k:"Script", flow:"analyze", rel:["analysis-core.schema.json"] }
+        ]},
+        { n:"manage-backlog", d:"Build the story list", c:[
+          { n:"SKILL.md", s:"Initializes, extends, restructures, adopts, or steers the active backlog workbook from registers + analysis, using the active overlay for starter structure.", k:"Skill", flow:"backlog", io:["registers + AnalysisCore","Backlog Tracker.xlsx"], when:"Stage 4 — where stories are created.", rel:["backlog_model.py","active-profile.yaml","modes/"] },
+          { n:"references/modes/", s:"Backlog modes: initialize, extend, restructure, adopt-existing, update-steering.", k:"Reference", flow:"backlog" },
+          { n:"references/output-contract.md", s:"The contract for backlog workbook output structure.", k:"Reference", flow:"backlog", rel:["write-schema.yaml"] },
+          { n:"references/write-guardrails.md", s:"Guardrails preventing unsafe backlog writes.", k:"Reference", flow:"backlog" },
+          { n:"references/*.md", s:"Additional refs: custom-column-inference, retrieval-guidance, sidecar-schema, workbook-interpretation.", k:"Reference", flow:"backlog" }
+        ]},
+        { n:"compose-deliverable", d:"Package client deliverables", c:[
+          { n:"SKILL.md", s:"Generates/updates client-facing deliverables from approved templates in native formats (.pptx, .xlsx, .md, .docx) using registers, analysis, and backlog.", k:"Skill", flow:"deliver", io:["registers/analysis/backlog","client deliverables"], when:"Stage 5 — packaging the handoff.", rel:["deliverable-templates/","analyze/SKILL.md","pptx/SKILL.md"] },
+          { n:"references/template-onboarding.md", s:"How to onboard a new deliverable template into the skill.", k:"Reference", flow:"deliver" }
+        ]},
+        { n:"prep-workshop", d:"Prep for upcoming sessions", c:[
+          { n:"SKILL.md", s:"Prepares briefing materials and targeted questions for an upcoming workshop/interview from everything collected so far.", k:"Skill", flow:"sys", io:["registers","prep document"], when:"Before a workshop/interview.", rel:["Stakeholders.xlsx","stakeholder_profiles.py","question-frameworks.md"] },
+          { n:"references/prep-document-spec.md", s:"Spec for the prep document output.", k:"Reference", flow:"sys" },
+          { n:"references/question-frameworks.md", s:"Frameworks for generating targeted questions.", k:"Reference", flow:"sys" },
+          { n:"references/sub-agent-prompts.md", s:"Sub-agent prompts for prep.", k:"Reference", flow:"sys" }
+        ]},
+        { n:"hub-audit", d:"Quality + readiness checks", c:[
+          { n:"SKILL.md", s:"Runs hub quality checks — completeness, phase-gate readiness, deliverable QA — without generating new content.", k:"Skill", flow:"sys", io:["hub state","audit report"], when:"Before a phase gate or deliverable handoff.", rel:["checklists.md","project-state.yaml"] },
+          { n:"references/checklists.md", s:"The audit checklists.", k:"Reference", flow:"sys" }
+        ]},
+        { n:"conflict-check", d:"Find contradictions", c:[
+          { n:"SKILL.md", s:"Identifies and validates contradictions across sources.", k:"Skill", flow:"analyze", io:["sources/registers","conflict findings"], when:"When you suspect contradictory inputs.", rel:["conflict-types.md","tensions.md"] },
+          { n:"references/conflict-types.md", s:"Taxonomy of conflict types.", k:"Reference", flow:"analyze" },
+          { n:"references/sub-agent-prompts.md", s:"Sub-agent prompts for conflict detection.", k:"Reference", flow:"analyze" }
+        ]},
+        { n:"diagram-process", d:"Mermaid process diagrams", c:[
+          { n:"SKILL.md", s:"Produces Mermaid process diagrams (flow, sequence, state) from described workflows.", k:"Skill", flow:"sys", io:["workflow description","Mermaid diagram"], when:"When you need a process visual.", rel:["mermaid-patterns.md"] },
+          { n:"references/mermaid-patterns.md", s:"Reusable Mermaid patterns.", k:"Reference", flow:"sys" },
+          { n:"references/sub-agent-prompts.md", s:"Sub-agent prompts for diagramming.", k:"Reference", flow:"sys" }
+        ]},
+        { n:"generate-template", d:"CLM template drafting (specialty)", c:[
+          { n:"SKILL.md", s:"Generates/analyzes/drafts a CLM contract template from client requirements and existing samples.", k:"Skill", flow:"deliver", when:"CLM engagements only.", rel:["clm-template-spec.md","Template Registry.xlsx"] },
+          { n:"references/", s:"CLM references: clause library, contract types, Ironclad field mapping, Template Registry.xlsx, write schema.", k:"Reference", flow:"deliver" }
+        ]},
+        { n:"salesforce-demo-data", d:"Seed demo data", c:[
+          { n:"SKILL.md", s:"Creates/seeds believable Salesforce demo data for a sandbox, scratch org, UAT, training, or pursuit demo.", k:"Skill", flow:"sys", when:"When you need synthetic org data for a demo.", rel:["research-and-realism.md"] },
+          { n:"references/research-and-realism.md", s:"Guidance for making demo data believable.", k:"Reference", flow:"sys" },
+          { n:"references/sample-record-reconnaissance.md", s:"How to reconnoiter existing org records before seeding.", k:"Reference", flow:"sys" }
+        ]},
+        { n:"author-overlay-package", d:"Build/update overlays", c:[
+          { n:"SKILL.md", s:"Adds or updates a reusable capability/industry overlay package in the published template repo.", k:"Skill", flow:"sys", when:"When a team wants a new/updated overlay.", rel:["registry.yaml","overlays/README.md"] },
+          { n:"references/", s:"Overlay decision tree, package checklist, PR workflow, surface-selection guide.", k:"Reference", flow:"sys" }
+        ]},
+        { n:"excel", d:"Spreadsheet tool", c:[
+          { n:"SKILL.md", s:"Direct .xlsx/.xls work: read sheets, edit cells, formulas, formatting, charts/pivots, workbook health.", k:"Skill", flow:"sys", rel:["excel-operations.md","excel_read.py","excel_write.py"] },
+          { n:"references/", s:"Excel references: operations, charts-and-pivots, financial-standards.", k:"Reference", flow:"sys" },
+          { n:"scripts/", s:"Excel helpers: read, write, apply, verify, structure, charts, utils, module_loader.", k:"Script", flow:"sys" }
+        ]},
+        { n:"docx", d:"Word tool", c:[
+          { n:"SKILL.md", s:"Read/convert/create/modify Word .docx files.", k:"Skill", flow:"sys", rel:["docx_convert.py","docx_write.py","transcript_guard.py"] },
+          { n:"scripts/docx_convert.py", s:"Converts .docx to readable/markdown form.", k:"Script", flow:"sys" },
+          { n:"scripts/docx_write.py", s:"Writes/edits .docx documents.", k:"Script", flow:"sys" }
+        ]},
+        { n:"pdf", d:"PDF tool", c:[
+          { n:"SKILL.md", s:"Read/convert/extract content from .pdf files.", k:"Skill", flow:"sys", rel:["pdf_convert.py"] },
+          { n:"scripts/pdf_convert.py", s:"Extracts/converts PDF content.", k:"Script", flow:"sys" }
+        ]},
+        { n:"pptx", d:"PowerPoint tool", c:[
+          { n:"SKILL.md", s:"Read/search/update existing .pptx slide content while preserving layouts.", k:"Skill", flow:"sys", rel:["pptx_read.py","pptx_write.py","compose-deliverable/SKILL.md"] },
+          { n:"scripts/pptx_read.py", s:"Reads/searches slide content.", k:"Script", flow:"sys" },
+          { n:"scripts/pptx_write.py", s:"Updates slide content preserving layout.", k:"Script", flow:"sys" }
+        ]}
+      ]}
+    ]},
+
+    { n:"knowledge-hub", d:"Your project's content — everything durable and client-facing", c:[
+      { n:"00 - Inbox", d:"Drop zone for new materials", c:[
+        { n:".gitkeep", s:"Placeholder; drop SOWs, transcripts, exports, org charts here for processing.", k:"Placeholder", flow:"sys", rel:["process-inbox/SKILL.md"] }
+      ]},
+      { n:"00 - Project", d:"Project identity + timeline", c:[
+        { n:"Project Overview.md", s:"Project identity: client, engagement type, summary, team. Finalized at the end of setup.", k:"Doc", flow:"setup", rel:["Phase Context.md","project-state.yaml"] },
+        { n:"Phase Context.md", s:"Current phase and focus for the engagement.", k:"Doc", flow:"setup", rel:["playbooks/"] },
+        { n:"Timeline.md", s:"Engagement timeline/milestones.", k:"Doc", flow:"sys" }
+      ]},
+      { n:"00 - Registers", d:"The 4 authoritative Excel registers — single source of truth", c:[
+        { n:"Current_State.xlsx", s:"Pain points, systems, requirements, and supporting evidence. The most-read register downstream.", k:"Register", flow:"analyze", io:["governed writes","synthesis/analysis/backlog"], when:"Written by setup + review --apply; read everywhere.", rel:["write_registers.py","synthesize/SKILL.md","pain-points.md"] },
+        { n:"Future_State.xlsx", s:"Objectives, focus areas, and solution directions.", k:"Register", flow:"analyze", when:"Written by setup + review --apply.", rel:["Focus Areas.md","Solution Directions.md","write_registers.py"] },
+        { n:"RAID_Plus.xlsx", s:"Risks, assumptions, issues, decisions — plus constraints, tensions, and open questions.", k:"Register", flow:"sys", when:"Written by setup + review --apply.", rel:["conflict-check/SKILL.md","hub-audit/SKILL.md","risks.md"] },
+        { n:"Stakeholders.xlsx", s:"Stakeholders and their relationships.", k:"Register", flow:"sys", when:"Written by setup + review --apply.", rel:["prep-workshop/SKILL.md","stakeholder_profiles.py","stakeholders.md"] }
+      ]},
+      { n:"01 - Sessions", d:"Structured session notes", c:[
+        { n:"Week 1/.gitkeep", s:"Placeholder; process-session writes structured notes here, organized by week.", k:"Placeholder", flow:"sys", rel:["process-session/SKILL.md","session-note.md"] }
+      ]},
+      { n:"02 - Current State", d:"Narrative current-state (synthesize output)", c:[
+        { n:"System Landscape.md", s:"Narrative of the current system landscape, grounded in the systems lane.", k:"Doc", flow:"synth", rel:["systems.md","synthesize/SKILL.md"] },
+        { n:"Analysis/.gitkeep", s:"User-facing current-state analysis views (heat maps, matrices).", k:"Placeholder", flow:"analyze", rel:["analyze/SKILL.md"] },
+        { n:"Process Diagrams/.gitkeep", s:"Current-state process diagrams.", k:"Placeholder", flow:"sys", rel:["diagram-process/SKILL.md"] }
+      ]},
+      { n:"03 - Future State", d:"Future-state direction", c:[
+        { n:"Focus Areas.md", s:"The prioritized future-state focus areas.", k:"Doc", flow:"analyze", rel:["Future_State.xlsx"] },
+        { n:"Solution Directions.md", s:"Candidate solution directions under consideration.", k:"Doc", flow:"analyze", rel:["Future_State.xlsx"] },
+        { n:"Analysis/.gitkeep", s:"Future-state analysis views (gap analyses, option comparisons).", k:"Placeholder", flow:"analyze" },
+        { n:"Process Diagrams/.gitkeep", s:"Future-state process diagrams.", k:"Placeholder", flow:"sys" }
+      ]},
+      { n:"04 - Backlog", d:"The story list (manage-backlog output)", c:[
+        { n:"Backlog Tracker.xlsx", s:"Epics → features → user stories, traced back to source pain points/requirements. The artifact the solutions team builds against.", k:"Workbook", flow:"backlog", io:["registers + analysis","stories for handoff"], when:"Built/updated by manage-backlog.", rel:["manage-backlog/SKILL.md","backlog_model.py","MVP Scope.md"] },
+        { n:"MVP Scope.md", s:"Defines the MVP slice of the backlog.", k:"Doc", flow:"backlog", rel:["Backlog Tracker.xlsx"] }
+      ]},
+      { n:"06 - Reference", d:"Supporting reference materials", c:[
+        { n:"Client Documentation/.gitkeep", s:"Client-provided documentation.", k:"Placeholder", flow:"sys" },
+        { n:"Sales & Pre-Discovery/.gitkeep", s:"Pre-sales and pre-discovery materials (SOWs, proposals).", k:"Placeholder", flow:"sys" },
+        { n:"System Exports/.gitkeep", s:"Raw system exports for reference.", k:"Placeholder", flow:"sys" }
+      ]},
+      { n:"99 - System", d:"Machine state — the derived + authoritative system layer", c:[
+        { n:"extraction-policy.yaml", s:"Policy controlling what/how the intake engine extracts. Tunable via /review.", k:"Config", flow:"sys", rel:["intake_engine.py","review/SKILL.md"] },
+        { n:"glossary.yaml", s:"Project glossary/canonical terms used to normalize extraction.", k:"Config", flow:"sys", rel:["review/SKILL.md","identity_resolution.py"] },
+        { n:"project/project-state.yaml", s:"Authoritative project state (phase, overlay, progress). Consulted by many skills.", k:"State", flow:"sys", when:"Read/updated across the lifecycle.", rel:["build_project.py","project-state-authority.md"] },
+        { n:"analysis/cores/.gitkeep", s:"Durable AnalysisCore JSON files — the analysis source of truth.", k:"Placeholder", flow:"analyze", rel:["analyze/SKILL.md"] },
+        { n:"analysis/support/.gitkeep", s:"Optional analysis support artifacts.", k:"Placeholder", flow:"analyze" },
+        { n:"backlog/active-profile.yaml", s:"The active backlog profile (defaults + overlay patches merged).", k:"Config", flow:"backlog", rel:["profile.yaml","profile.patch.yaml"] },
+        { n:"backlog/active-target.json", s:"Pointer to the active backlog workbook/target.", k:"Config", flow:"backlog", rel:["backlog_paths.py"] },
+        { n:"backlog/imports/.gitkeep", s:"Placeholder for backlog import staging.", k:"Placeholder", flow:"backlog" },
+        { n:"evidence/.gitkeep", s:"Queued observations/evidence awaiting review (proposals live here).", k:"Placeholder", flow:"sys", rel:["intake_engine.py","review/SKILL.md"] },
+        { n:"graph/.gitkeep", s:"Built relationship-graph artifacts.", k:"Placeholder", flow:"sys", rel:["build_graph.py"] },
+        { n:"identity/.gitkeep", s:"Identity-resolution state (entity IDs/aliases).", k:"Placeholder", flow:"sys", rel:["identity_resolution.py"] },
+        { n:"register-mirrors/", s:"Read-optimized mirrors of each register (current_state, future_state, raid_plus, stakeholders) for fast querying.", k:"Placeholder", flow:"sys", rel:["register_projection_export.py","query.py"] }
+      ]}
+    ]},
+
+    { n:"playbooks", d:"Phase-by-phase checklists", c:[
+      { n:"01-prepare.md", s:"Prepare phase (Wk 0–1): stand up the repo, load pre-discovery materials, plan sessions.", k:"Playbook", flow:"setup", rel:["setup/SKILL.md"] },
+      { n:"02-learn.md", s:"Learn phase (Wk 2): run workshops, process sessions, build current state.", k:"Playbook", flow:"synth", rel:["process-session/SKILL.md","synthesize/SKILL.md"] },
+      { n:"03-ideate.md", s:"Ideate phase (Wk 3–4): analyze, shape future state, explore solutions.", k:"Playbook", flow:"analyze", rel:["analyze/SKILL.md"] },
+      { n:"04-plan.md", s:"Plan phase (Wk 5–6): build backlog, define MVP, package handoff.", k:"Playbook", flow:"backlog", rel:["manage-backlog/SKILL.md","compose-deliverable/SKILL.md"] }
+    ]},
+    { n:"templates", d:"Reusable note + deliverable templates", c:[
+      { n:"session-note.md", s:"Template for a structured session note.", k:"Template", flow:"sys", rel:["process-session/SKILL.md"] },
+      { n:"weekly-summary.md", s:"Template for a weekly rollup summary.", k:"Template", flow:"synth" },
+      { n:"epic-feature.md", s:"Template for epics/features in the backlog.", k:"Template", flow:"backlog", rel:["manage-backlog/SKILL.md"] },
+      { n:"functional-design.md", s:"Template for a functional design doc.", k:"Template", flow:"deliver" },
+      { n:"salesforce-solution-design.md", s:"Template for a Salesforce solution design.", k:"Template", flow:"deliver" },
+      { n:"clm-template-spec.md", s:"Spec template for CLM contract templates.", k:"Template", flow:"deliver", rel:["generate-template/SKILL.md"] }
+    ]},
+    { n:"tests", d:"Test suite", c:[
+      { n:"test_docx_transcript_guard.py", s:"Tests the transcript guard that protects docx processing.", k:"Test", flow:"sys", rel:["transcript_guard.py","docx/SKILL.md"] }
+    ]}
+  ]
+};
+
+/* ---------- Render tree ---------- */
+const treeEl = document.getElementById('tree');
+const detailEl = document.getElementById('detail');
+let selectedNode = null;
+const nodeIndex = [];
+
+function buildNode(node, parentPath, depth){
+  const li = document.createElement('li');
+  const isFolder = !!node.c;
+  const path = parentPath ? parentPath + "/" + node.n : node.n;
+  const row = document.createElement('div');
+  row.className = 'tnode ' + (isFolder ? 'folder' : 'file');
+  row.dataset.name = node.n.toLowerCase();
+
+  const tw = document.createElement('span');
+  tw.className = 'tw';
+  tw.textContent = isFolder ? "▸" : "";
+  const ic = document.createElement('span');
+  ic.className = 'ic';
+  ic.textContent = isFolder ? "▸" : iconLeaf(node);
+  const nm = document.createElement('span');
+  nm.className = 'nm';
+  nm.textContent = node.n;
+  row.appendChild(tw); row.appendChild(ic); row.appendChild(nm);
+  li.appendChild(row);
+
+  if(isFolder){
+    const ul = document.createElement('ul');
+    ul.className = 'tchildren' + (depth >= 1 ? ' collapsed' : '');
+    if(depth < 1) tw.textContent = "▾";
+    node.c.forEach(function(ch){ ul.appendChild(buildNode(ch, path, depth+1)); });
+    li.appendChild(ul);
+    row.addEventListener('click', function(e){
+      e.stopPropagation();
+      ul.classList.toggle('collapsed');
+      tw.textContent = ul.classList.contains('collapsed') ? "▸" : "▾";
+    });
+  } else {
+    row.addEventListener('click', function(e){
+      e.stopPropagation();
+      selectFile(node, path, row);
+    });
+    nodeIndex.push({ node:node, path:path, row:row });
+  }
+  return li;
+}
+
+function iconLeaf(node){
+  var n = node.n.toLowerCase();
+  if(n.endsWith('.md')) return "▤";
+  if(n.endsWith('.py')) return "⚙";
+  if(n.endsWith('.yaml')||n.endsWith('.yml')||n.endsWith('.json')||n.endsWith('.cmd')) return "◇";
+  if(n.endsWith('.xlsx')||n.endsWith('.xls')) return "▦";
+  if(n.endsWith('.pptx')) return "▧";
+  if(n.indexOf('.gitkeep')>-1||n.indexOf('.gitignore')>-1) return "·";
+  if(n==='py'||n==='setup-python'||n.endsWith('.sh')) return "❯";
+  return "▪";
+}
+
+const rootUl = document.createElement('ul');
+rootUl.appendChild(buildNode(TREE, "", 0));
+treeEl.appendChild(rootUl);
+
+/* ---------- Flow tag labels ---------- */
+const FLOW = {
+  setup:   ["Setup",    "ft-setup"],
+  synth:   ["Synthesize","ft-synth"],
+  analyze: ["Analyze",  "ft-analyze"],
+  backlog: ["Backlog",  "ft-backlog"],
+  deliver: ["Deliver",  "ft-deliver"],
+  sys:     ["System",   "ft-sys"]
+};
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ---------- Select a file ---------- */
+function selectFile(node, path, row){
+  if(selectedNode) selectedNode.classList.remove('selected');
+  if(row){ row.classList.add('selected'); selectedNode = row; }
+
+  const flow = FLOW[node.flow] || FLOW.sys;
+  let html = '';
+  html += '<div class="dpath">' + esc(path) + '</div>';
+  html += '<div class="dname">' + esc(node.n) + '</div>';
+  html += '<div class="dbadges">';
+  if(node.k) html += '<span class="dbadge kind">' + esc(node.k) + '</span>';
+  html += '<span class="dbadge"><span class="flow-tag ' + flow[1] + '">' + flow[0] + '</span></span>';
+  html += '</div>';
+  html += '<div class="dsum">' + esc(node.s || 'No summary available.') + '</div>';
+  html += '<div class="dmeta">';
+
+  if(node.io){
+    html += '<div class="drow"><div class="dh"><span class="dhi">⇄</span> Inputs → Outputs</div>';
+    html += '<ul><li><strong>In:</strong> ' + esc(node.io[0]) + '</li><li><strong>Out:</strong> ' + esc(node.io[1]) + '</li></ul></div>';
+  }
+  if(node.when){
+    html += '<div class="drow"><div class="dh"><span class="dhi">◷</span> When it runs</div><p>' + esc(node.when) + '</p></div>';
+  }
+  if(node.rel && node.rel.length){
+    html += '<div class="drow"><div class="dh"><span class="dhi">⌘</span> Related</div><div class="rel-chips">';
+    node.rel.forEach(function(r){ html += '<button class="rel-chip" data-rel="' + esc(r) + '">' + esc(r) + '</button>'; });
+    html += '</div></div>';
+  }
+  html += '</div>';
+  detailEl.innerHTML = html;
+
+  detailEl.querySelectorAll('.rel-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){ jumpToRelated(chip.dataset.rel); });
+  });
+}
+
+/* ---------- Jump to a related file by name fragment ---------- */
+function jumpToRelated(rel){
+  const key = rel.replace(/\/$/, '').toLowerCase();
+  let match = nodeIndex.find(function(x){ return x.node.n.toLowerCase() === key; });
+  if(!match) match = nodeIndex.find(function(x){ return x.path.toLowerCase().indexOf(key) > -1; });
+  if(!match) match = nodeIndex.find(function(x){ return x.node.n.toLowerCase().indexOf(key.split('/').pop()) > -1; });
+  if(!match) return;
+  // expand ancestors
+  let el = match.row.parentElement;
+  while(el && el !== treeEl){
+    if(el.classList && el.classList.contains('tchildren')){
+      el.classList.remove('collapsed');
+      const prevRow = el.previousElementSibling;
+      if(prevRow){ const tw = prevRow.querySelector('.tw'); if(tw) tw.textContent = "▾"; }
+    }
+    el = el.parentElement;
+  }
+  selectFile(match.node, match.path, match.row);
+  match.row.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+/* ---------- Filter ---------- */
+document.getElementById('treeSearch').addEventListener('input', function(e){
+  const q = e.target.value.trim().toLowerCase();
+  const allRows = treeEl.querySelectorAll('.tnode');
+  if(!q){
+    allRows.forEach(function(r){ r.classList.remove('hidden'); });
+    treeEl.querySelectorAll('.tchildren').forEach(function(ul, i){
+      // restore default: only top-level expanded
+    });
+    return;
+  }
+  // Show any file row whose name matches, plus its ancestors
+  nodeIndex.forEach(function(x){
+    const hit = x.node.n.toLowerCase().indexOf(q) > -1 || (x.node.s||'').toLowerCase().indexOf(q) > -1;
+    x.row.classList.toggle('hidden', !hit);
+    if(hit){
+      let el = x.row.parentElement;
+      while(el && el !== treeEl){
+        if(el.classList && el.classList.contains('tchildren')){
+          el.classList.remove('collapsed');
+          const prevRow = el.previousElementSibling;
+          if(prevRow){ prevRow.classList.remove('hidden'); const tw = prevRow.querySelector('.tw'); if(tw) tw.textContent = "▾"; }
+        }
+        el = el.parentElement;
+      }
+    }
+  });
+  // hide folder rows with no visible descendants
+  treeEl.querySelectorAll('.tnode.folder').forEach(function(fr){
+    const ul = fr.nextElementSibling;
+    if(!ul) return;
+    const anyVisible = ul.querySelector('.tnode.file:not(.hidden)');
+    fr.classList.toggle('hidden', !anyVisible);
+  });
+});
+</script>
+</body>
+</html>

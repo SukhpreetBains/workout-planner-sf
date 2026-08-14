@@ -1,0 +1,28 @@
+# [Meeting Title]
+
+- **Date:** [YYYY-MM-DD]
+- **Attendees:** [names and roles]
+- **Purpose:** [one line — why this session happened]
+- **Transcript:** [link to the raw transcript file, if kept]
+
+## Summary
+
+[3-6 sentences: what the session covered and the most important takeaways.]
+
+## What we heard
+
+[The substance, grouped by topic. Attribute notable statements to the
+person who said them. Keep client vocabulary — do not translate their
+terms.]
+
+## Decisions made
+
+- [Decision — who made it, and any conditions]
+
+## Open questions
+
+- [Question — who should answer it, and why it matters]
+
+## Follow-ups
+
+- [Action — owner — when]
