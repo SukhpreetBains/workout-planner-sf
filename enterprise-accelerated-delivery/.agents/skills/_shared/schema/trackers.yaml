@@ -1,0 +1,218 @@
+# Tracker schema — the single source of truth for what the project trackers
+# contain and what the agent may extract from documents.
+#
+# Plain-English model:
+#   Documents produce FINDINGS. Each finding belongs to one CATEGORY below.
+#   Approved findings become rows in one of four Excel TRACKERS in
+#   workspace/trackers/. Every row cites the document(s) it came from in its
+#   "Source Refs" column (workspace-relative paths, "; "-separated).
+#
+# Column conventions:
+#   - The first column of every tab is the row ID: <prefix> + zero-padded
+#     number (e.g. PAIN-007). IDs are assigned by apply_updates.py, never by
+#     the agent.
+#   - required: true columns must be supplied when adding a row.
+#   - Columns whose name ends in " IDs" hold "; "-separated row IDs from
+#     another tab — that is how rows link to each other.
+#   - "Source Refs", "Created At", "Updated At" exist on every tab and are
+#     managed by apply_updates.py ("Source Refs" comes from the update file).
+
+schema_version: "1.0"
+list_delimiter: "; "
+
+trackers:
+  stakeholders:
+    file: workspace/trackers/stakeholders.xlsx
+    tabs: [stakeholder]
+  current-state:
+    file: workspace/trackers/current-state.xlsx
+    tabs: [pain_point, system]
+  future-state:
+    file: workspace/trackers/future-state.xlsx
+    tabs: [objective, requirement]
+  raid:
+    file: workspace/trackers/raid.xlsx
+    tabs: [risk, assumption, constraint, decision, open_question]
+
+categories:
+  stakeholder:
+    tab: Stakeholders
+    id_prefix: STK-
+    what_belongs: >
+      A person, group, team, committee, vendor, or external party that
+      influences, delivers, depends on, or is materially affected by the work.
+    bar_to_clear: >
+      Named actor with an identity-and-role signal (owns, approves, sponsors,
+      operates, escalates) — not a passing mention.
+    columns:
+      - {name: Name, required: true}
+      - {name: Role}
+      - {name: Organization}
+      - {name: Influence, enum: [low, medium, high]}
+      - {name: Interest Areas}
+      - {name: Reports To IDs, links_to: stakeholder}
+      - {name: Engagement Notes}
+
+  pain_point:
+    tab: Pain Points
+    id_prefix: PAIN-
+    what_belongs: >
+      A current-state problem materially affecting delivery, operations,
+      users, or governance.
+    bar_to_clear: >
+      Concrete friction happening today (delays, errors, workarounds, manual
+      effort, visibility gaps) with a material effect — not a passing gripe.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Functional Area}
+      - {name: Pain Type, required: true,
+         enum: [process, technology, data, people, policy, integration,
+                reporting, governance, change_adoption, other]}
+      - {name: Severity, required: true, enum: [low, medium, high, critical]}
+      - {name: Quantified Impact}
+      - {name: Status, required: true, default: active,
+         enum: [active, monitoring, mitigated, resolved, archived]}
+      - {name: Raised By Stakeholder IDs, links_to: stakeholder}
+      - {name: Affects System IDs, links_to: system}
+
+  system:
+    tab: Systems
+    id_prefix: SYS-
+    what_belongs: >
+      A named application, platform, data store, integration, reporting
+      surface, manual tool, or external service the client operates or
+      depends on.
+    bar_to_clear: >
+      A distinct operated, administered, or integrated surface — modules,
+      scripts, and config mechanisms inside a platform stay out.
+    columns:
+      - {name: Name, required: true}
+      - {name: System Type, required: true,
+         enum: [application, platform, data_store, integration, reporting,
+                manual_tool, infrastructure, external_service]}
+      - {name: Description}
+      - {name: Owner}
+      - {name: Status, required: true, default: active,
+         enum: [active, planned, retiring, retired]}
+      - {name: Related System IDs, links_to: system}
+
+  objective:
+    tab: Objectives
+    id_prefix: OBJ-
+    what_belongs: >
+      A future-state result the engagement is trying to achieve — leadership
+      intent, desired outcomes, and success criteria.
+    bar_to_clear: >
+      Stated intent for a future result (goal, target, "success looks like"),
+      ideally with a measure — not solution features and not current
+      complaints.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Success Measure}
+      - {name: Priority, enum: [low, medium, high]}
+      - {name: Status, required: true, default: active,
+         enum: [active, achieved, dropped]}
+
+  requirement:
+    tab: Requirements
+    id_prefix: REQ-
+    what_belongs: >
+      A condition, capability, or rule the solution or delivery approach must
+      satisfy.
+    bar_to_clear: >
+      Stated as necessary ("must", "shall", "needs the ability to",
+      acceptance criteria) — suggestions and nice-to-haves are not
+      requirements.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Requirement Type, required: true,
+         enum: [functional, non_functional, data, integration, reporting,
+                security, compliance, other]}
+      - {name: Priority, enum: [must, should, could, wont]}
+      - {name: Status, required: true, default: proposed,
+         enum: [proposed, confirmed, deferred, dropped]}
+      - {name: Addresses Pain Point IDs, links_to: pain_point}
+      - {name: Supports Objective IDs, links_to: objective}
+
+  risk:
+    tab: Risks
+    id_prefix: RSK-
+    what_belongs: >
+      A future adverse possibility or uncertain dependency that could
+      threaten objectives, scope, schedule, or delivery.
+    bar_to_clear: >
+      Future uncertainty with a plausible mechanism and delivery effect — not
+      pain already happening and not vague worry.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Likelihood, enum: [low, medium, high]}
+      - {name: Impact, enum: [low, medium, high, critical]}
+      - {name: Mitigation}
+      - {name: Owner}
+      - {name: Status, required: true, default: open,
+         enum: [open, monitoring, mitigated, closed]}
+
+  assumption:
+    tab: Assumptions
+    id_prefix: ASM-
+    what_belongs: >
+      A provisional belief the plan depends on but has not yet validated.
+    bar_to_clear: >
+      The plan actually leans on the belief and validation is still pending —
+      incidental beliefs nothing depends on stay out.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Validation Plan}
+      - {name: Status, required: true, default: unvalidated,
+         enum: [unvalidated, validated, invalidated]}
+
+  constraint:
+    tab: Constraints
+    id_prefix: CST-
+    what_belongs: >
+      A binding boundary or authoritative guardrail that limits feasible
+      options.
+    bar_to_clear: >
+      The authority is nameable (regulation, policy, contract, budget or
+      timeline cap, mandate) and the boundary actually binds choices.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Authority}
+      - {name: Constraint Type,
+         enum: [regulatory, policy, contractual, budget, timeline, technical,
+                other]}
+      - {name: Status, required: true, default: active, enum: [active, lifted]}
+
+  decision:
+    tab: Decisions
+    id_prefix: DEC-
+    what_belongs: >
+      A committed or explicitly proposed choice with enough authority to shape
+      delivery, design, scope, governance, or operations.
+    bar_to_clear: >
+      Authority or commitment is visible (who decided, decisive language, an
+      approval) — options still under discussion stay out.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Decided By}
+      - {name: Decision Date}
+      - {name: Rationale}
+      - {name: Status, required: true, default: decided,
+         enum: [proposed, decided, superseded, reversed]}
+
+  open_question:
+    tab: Open Questions
+    id_prefix: QST-
+    what_belongs: >
+      An explicitly unresolved issue that blocks or materially affects
+      decisions, requirements, or future-state clarity.
+    bar_to_clear: >
+      Material and left unresolved with a downstream effect — casual
+      brainstorming and rhetorical questions stay out.
+    columns:
+      - {name: Question, required: true}
+      - {name: Why It Matters}
+      - {name: Directed To}
+      - {name: Answer}
+      - {name: Status, required: true, default: open,
+         enum: [open, answered, parked]}
