@@ -29,4 +29,4 @@ Use `slalom-branding` to apply or review approved Slalom colors, typography, acc
 
 The Opportunity workspace is designed to live in a SharePoint folder synchronized locally through OneDrive. Agent-created project work remains under the Opportunity's `workspace/` folder.
 
-See [Opportunity Workspace Walkthrough](enterprise-accelerated-delivery/WORKSPACE-WALKTHROUGH.md) for the complete setup and daily operating flow.
+See [Opportunity Workspace Walkthrough](docs/opportunity-workspace-walkthrough.md) for the complete setup and daily operating flow.

@@ -16,7 +16,7 @@ Before changing anything, setup runs a read-only check showing what exists and w
 
 ## 2. Prepare the Opportunity folder
 
-Setup copies the canonical `enterprise-accelerated-delivery/workspace/` template into the Opportunity:
+Setup copies the canonical workspace template bundled with `initial-setup` into the Opportunity:
 
 ```text
 <Account>/

@@ -26,8 +26,7 @@ WINDOWS_RESERVED_NAMES = {
 }
 AGENTS_FILE_NAME = "AGENTS.md"
 SKILL_ROOT = Path(__file__).resolve().parent.parent
-REPOSITORY_ROOT = SKILL_ROOT.parents[1]
-DEFAULT_WORKSPACE_TEMPLATE = REPOSITORY_ROOT / "enterprise-accelerated-delivery" / "workspace"
+DEFAULT_WORKSPACE_TEMPLATE = SKILL_ROOT / "assets" / "workspace-template"
 AGENTS_TEMPLATE_PATH = SKILL_ROOT / "references" / "agent-workspace-template.md"
 
 
