@@ -1,6 +1,6 @@
 # Project Communications Record Contract
 
-Use `<Opportunity folder>/Agent Inbox/source-context.yaml` as the project-owned source-location record shared by setup, discovery, and retrieval. Store references and access state only—never message text, document contents, credentials, OAuth data, or permission payloads.
+Use `<Opportunity folder>/workspace/.system/source-context.yaml` as the project-owned source-location record shared by setup, discovery, and retrieval. Store references and access state only—never message text, document contents, credentials, OAuth data, or permission payloads.
 
 `initial-setup` owns the contract. Later skills may add or refresh confirmed locations but must preserve unknown fields and previously confirmed locations.
 

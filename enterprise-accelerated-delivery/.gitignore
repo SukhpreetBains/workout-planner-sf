@@ -29,3 +29,4 @@ venv/
 workspace/.system/search/
 workspace/.system/tracker-copies/
 workspace/.system/sync-state.json
+workspace/.system/project-context/

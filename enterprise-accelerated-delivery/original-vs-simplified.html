@@ -279,7 +279,7 @@
     <!-- SIMPLIFIED -->
     <div class="section section--new" style="--i:6">
       <div class="section-label"><span class="dot"></span> Simplified (feature/simplify)</div>
-      <p class="section-sub">Claude Code only. One plainly-named flow; every remaining file serves it. Vocabulary anyone gets: inbox, findings, trackers, sync.</p>
+      <p class="section-sub">Host-neutral skills. One plainly-named flow; every remaining file serves it. Vocabulary anyone gets: inbox, findings, trackers, sync.</p>
 
       <div class="layer">
         <div class="title">Root docs <span class="count">1</span></div>
@@ -287,7 +287,7 @@
       </div>
       <div class="layer">
         <div class="title">Skills <span class="count">5</span></div>
-        <div class="desc"><code>setup</code>, <code>add-documents</code>, <code>add-meeting-notes</code>, <code>review-updates</code>, <code>summarize</code> — named after what the user is doing.</div>
+        <div class="desc"><code>initial-setup</code>, <code>workspace-ingest-documents</code>, <code>workspace-capture-meeting-notes</code>, <code>workspace-review-updates</code>, <code>workspace-summarize</code> — named after what the user is doing.</div>
       </div>
       <div class="layer">
         <div class="title">Engine <span class="count">9 scripts</span></div>
@@ -327,13 +327,13 @@
       <div class="pipeline-step">
         <div class="step-num">2 · EXTRACT</div>
         <div class="step-name">Findings proposed</div>
-        <div class="step-detail">/add-documents<br>/add-meeting-notes</div>
+        <div class="step-detail">workspace-ingest-documents<br>workspace-capture-meeting-notes</div>
       </div>
       <div class="pipeline-arrow">→</div>
       <div class="pipeline-step">
         <div class="step-num">3 · APPROVE</div>
         <div class="step-name">Human review</div>
-        <div class="step-detail">/review-updates —<br>the only write path</div>
+        <div class="step-detail">workspace-review-updates —<br>the only write path</div>
       </div>
       <div class="pipeline-arrow">→</div>
       <div class="pipeline-step">
@@ -366,7 +366,7 @@
           <tr><td><code class="old-name">write_registers.py</code></td><td><code class="new-name">apply_updates.py</code></td><td class="why">verb matches the approval flow</td></tr>
           <tr><td><code class="old-name">refresh_derived_state.py</code> (+ graph, views, mirrors)</td><td><code class="new-name">sync.py</code></td><td class="why">one word, one script, three outputs</td></tr>
           <tr><td><code class="old-name">query.py</code></td><td><code class="new-name">search.py</code></td><td class="why">what agents actually do with it</td></tr>
-          <tr><td><code class="old-name">/process-inbox</code> · <code class="old-name">/process-session</code> · <code class="old-name">/review</code> · <code class="old-name">/synthesize</code></td><td><code class="new-name">/add-documents</code> · <code class="new-name">/add-meeting-notes</code> · <code class="new-name">/review-updates</code> · <code class="new-name">/summarize</code></td><td class="why">skills named after the user's action</td></tr>
+          <tr><td><code class="old-name">process-inbox</code> · <code class="old-name">process-session</code> · <code class="old-name">review</code> · <code class="old-name">synthesize</code></td><td><code class="new-name">workspace-ingest-documents</code> · <code class="new-name">workspace-capture-meeting-notes</code> · <code class="new-name">workspace-review-updates</code> · <code class="new-name">workspace-summarize</code></td><td class="why">workspace skills share a clear namespace and action</td></tr>
         </tbody>
       </table>
     </div>

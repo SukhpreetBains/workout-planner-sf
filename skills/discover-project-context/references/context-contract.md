@@ -1,6 +1,6 @@
 # Project Context Contract v1
 
-Use `Agent Inbox/source-context.yaml`, created by `initial-setup`, as the project-owned source-location record. Use `.codex/project-context/manifest.json` as its machine-local retrieval projection and stable handoff to ranking scripts. Import the shared record before retrieval; do not maintain conflicting source identities in the local projection.
+Use `workspace/.system/source-context.yaml`, created by `initial-setup`, as the project-owned source-location record. Use `workspace/.system/project-context/manifest.json` as its machine-local retrieval projection and stable handoff to ranking scripts. Import the shared record before retrieval; do not maintain conflicting source identities in the local projection.
 
 ## Required shape
 
@@ -26,7 +26,7 @@ Use `Agent Inbox/source-context.yaml`, created by `initial-setup`, as the projec
     "allow_private_search": false
   },
   "source_context": {
-    "path": "Agent Inbox/source-context.yaml",
+    "path": "workspace/.system/source-context.yaml",
     "last_imported_at": "2026-08-04T12:00:00Z",
     "source_count": 3
   },

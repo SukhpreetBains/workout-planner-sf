@@ -34,8 +34,8 @@ def main() -> None:
     run(str(VALIDATOR))
     with tempfile.TemporaryDirectory(prefix="context-fixture-") as temp:
         root = Path(temp)
-        context = root / ".codex" / "project-context"
-        source_context = root / "Agent Inbox" / "source-context.yaml"
+        context = root / "workspace" / ".system" / "project-context"
+        source_context = root / "workspace" / ".system" / "source-context.yaml"
         run(str(SOURCE_CONTEXT), "init", "--root", str(root), "--account", "Synthetic Account", "--opportunity", "Synthetic")
         shared = ["--root", str(root), "--authority", "canonical", "--priority", "5", "--sensitivity", "internal"]
         run(str(SOURCE_CONTEXT), "upsert-source", *shared, "--id", "chat", "--kind", "slack", "--name", "Chat source", "--locator", "slack://team/channel", "--identifier", "parent_id=team", "--identifier", "channel_id=channel", "--purpose", "Decisions about context boundaries", "--access-state", "available")
@@ -50,7 +50,7 @@ def main() -> None:
         manifest = load(context / "manifest.json")
         assert manifest["discovery_runs"][-1]["estimated_tokens"] == 25
         assert manifest["discovery_runs"][-1]["exploration_caps"]["chat"] == 4
-        assert manifest["source_context"]["path"] == "Agent Inbox/source-context.yaml"
+        assert manifest["source_context"]["path"] == "workspace/.system/source-context.yaml"
         assert manifest["source_context"]["source_count"] == 3
         assert {source["kind"] for source in manifest["sources"]} == {"slack", "teams", "sharepoint"}
         assert any(source["kind"] == "sharepoint" and source["locator"].startswith("https://tenant.sharepoint.com/") for source in manifest["sources"])
@@ -117,7 +117,7 @@ def main() -> None:
     # Gada's original messaging-only shape remains importable and is preserved when extended.
     with tempfile.TemporaryDirectory(prefix="source-context-gada-") as temp:
         root = Path(temp)
-        source_context = root / "Agent Inbox" / "source-context.yaml"
+        source_context = root / "workspace" / ".system" / "source-context.yaml"
         source_context.parent.mkdir(parents=True)
         source_context.write_text(
             """account: Acme

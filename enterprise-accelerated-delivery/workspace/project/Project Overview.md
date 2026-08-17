@@ -4,13 +4,13 @@
 
 | Field | Value |
 |-------|-------|
-| **Project Name** | [Project Name] |
-| **Client** | [Client Name] |
+| **Opportunity** | [Opportunity Name] |
+| **Account** | [Account Name] |
 | **Engagement Type** | [Discovery / Discovery + Design / Full Lifecycle] |
 | **Start Date** | [YYYY-MM-DD] |
 | **End Date** | [YYYY-MM-DD] |
 | **Slalom Lead** | [Name] |
-| **Client Sponsor** | [Name] |
+| **Opportunity Sponsor** | [Name] |
 
 ## Background
 

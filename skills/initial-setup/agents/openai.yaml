@@ -1,7 +1,7 @@
 interface:
   display_name: "Initial Setup"
-  short_description: "Bootstrap discovery environment and source-system context"
-  default_prompt: "Use $initial-setup to prepare my discovery environment and set me up for a new or existing project in my synced Account folder."
+  short_description: "Prepare an Opportunity workspace and project context"
+  default_prompt: "Use $initial-setup to prepare a new or existing Opportunity workspace in my synced Account folder."
 
 policy:
   allow_implicit_invocation: false

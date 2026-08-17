@@ -46,7 +46,7 @@ def slugify(value: str) -> str:
 
 def paths(root: str) -> tuple[Path, Path, Path]:
     workspace = Path(root).expanduser().resolve()
-    context_dir = workspace / ".codex" / "project-context"
+    context_dir = workspace / "workspace" / ".system" / "project-context"
     return context_dir, context_dir / "manifest.json", context_dir / "brief.md"
 
 
@@ -105,7 +105,7 @@ def new_manifest(root: str, name: str | None, objective: str | None) -> dict[str
         },
         "sources": [],
         "source_context": {
-            "path": "Agent Inbox/source-context.yaml",
+            "path": "workspace/.system/source-context.yaml",
             "last_imported_at": None,
             "source_count": 0,
         },
@@ -141,7 +141,7 @@ def render_brief(manifest: dict[str, Any]) -> str:
             "",
             "## Shared Source Record",
             "",
-            f"- Path: `{shared.get('path', 'Agent Inbox/source-context.yaml')}`",
+            f"- Path: `{shared.get('path', 'workspace/.system/source-context.yaml')}`",
             f"- Last imported: {shared.get('last_imported_at') or 'Not imported'}",
             f"- Shared references imported: {shared.get('source_count', 0)}",
         ])

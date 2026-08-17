@@ -26,7 +26,7 @@ def slugify(value: str) -> str:
 def context_path(root: str, explicit: str | None = None) -> Path:
     if explicit:
         return Path(explicit).expanduser().resolve()
-    return Path(root).expanduser().resolve() / "Agent Inbox" / "source-context.yaml"
+    return Path(root).expanduser().resolve() / "workspace" / ".system" / "source-context.yaml"
 
 
 def scalar(value: str) -> Any:

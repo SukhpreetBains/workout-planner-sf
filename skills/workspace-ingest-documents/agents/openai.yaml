@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Ingest Documents"
+  short_description: "File documents and propose tracker updates"
+  default_prompt: "Use $workspace-ingest-documents to process the documents in my Opportunity workspace inbox."

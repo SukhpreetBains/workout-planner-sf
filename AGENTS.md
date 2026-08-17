@@ -10,7 +10,7 @@
 
 ## Current implementation state
 
-The primary skills are scaffolds only. Do not treat TODO-marked skills, references, or templates as executable workflows or approved delivery guidance.
+The initial setup, project-context, `workspace-*` knowledge, and `slalom-branding` skills are implemented. Do not treat other TODO-marked skills, references, or templates as executable workflows or approved delivery guidance.
 
 ## Change safety
 

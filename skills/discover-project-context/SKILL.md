@@ -1,6 +1,6 @@
 ---
 name: discover-project-context
-description: Establish or refresh reusable project context before implementation work begins. Use when Codex is starting work in an unfamiliar project, repeatedly searching for project references, onboarding to an existing effort, handing context to later skills, or identifying local folders, Slack channels, Teams chats/channels, SharePoint folders, stakeholders, terminology, constraints, or authoritative sources. Run measured, metadata-only discovery, update the setup-generated Agent Inbox/source-context.yaml record, and generate a local .codex/project-context projection without ingesting dense histories.
+description: Establish or refresh reusable project context before implementation work begins. Use when Codex is starting work in an unfamiliar project, repeatedly searching for project references, onboarding to an existing effort, handing context to later skills, or identifying local folders, Slack channels, Teams chats/channels, SharePoint folders, stakeholders, terminology, constraints, or authoritative sources. Run measured, metadata-only discovery, update the setup-generated workspace/.system/source-context.yaml record, and generate a bounded projection inside workspace/.system/project-context without ingesting dense histories.
 ---
 
 # Discover Project Context
@@ -13,12 +13,12 @@ Use the setup-generated project communications record as the shared source of tr
 
 ```text
 <Opportunity folder>/
-├── Agent Inbox/
-│   └── source-context.yaml       # shared source locations from initial-setup
-└── .codex/project-context/
-    ├── .gitignore
-    ├── manifest.json             # generated local retrieval projection
-    └── brief.md                  # compact local projection
+└── workspace/.system/
+    ├── source-context.yaml       # shared source locations from initial-setup
+    └── project-context/
+        ├── .gitignore
+        ├── manifest.json         # generated local retrieval projection
+        └── brief.md              # compact local projection
 ```
 
 Read the initial-setup [project communications record contract](../initial-setup/references/source-context.md) before changing shared locations. Read [references/context-contract.md](references/context-contract.md) before writing the local projection. Do not make `manifest.json` a second independently maintained source inventory.
@@ -37,17 +37,17 @@ Use the initial-setup `scripts/manage-source-context.py` for shared source updat
 
 ### 2. Reuse before discovering
 
-- Check `Agent Inbox/source-context.yaml` first and validate it with the initial-setup manager.
-- Check `.codex/project-context/manifest.json` next. If it exists, validate it and import the shared record before identifying missing, stale, or task-relevant fields.
+- Check `workspace/.system/source-context.yaml` first and validate it with the initial-setup manager.
+- Check `workspace/.system/project-context/manifest.json` next. If it exists, validate it and import the shared record before identifying missing, stale, or task-relevant fields.
 - Read `brief.md` before any broader exploration. Refresh instead of restarting.
 
 Run:
 
 ```bash
-python3 <skill-dir>/scripts/project_context.py init --root <workspace-root>
-python3 <initial-setup-skill-dir>/scripts/manage-source-context.py validate --root <workspace-root>
-python3 <skill-dir>/scripts/project_context.py import-source-context --root <workspace-root> --allow-incomplete
-python3 <skill-dir>/scripts/project_context.py validate --root <workspace-root> --allow-incomplete
+python3 <skill-dir>/scripts/project_context.py init --root <opportunity-root>
+python3 <initial-setup-skill-dir>/scripts/manage-source-context.py validate --root <opportunity-root>
+python3 <skill-dir>/scripts/project_context.py import-source-context --root <opportunity-root> --allow-incomplete
+python3 <skill-dir>/scripts/project_context.py validate --root <opportunity-root> --allow-incomplete
 ```
 
 `init` is non-destructive and does not overwrite an existing local manifest. It also creates a directory-local `.gitignore` so manifests and later cached excerpts stay local by default. Tell the user that the ranked context cache is intentionally untracked while the project communications record remains project-owned.
@@ -95,7 +95,7 @@ Measure the pass after the scan: count connector calls, candidate locations cons
 
 ```bash
 python3 <skill-dir>/scripts/project_context.py record-discovery \
-  --root <workspace-root> \
+  --root <opportunity-root> \
   --sources-considered 6 \
   --sources-recorded 3 \
   --connector-calls 4 \
@@ -128,7 +128,7 @@ After user confirmation, add each distinct canonical location to the shared reco
 
 ```bash
 python3 <initial-setup-skill-dir>/scripts/manage-source-context.py upsert-source \
-  --root <workspace-root> \
+  --root <opportunity-root> \
   --id engagement-folder \
   --kind sharepoint \
   --name "Engagement folder" \
@@ -144,13 +144,13 @@ python3 <initial-setup-skill-dir>/scripts/manage-source-context.py upsert-source
   --access-reason "Folder identity was confirmed during discovery."
 
 python3 <skill-dir>/scripts/project_context.py set-project \
-  --root <workspace-root> \
+  --root <opportunity-root> \
   --name "Project name" \
   --objective "Current objective" \
   --phase "Current phase"
 
-python3 <skill-dir>/scripts/project_context.py import-source-context --root <workspace-root>
-python3 <skill-dir>/scripts/project_context.py validate --root <workspace-root>
+python3 <skill-dir>/scripts/project_context.py import-source-context --root <opportunity-root>
+python3 <skill-dir>/scripts/project_context.py validate --root <opportunity-root>
 ```
 
 - Use workspace-relative paths for local sources when possible.
@@ -158,7 +158,7 @@ python3 <skill-dir>/scripts/project_context.py validate --root <workspace-root>
 - Store no credentials, tokens, copied private messages, or full document content in the shared record or local projection.
 - Mark confidential source locations with the appropriate `sensitivity` value.
 - Keep unresolved but important gaps explicit in `open_questions`.
-- Keep `.codex/project-context/` excluded from version control when it contains internal or confidential locations. Do not remove or broaden its directory-local ignore rule without explicit user intent.
+- Keep `workspace/.system/project-context/` excluded from version control when it contains internal or confidential locations. Do not remove or broaden its directory-local ignore rule without explicit user intent.
 
 ## Handoff
 

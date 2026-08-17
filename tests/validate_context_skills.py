@@ -8,7 +8,15 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ("initial-setup", "discover-project-context", "retrieve-project-context")
+SKILLS = (
+    "initial-setup",
+    "discover-project-context",
+    "retrieve-project-context",
+    "workspace-ingest-documents",
+    "workspace-capture-meeting-notes",
+    "workspace-review-updates",
+    "workspace-summarize",
+)
 LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
 
