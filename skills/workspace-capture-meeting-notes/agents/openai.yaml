@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Capture Meeting Notes"
+  short_description: "Capture meeting evidence and proposed updates"
+  default_prompt: "Use $workspace-capture-meeting-notes to turn this meeting material into a structured workspace note."

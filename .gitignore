@@ -1,10 +1,16 @@
+# OS-generated files
+.DS_Store
+
+# Python runtime state
+__pycache__/
+*.pyc
+.venv/
+
 # Machine-local project context assembled from authorized sources.
-.codex/project-context/
+workspace/.system/project-context/
 
 # Machine-local skill eval fixtures and outputs.
 local-evals/
 
 # Downloaded meeting transcripts may contain project-specific content.
 Call Transcripts/
-
-.venv

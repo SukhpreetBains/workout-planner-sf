@@ -41,7 +41,8 @@ def os_name() -> str:
 
 def current_python_status() -> ToolStatus:
     version = first_line(sys.version.replace("\n", " "))
-    return ToolStatus("Python 3", sys.executable, True, version)
+    supported = sys.version_info >= (3, 10)
+    return ToolStatus("Python 3.10+", sys.executable, supported, version)
 
 
 def command_status(command: str, label: str) -> ToolStatus:
@@ -54,12 +55,14 @@ def command_status(command: str, label: str) -> ToolStatus:
     return ToolStatus(label, command, True, version)
 
 
-def collect_statuses() -> list[ToolStatus]:
-    return [
-        current_python_status(),
-        command_status("node", "Node.js"),
-        command_status("npm.cmd" if os_name() == "windows" else "npm", "npm"),
-    ]
+def collect_statuses(include_node: bool = False) -> list[ToolStatus]:
+    statuses = [current_python_status()]
+    if include_node:
+        statuses.extend([
+            command_status("node", "Node.js"),
+            command_status("npm.cmd" if os_name() == "windows" else "npm", "npm"),
+        ])
+    return statuses
 
 
 def print_statuses(statuses: list[ToolStatus]) -> None:
@@ -96,14 +99,14 @@ def install_with_winget(package_id: str) -> bool:
     )
 
 
-def install_missing() -> tuple[bool, list[str]]:
+def install_missing(include_node: bool) -> tuple[bool, list[str]]:
     platform_name = os_name()
     notes: list[str] = []
     attempted_install = False
 
-    statuses = {status.label: status for status in collect_statuses()}
+    statuses = {status.label: status for status in collect_statuses(include_node)}
 
-    if not statuses["Node.js"].installed or not statuses["npm"].installed:
+    if include_node and (not statuses["Node.js"].installed or not statuses["npm"].installed):
         attempted_install = True
         if platform_name == "macos" and shutil.which("brew"):
             if install_with_brew("node"):
@@ -132,13 +135,18 @@ def main() -> int:
         action="store_true",
         help="Install supported missing dependencies using the platform package manager.",
     )
+    parser.add_argument(
+        "--include-node",
+        action="store_true",
+        help="Also require Node.js and npm for a workflow that needs them.",
+    )
     args = parser.parse_args()
 
-    statuses = collect_statuses()
+    statuses = collect_statuses(args.include_node)
     print_statuses(statuses)
 
     if args.install_missing:
-        attempted_install, notes = install_missing()
+        attempted_install, notes = install_missing(args.include_node)
         if notes:
             print()
             for note in notes:
@@ -147,12 +155,14 @@ def main() -> int:
             print()
             print("Rechecking environment after installation attempts...")
             print()
-            statuses = collect_statuses()
+            statuses = collect_statuses(args.include_node)
             print_statuses(statuses)
 
     missing = [status for status in statuses if not status.installed]
     print()
     if missing:
+        if any(status.label == "Python 3.10+" for status in missing):
+            print("Python 3.10 or newer is required. Install or select a supported Python runtime.")
         print("Environment baseline is incomplete.")
         return 1
 

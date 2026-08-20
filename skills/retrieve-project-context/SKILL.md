@@ -1,6 +1,6 @@
 ---
 name: retrieve-project-context
-description: Retrieve, re-rank, trim, and persist task-relevant project context from sources recorded by initial setup and discovery. Use when Codex needs evidence from known local files, Slack or Teams conversations, SharePoint folders, or other confirmed sources; when long histories would otherwise consume excessive context; when a cached briefing should be refreshed; or when downstream work needs a compact evidence hierarchy. Import Agent Inbox/source-context.yaml into the local manifest, fetch narrowly, rank against the task, and store bounded summaries with provenance.
+description: Retrieve, re-rank, trim, and persist task-relevant project context from sources recorded by initial setup and discovery. Use when Codex needs evidence from known local files, Slack or Teams conversations, SharePoint folders, or other confirmed sources; when long histories would otherwise consume excessive context; when a cached briefing should be refreshed; or when downstream work needs a compact evidence hierarchy. Import workspace/.system/source-context.yaml into the local manifest, fetch narrowly, rank against the task, and store bounded summaries with provenance.
 ---
 
 # Retrieve Project Context
@@ -9,7 +9,7 @@ Build a task-specific evidence pack from sources already identified by `$discove
 
 ## Preconditions
 
-Require the setup-generated `Agent Inbox/source-context.yaml` beneath the project root. Validate it, initialize the local `.codex/project-context/manifest.json` projection when needed, and run the discovery skill's `import-source-context` command before planning retrieval. Read `.codex/project-context/brief.md`, then validate the imported manifest.
+Require the setup-generated `workspace/.system/source-context.yaml` beneath the Opportunity root. Validate it, initialize the local `workspace/.system/project-context/manifest.json` projection when needed, and run the discovery skill's `import-source-context` command before planning retrieval. Read `workspace/.system/project-context/brief.md`, then validate the imported manifest.
 
 If the shared record is absent or lacks the sources needed for the task, invoke `$discover-project-context` or ask only for the missing location. Do not compensate with an unbounded workspace or connector search. Do not edit shared locations as an incidental retrieval side effect.
 
@@ -27,7 +27,7 @@ Write one sentence that captures the decision, deliverable, or question the cont
 
 ### 2. Reuse fresh context
 
-Check `.codex/project-context/state.json` and `index.md` after importing the shared source record.
+Check `workspace/.system/project-context/state.json` and `index.md` after importing the shared source record.
 
 - Reuse a cached source when its purpose matches the task, it is within `freshness_hours`, and the current request does not demand newer facts.
 - Refresh mutable decision, status, issue, and conversation sources when freshness is uncertain.
@@ -76,7 +76,7 @@ Run:
 
 ```bash
 python3 <skill-dir>/scripts/rank_context.py \
-  --manifest <workspace-root>/.codex/project-context/manifest.json \
+  --manifest <opportunity-root>/workspace/.system/project-context/manifest.json \
   --chunks <temporary-dir>/chunks.jsonl \
   --task "<retrieval task>" \
   --output <temporary-dir>/ranked.jsonl \
@@ -105,15 +105,15 @@ Run:
 
 ```bash
 python3 <skill-dir>/scripts/persist_context.py \
-  --manifest <workspace-root>/.codex/project-context/manifest.json \
+  --manifest <opportunity-root>/workspace/.system/project-context/manifest.json \
   --pack <temporary-dir>/pack.json \
-  --context-dir <workspace-root>/.codex/project-context
+  --context-dir <opportunity-root>/workspace/.system/project-context
 ```
 
 This produces:
 
 ```text
-.codex/project-context/
+workspace/.system/project-context/
 ├── .gitignore
 ├── index.md
 ├── state.json

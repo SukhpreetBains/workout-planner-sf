@@ -1,6 +1,6 @@
 # Context Retrieval Contract v1
 
-`initial-setup` owns the shared `Agent Inbox/source-context.yaml` source-location contract. Discovery maintains confirmed locations and generates `.codex/project-context/manifest.json`; retrieval consumes that local projection without changing shared source identity or scope.
+`initial-setup` owns the shared `workspace/.system/source-context.yaml` source-location contract. Discovery maintains confirmed locations and generates `workspace/.system/project-context/manifest.json`; retrieval consumes that local projection without changing shared source identity or scope.
 
 ## Manifest fields used by retrieval
 
