@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "archetype": "executive-readout",
+    "client": "Test Client",
+    "title": "A minimal readout",
+    "date": "2026-01-15",
+    "classification": "Confidential — prepared for Test Client",
+    "accent": "chartreuse"
+  },
+  "sections": [
+    {
+      "type": "exec-summary",
+      "body": "One paragraph is enough to prove the pipeline end to end.\n"
+    },
+    {
+      "type": "theme-group",
+      "title": "What we heard",
+      "findings": [
+        {
+          "theme": "A single theme",
+          "evidence": "One observation, recorded once.",
+          "implication": "And the so-what that makes it a finding.",
+          "severity": "low"
+        }
+      ]
+    },
+    {
+      "type": "recommendations",
+      "items": [
+        {
+          "action": "Do the one thing",
+          "rationale": "Because the evidence points at it."
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "items": ["Confirm the scope"]
+    }
+  ]
+}

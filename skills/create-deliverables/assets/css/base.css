@@ -1,0 +1,226 @@
+/* ==========================================================================
+   base.css — reset, fonts, document layout, typography.
+
+   No color literal may appear in this file. Use a token from tokens.css.
+   Every rule that sets a background must also set `color` from the same
+   surface, or carry a trailing no-text comment because it holds no text.
+   ========================================================================== */
+
+/* --- Slalom Sans ---------------------------------------------------------
+   One @font-face block per weight, never one block listing several weights.
+   Only the four weights the kit actually uses are declared, so the browser
+   cannot fall back to a weight that does not exist in the family.
+   woff2 first, woff as the fallback source, no .otf on the web ever.
+   ------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: "Slalom Sans";
+  src: url("../fonts/slalom-sans-light.woff2") format("woff2"),
+       url("../fonts/slalom-sans-light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Slalom Sans";
+  src: url("../fonts/slalom-sans-regular.woff2") format("woff2"),
+       url("../fonts/slalom-sans-regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Slalom Sans";
+  src: url("../fonts/slalom-sans-bold.woff2") format("woff2"),
+       url("../fonts/slalom-sans-bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Slalom Sans";
+  src: url("../fonts/slalom-sans-black.woff2") format("woff2"),
+       url("../fonts/slalom-sans-black.woff") format("woff");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Reset --------------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  /* Slalom Sans has no Medium or SemiBold. Never let the browser invent one. */
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-white-bg);
+  color: var(--on-white-body);
+  font-family: var(--font-sans);
+  font-weight: var(--weight-body);
+  font-size: var(--size-body);
+  line-height: var(--leading-body);
+  /* Flush left, ragged right. Never justified, never centred. */
+  text-align: left;
+  text-wrap: pretty;
+}
+
+h1, h2, h3, p, ul, ol, figure, blockquote, dl, dd { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+img, svg { display: block; max-width: 100%; }
+a { color: var(--on-white-emphasis); text-underline-offset: 0.15em; }
+
+:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* --- Surfaces ------------------------------------------------------------
+   A surface is a background plus the text colours approved to sit on it.
+   These four rules are the only place a background and a text colour are
+   paired; every component inherits from whichever surface encloses it.
+   ------------------------------------------------------------------------ */
+
+.surface-white {
+  background: var(--surface-white-bg);
+  color: var(--on-white-body);
+}
+
+.surface-blue {
+  background: var(--surface-blue-bg);
+  color: var(--on-blue-body);
+}
+
+.surface-black {
+  background: var(--surface-black-bg);
+  color: var(--on-black-body);
+}
+
+.surface-accent {
+  background: var(--surface-accent-bg);
+  color: var(--on-accent-body);
+}
+
+/* --- Document layout ----------------------------------------------------- */
+
+.page {
+  display: block;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.section {
+  padding-block: var(--space-7);
+  padding-inline: var(--page-gutter);
+  scroll-margin-top: var(--space-5);
+}
+
+.section__inner {
+  max-width: var(--page-max);
+  margin-inline: auto;
+}
+
+.section + .section { border-top: 1px solid var(--rule-color); }
+.section--flush + .section { border-top: 0; }
+
+.measure { max-width: var(--measure); }
+
+.skip-link {
+  position: absolute;
+  left: var(--space-3);
+  top: var(--space-3);
+  z-index: 10;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-white-bg);
+  color: var(--on-white-emphasis);
+  font-weight: var(--weight-subhead);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible { transform: translateY(0); }
+
+/* Available to a screen reader, absent from the visual composition. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Typography ---------------------------------------------------------- */
+
+.display {
+  font-weight: var(--weight-display);
+  font-size: var(--size-display);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+}
+
+.headline {
+  font-weight: var(--weight-headline);
+  font-size: var(--size-h2);
+  line-height: var(--leading-subhead);
+  text-wrap: balance;
+}
+
+.subhead {
+  font-weight: var(--weight-subhead);
+  font-size: var(--size-h3);
+  line-height: var(--leading-subhead);
+}
+
+.eyebrow {
+  /* The one place all caps is permitted: a short label, never a sentence. */
+  text-transform: uppercase;
+  font-weight: var(--weight-subhead);
+  font-size: var(--size-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  line-height: var(--leading-subhead);
+}
+
+.small {
+  font-size: var(--size-small);
+  font-weight: var(--weight-body-tight);
+}
+
+.muted { color: var(--on-white-muted); }
+.emphasis { color: var(--on-white-emphasis); }
+
+.prose > * + * { margin-top: var(--space-3); }
+.prose strong { font-weight: var(--weight-subhead); }
+.prose em { font-style: italic; font-weight: var(--weight-body-tight); }
+
+.prose ul { display: grid; gap: var(--space-2); }
+
+.prose li {
+  /* Bullets sit one weight step heavier than Light body copy. */
+  font-weight: var(--weight-bullet);
+  padding-left: var(--space-4);
+  position: relative;
+}
+
+.prose li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: var(--space-2);
+  height: 2px;
+  background: var(--on-white-emphasis); /* no-text */
+}

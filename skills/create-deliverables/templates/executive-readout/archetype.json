@@ -1,0 +1,56 @@
+{
+  "name": "executive-readout",
+  "title": "Executive readout / findings",
+  "description": "A discovery readout for an executive audience: what we heard, what it means, what to do about it, and what happens next. Reads top to bottom in ten minutes and prints as a defensible record.",
+  "cover_surface": "blue",
+  "footer_surface": "black",
+  "allowed_sections": [
+    "exec-summary",
+    "kpi-row",
+    "theme-group",
+    "quote",
+    "heatmap",
+    "recommendations",
+    "roadmap",
+    "timeline",
+    "next-steps",
+    "methodology"
+  ],
+  "required_sections": [
+    "exec-summary",
+    "theme-group",
+    "recommendations",
+    "next-steps"
+  ],
+  "recommended_order": [
+    "exec-summary",
+    "kpi-row",
+    "theme-group",
+    "quote",
+    "heatmap",
+    "recommendations",
+    "roadmap",
+    "next-steps",
+    "methodology"
+  ],
+  "injects": ["cover", "progress-rail", "footer"],
+  "default_motion": {
+    "cover": ["color-bar-draw", "line-draw"],
+    "progress-rail": "scroll-sync",
+    "exec-summary": "fade-up",
+    "kpi-row": "count-up",
+    "theme-group": "stagger-up",
+    "quote": "fade-up",
+    "heatmap": "cell-sweep",
+    "recommendations": "stagger-up",
+    "roadmap": "path-draw",
+    "next-steps": "stagger-up",
+    "methodology": "none",
+    "footer": "none"
+  },
+  "notes": [
+    "exec-summary comes first: an executive who reads one block reads that one.",
+    "A finding without an implication is not a finding, so `implication` is required.",
+    "methodology sits last. It is the defensibility appendix, not the argument."
+  ]
+}
