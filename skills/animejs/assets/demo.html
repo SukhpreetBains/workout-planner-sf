@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anime.js v4 - skill demo</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-content: center;
+      gap: 2rem;
+      font-family: system-ui, sans-serif;
+      background: #0b0b12;
+      color: #e7e7f0;
+    }
+    h1 { font-weight: 600; letter-spacing: -0.02em; text-align: center; }
+    .row { display: flex; gap: 1rem; justify-content: center; }
+    .box {
+      width: 64px; height: 64px; border-radius: 14px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      opacity: 0;
+    }
+    button {
+      justify-self: center;
+      padding: 0.6rem 1.2rem; border: 0; border-radius: 999px;
+      background: #6366f1; color: white; font: inherit; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Anime.js v4 - staggered timeline</h1>
+  <div class="row">
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+    <div class="box"></div>
+  </div>
+  <button id="replay">Replay</button>
+
+  <script type="module">
+    // No build step: import the v4 ESM bundle straight from a CDN.
+    import { createTimeline, animate, stagger } from 'https://cdn.jsdelivr.net/npm/animejs@4/+esm';
+
+    function play() {
+      const tl = createTimeline({ defaults: { ease: 'outExpo', duration: 700 } });
+
+      tl.add('.box', {
+          y: [40, 0],
+          opacity: [0, 1],
+          scale: [0.6, 1],
+          delay: stagger(80, { from: 'center' }),
+        })
+        .add('.box', {
+          rotate: '1turn',
+          duration: 600,
+          delay: stagger(60),
+        }, '-=300');
+    }
+
+    play();
+    document.getElementById('replay').addEventListener('click', () => {
+      // reset then replay
+      animate('.box', { opacity: 0, y: 40, rotate: 0, scale: 0.6, duration: 0 });
+      play();
+    });
+  </script>
+</body>
+</html>

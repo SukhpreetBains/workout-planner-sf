@@ -1,0 +1,92 @@
+/* ==========================================================================
+   print.css — the deliverable printed or saved as PDF.
+
+   Every animated element resolves to its final state. A printed page cannot
+   run motion.js, so anything that relies on it must already be visible.
+   ========================================================================== */
+
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 16mm 14mm;
+  }
+
+  html { scroll-behavior: auto; }
+
+  body {
+    font-size: 10.5pt;
+    line-height: 1.4;
+  }
+
+  /* Final states for every animated element. */
+  [data-motion],
+  [data-motion] * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .slalom-line path,
+  .roadmap__path path {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  /* Interactive chrome has no meaning on paper. */
+  .rail,
+  .skip-link,
+  .slalom-line {
+    display: none !important;
+  }
+
+  /* Backgrounds must actually print — the classification marker and the cover
+     depend on them. */
+  .cover,
+  .footer,
+  .tag,
+  .color-bar,
+  .color-bar__swatch,
+  .meter__step {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cover {
+    min-height: auto;
+    padding-block: 0 var(--space-4);
+    break-after: page;
+  }
+
+  .cover__body { padding-block: var(--space-6); }
+
+  .section {
+    padding-block: var(--space-5);
+    padding-inline: 0;
+    break-inside: auto;
+  }
+
+  .section + .section { border-top: 0; }
+
+  /* Keep a unit of meaning on one page where it fits. */
+  .kpi,
+  .finding,
+  .phase,
+  .rec,
+  .quote,
+  .exec-summary,
+  .next-step {
+    break-inside: avoid;
+  }
+
+  h1, h2, h3 { break-after: avoid; }
+
+  .heatmap__scroll { overflow: visible; }
+  .heatmap table { min-width: 0; }
+
+  /* A link's URL is useless on paper and this deliverable has no external
+     links by design, so suppress decoration rather than print href text. */
+  a { text-decoration: none; }
+
+  .footer { break-inside: avoid; }
+}

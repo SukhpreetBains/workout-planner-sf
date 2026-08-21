@@ -1,0 +1,568 @@
+/* ==========================================================================
+   components.css — the component kit.
+
+   Rules of this file:
+   1. No color literal. Tokens only.
+   2. A rule that sets a background either pairs a text colour from the same
+      surface, or carries a trailing no-text comment because it holds no text.
+   3. Never `opacity: 0` here. Components must be fully readable with
+      JavaScript disabled; motion.js sets its own "before" state at init.
+   4. Named secondary tokens (--cyan, --coral-red, --purple, --chartreuse)
+      appear only in the colour bar, which the brand permits to show the whole
+      palette. Everywhere else uses --accent.
+   ========================================================================== */
+
+/* ==========================================================================
+   COVER
+   ========================================================================== */
+
+.cover {
+  position: relative;
+  min-height: var(--cover-min-height);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--page-gutter) 0;
+  overflow: hidden;
+}
+
+.cover__inner {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  width: 100%;
+  display: contents;
+}
+
+.cover__masthead {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  position: relative;
+  z-index: 1;
+}
+
+/* Clear space of at least the width of an "o" on every side of the mark. */
+.logo {
+  padding: var(--logo-clear-space);
+  margin: calc(var(--logo-clear-space) * -1);
+  flex: 0 0 auto;
+}
+
+.logo img { height: var(--logo-height); width: auto; }
+
+/* A partner lockup: the client mark sits beside ours, separated by a rule,
+   and never larger than the Slalom mark. */
+.lockup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding-left: var(--space-4);
+  border-left: 1px solid currentColor;
+}
+
+.lockup img { height: var(--logo-height); width: auto; }
+
+.cover__body {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  width: 100%;
+  align-self: center;
+  display: grid;
+  gap: var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+
+.cover__title { max-width: 24ch; }
+.cover__subtitle { font-size: var(--size-h3); font-weight: var(--weight-body-tight); max-width: 44ch; }
+
+.cover__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--size-small);
+  font-weight: var(--weight-body-tight);
+}
+
+.cover__meta dt { font-weight: var(--weight-subhead); }
+.cover__meta div { display: grid; gap: var(--space-1); }
+
+.cover__foot {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  width: 100%;
+  padding-block-end: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+
+.classification {
+  font-size: var(--size-small);
+  font-weight: var(--weight-subhead);
+}
+
+/* --- The Slalom line ----------------------------------------------------
+   A bold single line referencing the fluidity of the logo. Decorative, so it
+   is aria-hidden and exempt from text contrast. See references/delivery.md on
+   this being a drawn line rather than a Creative Library vector.
+   ----------------------------------------------------------------------- */
+
+.slalom-line {
+  position: absolute;
+  /* Held clear of the colour bar: a decorative line never crosses it. */
+  inset: auto -10% 18% auto;
+  width: 78%;
+  height: 56%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.slalom-line path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.28;
+}
+
+/* ==========================================================================
+   COLOR BAR
+   One per layout, never more, never over 20% of the layout, never reordered:
+   Slalom Blue, Cyan, Coral Red, Purple, Chartreuse.
+   ========================================================================== */
+
+.color-bar {
+  display: flex;
+  width: 100%;
+  height: var(--color-bar-height);
+  max-height: 20%;
+}
+
+.color-bar__swatch { flex: 1 1 0; height: 100%; } /* no-text */
+
+.color-bar__swatch--blue { background: var(--slalom-blue); } /* no-text */
+.color-bar__swatch--cyan { background: var(--cyan); } /* no-text */
+.color-bar__swatch--coral-red { background: var(--coral-red); } /* no-text */
+.color-bar__swatch--purple { background: var(--purple); } /* no-text */
+.color-bar__swatch--chartreuse { background: var(--chartreuse); } /* no-text */
+
+/* When the layout background matches one of the bar's swatches, that swatch
+   alone moves to its Dark 3 tone. Nothing else changes. Slalom Blue has no
+   Dark 3, so it resolves to Slalom Dark Blue. */
+[data-bar-bg="blue"] .color-bar__swatch--blue { background: var(--slalom-dark-blue); } /* no-text */
+[data-bar-bg="cyan"] .color-bar__swatch--cyan { background: var(--cyan-dark-3); } /* no-text */
+[data-bar-bg="coral-red"] .color-bar__swatch--coral-red { background: var(--coral-red-dark-3); } /* no-text */
+[data-bar-bg="purple"] .color-bar__swatch--purple { background: var(--purple-dark-3); } /* no-text */
+[data-bar-bg="chartreuse"] .color-bar__swatch--chartreuse { background: var(--chartreuse-dark-3); } /* no-text */
+
+/* ==========================================================================
+   PROGRESS RAIL
+   ========================================================================== */
+
+.rail {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--surface-white-bg);
+  color: var(--on-white-body);
+  border-bottom: 1px solid var(--rule-color);
+}
+
+.rail__track {
+  height: 3px;
+  width: 100%;
+  background: var(--rule-color); /* no-text */
+}
+
+.rail__fill {
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: var(--on-white-emphasis); /* no-text */
+}
+
+.rail__nav {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-2) var(--page-gutter);
+  font-size: var(--size-small);
+  font-weight: var(--weight-body-tight);
+}
+
+.rail__link { color: var(--on-white-muted); text-decoration: none; padding: var(--space-1) 0; }
+.rail__link:hover { color: var(--on-white-emphasis); text-decoration: underline; }
+.rail__link[aria-current="true"] { color: var(--on-white-emphasis); font-weight: var(--weight-subhead); }
+
+/* ==========================================================================
+   SECTION HEADINGS
+   ========================================================================== */
+
+.section__head { display: grid; gap: var(--space-2); margin-bottom: var(--space-5); }
+.section__head .eyebrow { color: var(--on-white-emphasis); }
+
+/* ==========================================================================
+   EXEC SUMMARY
+   ========================================================================== */
+
+.exec-summary {
+  display: grid;
+  gap: var(--space-4);
+  /* The block is the measure, so the border does not outrun the text. */
+  max-width: 50rem;
+  padding: var(--space-5);
+  border: 1px solid var(--rule-color);
+  border-left: 4px solid var(--on-white-emphasis);
+  /* Exactly one rounded corner. */
+  border-radius: 0 var(--corner) 0 0;
+}
+
+
+
+/* ==========================================================================
+   KPI ROW
+   ========================================================================== */
+
+.kpi-row {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.kpi {
+  display: grid;
+  /* Value, label, then the source pinned to the bottom so the tiles line up
+     whatever the label length. */
+  grid-template-rows: auto 1fr auto;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-top: 4px solid var(--accent);
+  background: var(--surface-white-bg);
+  color: var(--on-white-body);
+  border-radius: 0 0 0 var(--corner);
+  box-shadow: none;
+}
+
+.kpi__value {
+  font-weight: var(--weight-display);
+  font-size: var(--size-kpi);
+  line-height: var(--leading-display);
+  color: var(--on-white-display);
+}
+
+/* The unit stays at the value's size — one type size, not two. */
+.kpi__unit { font-weight: var(--weight-display); }
+.kpi__label { font-weight: var(--weight-body-tight); }
+.kpi__source { color: var(--on-white-muted); font-size: var(--size-small); }
+
+/* ==========================================================================
+   FINDING CARD
+   ========================================================================== */
+
+.findings { display: grid; gap: var(--space-4); }
+
+.finding {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--rule-color);
+  border-radius: var(--corner) 0 0 0;
+  background: var(--surface-white-bg);
+  color: var(--on-white-body);
+}
+
+.finding__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.finding__title { display: flex; align-items: center; gap: var(--space-3); }
+
+.finding__fields {
+  display: grid;
+  gap: var(--space-4) var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+}
+.finding__icon { width: 2rem; height: 2rem; flex: 0 0 auto; }
+.finding__field { display: grid; gap: var(--space-1); align-content: start; }
+.finding__field dt { font-weight: var(--weight-subhead); font-size: var(--size-eyebrow); text-transform: uppercase; letter-spacing: var(--tracking-eyebrow); color: var(--on-white-muted); }
+.finding__implication { font-weight: var(--weight-body-tight); }
+
+/* --- Severity -----------------------------------------------------------
+   A filled-bar meter plus the word. Colour is decoration on top of a label
+   that already works in greyscale and in print.
+   ----------------------------------------------------------------------- */
+
+.severity { display: flex; align-items: center; gap: var(--space-2); font-size: var(--size-small); font-weight: var(--weight-subhead); }
+
+.meter { display: flex; gap: 3px; align-items: end; }
+.meter__step { width: 6px; height: 10px; background: var(--rule-color); } /* no-text */
+.meter__step--on { background: var(--accent); } /* no-text */
+.meter--tall .meter__step { height: 14px; }
+.severity .meter__step:nth-child(2) { height: 13px; }
+.severity .meter__step:nth-child(3) { height: 16px; }
+
+/* ==========================================================================
+   QUOTE
+   Slalom Sans only. The approved pairings in typography.md both want a serif,
+   and no serif ships with this repo — see references/delivery.md, and the
+   validator's known-deviation warning.
+   ========================================================================== */
+
+.quote { display: grid; gap: var(--space-4); max-width: 46rem; }
+
+.quote__text {
+  font-size: var(--size-h2);
+  font-weight: var(--weight-body-tight);
+  line-height: var(--leading-subhead);
+  text-wrap: balance;
+}
+
+.quote__mark { color: var(--on-white-emphasis); }
+.quote__attrib { display: grid; gap: var(--space-1); border-left: 4px solid var(--accent); padding-left: var(--space-3); }
+.quote__name { font-weight: var(--weight-subhead); }
+.quote__title { font-weight: var(--weight-body); color: var(--on-white-muted); }
+
+/* ==========================================================================
+   HEATMAP
+   Never colour alone: every cell prints its numeral and a step meter, and the
+   legend spells out the scale.
+   ========================================================================== */
+
+.heatmap { display: grid; gap: var(--space-4); }
+.heatmap__scroll { overflow-x: auto; }
+.heatmap table { border-collapse: collapse; width: 100%; max-width: 52rem; min-width: 32rem; }
+.heatmap th:first-child { width: 50%; }
+
+.heatmap caption {
+  text-align: left;
+  font-weight: var(--weight-subhead);
+  padding-bottom: var(--space-3);
+}
+
+.heatmap th, .heatmap td {
+  text-align: left;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--rule-color);
+  vertical-align: middle;
+}
+
+.heatmap thead th {
+  font-size: var(--size-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: var(--weight-subhead);
+  color: var(--on-white-muted);
+}
+
+.heatmap tbody th { font-weight: var(--weight-body-tight); }
+.heatmap__note { color: var(--on-white-muted); font-size: var(--size-small); }
+.cell { display: flex; align-items: center; gap: var(--space-2); }
+.cell__value { font-weight: var(--weight-subhead); font-variant-numeric: tabular-nums; }
+.heatmap__legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--size-small); color: var(--on-white-muted); }
+.heatmap__legend li { display: flex; align-items: center; gap: var(--space-2); }
+
+/* ==========================================================================
+   ROADMAP / TIMELINE
+   ========================================================================== */
+
+.roadmap { display: grid; gap: var(--space-5); }
+.roadmap__rail { position: relative; }
+
+.roadmap__path {
+  width: 100%;
+  height: 3rem;
+  overflow: visible;
+}
+
+.roadmap__path path {
+  fill: none;
+  stroke: var(--on-white-emphasis);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.roadmap__phases {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.phase {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--rule-color);
+  border-top: 4px solid var(--accent);
+  border-radius: 0 0 var(--corner) 0;
+  background: var(--surface-white-bg);
+  color: var(--on-white-body);
+}
+
+.phase__window { color: var(--on-white-muted); font-size: var(--size-small); font-weight: var(--weight-body-tight); }
+.phase__outcomes { display: grid; gap: var(--space-2); font-weight: var(--weight-bullet); font-size: var(--size-small); }
+.phase__outcomes li { padding-left: var(--space-4); position: relative; }
+.phase__outcomes li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: var(--space-2); height: 2px; background: var(--on-white-emphasis); } /* no-text */
+
+/* ==========================================================================
+   RECOMMENDATIONS
+   ========================================================================== */
+
+.recs { display: grid; gap: var(--space-4); counter-reset: rec; }
+
+.rec {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--rule-color);
+  border-radius: var(--corner) 0 0 0;
+  background: var(--surface-white-bg);
+  color: var(--on-white-body);
+}
+
+.rec__index {
+  grid-row: 1 / span 3;
+  font-weight: var(--weight-display);
+  font-size: var(--size-h2);
+  line-height: 1;
+  color: var(--on-white-emphasis);
+  font-variant-numeric: tabular-nums;
+}
+
+.rec__action { font-weight: var(--weight-subhead); font-size: var(--size-h3); }
+.rec__rationale { max-width: var(--measure); }
+
+.rec__tags { display: flex; flex-wrap: wrap; gap: var(--space-2); font-size: var(--size-small); }
+
+/* Wide enough for the horizon and owner to sit alongside the rationale rather
+   than leaving the right half of the card empty. */
+@media (min-width: 62rem) {
+  .rec { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .rec__index { grid-row: 1 / span 2; }
+  .rec__action { grid-column: 2; }
+  .rec__rationale { grid-column: 2; }
+  .rec__tags { grid-column: 3; grid-row: 1 / span 2; flex-direction: column; align-items: start; align-self: center; }
+}
+
+.tag {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  background: var(--surface-accent-bg);
+  color: var(--on-accent-body);
+  font-weight: var(--weight-body-tight);
+}
+
+.tag b { font-weight: var(--weight-subhead); }
+
+/* ==========================================================================
+   NEXT STEPS
+   ========================================================================== */
+
+.next-steps { display: grid; gap: var(--space-3); counter-reset: step; max-width: 46rem; }
+
+.next-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-4);
+  align-items: baseline;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule-color);
+  font-weight: var(--weight-bullet);
+}
+
+.next-step__index { font-weight: var(--weight-subhead); color: var(--on-white-emphasis); font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   METHODOLOGY
+   ========================================================================== */
+
+.methodology .prose { max-width: var(--measure); }
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+.footer {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--page-gutter);
+  background: var(--surface-black-bg);
+  color: var(--on-black-body);
+}
+
+.footer__inner {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--space-4);
+}
+
+.footer__meta { display: grid; gap: var(--space-1); font-size: var(--size-small); font-weight: var(--weight-body-tight); }
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+/* ==========================================================================
+   REDUCED MOTION
+
+   This block does not merely skip the animations — it forces every animated
+   element to its FINAL state. Skipping an animation whose "before" state was
+   already applied is how a page like this ends up permanently invisible for
+   the one user who most needed it not to move.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  [data-motion],
+  [data-motion] * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .slalom-line path,
+  .roadmap__path path {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+
+  /* A scroll-linked bar is scroll-linked motion, and an empty one would be
+     misleading. Remove it rather than freeze it at zero. */
+  .rail__track { display: none; }
+}
+
+@media (max-width: 40rem) {
+  :root {
+    --space-7: 3.5rem;
+    --page-gutter: var(--space-3);
+    --cover-min-height: auto;
+  }
+
+  .cover { padding-top: var(--space-4); gap: var(--space-5); }
+  .cover__body { padding-block: var(--space-6); }
+  .rec { grid-template-columns: 1fr; }
+  .rec__index { grid-row: auto; }
+  .slalom-line { display: none; }
+}
