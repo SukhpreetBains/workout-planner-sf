@@ -4,10 +4,14 @@
   "questions": {
     "correctness": {
       "status": "measured",
-      "how": "Four code-based task contracts assert the manifest, brief, ranked evidence, access gaps and cache decision. No golden reference document exists for this deliverable, so there is no golden comparison.",
+      "how": "Seventeen named code checks, each carrying its own id and assertion class, graded against the four task contracts in cases/tasks.jsonl. A check that never executes counts as a failure rather than dropping out of the denominator. No golden reference document exists for this deliverable, so there is no golden comparison.",
       "reported": [
-        "outcome_pass_rate",
+        "outcome",
+        "checks_total",
+        "checks_passed",
+        "failed_check_ids",
         "evaluated_task_count",
+        "outcome_pass_rate",
         "failed_task_ids"
       ]
     },
@@ -15,15 +19,29 @@
       "status": "not-instrumented",
       "how": "unknown",
       "reported": [],
-      "note": "No tokens, dollars or spread have been recorded. The suite runs local Python scripts rather than a model, so there is no session log to parse until an agentic arm exists."
+      "note": "No tokens, dollars or spread have been recorded, and none can be recorded here. The suite runs local Python scripts rather than a model, so no session log exists to parse. Every cost field in the run record carries the marker not-applicable, and estimated_usd is null rather than 0.0, because a zero would read as a measured cost of nothing."
     },
     "time": {
       "status": "not-instrumented",
       "how": "unknown",
       "reported": [
-        "duration_ms"
+        "harness_wall_clock_seconds"
       ],
-      "note": "duration_ms is harness runtime, not a saving. No human baseline has been recorded, so time saved is unknown and is not reported."
+      "note": "harness_wall_clock_seconds is how long the machine took to run the scripts. It is not agent elapsed time and it is not a saving. agent_wall_clock_seconds carries the marker not-applicable because there is no agent, and human_baseline_minutes, time_saved_minutes and speedup_factor are omitted rather than zeroed."
+    },
+    "reproducibility": {
+      "status": "measured",
+      "how": "The whole pipeline runs runs_per_arm times over the same pinned fixture, each in a fresh temporary workspace with a scrubbed environment, and every graded artifact is hashed. Runs are compared against run 1 both raw and after a short enumerated normalisation ruleset. Any cross-run difference the declared rules cannot explain fails the suite and is reported with its file and the differing line.",
+      "reported": [
+        "determinism.verdict",
+        "determinism.runs_compared",
+        "determinism.identical_before_normalisation",
+        "determinism.identical_after_declared_normalisation",
+        "determinism.canonical_artifact_sha256",
+        "determinism.declared_volatility",
+        "determinism.undeclared_variation"
+      ],
+      "note": "This is output reproducibility, not cost consistency. It says the same input produces the same artifacts; it says nothing about tokens or dollars, which this suite cannot measure. Do not present it as an answer to \"what did it cost, and was that predictable?\"."
     }
   },
   "arms": {
@@ -32,12 +50,13 @@
       "note": "The deterministic harness exercises the shipped context scripts in a fresh temporary workspace."
     },
     "baseline-no-skills": {
-      "status": "not-implemented",
-      "note": "No comparison arm exists. There is no meaningful no-skills version of a script-driven run: the baseline arm becomes constructible once a model, rather than the harness, drives the workflow.",
-      "unblocked_by": "An agentic arm where a model is asked for the same evidence pack with the Ascent skills unavailable."
+      "status": "not-applicable",
+      "note": "Not merely unimplemented: there is no meaningful no-skills version of a deterministic shell script. The arm exists to answer \"what would you get by just throwing this into Claude?\", and the thing under test here is the scripts themselves, not a model's use of them. Removing the Ascent skills removes the subject of the test rather than establishing a control.",
+      "becomes_applicable_when": "A model, rather than the harness, drives the workflow. At that point the same fixture can be put to the model with the Ascent skills withheld, on the same host and prompt, and the delta becomes measurable.",
+      "consequence": "Every delta in the suite summary is null. No figure here is a saving."
     }
   },
-  "runs_per_arm": 1,
+  "runs_per_arm": 5,
   "consistency": {
     "metric": "coefficient_of_variation(total_tokens)",
     "verdict": "unknown",
@@ -47,7 +66,7 @@
       "unpredictable": "> 0.30"
     },
     "thresholds_status": "provisional",
-    "note": "Unknown, not predictable. One run of a deterministic script says nothing about the cost spread of the agentic workflow this suite stands in for. Fewer than three runs per arm cannot support a verdict."
+    "note": "Unknown, not predictable, and not the same thing as reproducibility. The suite now repeats five times and proves the output is identical, but it measures no tokens, so how much the cost jumps around remains unknown. Do not read the reproducibility verdict as a cost consistency verdict."
   },
   "coverage": {
     "mode": "regression",
@@ -91,59 +110,82 @@
     }
   },
   "metrics": [
-    "outcome_pass_rate",
+    "outcome",
+    "checks_total",
+    "checks_passed",
+    "failed_check_ids",
     "evaluated_task_count",
+    "outcome_pass_rate",
     "failed_task_ids",
-    "duration_ms"
+    "determinism.verdict",
+    "determinism.canonical_artifact_sha256",
+    "determinism.identical_after_declared_normalisation",
+    "determinism.undeclared_variation",
+    "harness_wall_clock_seconds"
   ],
   "gaps": [
     {
       "id": "no-cost-data",
       "question": "cost",
-      "statement": "No tokens or dollars have been recorded for this suite.",
-      "unblocked_by": "An agentic arm producing a session log, parsed by the deterministic telemetry harness into ascent.eval-run-record.v1 files."
+      "statement": "No tokens or dollars have been recorded, and none can be. The suite runs local Python scripts, so there is no model and no session log to parse.",
+      "unblocked_by": "A different suite, against a document-producing skill driven by a model, whose session log the deterministic telemetry harness can parse into ascent.eval-run-record.v1 files.",
+      "status": "open-and-not-closable-in-this-suite"
     },
     {
       "id": "no-baseline-arm",
       "question": "cost",
-      "statement": "The same job has never been run without the Ascent skills, so nothing here is a saving.",
-      "unblocked_by": "A baseline-no-skills arm on the same host, model, prompt and fixture."
+      "statement": "There is no no-skills arm, and there cannot be one here: removing the Ascent skills from a test of the Ascent scripts removes the subject of the test rather than establishing a control. Nothing in this suite is a saving.",
+      "unblocked_by": "A model-driven arm on the same host, model, prompt and fixture, with the Ascent skills withheld. Not constructible while the harness itself calls the scripts.",
+      "status": "not-applicable-to-this-suite"
     },
     {
       "id": "consistency-unknown",
       "question": "cost",
-      "statement": "How much the cost jumps around is unknown; the suite runs once and measures no tokens.",
-      "unblocked_by": "At least three runs per arm with recorded token totals."
+      "statement": "How much the cost jumps around is unknown. The suite no longer runs once - it repeats five times and proves the graded artifacts are identical - but it measures no tokens, so there is no cost spread to report.",
+      "unblocked_by": "At least three runs per arm with recorded token totals, which requires the model-driven arm.",
+      "status": "open-partially-addressed",
+      "partially_addressed_by": "Output reproducibility across five runs is now measured and reported under questions.reproducibility. That is a different claim from cost consistency and does not close this gap."
     },
     {
       "id": "no-human-baseline",
       "question": "time",
       "statement": "No one has timed a human assembling this evidence pack, so no hours-saved figure can be quoted.",
-      "unblocked_by": "One timed manual run, or a dated delivery-lead estimate with a named source."
+      "unblocked_by": "One timed manual run, or a dated delivery-lead estimate with a named source.",
+      "status": "open"
     },
     {
       "id": "no-golden-reference",
       "question": "correctness",
       "statement": "There is no known-good human document to compare against; the deliverable is machine-local state, not a client document.",
-      "unblocked_by": "Moving the reference-based comparison to the downstream document-producing skills, where a real approved deliverable exists."
+      "unblocked_by": "Moving the reference-based comparison to the downstream document-producing skills, where a real approved deliverable exists.",
+      "status": "open"
     },
     {
       "id": "provenance-is-guessed",
       "question": "correctness",
       "statement": "We guessed these failures from the design; we have not yet watched it fail for real.",
-      "unblocked_by": "Error analysis on real skill traces: open coding, axial coding, frequency counts."
+      "unblocked_by": "Error analysis on real skill traces: open coding, axial coding, frequency counts.",
+      "status": "open"
     },
     {
       "id": "behavior-not-observable",
       "question": "correctness",
-      "statement": "This suite cannot show that a model would invoke the right skills or ask the right questions, because the harness calls the scripts itself.",
-      "unblocked_by": "An agentic arm whose session log records skill invocations and user turns."
+      "statement": "This suite cannot show that a model would invoke the right skills or ask the right questions, because the harness calls the scripts itself. The run record records these as not-observable rather than as zero or as a pass.",
+      "unblocked_by": "An agentic arm whose session log records skill invocations and user turns.",
+      "status": "open"
+    },
+    {
+      "id": "clock-not-injectable",
+      "question": "reproducibility",
+      "status": "open",
+      "statement": "The graded artifacts are not byte-identical in raw form, because project_context.py and persist_context.py stamp the current time into them and accept no clock argument. The suite names the affected fields and proves everything else is identical, but it cannot prove full byte equality until the clock can be pinned.",
+      "unblocked_by": "An optional --now argument on project_context.py and persist_context.py, matching the one cache_context.py already accepts. Both scripts are outside this evaluation package's ownership, so the change belongs to the skill authors."
     }
   ],
   "aggregation": {
     "command": "python3 -m evals.lib.aggregate --suite context-skills",
-    "status": "not-yet-applicable",
-    "note": "The aggregator reads ascent.eval-run-record.v1 files from results/runs/. This suite does not emit them yet; its runner writes a single legacy result to results/latest.json."
+    "status": "applicable",
+    "note": "The runner now writes ascent.eval-run-record.v1 files to results/runs/, one per repeat, and the aggregator reads them. Verified: it reports correctness_pass_rate and leaves every token, dollar and wall-clock spread null, because those fields carry the marker not-applicable and the aggregator skips non-numeric values rather than coercing them to zero. Its consistency_verdict for this suite reads insufficient-runs, which is accurate in effect but reached for the wrong reason: there are five runs and no token values, not too few runs."
   },
   "transcript_review": {
     "sample": "all failures; inspect generated artifacts when a target script changes",
@@ -160,15 +202,47 @@
       "code-based"
     ],
     "scoring": "binary",
-    "reliability_estimator": "single-trial",
+    "reliability_estimator": "repeated-whole-suite-runs",
     "execution_context": "ci-offline",
     "failure_mode_provenance": "contract-enumeration",
     "reference_dependence": "reference-based",
-    "notes": "Reference classification, not the headline. Deterministic scripts under a code-based harness, so no model or human grader is in the loop and no pass@k/pass^k estimator applies. Interaction scope is single-turn because the harness invokes the skill scripts directly; it is not yet an agentic eval. reference-based here means each task has a reference solution, not that a golden human document exists.",
+    "notes": "Reference classification, not the headline. Deterministic scripts under a code-based harness, so no model or human grader is in the loop and no pass@k/pass^k estimator applies: the repetition here measures output reproducibility over identical input, not sampling variability. Interaction scope is single-turn because the harness invokes the skill scripts directly; it is not yet an agentic eval. reference-based here means each task has a reference solution, not that a golden human document exists.",
     "references": [
       "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
       "https://hamel.dev/blog/posts/evals-faq/",
       "https://github.com/ai-evals-course/evals-skills"
     ]
-  }
+  },
+  "runs_per_arm_rationale": "Five whole-suite repeats. The spec's provisional one-run-per-change budget exists to contain a token bill; this suite spends no tokens, so repetition is free and the reproducibility claim is worth having. Fewer than three runs cannot support any cross-run claim at all.",
+  "reproducibility": {
+    "metric": "sha256 over the graded artifact bundle, compared across runs",
+    "verdict": "reproducible-modulo-declared-volatility",
+    "verdict_meaning": "Every graded artifact was byte-identical across runs once the declared volatility rules below were applied, and no difference went unexplained. The raw artifacts are not identical, and the suite reports that rather than hiding it.",
+    "declared_volatility": [
+      {
+        "id": "iso8601-utc-timestamp",
+        "statement": "The target scripts stamp the current UTC time into the manifest, brief, index, per-source summaries and state file.",
+        "cause": "project_context.py and persist_context.py call datetime.now(timezone.utc) directly and accept no clock argument. This suite does not own those scripts.",
+        "unblocked_by": "An optional --now argument on project_context.py and persist_context.py, matching the one cache_context.py already accepts."
+      },
+      {
+        "id": "state-manifest-digest",
+        "statement": "state.json carries a sha256 over manifest.json, so it inherits the timestamps above.",
+        "cause": "Derived value, not an independent source of variation.",
+        "unblocked_by": "The same injectable clock."
+      }
+    ],
+    "not_normalised": "Nothing else. The temporary workspace path, the repository path and the throwaway home directory are substituted for placeholders before hashing, and the harness reports how many substitutions it actually made - measured at zero, so no machine path reaches a graded artifact in the first place."
+  },
+  "hermeticity": {
+    "workspace": "A fresh temporary directory per run, deleted afterwards.",
+    "environment": "The inherited shell environment is discarded. Only PATH, HOME, TMPDIR, LC_ALL, LANG, TZ and PYTHON* are set, and HOME points at a throwaway directory, so no developer setting or dotfile reaches a target script.",
+    "network": "Blocked, and enforced rather than asserted: a sitecustomize.py on PYTHONPATH raises on socket construction, create_connection, socketpair, getaddrinfo and gethostbyname in every subprocess, so a new network call fails the run instead of succeeding quietly.",
+    "clock": "Pinned wherever the target interface allows it. Cache decisions are taken against the recorded retrieval timestamp plus a fixed offset from the fixture, so age_hours is an exact number rather than a reading of the developer's clock. The remaining timestamps are declared under reproducibility.declared_volatility.",
+    "hash_seed": "PYTHONHASHSEED is varied across runs rather than pinned. Pinning it would mask set-ordering non-determinism, which is the class of bug this suite exists to catch.",
+    "inputs": "One committed fixture, hashed into every run record along with the sha256 of each target script.",
+    "depends_on_repo_checkout": "Yes, inherently: the suite executes the skill scripts from the checkout it ships inside. That is not a dependency on any particular machine - no absolute developer path, home directory or clock reading reaches a graded artifact."
+  },
+  "gap_ledger_note": "Eight gaps, none of them closed by this change. Reproducibility of the output was added as a newly measured fact and clock-not-injectable was added as a newly discovered one; neither closes a pre-existing gap. Two gaps are reclassified rather than closed: no-cost-data is not closable in a script suite, and no-baseline-arm is not applicable to one.",
+  "command": "python3 evals/context-skills/run_deterministic.py"
 }

@@ -6,7 +6,7 @@
     "name": "Local project-context projection: manifest.json, brief.md and a ranked evidence pack",
     "kind": "machine-local-state",
     "client_facing": false,
-    "path_or_form": ".codex/project-context/ under the opportunity root, deliberately untracked",
+    "path_or_form": "workspace/.system/project-context/ under the opportunity root, deliberately untracked",
     "note": "There is no client-facing document here, so this suite has no golden-document comparison and a thin correctness surface by nature. The document-producing skills downstream of this one are where the reference-based capability evaluation belongs."
   },
   "human_baseline": {
@@ -49,7 +49,9 @@
       "cache_context.py"
     ],
     "environment": [
-      "Fresh temporary workspace per trial",
+      "Fresh temporary workspace per run, removed afterwards",
+      "Scrubbed environment with the developer's home redirected to a throwaway directory",
+      "Network blocked and enforced, not merely assumed",
       "Only recorded sources may be retrieved",
       "Unavailable and unknown sources remain visible as access gaps"
     ]
@@ -71,5 +73,10 @@
   ],
   "failure_mode_provenance": "contract-enumeration",
   "failure_mode_provenance_note": "We guessed these failures from the design; we have not yet watched it fail for real. Derived from the skill contract and scripts, not from error analysis on observed traces. Re-derive the taxonomy by open coding and axial coding real skill traces before treating these as representative, and do not attach frequencies to them until then.",
-  "unknowns": []
+  "unknowns": [],
+  "reproducibility": {
+    "measured": true,
+    "claim": "The graded artifacts are identical across repeated runs over the same pinned fixture, once two declared timestamp-derived fields are accounted for. The suite fails on any cross-run difference it has not declared.",
+    "not_a_cost_claim": "This is reproducibility of the output, not consistency of cost. This suite measures no tokens, so it cannot answer how much the cost jumps around."
+  }
 }
