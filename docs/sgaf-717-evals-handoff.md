@@ -45,7 +45,8 @@ The full requirement set, traced to the conversation, is in
 | Evaluation-design skill | [`skills/design-skill-evals/SKILL.md`](../skills/design-skill-evals/SKILL.md) | Six steps. Profiling now requires the deliverable, the human baseline and whether a golden reference exists. Anti-patterns grew from 5 to 13. |
 | Project-context suite | [`evals/context-skills/`](../evals/context-skills/) | Four task contracts unchanged. Metadata rewritten to record honestly what is *not* measured, with seven named gaps. |
 | Presentation | [`docs/sgaf-717-evals-presentation.html`](sgaf-717-evals-presentation.html) | 16 slides. Opens on the three questions; taxonomy in an appendix. |
-| Workbench | [`docs/evals-workbench.html`](evals-workbench.html), [`docs/evals_workbench.py`](evals_workbench.py) | Three headline results, per-run cost spread, arm-vs-arm deltas, copy-paste summary block, honest empty states. |
+| Workbench | [`docs/evals-workbench.html`](evals-workbench.html), [`docs/evals_workbench.py`](evals_workbench.py) | Slalom-branded. Three headline results, N runs per arm, per-run cost spread, credits as a labelled derived figure, per-skill call durations, reproducibility kept separate from cost, and a metric coverage table listing all 24 requested metrics with the quote that asked for each one. |
+| Credit rate card | [`evals/lib/telemetry/codex_rates.json`](../evals/lib/telemetry/codex_rates.json) | The published Codex credit rates with provenance and fetch date, plus two measured findings: the per-turn billing unit and the token reconciliation invariant. No rate appears anywhere in code. |
 
 ## Two corrections to how agent cost is measured
 
@@ -69,6 +70,116 @@ Codex needs its own care: `cached_input_tokens` is a **subset** of
 `input_tokens`, inverted from Claude Code's semantics, so a naive cross-host
 mapping double-counts cache reads.
 
+## Credits, and why they are derived rather than reported
+
+Calvin asks about cost in credits: "is it 70 credits one time and 40 credits
+another time?" No host reports a credit figure in its logs, so a credit number is
+always measured tokens times a published rate. That makes the rate card part of
+the number, and it is cited with its fetch date wherever the figure appears.
+
+Three things about the derivation would each silently produce a wrong figure.
+
+**Codex token semantics are inverted from Claude Code's.** `cached_input_tokens`
+is a *subset* of `input_tokens`, so billable uncached input is
+`input_tokens - cached_input_tokens`; adding them double-charges every cache
+read. `reasoning_output_tokens` is likewise a subset of `output_tokens` and is
+carried through to the record without ever being added to anything.
+
+**The billing unit is a turn, not a model request.** The published "5-30 credits
+per message" band is per user turn. `turn_context` carries the `turn_id`, the
+effective `model` and the `effort`, and is therefore the join key for applying a
+rate; `token_count` events carry no turn id, so attribution is positional to the
+most recent `turn_context`. Measured across the 26 local rollouts: 223 turns,
+1148 model requests, and on the 58 turns whose model is on the rate card a median
+of 5 and a mean of 11.8 requests per turn. Quoting a per-request figure against
+the per-message band understates by roughly an order of magnitude, so both
+spreads are emitted and each carries its unit.
+
+**Unpriced is not free.** `gpt-5.5` is off the current card and emits null.
+`codex-auto-review` is a router alias rather than a billable model, and on this
+corpus it is not resolvable from `turn_context` at all - `collaboration_mode`
+repeats the alias - so its 148 turns emit null too. A parent-thread inference is
+implemented and deliberately **off by default**: assuming a review subagent bills
+at its parent's rate would price those turns and move the session median from
+2.59 to 0.70 credits per turn, which is a material change to a client-facing
+figure on the strength of something nothing on file establishes.
+
+The derivation reproduces the rate card's own measurement: 58 priced turns, mean
+14.08 credits per turn, per-model medians of 2.54 (terra, n=41) and 0.65 (luna,
+n=9), maxima of 29.69 / 2.83 / 338.29, and per-request median 0.83 / mean 1.20 /
+max 22.92. The card's percentile figures used a different interpolation method
+and read higher; medians, means, counts and maxima agree.
+
+The token reconciliation invariant is counted, never repaired: it holds on 1108
+of 1121 local events and the 13 failures cluster at compaction boundaries. A
+repaired delta would be an invented token count, so the count is surfaced and
+the run records list the violating requests.
+
+Two published multipliers - fast mode and image generation - have no numeric
+factor on file. They are not applied, and that is stated beside every credit
+figure, because a number that omits them is a floor rather than a total.
+
+## Two corrections found by building the interface
+
+Both were found by pointing the workbench at real run records rather than by
+reading the code, and both would have put a false number on a client-facing page.
+
+**A machine runtime is not an agent runtime.** The workbench used to put the
+Python subprocess time in `agent_wall_clock_seconds` and derive
+`time_saved_minutes` and `speedup_factor` from it. The suite has no model in it,
+so it has no agent elapsed time. The line was dormant only because the recorded
+baseline said `recorded: false`; the moment anyone recorded a four-hour human
+baseline, a two-second script would have published a roughly 7,000x speedup.
+`agent_wall_clock_seconds` is now `"not-applicable"` with the reason attached,
+the measured figure lives in `harness_wall_clock_seconds`, and nothing derives a
+saving from it. The acceptance suite now fails if the string `speedup_factor`
+appears in the server at all.
+
+**"Not measured" and "measured as zero" must not look alike.** The metrics
+endpoint reported "did it call all the skills it needed to call" as *measured*,
+with the value `not-observable`, because the sentinel list covered
+`not-applicable` and `not-recorded` but not that one. Any string starting `not-`
+now reads as an absence. Relatedly, the aggregator returned `insufficient-runs`
+for a suite with five runs and no cost telemetry - accurate in effect, but it
+told the reader to run it more times, which could never help. There is now a
+distinct `no-cost-data` verdict.
+
+## What the interface shows
+
+Every metric requested across the five recordings is on the page, and each is
+either rendered from a measured value or rendered as an explicit empty state
+naming the reason it is absent. The coverage table carries the quote that asked
+for each one, so a reader can see a metric was requested rather than invented,
+and a metric this harness cannot measure stays on the list rather than
+disappearing from the UI.
+
+Two claims are kept apart on the page, in separate cards, because they look alike
+and are not: reproducibility of an artifact, and predictability of a bill. For
+the project-context suite the honest headline is "same input, same output, across
+five runs" - five identical canonical digests against five differing raw digests
+- and nothing whatsoever about cost.
+
+Three metrics are structurally unmeasurable with this harness and say so rather
+than being approximated:
+
+- **Share of the credit budget.** Calvin's "that was 24% of the budget used that
+  day" needs the size of the plan's allowance. That is account state and appears
+  in no session log. Credits per run are measured; the denominator is not
+  available.
+- **Human review of the output.** A reviewer's verdict is entered by a person.
+  Nothing here will ever fill it in, because a generated verdict is exactly the
+  vibes metric this work replaces.
+- **Per-skill-call duration on Codex.** Claude Code records a tool call and its
+  result, each timestamped, so a call can be timed. Codex records the call and
+  not the result time. The absence is declared rather than approximated.
+
+One measured figure needs its caveat repeated wherever it appears. Invoking the
+`Skill` tool injects instructions into context and returns in 0.07-0.09 s on real
+sessions. That is a tool round trip, **not** the cost of the skill: the work a
+skill directs happens across later turns and nothing in the transcript brackets
+it. A Bash call into a skill's scripts is different, and that duration is the
+script actually running. Every per-call figure carries which of the two it is.
+
 ## Known limits of the harness
 
 Recorded because a metric nobody trusts is worse than no metric.
@@ -89,6 +200,13 @@ Recorded because a metric nobody trusts is worse than no metric.
   figure.
 - **Codex wall-clock is unreliable on resumed threads.** One real rollout carries
   12 session starts and spans 6.8 days. Flagged rather than trusted.
+- **Codex `cache_write_input_tokens` is 0 in every local session,** so whether it
+  is a subset of `input_tokens` or an additional charge is unverified. Treated as
+  a subset, with the assumption flagged in `parse_stats` rather than hidden.
+- **Per-call timing misses what it cannot see.** A skill followed without
+  invoking the `Skill` tool or touching a `skills/` path is untimed because it is
+  undetected, and a call whose result never arrives is counted unmatched rather
+  than given a duration.
 
 ## What this suite can and cannot tell you
 
@@ -177,12 +295,19 @@ existing `git-workflow` and `jira-workflow` skills already own that surface.
 ## Run and review
 
 ```bash
-python3 evals/context-skills/run_deterministic.py            # correctness only
-python3 -m evals.lib.telemetry --session <path> --out <f>    # cost and time from a session log
-python3 -m evals.lib.aggregate --suite context-skills        # k runs, spread, arm deltas
-python3 -m evals.lib.emit_summary --suite context-skills     # the paste-ready block
-python3 docs/evals_workbench.py --port 8765                  # then open evals-workbench.html
+python3 evals/context-skills/run_deterministic.py --runs 5    # correctness and reproducibility
+python3 -m evals.lib.telemetry --session <path> --out <f>     # cost, credits and time from a log
+python3 -m evals.lib.aggregate --suite context-skills         # k runs, spread, arm deltas
+python3 -m evals.lib.emit_summary --suite context-skills      # the paste-ready block
+python3 docs/evals_workbench.py --port 8765                   # then open evals-workbench.html
 ```
+
+The workbench discovers suites from `evals/*/eval-plan.json` rather than
+hardcoding one, so it runs against whatever is in the checkout and reports the
+absence honestly when there is nothing. Its endpoints are `/api/suites`,
+`/api/suite/<id>`, `/api/runs/<id>`, `/api/summary/<id>`, `/api/metrics/<id>`,
+`/api/paste/<id>`, `/api/results/<id>` and `POST /api/run/<id>` with
+`{"runs": k, "arm": "..."}`.
 
 Tests: `tests/skill_evals_acceptance.py`, `tests/telemetry_acceptance.py`,
 `tests/context_skills_acceptance.py`, `tests/validate_context_skills.py`. All
