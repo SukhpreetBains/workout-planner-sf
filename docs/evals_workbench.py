@@ -1307,31 +1307,44 @@ def metrics_payload(suite: Suite) -> dict:
             entry["value"] = value if not isinstance(value, (dict, list)) else None
         else:
             reason = None
-            if isinstance(value, str) and value:
-                # The harness said so itself, in its own words. Prefer any adjacent
-                # note it wrote over a generic restatement of the sentinel.
-                container = _dig(latest or {}, ".".join(path.split(".")[:-1])) or {}
-                leaf = path.split(".")[-1]
-                note = None
-                if isinstance(container, dict):
+            # Reason priority, most specific first. A sentinel restatement -
+            # "the harness recorded this as 'not-applicable'" - is technically
+            # true and useless to a reader, so it is the last resort rather than
+            # the first answer.
+            leaf = path.split(".")[-1]
+            container = _dig(latest or {}, ".".join(path.split(".")[:-1]))
+            if isinstance(container, dict):
+                # A note may be keyed off the field name with or without its unit
+                # suffix: the runner writes `agent_wall_clock_note` beside
+                # `agent_wall_clock_seconds`.
+                stems = [leaf]
+                for unit in ("_seconds", "_minutes", "_tokens", "_usd"):
+                    if leaf.endswith(unit):
+                        stems.append(leaf[: -len(unit)])
+                for stem in stems:
                     for suffix in ("_note", "_reason", "_unavailable_reason"):
-                        candidate = container.get(leaf + suffix)
+                        candidate = container.get(stem + suffix)
                         if isinstance(candidate, str) and candidate:
-                            note = candidate
+                            reason = candidate
                             break
-                reason = note or "The harness recorded this as {0!r}.".format(value)
-            if reason is None and latest is None and not path.startswith("summary."):
-                reason = "No run has been recorded for this suite yet."
+                    if reason:
+                        break
             if reason is None and isinstance(latest, dict):
                 declared = latest.get("unmeasured")
                 if isinstance(declared, dict):
-                    # The run record's own account wins over the catalogue default.
-                    for key in (metric["id"], path.split(".")[-1], path.split(".")[0]):
-                        if isinstance(declared.get(key), str):
+                    # The run record's own account of the gap.
+                    for key in (metric["id"], leaf, path.split(".")[0]):
+                        if isinstance(declared.get(key), str) and declared[key]:
                             reason = declared[key]
                             break
+            if reason is None and latest is None and not path.startswith("summary."):
+                reason = "No run has been recorded for this suite yet."
             if reason is None:
-                reason = metric.get("absent_reason") or "Not recorded by this suite."
+                reason = metric.get("absent_reason")
+            if reason is None and isinstance(value, str) and value:
+                reason = "The harness recorded this as {0!r}.".format(value)
+            if reason is None:
+                reason = "Not recorded by this suite."
             entry["absent_reason"] = reason
         entries.append(entry)
 

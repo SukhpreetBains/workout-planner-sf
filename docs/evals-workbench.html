@@ -4,1375 +4,1528 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ascent evaluation workbench</title>
+<!--
+  Slalom brand implementation, per skills/slalom-branding/references/.
+
+  Typography (typography.md): Slalom Sans is the primary face for all brand
+  material including web, self-hosted from the skill's own assets/fonts via the
+  server's read-only /brand/ mount. Only the four weights actually loaded are
+  declared, and font-synthesis is off, because there is no Medium or SemiBold in
+  the family and a browser must not fake one. Sentence case throughout, flush
+  left, ragged right. Avenir Next LT Pro is deliberately absent: it is
+  PowerPoint-only. Lora is not bundled, so nothing here sets a serif.
+
+  Colour (color.md): a Slalom Blue appears in every composition and is paired
+  with exactly one secondary - Coral Red - outside the charts. The brand guide
+  permits all brand colours together in "infographic charts, bar graphs, and the
+  official color bar", which is the only place a third hue appears here.
+
+  Accessibility (accessibility.md, WCAG 2.1 AA): every text pair below was
+  measured, not eyeballed, against white -
+    Slalom Dark Blue #002FAF  10.37:1   body and emphasis
+    Black                     21.00:1   headings
+    Dark Gray #666666          5.74:1   secondary text
+    Slalom Blue #0C62FB        5.05:1   links, primary accent
+    Coral Red Dark 3 #E6154A   4.59:1   failure text
+    Coral Red core #FF4D5F     3.24:1   CHART FILL AND BORDERS ONLY - never text
+    Chartreuse on white        1.81:1   FAILS. Never text on white; only as a
+                                        fill behind black text (18.52:1).
+  Nothing communicates by colour alone: every status carries an icon and a word,
+  and every chart series is labelled directly on the mark.
+-->
 <style>
-/* ---------------------------------------------------------------- tokens
-   Colour roles come from the house dataviz palette. The two series hexes
-   were validated with scripts/validate_palette.js against both surfaces:
-   light  #2a78d6,#eb6834 on #fcfcfb  - all checks pass
-   dark   #3987e5,#d95926 on #1a1a19  - all checks pass
-   The time chart uses a one-hue ordinal pair (blue 250/450 light,
-   blue 550/400 dark), validated with --ordinal in both modes.        */
+@font-face{font-family:"Slalom Sans";
+  src:url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Light.woff2") format("woff2"),
+      url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Light.woff") format("woff");
+  font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"Slalom Sans";
+  src:url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Regular.woff2") format("woff2"),
+      url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Regular.woff") format("woff");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Slalom Sans";
+  src:url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Bold.woff2") format("woff2"),
+      url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Bold.woff") format("woff");
+  font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"Slalom Sans";
+  src:url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Black.woff2") format("woff2"),
+      url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Black.woff") format("woff");
+  font-weight:900;font-style:normal;font-display:swap}
+
 :root{
-  color-scheme:light;
-  --surface-1:#fcfcfb;      /* card / chart surface */
-  --surface-2:#f9f9f7;      /* page plane */
-  --surface-3:#f1f1ed;      /* recessive fill */
-  --text-primary:#0b0b0b;
-  --text-secondary:#52514e;
-  --text-muted:#898781;
-  --grid:#e1e0d9;
-  --axis:#c3c2b7;
-  --border:rgba(11,11,11,.10);
-  --series-1:#2a78d6;       /* with Ascent skills */
-  --series-2:#eb6834;       /* baseline, no skills */
-  --ordinal-far:#86b6ef;    /* one-hue pair, low end */
-  --ordinal-near:#2a78d6;   /* one-hue pair, high end */
-  --good:#0ca30c;
-  --warning:#fab219;
-  --serious:#ec835a;
-  --critical:#d03b3b;
-  --success-text:#006300;
-  --link:#256abf;
-  --shadow:0 1px 2px rgba(11,11,11,.04);
-  --band-opacity:.16;
-}
-@media (prefers-color-scheme:dark){
-  :root:where(:not([data-theme="light"])){
-    color-scheme:dark;
-    --surface-1:#1a1a19;--surface-2:#0d0d0d;--surface-3:#242422;
-    --text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;
-    --grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
-    --series-1:#3987e5;--series-2:#d95926;
-    --ordinal-far:#184f95;--ordinal-near:#3987e5;
-    --success-text:#0ca30c;--link:#86b6ef;--shadow:none;--band-opacity:.28;
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme:dark;
-  --surface-1:#1a1a19;--surface-2:#0d0d0d;--surface-3:#242422;
-  --text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#898781;
-  --grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
-  --series-1:#3987e5;--series-2:#d95926;
-  --ordinal-far:#184f95;--ordinal-near:#3987e5;
-  --success-text:#0ca30c;--link:#86b6ef;--shadow:none;--band-opacity:.28;
+  /* Primary. A Slalom Blue is present in every composition. */
+  --slalom-blue:#0C62FB;
+  --slalom-dark-blue:#002FAF;
+  /* The one secondary paired with blue outside the charts. */
+  --coral-red:#FF4D5F;
+  --coral-red-dark-3:#E6154A;
+  /* Chart-only hues. Permitted together in infographic charts and bar graphs. */
+  --cyan:#1BE1F2;
+  --purple:#C7B9FF;
+  --chartreuse:#DEFF4D;
+  /* Neutrals. */
+  --white:#FFFFFF;
+  --light-gray:#E6E6E6;
+  --dark-gray:#666666;
+  --black:#000000;
+  /* Tone-on-tone depth, used sparingly and never as a dominant flood. */
+  --blue-tint:#F4F7FF;
+  --blue-tint-2:#E8EEFF;
+
+  --surface:var(--white);
+  --surface-recessed:var(--blue-tint);
+  --page:#FAFAFA;
+  --text:var(--black);
+  --text-secondary:var(--dark-gray);
+  --text-emphasis:var(--slalom-dark-blue);
+  --border:var(--light-gray);
+  --link:var(--slalom-blue);
+
+  /* Semantic roles. Each is always paired with an icon and a word. */
+  --measured:var(--slalom-dark-blue);
+  --absent:var(--dark-gray);
+  --failure:var(--coral-red-dark-3);
+  --series-with-skills:var(--slalom-blue);
+  --series-baseline:var(--coral-red);
 }
 
-/* ------------------------------------------------------------------ base */
 *{box-sizing:border-box}
-body{margin:0;background:var(--surface-2);color:var(--text-primary);
-  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.5;
-  -webkit-font-smoothing:antialiased}
-.frame{width:min(1140px,calc(100% - 40px));margin-inline:auto}
-h1{margin:0 0 6px;font-size:1.85rem;font-weight:650;letter-spacing:-.02em}
-h2{margin:0;font-size:1.06rem;font-weight:650;letter-spacing:-.01em}
-h3{margin:0 0 4px;font-size:.9rem;font-weight:650}
-p{margin:0 0 10px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--text);
+  font-family:"Slalom Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-weight:300;font-size:16px;line-height:1.45;
+  font-synthesis:none;-webkit-font-smoothing:antialiased}
+.frame{width:min(1180px,calc(100% - 48px));margin-inline:auto}
+
+/* Type scale kept to three sizes per composition where practical. */
+h1{margin:0 0 8px;font-weight:700;font-size:2rem;line-height:1.05;letter-spacing:-.02em}
+h2{margin:0;font-weight:700;font-size:1.15rem;line-height:1.15}
+h3{margin:0 0 6px;font-weight:700;font-size:.95rem}
+p{margin:0 0 12px;max-width:78ch}
 p:last-child{margin-bottom:0}
-a{color:var(--link)}
-code,kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.86em}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.eyebrow{margin:0 0 8px;color:var(--text-muted);font-size:.7rem;font-weight:700;
+a{color:var(--link);text-decoration:underline;text-underline-offset:2px}
+strong,b{font-weight:700}
+ul{margin:0 0 12px;padding-left:1.1em}
+li{margin-bottom:4px}
+li::marker{font-weight:400}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84em;
+  background:var(--surface-recessed);padding:1px 5px;border-radius:3px;color:var(--text-emphasis)}
+.eyebrow{margin:0 0 10px;color:var(--slalom-blue);font-weight:700;font-size:.7rem;
   letter-spacing:.14em;text-transform:uppercase}
-.lede{max-width:74ch;color:var(--text-secondary)}
-.note{color:var(--text-secondary);font-size:.87rem}
-.small{font-size:.78rem;color:var(--text-muted)}
-.key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.72rem;color:var(--text-muted)}
-:focus-visible{outline:2px solid var(--series-1);outline-offset:2px;border-radius:3px}
+.lede{max-width:76ch;color:var(--text-secondary);font-size:1.02rem}
+.note{color:var(--text-secondary);font-size:.88rem}
+.small{color:var(--text-secondary);font-size:.79rem}
+:focus-visible{outline:3px solid var(--slalom-blue);outline-offset:2px;border-radius:2px}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* --------------------------------------------------------------- chrome */
-header.top{background:var(--surface-1);border-bottom:1px solid var(--border)}
-header.top .frame{padding:26px 0 22px}
-.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;
-  padding:12px 0;margin-top:-1px;border-bottom:1px solid var(--border);
-  background:var(--surface-2);position:sticky;top:0;z-index:20}
-.controls .grow{flex:1 1 auto}
-.suite-tag{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;
-  border:1px solid var(--border);border-radius:6px;background:var(--surface-1);
-  font-size:.8rem;color:var(--text-secondary)}
-.suite-tag b{color:var(--text-primary);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:650}
-label.field{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;color:var(--text-secondary)}
-select,button{font:inherit;font-size:.85rem}
-select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;
-  background:var(--surface-1);color:var(--text-primary)}
-button{cursor:pointer}
-.btn{padding:7px 13px;border:1px solid var(--border);border-radius:6px;
-  background:var(--surface-1);color:var(--text-primary);font-weight:600}
-.btn:hover{background:var(--surface-3)}
-.btn-primary{border-color:transparent;background:var(--series-1);color:#fff}
-.btn-primary:hover{filter:brightness(.94)}
-.btn-primary:disabled{opacity:.55;cursor:progress}
-.run-status{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--text-secondary)}
+/* The official color bar. One per layout, never reordered, never over 20%. */
+.color-bar{display:flex;height:6px;width:100%}
+.color-bar i{flex:1}
+.color-bar i:nth-child(1){background:var(--slalom-blue)}
+.color-bar i:nth-child(2){background:var(--cyan)}
+.color-bar i:nth-child(3){background:var(--coral-red)}
+.color-bar i:nth-child(4){background:var(--purple)}
+.color-bar i:nth-child(5){background:var(--chartreuse)}
 
-main{padding:22px 0 60px}
-section.card{padding:20px 20px 18px;margin-bottom:18px;border:1px solid var(--border);
-  border-radius:10px;background:var(--surface-1);box-shadow:var(--shadow)}
-.card-head{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin-bottom:4px}
-.card-head .q{color:var(--text-muted);font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
-.card-sub{margin:2px 0 16px;color:var(--text-secondary);font-size:.88rem;max-width:82ch}
+header.top{background:var(--surface);border-bottom:1px solid var(--border)}
+header.top .frame{padding:30px 0 26px;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+header.top .head-text{flex:1 1 420px}
+.brandmark{width:132px;height:auto;flex:0 0 auto;margin-top:4px}
 
-/* ---------------------------------------------------------- stat tiles */
-.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.tile{padding:16px;border:1px solid var(--border);border-radius:9px;background:var(--surface-1)}
-.tile .q{display:block;margin-bottom:9px;font-size:.87rem;font-weight:650;color:var(--text-primary)}
-.tile .v{display:block;font-size:1.9rem;font-weight:650;letter-spacing:-.02em;line-height:1.15}
-.tile .v.absent{font-size:1.02rem;font-weight:600;color:var(--text-secondary);line-height:1.35}
-.tile .s{display:block;margin-top:6px;color:var(--text-secondary);font-size:.83rem}
-.tile .k{display:block;margin-top:9px}
+.controls{position:sticky;top:0;z-index:30;background:var(--surface);
+  border-bottom:1px solid var(--border)}
+.controls .frame{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;padding:14px 0}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-secondary)}
+select{font:inherit;font-weight:400;font-size:.9rem;padding:8px 10px;
+  border:1px solid var(--dark-gray);border-radius:4px;background:var(--white);color:var(--text);
+  min-width:170px}
+select:disabled{color:var(--text-secondary);background:var(--light-gray)}
+.grow{flex:1 1 auto}
+button{font:inherit;cursor:pointer}
+.btn{font-weight:700;font-size:.9rem;padding:9px 18px;border-radius:4px;
+  border:1px solid var(--slalom-blue);background:var(--white);color:var(--slalom-dark-blue)}
+.btn:hover{background:var(--blue-tint)}
+.btn-primary{background:var(--slalom-blue);border-color:var(--slalom-blue);color:var(--white)}
+.btn-primary:hover{background:var(--slalom-dark-blue);border-color:var(--slalom-dark-blue)}
+.btn-primary:disabled{background:var(--dark-gray);border-color:var(--dark-gray);cursor:progress}
+.run-status{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--text-secondary);
+  flex:1 1 260px;min-height:24px}
 
-/* -------------------------------------------------------------- status */
-.status-line{display:inline-flex;align-items:center;gap:8px;font-weight:600}
-.status-line svg{flex:0 0 auto}
-.tone-good{color:var(--success-text)}
-.tone-warning{color:#8a5b00}
-.tone-critical{color:var(--critical)}
-.tone-muted{color:var(--text-secondary)}
-:root[data-theme="dark"] .tone-warning{color:var(--warning)}
-@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .tone-warning{color:var(--warning)}}
-.verdict{display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border:1px solid var(--border);
-  border-radius:99px;background:var(--surface-3);font-size:.85rem;font-weight:650}
+main{padding:26px 0 72px}
+section.card{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:24px;margin-bottom:20px}
+.card-head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;margin-bottom:6px}
+.card-head .q{color:var(--slalom-blue);font-weight:700;font-size:.7rem;letter-spacing:.13em;
+  text-transform:uppercase}
+.card-sub{margin:4px 0 20px;color:var(--text-secondary);font-size:.9rem;max-width:82ch}
+.quote{margin:0 0 18px;padding:12px 16px;border-left:3px solid var(--slalom-blue);
+  background:var(--surface-recessed);color:var(--text-emphasis);font-size:.9rem;max-width:84ch}
+.quote cite{display:block;margin-top:6px;font-style:normal;font-size:.78rem;color:var(--text-secondary)}
 
-/* --------------------------------------------------------- empty states */
-.absent-block{padding:14px 15px;border:1px dashed var(--axis);border-radius:9px;background:var(--surface-2)}
-.absent-block h3{color:var(--text-primary)}
-.absent-block p{color:var(--text-secondary);font-size:.87rem;max-width:80ch}
-.absent-block .cmd{display:block;margin-top:9px;padding:8px 10px;border-radius:6px;background:var(--surface-3);
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;color:var(--text-secondary);
-  overflow-x:auto;white-space:pre}
+/* Stat tiles. A measured figure is large; an absent one states its reason at
+   body size instead, because a big grey dash reads as a number that is zero. */
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:16px}
+.tile{border:1px solid var(--border);border-radius:5px;padding:18px;background:var(--surface)}
+.tile.absent{border-style:dashed;border-color:var(--dark-gray);background:var(--page)}
+.tile .q{display:block;margin-bottom:10px;font-weight:700;font-size:.9rem;color:var(--text)}
+.tile .v{display:block;font-weight:900;font-size:2.1rem;line-height:1.05;letter-spacing:-.02em;
+  color:var(--text-emphasis);font-variant-numeric:tabular-nums}
+.tile .v small{font-weight:700;font-size:.42em;letter-spacing:0;color:var(--text-secondary)}
+.tile .s{display:block;margin-top:8px;font-size:.84rem;color:var(--text-secondary)}
+.tile .why{display:block;margin-top:2px;font-size:.84rem;color:var(--text-secondary);font-weight:400}
+.tile .absent-label{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:.9rem;
+  color:var(--absent)}
 
-/* ---------------------------------------------------------- figures */
-figure{margin:0}
-figcaption{margin-bottom:8px;font-size:.85rem;font-weight:600;color:var(--text-primary)}
-figcaption span{font-weight:400;color:var(--text-muted)}
-.plot{position:relative}
-.plot svg{display:block;width:100%;height:auto;overflow:visible}
-.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-bottom:14px}
-.legend .item{display:inline-flex;align-items:center;gap:7px;font-size:.83rem;color:var(--text-secondary)}
-.legend .swatch{width:12px;height:12px;border-radius:3px;background:var(--c);flex:0 0 auto}
-.tip{position:absolute;z-index:30;min-width:150px;padding:9px 11px;border:1px solid var(--border);
-  border-radius:7px;background:var(--surface-1);box-shadow:0 6px 22px rgba(11,11,11,.14);
-  font-size:.8rem;pointer-events:none;opacity:0;transform:translate(-50%,-118%);transition:opacity .1s}
-.tip.on{opacity:1}
-.tip .tv{font-size:1rem;font-weight:650;color:var(--text-primary)}
-.tip .tl{color:var(--text-secondary)}
-.tip .tk{margin-top:3px;color:var(--text-muted);font-size:.72rem;
-  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
+.status{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.status svg{flex:0 0 auto}
+.tone-measured{color:var(--measured)}
+.tone-failure{color:var(--failure)}
+.tone-absent{color:var(--absent)}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;
+  font-weight:700;font-size:.82rem;border:1px solid var(--border);background:var(--surface-recessed);
+  color:var(--text-emphasis)}
+.chip.warn{background:var(--chartreuse);border-color:#B3CC3E;color:var(--black)}
+.chip.bad{background:var(--white);border-color:var(--coral-red-dark-3);color:var(--failure)}
 
-/* --------------------------------------------------------------- bars */
-.bars{display:grid;gap:10px}
-.bar-row{display:grid;grid-template-columns:minmax(120px,190px) 1fr;gap:12px;align-items:center}
-.bar-name{display:inline-flex;align-items:center;gap:8px;font-size:.84rem;color:var(--text-secondary)}
-.bar-name i{width:10px;height:10px;border-radius:2px;background:var(--c);flex:0 0 auto}
-.bar-track{display:flex;align-items:center;gap:8px;min-height:16px}
-.bar-fill{height:14px;border-radius:0 4px 4px 0;background:var(--c);min-width:2px}
-.bar-value{font-size:.84rem;font-weight:650;color:var(--text-primary);
-  font-variant-numeric:tabular-nums;white-space:nowrap}
-.measure-group{display:grid;gap:18px}
-.measure{padding:14px;border:1px solid var(--border);border-radius:9px;background:var(--surface-2)}
-.delta{margin-top:10px;font-size:.84rem;color:var(--text-secondary)}
-.delta b{color:var(--text-primary)}
+.absent-block{border:1px dashed var(--dark-gray);border-radius:5px;padding:16px 18px;
+  background:var(--page)}
+.absent-block h3{color:var(--text)}
+.absent-block p{color:var(--text-secondary);font-size:.88rem;max-width:82ch}
+.absent-block .cmd{display:block;margin-top:10px;padding:9px 11px;border-radius:4px;
+  background:var(--white);border:1px solid var(--border);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;
+  color:var(--text-emphasis);overflow-x:auto;white-space:pre}
 
-/* -------------------------------------------------------------- tables */
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+caption{text-align:left;padding-bottom:10px;color:var(--text-secondary);font-size:.84rem}
+th{text-align:left;font-weight:700;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text-secondary);padding:8px 12px 8px 0;border-bottom:2px solid var(--slalom-blue);
+  white-space:nowrap}
+td{padding:10px 12px 10px 0;border-bottom:1px solid var(--border);vertical-align:top;font-weight:400}
+tbody tr:hover{background:var(--surface-recessed)}
+td.num{text-align:right;font-variant-numeric:tabular-nums;padding-right:18px}
 .scroll{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-th,td{padding:10px 11px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
-th{color:var(--text-secondary);font-size:.71rem;font-weight:700;letter-spacing:.08em;
-  text-transform:uppercase;white-space:nowrap;background:var(--surface-2)}
-tbody tr:last-child td{border-bottom:0}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.proves{max-width:46ch}
-.proves .must{display:block;margin-top:5px;color:var(--text-secondary);font-size:.82rem}
-.chips{display:flex;flex-wrap:wrap;gap:4px}
-.chip{padding:2px 7px;border:1px solid var(--border);border-radius:99px;background:var(--surface-2);
-  color:var(--text-secondary);font-size:.71rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.badge{display:inline-block;padding:2px 8px;border-radius:99px;background:var(--surface-3);
-  border:1px solid var(--border);font-size:.72rem;font-weight:650;white-space:nowrap}
-details{margin-top:12px}
-summary{cursor:pointer;color:var(--link);font-size:.84rem;font-weight:600}
-summary::marker{color:var(--text-muted)}
-.output{max-height:280px;overflow:auto;margin:10px 0 0;padding:12px;border:1px solid var(--border);
-  border-radius:7px;background:var(--surface-2);color:var(--text-secondary);
-  font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap}
 
-/* ----------------------------------------------------- summary block */
-.paste{display:grid;gap:12px;grid-template-columns:1fr auto;align-items:start}
-.paste pre{margin:0;padding:14px;border:1px solid var(--border);border-radius:8px;
-  background:var(--surface-2);color:var(--text-primary);font:12.5px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;
-  white-space:pre-wrap;overflow-x:auto}
-.copied{font-size:.8rem;color:var(--success-text);min-height:1.2em;display:block;margin-top:6px}
+/* Charts. A 1px top border on each bar, per accessibility.md, and every series
+   labelled on the mark rather than only in a legend. */
+.chart{margin-top:6px}
+.bar-row{display:grid;grid-template-columns:190px 1fr 120px;gap:12px;align-items:center;
+  margin-bottom:9px}
+.bar-row .bar-label{font-size:.84rem;font-weight:400;color:var(--text)}
+.bar-track{height:22px;background:var(--light-gray);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-top:1px solid rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:7px;
+  font-size:.74rem;font-weight:700;color:var(--white)}
+.bar-fill.with-skills{background:var(--series-with-skills)}
+.bar-fill.baseline{background:var(--series-baseline);color:var(--black);
+  border-top-color:rgba(0,0,0,.45)}
+.bar-row .bar-value{font-size:.84rem;font-weight:700;font-variant-numeric:tabular-nums;
+  color:var(--text-emphasis)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:14px 0 0;font-size:.8rem;
+  color:var(--text-secondary)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.swatch{width:13px;height:13px;border-radius:2px;border:1px solid rgba(0,0,0,.35)}
+.swatch.with-skills{background:var(--series-with-skills)}
+.swatch.baseline{background:var(--series-baseline)}
 
-/* -------------------------------------------------------- two columns */
-.split{display:grid;grid-template-columns:1.35fr .65fr;gap:18px;align-items:start}
-.gloss{margin:0;padding:0;list-style:none}
-.gloss li{padding:10px 0;border-bottom:1px solid var(--grid);font-size:.87rem}
-.gloss li:last-child{border-bottom:0}
-.gloss b{color:var(--text-primary)}
-.gloss .term{color:var(--text-muted);font-size:.78rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-.axes{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.axis-row{display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid var(--border);
-  border-radius:7px;background:var(--surface-2);font-size:.8rem}
-.axis-row span:first-child{color:var(--text-secondary)}
-.axis-row span:last-child{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-primary)}
-.banner{padding:12px 14px;margin-bottom:18px;border:1px solid var(--border);border-left:3px solid var(--warning);
-  border-radius:0 8px 8px 0;background:var(--surface-1);font-size:.87rem}
-.banner b{display:block;margin-bottom:3px}
+.strip{position:relative;height:74px;margin:10px 0 4px}
+.strip svg{display:block;width:100%;height:100%;overflow:visible}
 
-@media (max-width:900px){
-  .kpi{grid-template-columns:1fr}
-  .split{grid-template-columns:1fr}
-  .paste{grid-template-columns:1fr}
-  .bar-row{grid-template-columns:1fr}
-  .controls{position:static}
-}
-@media print{.controls,.btn{display:none}}
+pre.paste{margin:0;padding:16px;background:var(--surface-recessed);border:1px solid var(--border);
+  border-radius:5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;
+  line-height:1.5;white-space:pre-wrap;color:var(--text);max-height:420px;overflow:auto}
+pre.output{margin:10px 0 0;padding:14px;background:var(--black);color:#F2F2F2;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.74rem;line-height:1.45;
+  white-space:pre-wrap;max-height:340px;overflow:auto}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:700;font-size:.88rem;color:var(--text-emphasis)}
+.row-actions{display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.copied{font-size:.82rem;font-weight:700;color:var(--measured)}
+
+.banner{border-radius:5px;padding:16px 18px;margin-bottom:20px;font-size:.9rem;
+  border:1px solid var(--slalom-blue);background:var(--surface-recessed);color:var(--text-emphasis)}
+.banner.bad{border-color:var(--coral-red-dark-3);background:var(--white);color:var(--failure)}
+.banner b{font-weight:700}
+
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.metric-quote{font-size:.82rem;color:var(--text-secondary);max-width:62ch}
+.metric-reason{font-size:.82rem;color:var(--text-secondary);max-width:62ch}
+footer.foot{border-top:1px solid var(--border);background:var(--surface);padding:26px 0 40px}
+footer.foot .frame{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+@media print{.controls,.row-actions{display:none}body{background:var(--white)}}
 </style>
 </head>
-<body data-palette="#2a78d6,#eb6834">
+<body>
+<div class="color-bar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
 
 <header class="top">
   <div class="frame">
-    <p class="eyebrow">Slalom internal &middot; local development tool</p>
-    <h1>Evaluation workbench</h1>
-    <p class="lede">Three questions, in this order: did it do the job right, what did it cost and was that
-      predictable, and how much time did it save. Every number below is either measured on this machine or
-      marked as not measured, with the reason. Nothing on this page is a placeholder.</p>
+    <img class="brandmark" src="/brand/logos/slalom-logo-blue-RGB.svg"
+         alt="Slalom" width="132" height="34">
+    <div class="head-text">
+      <p class="eyebrow">Ascent &middot; skill evaluation</p>
+      <h1>Did it work, what did it cost, and how much time did it save?</h1>
+      <p class="lede">Three questions, measured from session logs by code. Every number on
+        this page is either measured or marked absent with the reason it is missing. Nothing
+        here is estimated to look complete.</p>
+    </div>
   </div>
 </header>
 
 <div class="controls">
-  <div class="frame" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-    <span class="suite-tag">Suite <b id="suiteId">context-skills</b></span>
-    <label class="field">History window
-      <select id="limit">
-        <option value="5">last 5 runs</option>
-        <option value="10" selected>last 10 runs</option>
-        <option value="25">last 25 runs</option>
-        <option value="50">last 50 runs</option>
+  <div class="frame">
+    <div class="field">
+      <label for="suiteSelect">Suite</label>
+      <select id="suiteSelect" disabled><option>Loading&hellip;</option></select>
+    </div>
+    <div class="field">
+      <label for="armSelect">Arm</label>
+      <select id="armSelect" disabled></select>
+    </div>
+    <div class="field">
+      <label for="runsSelect">Runs</label>
+      <select id="runsSelect" disabled></select>
+    </div>
+    <div class="field">
+      <label for="limitSelect">History</label>
+      <select id="limitSelect">
+        <option value="5">Last 5</option>
+        <option value="10" selected>Last 10</option>
+        <option value="25">Last 25</option>
+        <option value="100">All</option>
       </select>
-    </label>
+    </div>
     <button class="btn btn-primary" id="runButton" disabled>Run evaluation</button>
     <span class="run-status" id="runStatus" role="status" aria-live="polite">Connecting to the local workbench&hellip;</span>
-    <span class="grow"></span>
-    <button class="btn" id="themeButton" aria-label="Switch colour theme">Theme</button>
   </div>
 </div>
 
-<main class="frame">
+<main>
+  <div class="frame">
+    <div id="banner"></div>
 
-  <div id="banner"></div>
+    <!-- Headline. Deliberately not a single "score": three questions, three answers. -->
+    <section class="card" id="headlineCard">
+      <div class="card-head"><h2>Headline</h2><span class="q" id="headlineWhen"></span></div>
+      <p class="card-sub">The three questions, in the order a reader asks them.</p>
+      <div class="kpi" id="kpi"></div>
+    </section>
 
-  <!-- ------------------------------------------------ three headline results -->
-  <section class="card">
-    <div class="card-head"><h2>Headline result</h2><span class="q" id="headlineWhen"></span></div>
-    <p class="card-sub">One answer per question. The machine key for each figure is in small type beneath it.</p>
-    <div class="kpi" id="kpi"></div>
-  </section>
+    <section class="card">
+      <div class="card-head"><span class="q">Question 1</span><h2>Did it do the job right?</h2>
+        <span class="q" id="q1Status"></span></div>
+      <blockquote class="quote">&ldquo;Those are two of the important metrics, and the third one
+        is, and it did the right thing. If we can validate those three things somehow, I feel
+        like that is our test suite, or that&rsquo;s our sales pitch.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <div id="correctness"></div>
+      <div class="scroll" id="checkTable"></div>
+    </section>
 
-  <!-- --------------------------------------------------------- question one -->
-  <section class="card">
-    <div class="card-head"><span class="q">Question 1</span><h2>Did it do the job right?</h2><span class="q" id="q1Status"></span></div>
-    <p class="card-sub">Four task contracts, graded by code, pass or fail with no partial credit. The plain
-      reading of each contract is the first column; the assertion class names are what make coverage
-      checkable and are kept verbatim.</p>
-    <div id="correctness"></div>
-    <div class="scroll" id="taskTable"></div>
-    <div id="gaps1"></div>
-  </section>
+    <section class="card">
+      <div class="card-head"><span class="q">Question 2</span><h2>What did it cost, and was that predictable?</h2>
+        <span class="q" id="q2Status"></span></div>
+      <blockquote class="quote">&ldquo;Is it as token efficient in between runs? Like how
+        different is the cost between each run? Is it, when you do like the PowerPoint one, is
+        it 70 credits one time and 40 credits another time?&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <p class="card-sub">Both halves are required. A cheap average with a wide spread is a
+        worse product than a slightly dearer run that lands in the same place every time,
+        because consistency is what is being sold.</p>
+      <div id="costBlock"></div>
+      <div id="spread"></div>
+    </section>
 
-  <!-- --------------------------------------------------------- question two -->
-  <section class="card">
-    <div class="card-head"><span class="q">Question 2</span><h2>What did it cost, and was that predictable?</h2><span class="q" id="q2Status"></span></div>
-    <p class="card-sub">An average with a wide spread is a worse product than a slightly dearer run that lands
-      in the same place every time. So the spread is shown, not just the middle.</p>
-    <div id="spread"></div>
-    <div id="gaps2"></div>
-  </section>
+    <!-- Credits are derived, and labelled as derived everywhere they appear. -->
+    <section class="card" id="creditsCard">
+      <div class="card-head"><span class="q">Question 2, in credits</span><h2>Credits per run</h2>
+        <span class="q">derived figure</span></div>
+      <p class="card-sub">Credits are not reported by any host. They are measured tokens
+        multiplied by a published rate card, so the rate card and the date it was fetched
+        travel with the number.</p>
+      <div id="credits"></div>
+    </section>
 
-  <section class="card">
-    <div class="card-head"><h2>With the skills against plain Claude</h2></div>
-    <p class="card-sub">The same task, same host, same model, run twice: once with the Ascent skill library
-      available and once without it. The reportable result is the difference, not either absolute.</p>
-    <div id="arms"></div>
-  </section>
+    <section class="card">
+      <div class="card-head"><span class="q">Question 3</span><h2>How much time did it save?</h2>
+        <span class="q" id="q3Status"></span></div>
+      <blockquote class="quote">&ldquo;This PowerPoint, it took us this many hours or days to
+        put it together. Now, the agent puts it together in this amount of time &hellip; it puts
+        in some metric around hours saved versus doing it manually. Instead of it just being
+        some vague, like, oh, it feels like it took an 8 point story to a 5 point story.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <div id="timeBlock"></div>
+      <div id="skillTiming"></div>
+    </section>
 
-  <!-- ------------------------------------------------------- question three -->
-  <section class="card">
-    <div class="card-head"><span class="q">Question 3</span><h2>How much time did it save?</h2><span class="q" id="q3Status"></span></div>
-    <p class="card-sub">Agent wall-clock against a recorded human baseline for the same deliverable. A baseline
-      is a figure a person gave us. It is never derived from the agent's own run, and a missing baseline is
-      shown as missing rather than as zero.</p>
-    <div id="time"></div>
-    <div id="gaps3"></div>
-  </section>
+    <!-- Reproducibility is a separate claim from cost. Kept in its own card, and
+         it says so, so nothing here can be quoted as a price or a saving. -->
+    <section class="card" id="determinismCard">
+      <div class="card-head"><h2>Same input, same output</h2>
+        <span class="q" id="detStatus"></span></div>
+      <blockquote class="quote">&ldquo;A lot of our focus going forward is going to be on the
+        eval stuff, to prove that what gets created is consistent.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-20</cite></blockquote>
+      <div id="determinism"></div>
+    </section>
 
-  <!-- ------------------------------------------------------- paste-ready -->
-  <section class="card">
-    <div class="card-head"><h2>Paste into the Jira comment or the pull request</h2></div>
-    <p class="card-sub">Facts only. Anything not measured says so, so the block can be pasted without editing.</p>
-    <div class="paste">
-      <pre id="pasteBlock">Loading&hellip;</pre>
-      <div>
-        <button class="btn" id="copyButton">Copy summary</button>
-        <span class="copied" id="copied"></span>
-        <p class="small" id="pasteSource" style="margin-top:8px;max-width:34ch"></p>
-      </div>
-    </div>
-  </section>
+    <section class="card">
+      <div class="card-head"><h2>Arm against arm</h2><span class="q">with skills vs no skills</span></div>
+      <blockquote class="quote">&ldquo;What makes what we&rsquo;re building different than just
+        throwing it into Claude? &hellip; The real value of what we&rsquo;re building is
+        consistency and cost savings.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <div id="arms"></div>
+    </section>
 
-  <!-- --------------------------------------------------------- run history -->
-  <section class="card">
-    <div class="card-head"><h2>Run history</h2><span class="q" id="historyCount"></span></div>
-    <p class="card-sub">Spread is the point, so the last several runs are all here, newest first. This table is
-      also the accessible twin of the cost strip above.</p>
-    <div class="scroll" id="historyTable"></div>
-    <details id="outputDetails"><summary>Process output from the most recent run</summary>
-      <pre class="output" id="output">No run recorded.</pre></details>
-  </section>
+    <!-- The coverage table is the honesty contract made visible: every metric
+         asked for, present or absent, with the quote and the reason. -->
+    <section class="card">
+      <div class="card-head"><h2>Metric coverage</h2><span class="q" id="coverageCount"></span></div>
+      <p class="card-sub">Every metric asked for in the evaluation conversations, the quote that
+        asked for it, and whether this harness measures it. A metric this suite cannot measure
+        stays on the list and says why, rather than disappearing from the page.</p>
+      <div class="scroll" id="coverage"></div>
+    </section>
 
-  <!-- --------------------------------------------------- execution boundary -->
-  <section class="card">
-    <div class="card-head"><h2>Execution boundary</h2></div>
-    <p class="card-sub">What the run button can and cannot do. This is a real safety property of the harness,
-      not a disclaimer.</p>
-    <div class="split">
-      <div>
-        <ul class="gloss" id="boundaryList"></ul>
-      </div>
-      <div class="absent-block">
-        <h3>Where the numbers come from</h3>
-        <p>Correctness is graded by the local runner. Cost, time and consistency figures are produced by the
-          telemetry CLI and read by this server; the page never computes a token or dollar figure of its own.</p>
-        <code class="cmd" id="telemetryCommands"></code>
-      </div>
-    </div>
-  </section>
+    <section class="card">
+      <div class="card-head"><h2>Paste-ready summary</h2><span class="q">for a Jira comment or PR body</span></div>
+      <blockquote class="quote">&ldquo;One of the outputs &hellip; in the resolution of the JIRA
+        story or in the pull request that the agent makes, it puts in some metric around hours
+        saved versus doing it manually.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <div id="pasteWrap"></div>
+    </section>
 
-  <!-- -------------------------------------------------------- appendix -->
-  <section class="card">
-    <div class="card-head"><span class="q">Appendix</span><h2>The words on this page</h2></div>
-    <p class="card-sub">Plain reading first. The standard term is in small type, once, for anyone who needs to
-      map this suite onto the wider evaluation literature.</p>
-    <div class="split">
-      <ul class="gloss">
-        <li><b>Did it do the job right</b> - the deterministic checks all held, and where a known-good human
-          document exists, the output was compared against it section by section.
-          <span class="term">correctness &middot; outcome verification</span></li>
-        <li><b>One good attempt is enough</b> - the workflow is allowed several tries and we score the best one.
-          Right for a deliverable a person will review anyway.
-          <span class="term">pass@k</span></li>
-        <li><b>Every attempt has to hold</b> - the correct estimator for a guardrail. One leak in five tries is
-          a failure, not an eighty per cent pass.
-          <span class="term">pass^k</span></li>
-        <li><b>How much the cost jumps around</b> - the spread of tokens per run divided by the average, so a
-          cheap-but-erratic workflow cannot hide behind its mean.
-          <span class="term">coefficient of variation</span></li>
-        <li><b>We guessed these failures from the design; we have not yet watched it fail for real</b> - the
-          tested failures were read off the skill contract rather than found in real traces. They are real
-          invariants, but they are not evidence of what goes wrong in practice.
-          <span class="term">contract-enumeration provenance</span></li>
-        <li><b>Checked by code, not judged by a model</b> - every assertion here is a Python check with a
-          deterministic answer. Nothing on this page grades tone, completeness or groundedness.
-          <span class="term">code-based grader</span></li>
-        <li><b>Protects behaviour that already works</b> - as opposed to a suite aimed at new or hard behaviour,
-          which is expected to have failures in it.
-          <span class="term">regression &middot; capability</span></li>
-        <li><b>Grades the finished artifacts, and the steps taken to make them</b> - this suite checks the files
-          produced and the boundaries respected while producing them.
-          <span class="term">outcome verification &middot; trajectory analysis</span></li>
-        <li><b>One run, no repetition</b> - deterministic scripts give the same answer every time, so a single
-          trial is enough. A model-driven suite would need repeated trials before any consistency claim.
-          <span class="term">single-trial</span></li>
-      </ul>
-      <div>
-        <h3>This suite's classification</h3>
-        <p class="note">Read straight from <code>eval-plan.json</code>. Kept for anyone auditing coverage; it is
-          not the headline.</p>
-        <div class="axes" id="taxonomy"></div>
-        <div class="banner" style="margin-top:16px">
-          <b>Honest limitation</b>
-          The project-context skills are deterministic shell and Python scripts with no client-facing
-          deliverable, so their evaluation is thin by nature. Cost, consistency and time-saved figures become
-          real with the skills that turn unstructured content into structured documents. That is the argument
-          for staging the work, not something to bury.
+    <section class="card">
+      <div class="card-head"><h2>Run history</h2><span class="q" id="historyCount"></span></div>
+      <p class="card-sub">Newest first. One row per recorded run.</p>
+      <div class="scroll" id="historyTable"></div>
+      <details id="outputDetails"><summary>Process output from the most recent batch</summary>
+        <pre class="output" id="output">No run recorded.</pre></details>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>How to read this page</h2><span class="q">method and limits</span></div>
+      <div class="split">
+        <div>
+          <h3>Extraction is deterministic</h3>
+          <p class="note">Telemetry is parsed out of host session logs by code. No model reads
+            a transcript to produce a figure on this page. Calvin&rsquo;s constraint, and the
+            reason his own first attempt was expensive.</p>
+          <h3>Consistency thresholds are provisional</h3>
+          <div id="thresholds"></div>
         </div>
-        <p class="note" style="margin-top:14px">Vocabulary borrowed from
-          <a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Anthropic,
-          <em>Demystifying evals for AI agents</em></a> and
-          <a href="https://hamel.dev/blog/posts/evals-faq/">Hamel Husain, <em>Evals FAQ</em></a> /
-          <a href="https://github.com/ai-evals-course/evals-skills">ai-evals-course/evals-skills</a>.
-          The enforced definitions live in
-          <code>skills/design-skill-evals/references/evaluation-contract.md</code>.
-          Thresholds and the three-question frame come from
-          <code>docs/sgaf-717-evals-redesign-spec.md</code>.</p>
-        <p class="note" style="margin-top:10px"><a href="sgaf-717-evals-presentation.html">Architecture deck</a>
-          &middot; <a href="sgaf-717-evals-handoff.md">Handoff notes</a></p>
+        <div>
+          <h3>Execution boundary</h3>
+          <ul class="note" id="boundaryList"></ul>
+          <h3>Commands behind these figures</h3>
+          <code class="cmd" id="telemetryCommands"></code>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </main>
 
-<script>
-"use strict";
+<footer class="foot">
+  <div class="frame">
+    <div>
+      <p class="eyebrow">Rate card</p>
+      <div class="small" id="rateCardFoot"></div>
+    </div>
+    <div>
+      <p class="eyebrow">Sources</p>
+      <p class="small">Metric asks are quoted from the 2026-08-17, 18, 20, 21 and 24 recordings.
+        Schemas are fixed by <code>docs/sgaf-717-evals-redesign-spec.md</code>.</p>
+    </div>
+    <div>
+      <p class="eyebrow">Brand</p>
+      <p class="small">Slalom Sans, self-hosted. Colour, type and contrast per the Slalom Brand
+        Guide, February 2025. Text and chart contrast measured against WCAG 2.1 AA.</p>
+    </div>
+  </div>
+</footer>
+<script type="module">
+/* ------------------------------------------------------------------ motion
+   Anime.js v4, self-hosted from skills/animejs via the server's /vendor/ mount.
+   v4 named imports, never the v3 default export. Motion is decoration only:
+   every figure is in the DOM before anything animates, so a reader with reduced
+   motion, a failed import, or JavaScript throttled sees the same numbers. */
+let animate = null, stagger = null;
+const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (!REDUCED_MOTION) {
+  try {
+    const anime = await import("/vendor/anime.esm.min.js");
+    animate = anime.animate; stagger = anime.stagger;
+  } catch (error) { animate = null; }
+}
+function reveal(selector) {
+  if (!animate) return;
+  const nodes = document.querySelectorAll(selector);
+  if (!nodes.length) return;
+  animate(nodes, {
+    opacity: [0, 1], translateY: [8, 0], duration: 420, ease: "outQuad",
+    delay: stagger ? stagger(45) : 0,
+  });
+}
+function countUp(node, value, format) {
+  if (!animate || !isFinite(value)) { node.textContent = format(value); return; }
+  const state = { n: 0 };
+  animate(state, {
+    n: value, duration: 700, ease: "outQuad",
+    onUpdate: () => { node.textContent = format(state.n); },
+    onComplete: () => { node.textContent = format(value); },
+  });
+}
 
-/* ------------------------------------------------------------------ setup */
-const SUITE = "context-skills";
+/* ------------------------------------------------------------------- state */
 const $ = (id) => document.getElementById(id);
-const state = {suite:null, runs:null, summary:null, paste:null, limit:10, connected:false, busy:false};
-const charts = [];
+const state = {
+  suites: null, suite: null, summary: null, runs: null, metrics: null, paste: null,
+  suiteId: null, limit: 10, arm: "with-skills", runCount: 3, busy: false, connected: false,
+};
 
 const ICONS = {
-  pass:'<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4.6 8.4l2.1 2.1 4.7-4.9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  fail:'<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.4 5.4l5.2 5.2M10.6 5.4l-5.2 5.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-  warn:'<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.9l6.1 11.2H1.9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 5.9v3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="8" cy="11.3" r=".95" fill="currentColor"/></svg>',
-  absent:'<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.6 2.2"/><path d="M5.1 8h5.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+  pass: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8.6l3.6 3.6L14 3.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  fail: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.4 3.4l9.2 9.2M12.6 3.4l-9.2 9.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  absent: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  info: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 7v4.2M8 4.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
 };
-const VERDICT_TONE = {predictable:["pass","tone-good"], variable:["warn","tone-warning"], unpredictable:["fail","tone-critical"]};
 
-/* -------------------------------------------------------------- helpers */
-function h(tag, opts, children){
-  const node = document.createElement(tag);
-  const o = opts || {};
-  if(o.class) node.className = o.class;
-  if(o.text !== undefined) node.textContent = o.text;
-  if(o.html !== undefined) node.innerHTML = o.html;
-  if(o.title) node.title = o.title;
-  if(o.style) node.setAttribute("style", o.style);
-  if(o.attrs) Object.keys(o.attrs).forEach(k => node.setAttribute(k, o.attrs[k]));
-  (children || []).forEach(child => node.appendChild(child));
-  return node;
-}
-const clear = (node) => { while(node.firstChild) node.removeChild(node.firstChild); return node; };
-const num = (value) => Number(value).toLocaleString(undefined, {maximumFractionDigits:0});
-const isNum = (value) => typeof value === "number" && isFinite(value);
+/* Never colour alone: a tone always ships with an icon and a word. */
+const VERDICT_WORDS = {
+  predictable: ["pass", "tone-measured", "Predictable"],
+  variable: ["info", "tone-absent", "Variable"],
+  unpredictable: ["fail", "tone-failure", "Unpredictable"],
+  "insufficient-runs": ["absent", "tone-absent", "Not enough runs to say"],
+  "no-cost-data": ["absent", "tone-absent", "No cost recorded"],
+  reproducible: ["pass", "tone-measured", "Reproducible"],
+  "reproducible-modulo-declared-volatility": ["pass", "tone-measured", "Reproducible, with declared volatility"],
+  "not-reproducible": ["fail", "tone-failure", "Not reproducible"],
+};
 
-function usd(value){
-  if(!isNum(value)) return null;
-  if(value === 0) return "$0.00";
-  return value < 0.01 ? "$" + value.toFixed(4) : "$" + value.toFixed(2);
-}
-function seconds(value){
-  if(!isNum(value)) return null;
-  if(value < 1) return Math.round(value * 1000) + " ms";
-  if(value < 60) return value.toFixed(2) + " s";
-  const m = Math.floor(value / 60);
-  return m + " min " + Math.round(value - m * 60) + " s";
-}
-function minutes(value){
-  if(!isNum(value)) return null;
-  if(value < 60) return value.toFixed(value < 10 ? 1 : 0) + " min";
-  return (value / 60).toFixed(1) + " h";
-}
-function when(iso){
-  if(!iso) return "";
-  const parsed = new Date(iso);
-  return isNaN(parsed.getTime()) ? String(iso) : parsed.toLocaleString();
-}
-function statusLine(icon, tone, text){
-  const node = h("span", {class:"status-line " + tone});
-  node.appendChild(h("span", {html:ICONS[icon], style:"display:inline-flex"}));
-  node.appendChild(h("span", {text:text}));
-  return node;
-}
-function absentBlock(title, why, command){
-  const node = h("div", {class:"absent-block"}, [h("h3", {text:title}), h("p", {text:why})]);
-  if(command) node.appendChild(h("code", {class:"cmd", text:command}));
-  return node;
-}
-function tableView(caption, headers, rows){
-  const details = h("details", {}, [h("summary", {text:"Table view"})]);
-  const table = h("table");
-  const head = h("tr");
-  headers.forEach((label, index) => head.appendChild(h("th", {class:index ? "num" : "", text:label})));
-  table.appendChild(h("thead", {}, [head]));
-  const body = h("tbody");
-  rows.forEach(cells => {
-    const row = h("tr");
-    cells.forEach((cell, index) => row.appendChild(h("td", {class:index ? "num" : "", text:String(cell)})));
-    body.appendChild(row);
-  });
-  table.appendChild(body);
-  details.appendChild(h("div", {class:"scroll"}, [table]));
-  if(caption) details.appendChild(h("p", {class:"small", style:"margin-top:8px", text:caption}));
-  return details;
-}
-function chart(host, draw){ charts.push({host:host, draw:draw}); draw(host); }
-function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+/* --------------------------------------------------------------- formatting */
+const isNum = (v) => typeof v === "number" && isFinite(v);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const int = (v) => Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
+const dec = (v, d) => Number(v).toLocaleString(undefined,
+  { minimumFractionDigits: d, maximumFractionDigits: d });
 
-/* ------------------------------------------------------- cost strip plot */
-/* One measure, one series, k runs. The job is the spread, so the marks are
-   the individual runs, with p50 and the min-max range called out.          */
-function drawStrip(host, points, stats, format){
-  clear(host);
-  const width = Math.max(320, host.clientWidth || 640);
-  const height = 148;
-  const padL = 22, padR = 22;
-  const rowY = 84, top = 40, bottom = height - 22;
-  const surface = cssVar("--surface-1") || "#fcfcfb";
-  const series = cssVar("--series-1") || "#2a78d6";
-  const axis = cssVar("--axis") || "#c3c2b7";
-  const muted = cssVar("--text-muted") || "#898781";
+function usd(v) {
+  if (!isNum(v)) return null;
+  return Math.abs(v) >= 0.01 ? "$" + dec(v, 2) : "$" + dec(v, 4);
+}
+function secs(v) {
+  if (!isNum(v)) return null;
+  if (v < 1) return dec(v, 2) + " s";
+  if (v < 90) return dec(v, 1) + " s";
+  if (v < 5400) return dec(v / 60, 1) + " min";
+  return dec(v / 3600, 1) + " h";
+}
+function mins(v) {
+  if (!isNum(v)) return null;
+  return v < 90 ? dec(v, 0) + " min" : dec(v / 60, 1) + " h";
+}
+function pct(v) { return isNum(v) ? dec(v * 100, 0) + "%" : null; }
+function when(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return isNaN(d) ? String(iso) : d.toLocaleString();
+}
 
-  const values = points.map(p => p.value);
-  let low = Math.min.apply(null, values), high = Math.max.apply(null, values);
-  if(low === high){ const pad = Math.abs(low) * 0.1 || 1; low -= pad; high += pad; }
-  const span = high - low;
-  low -= span * 0.08; high += span * 0.08;
-  const x = (value) => padL + ((value - low) / (high - low)) * (width - padL - padR);
+function statusHtml(icon, tone, text) {
+  return '<span class="status ' + tone + '">' + ICONS[icon] + "<span>" + esc(text) + "</span></span>";
+}
+function verdictChip(verdict) {
+  const v = VERDICT_WORDS[verdict];
+  if (!v) return '<span class="chip">' + esc(verdict || "unknown") + "</span>";
+  const cls = v[1] === "tone-failure" ? "chip bad" : (v[1] === "tone-absent" ? "chip warn" : "chip");
+  return '<span class="' + cls + '">' + ICONS[v[0]] + "<span>" + esc(v[2]) + "</span></span>";
+}
 
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("viewBox", "0 0 " + width + " " + height);
-  svg.setAttribute("width", width);
-  svg.setAttribute("height", height);
-  svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", "Cost per run across " + points.length + " runs, with the median and the range marked.");
-  const make = (name, attrs) => {
-    const node = document.createElementNS(svgNS, name);
-    Object.keys(attrs).forEach(key => node.setAttribute(key, attrs[key]));
-    svg.appendChild(node);
-    return node;
-  };
-
-  const rangeLow = isNum(stats.min) ? stats.min : Math.min.apply(null, values);
-  const rangeHigh = isNum(stats.max) ? stats.max : Math.max.apply(null, values);
-  make("rect", {x:x(rangeLow), y:rowY - 4, width:Math.max(2, x(rangeHigh) - x(rangeLow)), height:8, rx:4,
-    fill:series, "fill-opacity":cssVar("--band-opacity") || .16});
-  [rangeLow, rangeHigh].forEach(edge => make("line", {x1:x(edge), x2:x(edge), y1:rowY - 15, y2:rowY + 15,
-    stroke:axis, "stroke-width":1}));
-
-  if(isNum(stats.p50)){
-    make("line", {x1:x(stats.p50), x2:x(stats.p50), y1:rowY - 22, y2:rowY + 18, stroke:series, "stroke-width":2,
-      "stroke-linecap":"round"});
-    const share = (x(stats.p50) - padL) / (width - padL - padR);
-    const anchor = share < .12 ? "start" : (share > .88 ? "end" : "middle");
-    const label = make("text", {x:x(stats.p50), y:rowY - 32, "text-anchor":anchor, fill:cssVar("--text-primary"),
-      "font-size":"12.5", "font-weight":"650"});
-    label.textContent = "median " + format(stats.p50);
+/* A measured tile carries a big number. An absent tile carries the reason at
+   body size, because a large grey dash reads as a value that happens to be zero. */
+function tile(question, value, sub, absentReason) {
+  if (value == null) {
+    return '<div class="tile absent"><span class="q">' + esc(question) + "</span>" +
+      '<span class="absent-label">' + ICONS.absent + "<span>Not measured</span></span>" +
+      '<span class="why">' + esc(absentReason || "No reason recorded.") + "</span></div>";
   }
+  return '<div class="tile"><span class="q">' + esc(question) + "</span>" +
+    '<span class="v">' + value + "</span>" +
+    (sub ? '<span class="s">' + esc(sub) + "</span>" : "") + "</div>";
+}
 
-  /* de-collide overlapping runs vertically rather than hiding them */
-  const ordered = points.slice().sort((a, b) => a.value - b.value);
-  let lastX = -Infinity, lane = 0;
-  ordered.forEach(point => {
-    const px = x(point.value);
-    if(px - lastX < 11){ lane = lane === 0 ? 1 : (lane === 1 ? 2 : 0); } else { lane = 0; }
-    lastX = px;
-    point._x = px;
-    point._y = rowY + (lane === 0 ? 0 : (lane === 1 ? -12 : 12));
-  });
+function absentBlock(title, why, command) {
+  return '<div class="absent-block"><h3>' + statusHtml("absent", "tone-absent", title) + "</h3>" +
+    "<p>" + esc(why) + "</p>" +
+    (command ? '<code class="cmd">' + esc(command) + "</code>" : "") + "</div>";
+}
 
-  const tip = h("div", {class:"tip"});
-  const showTip = (point) => {
-    clear(tip);
-    tip.appendChild(h("div", {class:"tv", text:format(point.value)}));
-    tip.appendChild(h("div", {class:"tl", text:point.arm + " · " + when(point.at)}));
-    tip.appendChild(h("div", {class:"tk", text:point.id}));
-    tip.style.left = (point._x / width * 100) + "%";
-    tip.style.top = point._y + "px";
-    tip.classList.add("on");
-  };
-  const hideTip = () => tip.classList.remove("on");
-
-  ordered.forEach(point => {
-    const radius = point.latest ? 5.5 : 4.5;
-    make("circle", {cx:point._x, cy:point._y, r:radius, fill:series, stroke:surface, "stroke-width":2});
-    const hit = make("circle", {cx:point._x, cy:point._y, r:14, fill:"transparent", tabindex:"0",
-      role:"img", "aria-label":format(point.value) + ", " + point.id});
-    hit.style.cursor = "pointer";
-    hit.addEventListener("pointerenter", () => showTip(point));
-    hit.addEventListener("focus", () => showTip(point));
-    hit.addEventListener("pointerleave", hideTip);
-    hit.addEventListener("blur", hideTip);
-    if(point.latest){
-      const tag = make("text", {x:point._x, y:point._y + 32, "text-anchor":"middle", fill:muted, "font-size":"11"});
-      tag.textContent = "latest";
-    }
-  });
-
-  /* Two end labels only when there is room for both; otherwise one combined label. */
-  if(x(rangeHigh) - x(rangeLow) > 190){
-    const lowLabel = make("text", {x:x(rangeLow), y:bottom + 4, "text-anchor":"start", fill:muted,
-      "font-size":"11.5"});
-    lowLabel.textContent = "low " + format(rangeLow);
-    const highLabel = make("text", {x:x(rangeHigh), y:bottom + 4, "text-anchor":"end", fill:muted,
-      "font-size":"11.5"});
-    highLabel.textContent = "high " + format(rangeHigh);
-  } else {
-    const combined = make("text", {x:(x(rangeLow) + x(rangeHigh)) / 2, y:bottom + 4, "text-anchor":"middle",
-      fill:muted, "font-size":"11.5"});
-    combined.textContent = format(rangeLow) + " to " + format(rangeHigh);
+function table(caption, headers, rows) {
+  if (!rows.length) return "";
+  let html = "<table>";
+  if (caption) html += "<caption>" + esc(caption) + "</caption>";
+  html += "<thead><tr>" + headers.map((h) =>
+    "<th" + (h.num ? ' class="num"' : "") + ">" + esc(h.label) + "</th>").join("") + "</tr></thead><tbody>";
+  for (const row of rows) {
+    html += "<tr>" + row.map((cell, i) =>
+      "<td" + (headers[i] && headers[i].num ? ' class="num"' : "") + ">" +
+      (cell == null ? '<span class="tone-absent">not measured</span>' : cell) + "</td>").join("") + "</tr>";
   }
-
-  host.appendChild(svg);
-  host.appendChild(tip);
+  return html + "</tbody></table>";
 }
 
-/* ---------------------------------------------------------------- bars */
-function barRow(name, colorVar, valueText, ratio){
-  const track = h("div", {class:"bar-track"}, [
-    h("div", {class:"bar-fill", style:"--c:var(" + colorVar + ");width:" + Math.max(0.5, ratio * 100) + "%"}),
-    h("span", {class:"bar-value", text:valueText})
-  ]);
-  return h("div", {class:"bar-row"}, [
-    h("div", {class:"bar-name", style:"--c:var(" + colorVar + ")"}, [h("i"), h("span", {text:name})]),
-    track
-  ]);
-}
-function measureBlock(caption, rows, deltaText){
-  const wrap = h("div", {class:"measure"});
-  wrap.appendChild(h("figcaption", {text:caption}));
-  const bars = h("div", {class:"bars"});
-  const peak = Math.max.apply(null, rows.map(r => r.value).concat([0])) || 1;
-  rows.forEach(row => bars.appendChild(barRow(row.name, row.colorVar, row.text, row.value / peak)));
-  wrap.appendChild(bars);
-  if(deltaText) wrap.appendChild(h("p", {class:"delta", html:deltaText}));
-  wrap.appendChild(tableView(null, ["Arm", caption], rows.map(r => [r.name, r.text])));
-  return wrap;
-}
-
-/* ------------------------------------------------------- data accessors */
-function armOf(payload, arm){
-  const summary = payload && payload.summary;
-  const block = (summary && summary.arms && summary.arms[arm]) || null;
-  if(!block) return null;
-  const runs = isNum(block.runs) ? block.runs : (isNum(block.run_count) ? block.run_count : null);
-  if(runs === 0) return null;   /* the arm exists in the schema but was never run */
-  return block;
-}
-/* A summary block counts as measured only when its median is a real number. The
-   aggregator emits the block shape with nulls inside when nothing was recorded. */
-function stat(block, key){
-  const measure = block && block[key];
-  return measure && isNum(measure.p50) ? measure : null;
-}
-/* Time facts, preferring the suite aggregate over a single run, and saying which. */
-function timeFacts(){
-  const arm = armOf(state.summary, "with-skills");
-  const wall = stat(arm, "wall_clock_seconds");
-  const run = latestRun();
-  const runTime = (run && run.time) || {};
-  const facts = {
-    agentSeconds: wall ? wall.p50 : runTime.agent_wall_clock_seconds,
-    baselineMinutes: (arm && isNum(arm.human_baseline_minutes)) ? arm.human_baseline_minutes
-      : runTime.human_baseline_minutes,
-    baselineSource: (arm && arm.human_baseline_source) || runTime.human_baseline_source || null,
-    savedMinutes: (arm && isNum(arm.time_saved_minutes_p50)) ? arm.time_saved_minutes_p50
-      : runTime.time_saved_minutes,
-    speedup: runTime.speedup_factor,
-    scope: wall ? ("median across " + (arm.runs || arm.run_count || "several") + " runs") : "most recent run"
-  };
-  return facts;
-}
-function summaryNotes(){
-  const summary = state.summary && state.summary.summary;
-  const notes = (summary && summary.notes) || [];
-  return Array.isArray(notes) ? notes : [];
-}
+/* ------------------------------------------------------------ data helpers */
+const summaryDoc = () => (state.summary && state.summary.summary) || null;
+const armBlock = (name) => {
+  const doc = summaryDoc();
+  return (doc && doc.arms && doc.arms[name]) || null;
+};
 const latestRun = () => (state.runs && state.runs.runs && state.runs.runs[0]) || null;
-function tokenPoints(arm){
-  const runs = (state.runs && state.runs.runs) || [];
-  const points = [];
-  runs.forEach(run => {
-    const cost = run.cost;
-    if(!cost || !isNum(cost.total_tokens)) return;
-    if(arm && (run.arm || "unrecorded") !== arm) return;
-    points.push({id:run.run_id, arm:run.arm || "unrecorded", at:run.started_at, value:cost.total_tokens,
-      usd:isNum(cost.estimated_usd) ? cost.estimated_usd : null, latest:points.length === 0});
-  });
-  return points;
-}
-function otherArmRunCount(arm){
-  const runs = (state.runs && state.runs.runs) || [];
-  return runs.filter(run => run.cost && isNum(run.cost.total_tokens) && (run.arm || "unrecorded") !== arm).length;
-}
-function reasonFor(key){
+const rateCard = () => (state.summary && state.summary.rate_card) ||
+  (state.suites && state.suites.rate_card) || {};
+function unmeasured(key) {
   const run = latestRun();
-  if(run && run.unmeasured && run.unmeasured[key]) return run.unmeasured[key];
-  if(state.summary && state.summary.unmeasured && state.summary.unmeasured[key]) return state.summary.unmeasured[key];
+  if (run && run.unmeasured && typeof run.unmeasured[key] === "string") return run.unmeasured[key];
+  const s = state.summary && state.summary.unmeasured;
+  if (s && typeof s[key] === "string") return s[key];
   return null;
 }
-function thresholdText(){
-  const thresholds = (state.summary && state.summary.consistency_thresholds) || null;
-  if(!thresholds) return "";
-  const bands = (thresholds.bands || []).map(band => band.verdict + " " + band.range).join("  ·  ");
-  let line = (thresholds.status || "provisional") + " thresholds — " + bands
-    + ". Measured as the " + thresholds.measure + ".";
-  if(thresholds.note) line += " " + thresholds.note;
-  return line;
+function metric(id) {
+  const list = (state.metrics && state.metrics.metrics) || [];
+  for (const m of list) if (m.id === id) return m;
+  return null;
+}
+/* A metric's own absent reason is the single source of truth for why a figure
+   is missing, so the tile and the coverage table can never disagree. */
+function reasonFor(id, fallback) {
+  const m = metric(id);
+  if (m && m.status === "absent" && m.absent_reason) return m.absent_reason;
+  return fallback || "Not recorded.";
 }
 
-/* --------------------------------------------------- the plan's own words */
-/* The suite plan records what is not measured and why. Where it has an answer,
-   the page quotes it rather than inventing its own phrasing.                */
-const plan = () => (state.suite && state.suite.plan) || {};
-function questionStatus(name){
-  const block = (plan().questions || {})[name] || {};
-  return block.status || null;
-}
-function gapsFor(question){
-  return (plan().gaps || []).filter(gap => gap && gap.question === question);
-}
-function renderGaps(host, question){
-  clear(host);
-  const gaps = gapsFor(question);
-  if(!gaps.length) return;
-  const details = h("details", {}, [
-    h("summary", {text:"What this suite cannot tell you yet (" + gaps.length + ")"})]);
-  const list = h("ul", {class:"gloss"});
-  gaps.forEach(gap => {
-    const item = h("li");
-    item.appendChild(h("b", {text:gap.statement || gap.id}));
-    if(gap.unblocked_by){
-      item.appendChild(h("div", {class:"note", style:"margin-top:3px", text:"Unblocked by: " + gap.unblocked_by}));
-    }
-    item.appendChild(h("div", {class:"key", style:"margin-top:3px", text:gap.id}));
-    list.appendChild(item);
-  });
-  details.appendChild(list);
-  host.appendChild(details);
-}
-function renderStatusPills(){
-  [["q1Status", "correctness"], ["q2Status", "cost"], ["q3Status", "time"]].forEach(pair => {
-    const status = questionStatus(pair[1]);
-    $(pair[0]).textContent = status ? status.replace(/-/g, " ") : "";
-  });
-}
+/* -------------------------------------------------------------- renderers */
 
-/* ----------------------------------------------------------- question 1 */
-function renderCorrectness(){
-  const host = clear($("correctness"));
+function renderKpi() {
+  const host = $("kpi");
+  const arm = armBlock("with-skills");
   const run = latestRun();
-  if(!run){
-    host.appendChild(absentBlock("No run recorded yet",
-      (state.runs && state.runs.reason) || "Press Run evaluation to grade the suite on this machine."));
-    host.appendChild(h("div", {style:"height:16px"}));
-    return;
+  const tiles = [];
+
+  // Q1: correctness. Pass rate across the arm when there is one, else the
+  // latest outcome, which is a weaker claim and is labelled as one.
+  let q1 = null, q1sub = null;
+  if (arm && isNum(arm.correctness_pass_rate)) {
+    q1 = pct(arm.correctness_pass_rate);
+    q1sub = "passed on " + arm.runs + (arm.runs === 1 ? " run" : " runs");
+  } else if (run && run.correctness && run.correctness.outcome) {
+    const ok = run.correctness.outcome === "pass";
+    q1 = statusHtml(ok ? "pass" : "fail", ok ? "tone-measured" : "tone-failure",
+      ok ? "Pass" : "Fail");
+    q1sub = "latest run only";
   }
-  const correctness = run.correctness || {};
-  const passed = correctness.outcome === "pass";
-  const line = h("p", {style:"margin-bottom:14px"});
-  line.appendChild(statusLine(passed ? "pass" : "fail", passed ? "tone-good" : "tone-critical",
-    passed ? "All checks held on the most recent run" : "The most recent run failed"));
-  const detail = isNum(correctness.checks_passed)
-    ? correctness.checks_passed + " of " + correctness.checks_total + " checks passed"
-    : "of " + correctness.checks_total + " checks, the number that passed is not recorded";
-  line.appendChild(h("span", {class:"note", style:"margin-left:10px",
-    text:detail + " · " + when(run.started_at)}));
-  host.appendChild(line);
-  if(!passed && correctness.checks_passed_unavailable_reason){
-    host.appendChild(h("p", {class:"note", style:"margin-bottom:14px",
-      text:correctness.checks_passed_unavailable_reason}));
+  tiles.push(tile("Did it do the job right?", q1, q1sub,
+    reasonFor("correctness", "No run has been recorded.")));
+
+  // Q2: cost. Tokens lead; credits and dollars are shown in their own places.
+  const tokens = arm && arm.total_tokens;
+  let q2 = null, q2sub = null;
+  if (tokens && isNum(tokens.p50)) {
+    q2 = '<span data-countup="tokens">' + int(tokens.p50) +
+      '</span> <small>tokens</small>';
+    const cv = tokens.coefficient_of_variation;
+    q2sub = isNum(cv)
+      ? "median run; cost varies by " + dec(cv, 2) + " across " + arm.runs + " runs"
+      : "median run";
   }
-  if(run.unmeasured && run.unmeasured.golden_comparison && !run.correctness.golden_comparison){
-    host.appendChild(h("p", {class:"small", style:"margin-bottom:14px",
-      text:"No comparison against a known-good human document: " + run.unmeasured.golden_comparison}));
+  tiles.push(tile("What did it cost?", q2, q2sub,
+    reasonFor("tokens", unmeasured("cost"))));
+
+  // Q3: time saved. Never derived from a machine runtime.
+  const saved = run && run.time && run.time.time_saved_minutes;
+  let q3 = null, q3sub = null;
+  if (isNum(saved)) {
+    q3 = mins(saved);
+    q3sub = "against a recorded human baseline of " +
+      mins(run.time.human_baseline_minutes);
   }
+  tiles.push(tile("How much time did it save?", q3, q3sub,
+    reasonFor("hours_saved", unmeasured("human_baseline_minutes"))));
+
+  host.innerHTML = tiles.join("");
+  // Count up only a tile that carries a real measured number, and only ever
+  // towards the value already written into the DOM.
+  if (tokens && isNum(tokens.p50)) {
+    const node = host.querySelector('[data-countup="tokens"]');
+    if (node) countUp(node, tokens.p50, (n) => int(n));
+  }
+  $("headlineWhen").textContent = summaryDoc() && summaryDoc().generated_at
+    ? "generated " + when(summaryDoc().generated_at) : "";
+  reveal("#kpi .tile");
 }
 
-function renderTasks(){
-  const host = clear($("taskTable"));
-  const tasks = (state.suite && state.suite.tasks) || [];
-  if(!tasks.length){ host.appendChild(absentBlock("Task contracts unavailable",
-    "The suite plan could not be read from the local server.")); return; }
-  const table = h("table");
-  const head = h("tr");
-  ["What a pass proves", "Task", "Checks (assertion classes)", "Graded"].forEach(label =>
-    head.appendChild(h("th", {text:label})));
-  table.appendChild(h("thead", {}, [head]));
-  const body = h("tbody");
-  tasks.forEach(task => {
-    const row = h("tr");
-    const proves = h("td", {class:"proves"});
-    (task.expected_outcome || []).forEach(sentence => proves.appendChild(h("div", {text:sentence})));
-    if((task.must_not || []).length){
-      proves.appendChild(h("span", {class:"must", text:"Must not: " + task.must_not.join(" ")}));
-    }
-    row.appendChild(proves);
-    const identity = h("td");
-    identity.appendChild(h("div", {}, [h("span", {class:"badge", text:task.intent || task.case_type || "task"})]));
-    identity.appendChild(h("div", {class:"key", style:"margin-top:6px", text:task.id}));
-    identity.appendChild(h("div", {class:"small", style:"margin-top:4px",
-      text:(task.scoring || "binary") + " · " + (task.trials || 1) + " trial"}));
-    row.appendChild(identity);
-    const chips = h("div", {class:"chips"});
-    (task.assertion_classes || []).forEach(name => chips.appendChild(h("span", {class:"chip", text:name})));
-    row.appendChild(h("td", {}, [chips]));
-    row.appendChild(h("td", {class:"small", text:(task.graded_surface || []).join(", ")}));
-    body.appendChild(row);
-  });
-  table.appendChild(body);
-  host.appendChild(table);
-  host.appendChild(h("p", {class:"small", style:"margin-top:10px",
-    text:"A must-not task is a guardrail, not a task we expect to fail: it passes when the forbidden outcome "
-      + "does not occur. A suite with no forbidden-content assertion is not testing leakage, whatever its pass "
-      + "rate says."}));
-}
-
-/* ----------------------------------------------------------- question 2 */
-function renderSpread(){
-  const host = clear($("spread"));
-  const points = tokenPoints("with-skills");
-  const arm = armOf(state.summary, "with-skills");
-  const tokens = stat(arm, "total_tokens");
-
-  if(!points.length && !tokens){
-    const reason = reasonFor("cost") ||
-      "No cost telemetry has been recorded for this suite.";
-    const aggregate = state.summary && state.summary.telemetry && state.summary.telemetry.aggregate;
-    host.appendChild(absentBlock("No cost measured, so no spread and no consistency verdict", reason,
-      aggregate && !aggregate.available && aggregate.command ? aggregate.command : null));
-    if(aggregate && !aggregate.available && aggregate.reason){
-      host.appendChild(h("p", {class:"small", style:"margin-top:10px", text:aggregate.reason}));
-    }
-    host.appendChild(h("p", {class:"small", style:"margin-top:10px", text:thresholdText()}));
+function renderCorrectness() {
+  const host = $("correctness");
+  const run = latestRun();
+  const arm = armBlock("with-skills");
+  if (!run) {
+    host.innerHTML = absentBlock("No run recorded",
+      "Results appear here after the first run. Use the Run evaluation button above.");
+    $("q1Status").textContent = "";
+    $("checkTable").innerHTML = "";
     return;
   }
+  const c = run.correctness || {};
+  const ok = c.outcome === "pass";
+  $("q1Status").innerHTML = statusHtml(ok ? "pass" : "fail",
+    ok ? "tone-measured" : "tone-failure", ok ? "Pass" : "Fail");
 
-  const verdictRow = h("div", {style:"display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:14px"});
-  const verdict = arm && arm.consistency_verdict;
-  if(verdict && VERDICT_TONE[verdict]){
-    const tone = VERDICT_TONE[verdict];
-    const badge = h("span", {class:"verdict " + tone[1]});
-    badge.appendChild(h("span", {html:ICONS[tone[0]], style:"display:inline-flex"}));
-    badge.appendChild(h("span", {text:verdict}));
-    verdictRow.appendChild(badge);
-  } else {
-    verdictRow.appendChild(h("span", {class:"verdict tone-muted"}, [
-      h("span", {html:ICONS.absent, style:"display:inline-flex"}),
-      h("span", {text:verdict ? "consistency " + verdict.replace(/-/g, " ") : "no consistency verdict"})
-    ]));
+  const rows = [];
+  rows.push(["Outcome, latest run",
+    statusHtml(ok ? "pass" : "fail", ok ? "tone-measured" : "tone-failure",
+      ok ? "Pass" : "Fail")]);
+  if (arm && isNum(arm.correctness_pass_rate)) {
+    rows.push(["Pass rate across " + arm.runs + (arm.runs === 1 ? " run" : " runs"),
+      "<b>" + pct(arm.correctness_pass_rate) + "</b>"]);
   }
-  const cv = tokens && tokens.coefficient_of_variation;
-  const minimumRuns = ((state.summary && state.summary.summary
-    && state.summary.summary.consistency_thresholds) || {}).minimum_runs_for_verdict;
-  if(isNum(cv)){
-    verdictRow.appendChild(h("span", {class:"note"}, [
-      h("span", {text:"how much the cost jumps around: " + cv.toFixed(3) + " "}),
-      h("span", {class:"key", text:"coefficient_of_variation"})
-    ]));
-  } else if(arm && arm.consistency_unavailable_reason){
-    verdictRow.appendChild(h("span", {class:"note", text:arm.consistency_unavailable_reason}));
-  } else if(isNum(minimumRuns)){
-    verdictRow.appendChild(h("span", {class:"note",
-      text:"A verdict needs at least " + minimumRuns + " runs in the same arm with recorded tokens."}));
-  }
-  host.appendChild(verdictRow);
-
-  if(points.length){
-    const figure = h("figure");
-    const caption = h("figcaption", {text:"Tokens per run with the Ascent skills, last "
-      + points.length + " recorded " + (points.length === 1 ? "run " : "runs ")});
-    caption.appendChild(h("span", {text:"— one dot per run, median marked, low to high shaded"}));
-    figure.appendChild(caption);
-    const plot = h("div", {class:"plot"});
-    figure.appendChild(plot);
-    host.appendChild(figure);
-    const stats = tokens || {min:Math.min.apply(null, points.map(p => p.value)),
-      max:Math.max.apply(null, points.map(p => p.value)), p50:null};
-    chart(plot, (node) => drawStrip(node, points, stats, (value) => num(value) + " tok"));
-    figure.appendChild(tableView("Every dot above, as numbers.", ["Run", "Tokens", "Cost"],
-      points.map(p => [p.id, num(p.value), usd(p.usd) || "not measured"])));
-    const excluded = otherArmRunCount("with-skills");
-    if(excluded){
-      host.appendChild(h("p", {class:"small", style:"margin-top:8px", text:excluded
-        + " run(s) from another arm are not plotted here — a spread only means something within one arm. "
-        + "They are in the comparison panel and the run history."}));
+  if (isNum(c.checks_passed) && isNum(c.checks_total)) {
+    rows.push(["Checks passed", "<b>" + c.checks_passed + " of " + c.checks_total + "</b>"]);
+  } else if (isNum(c.checks_total)) {
+    rows.push(["Checks graded", "<b>" + c.checks_total + "</b>"]);
+    if (c.checks_passed_unavailable_reason) {
+      rows.push(["Checks passed", '<span class="tone-absent">' +
+        esc(c.checks_passed_unavailable_reason) + "</span>"]);
     }
-  } else {
-    host.appendChild(h("p", {class:"note",
-      text:"The aggregate summary reports a spread, but no individual run records carry token counts on this "
-        + "machine, so the per-run strip cannot be drawn."}));
   }
+  if (isNum(c.evaluated_task_count)) {
+    rows.push(["Task contracts evaluated", "<b>" + c.evaluated_task_count + "</b>"]);
+  }
+  const failed = (c.failed_check_ids || []).concat(c.failed_task_ids || []);
+  if (failed.length) {
+    rows.push(["Failed", '<span class="tone-failure mono">' +
+      esc(failed.join(", ")) + "</span>"]);
+  }
+  const golden = c.golden_comparison;
+  if (golden && typeof golden === "object") {
+    rows.push(["Matches the human reference",
+      "<b>" + esc(golden.required_sections_present) + " of " +
+      esc(golden.required_sections_total) + " required sections</b>" +
+      (golden.verdict ? " &middot; " + esc(golden.verdict) : "")]);
+  }
+  host.innerHTML = table(null, [{ label: "Measure" }, { label: "Result" }], rows);
 
-  if(tokens){
-    const grid = h("div", {class:"axes", style:"margin-top:16px"});
-    const tok = (value) => isNum(value) ? num(Math.round(value)) + " tok" : "not reported";
-    const rows = [["lowest run", tok(tokens.min)], ["median", tok(tokens.p50)],
-      ["95th percentile", tok(tokens.p95)], ["highest run", tok(tokens.max)]];
-    const dollars = stat(arm, "estimated_usd");
-    if(dollars) rows.push(["median cost", usd(dollars.p50) || "not measured"]);
-    rows.forEach(pair => grid.appendChild(h("div", {class:"axis-row"}, [
-      h("span", {text:pair[0]}), h("span", {text:pair[1]})])));
-    host.appendChild(grid);
+  if (!golden) {
+    host.innerHTML += "<br>" + absentBlock("No comparison against a human document",
+      reasonFor("golden_comparison", unmeasured("golden_comparison")));
   }
-  if(arm && arm.estimated_usd_note){
-    host.appendChild(h("p", {class:"small", style:"margin-top:10px", text:arm.estimated_usd_note}));
+  const review = c.human_review;
+  if (!review) {
+    host.innerHTML += "<br>" + absentBlock("No human review recorded",
+      reasonFor("human_review"));
   }
-  host.appendChild(h("p", {class:"small", style:"margin-top:12px", text:thresholdText()}));
-  const source = state.summary && state.summary.source;
-  if(source) host.appendChild(h("p", {class:"small", text:"Spread computed by: " + source + "."}));
+  renderChecks(c);
 }
 
-function renderArms(){
-  const host = clear($("arms"));
-  const withSkills = armOf(state.summary, "with-skills");
-  const baseline = armOf(state.summary, "baseline-no-skills");
-
-  if(!baseline){
-    host.appendChild(absentBlock("No no-skills comparison arm recorded",
-      reasonFor("comparison_arm") ||
-      "This suite has no baseline-no-skills runs, so no delta can be reported."));
-    host.appendChild(h("p", {class:"small", style:"margin-top:10px",
-      text:"Until this arm exists, no claim on this page should be phrased as a saving. Every headline claim "
-        + "is a delta against plain Claude, never an absolute."}));
-    summaryNotes().forEach(note => host.appendChild(h("p", {class:"small", text:note})));
-    return;
-  }
-
-  const legend = h("div", {class:"legend"});
-  [["--series-1", "With Ascent skills"], ["--series-2", "Plain Claude, no skills"]].forEach(pair => {
-    legend.appendChild(h("span", {class:"item"}, [
-      h("span", {class:"swatch", style:"--c:var(" + pair[0] + ")"}), h("span", {text:pair[1]})]));
-  });
-  host.appendChild(legend);
-
-  const deltas = ((state.summary && state.summary.summary && state.summary.summary.deltas) || {});
-  const group = h("div", {class:"measure-group"});
-  const measures = [
-    {caption:"Tokens per run (median)", block:"total_tokens", format:(v) => num(Math.round(v)) + " tok",
-     delta:isNum(deltas.tokens_saved_p50) ? num(Math.round(deltas.tokens_saved_p50)) + " tokens saved" : null},
-    {caption:"Cost per run (median)", block:"estimated_usd", format:(v) => usd(v),
-     delta:isNum(deltas.usd_saved_p50) ? usd(deltas.usd_saved_p50) + " saved" : null},
-    {caption:"Wall clock per run (median)", block:"wall_clock_seconds", format:(v) => seconds(v),
-     delta:isNum(deltas.minutes_saved_p50) ? minutes(deltas.minutes_saved_p50) + " saved" : null}
-  ];
-  measures.forEach(measure => {
-    const left = stat(withSkills, measure.block);
-    const right = stat(baseline, measure.block);
-    if(!left || !right){
-      group.appendChild(absentBlock(measure.caption + ": not measured",
-        "One or both arms have no measurement for this figure, so the difference is unknown."));
-      return;
-    }
-    const rows = [
-      {name:"With Ascent skills", colorVar:"--series-1", value:left.p50, text:measure.format(left.p50)},
-      {name:"Plain Claude", colorVar:"--series-2", value:right.p50, text:measure.format(right.p50)}
+function renderChecks(correctness) {
+  const host = $("checkTable");
+  const checks = correctness && correctness.checks;
+  if (!Array.isArray(checks) || !checks.length) { host.innerHTML = ""; return; }
+  const rows = checks.map((check) => {
+    const ok = check.outcome === "pass" || check.passed === true;
+    return [
+      '<span class="mono">' + esc(check.id || check.check_id || "") + "</span>",
+      esc(check.description || check.assertion || check.name || ""),
+      statusHtml(ok ? "pass" : "fail", ok ? "tone-measured" : "tone-failure",
+        ok ? "Pass" : "Fail"),
+      check.reason ? esc(check.reason) : null,
     ];
-    group.appendChild(measureBlock(measure.caption, rows,
-      measure.delta ? "<b>" + measure.delta + "</b> per run, comparing medians." : null));
   });
-  host.appendChild(group);
+  host.innerHTML = table("Every graded check in the latest run.",
+    [{ label: "Check" }, { label: "What it asserts" }, { label: "Result" }, { label: "Note" }],
+    rows);
+}
 
-  const outcome = h("div", {class:"measure", style:"margin-top:18px"});
-  outcome.appendChild(h("figcaption", {text:"Did the arm produce a passing output at all?"}));
-  const grid = h("div", {class:"axes"});
-  [["With Ascent skills", withSkills], ["Plain Claude, no skills", baseline]].forEach(pair => {
-    const rate = pair[1] && pair[1].correctness_pass_rate;
-    const row = h("div", {class:"axis-row"});
-    row.appendChild(h("span", {text:pair[0]}));
-    if(isNum(rate)){
-      const tone = rate === 1 ? ["pass", "tone-good"] : (rate > 0 ? ["warn", "tone-warning"] : ["fail", "tone-critical"]);
-      const cell = h("span");
-      cell.appendChild(statusLine(tone[0], tone[1], Math.round(rate * 100) + "% of runs passed"));
-      row.appendChild(cell);
-    } else {
-      row.appendChild(h("span", {}, [statusLine("absent", "tone-muted", "not graded")]));
+function renderCost() {
+  const host = $("costBlock");
+  const arm = armBlock("with-skills");
+  const run = latestRun();
+  const cost = (run && run.cost) || null;
+  const rows = [];
+
+  if (cost) {
+    const add = (label, value) => { if (isNum(value)) rows.push([label, "<b>" + int(value) + "</b>"]); };
+    add("Uncached input tokens", cost.input_tokens);
+    add("Output tokens", cost.output_tokens);
+    add("Cache reads", cost.cache_read_tokens);
+    add("Cache writes", cost.cache_creation_tokens);
+    add("Total tokens", cost.total_tokens);
+    if (isNum(cost.reasoning_output_tokens)) {
+      rows.push(["Reasoning tokens",
+        "<b>" + int(cost.reasoning_output_tokens) + "</b> " +
+        '<span class="small">(a subset of output, not an addition)</span>']);
+    } else if ("reasoning_output_tokens" in cost) {
+      rows.push(["Reasoning tokens",
+        '<span class="tone-absent">not reported by this host</span>']);
     }
-    grid.appendChild(row);
-  });
-  outcome.appendChild(grid);
-  host.appendChild(outcome);
-  if(deltas.consistency_improvement){
-    host.appendChild(h("p", {class:"delta", style:"margin-top:14px",
-      text:"Consistency: " + deltas.consistency_improvement}));
+    if (isNum(cost.model_requests)) add("Model requests", cost.model_requests);
+    if (isNum(cost.turns)) add("Turns", cost.turns);
+    if (isNum(cost.tool_calls)) add("Tool calls", cost.tool_calls);
+    if (isNum(cost.estimated_usd)) {
+      rows.push(["Estimated cost", "<b>" + usd(cost.estimated_usd) + "</b>"]);
+    } else {
+      rows.push(["Estimated cost", '<span class="tone-absent">' +
+        esc(reasonFor("usd", "No dollar rate is on file for this model.")) + "</span>"]);
+    }
+    if (isNum(cost.peak_context_utilization) && isNum(cost.context_window)) {
+      rows.push(["Peak context used",
+        "<b>" + pct(cost.peak_context_utilization) + "</b> of " +
+        int(cost.context_window) + " tokens"]);
+    }
   }
-  summaryNotes().forEach(note => host.appendChild(h("p", {class:"small", style:"margin-top:10px", text:note})));
+
+  if (rows.length) {
+    host.innerHTML = table("Latest run, from its session log.",
+      [{ label: "Channel" }, { label: "Measured" }], rows);
+  } else {
+    host.innerHTML = absentBlock("No token or dollar figures",
+      reasonFor("tokens", unmeasured("cost")),
+      "python3 -m evals.lib.telemetry --session <session-log> --out <file>");
+  }
+
+  const verdict = arm && arm.consistency_verdict;
+  $("q2Status").innerHTML = verdict ? verdictChip(verdict) : "";
 }
 
-/* ----------------------------------------------------------- question 3 */
-function renderTime(){
-  const host = clear($("time"));
-  const facts = timeFacts();
-  const agentSeconds = facts.agentSeconds;
-  const baselineMinutes = facts.baselineMinutes;
+function renderSpread() {
+  const host = $("spread");
+  const arm = armBlock("with-skills");
+  const tokens = arm && arm.total_tokens;
+  const parts = [];
 
-  if(!isNum(agentSeconds)){
-    host.appendChild(absentBlock("No agent run time recorded",
-      (state.runs && state.runs.reason) || "Run the suite to record wall-clock time."));
+  if (tokens && isNum(tokens.p50)) {
+    const rows = [
+      ["Cheapest run", "<b>" + int(tokens.min) + "</b>"],
+      ["Median run", "<b>" + int(tokens.p50) + "</b>"],
+      ["95th percentile", isNum(tokens.p95) ? "<b>" + int(tokens.p95) + "</b>" : null],
+      ["Dearest run", "<b>" + int(tokens.max) + "</b>"],
+      ["How much the cost jumps around",
+        isNum(tokens.coefficient_of_variation)
+          ? "<b>" + dec(tokens.coefficient_of_variation, 3) +
+            "</b> <span class=\"small\">(coefficient of variation)</span>"
+          : null],
+    ];
+    parts.push(table("Token spread across " + arm.runs + " runs in the with-skills arm.",
+      [{ label: "Across runs" }, { label: "Tokens", num: false }], rows));
+    parts.push("<p>" + verdictChip(arm.consistency_verdict) + "</p>");
+    parts.push(perRunStrip());
+  } else {
+    const why = (arm && arm.consistency_unavailable_reason) ||
+      reasonFor("cost_spread", unmeasured("consistency"));
+    parts.push(absentBlock("No cost spread", why,
+      "python3 -m evals.lib.aggregate --suite " + (state.suiteId || "<suite>")));
+  }
+
+  const recon = arm && arm.token_reconciliation;
+  if (recon && isNum(recon.violates) && recon.violates > 0) {
+    parts.push('<div class="banner bad">' + ICONS.info + " <b>" + recon.violates +
+      " of " + recon.checked + " per-request token deltas did not reconcile</b> against " +
+      "the cumulative counter. They cluster at compaction boundaries, are counted rather " +
+      "than repaired, and are listed in the run records. A repaired delta would be an " +
+      "invented token count.</div>");
+  }
+  host.innerHTML = parts.join("");
+}
+
+/* Per-run marks, so a spread is visible as a shape rather than only as a
+   number. Each mark is labelled by its run index in the title attribute and the
+   axis is stated in text, so the chart is not carrying meaning by colour. */
+function perRunStrip() {
+  const runs = ((state.runs && state.runs.runs) || []).slice().reverse();
+  const points = runs
+    .map((r, i) => ({ i: i + 1, v: r.cost && r.cost.total_tokens, id: r.run_id }))
+    .filter((p) => isNum(p.v));
+  if (points.length < 2) return "";
+  const lo = Math.min.apply(null, points.map((p) => p.v));
+  const hi = Math.max.apply(null, points.map((p) => p.v));
+  const span = hi - lo || 1;
+  const w = 100, h = 46;
+  const marks = points.map((p, idx) => {
+    const x = points.length === 1 ? 50 : (idx / (points.length - 1)) * w;
+    const y = h - ((p.v - lo) / span) * (h - 12) - 6;
+    return '<circle cx="' + dec(x, 2) + '%" cy="' + dec(y, 2) + '" r="4" ' +
+      'fill="var(--series-with-skills)" stroke="#FFFFFF" stroke-width="1.5">' +
+      "<title>Run " + p.i + ": " + int(p.v) + " tokens</title></circle>";
+  }).join("");
+  return '<div class="chart"><div class="strip"><svg viewBox="0 0 100 ' + h +
+    '" preserveAspectRatio="none" role="img" aria-label="Tokens per run, ' +
+    "oldest on the left, " + int(lo) + " to " + int(hi) + ' tokens">' +
+    '<line x1="0" y1="' + (h - 3) + '" x2="100" y2="' + (h - 3) +
+    '" stroke="var(--border)" stroke-width="1"/>' + marks + "</svg></div>" +
+    '<p class="small">Tokens per run, oldest on the left. Vertical range ' +
+    int(lo) + " to " + int(hi) + " tokens.</p></div>";
+}
+
+/* Credits: derived, and never displayed without the derivation and the source. */
+function renderCredits() {
+  const host = $("credits");
+  const card = rateCard();
+  const arm = armBlock("with-skills");
+  const run = latestRun();
+  const credits = (run && run.cost && run.cost.credits) || null;
+  const parts = [];
+
+  const provenance = [];
+  if (card.available) {
+    provenance.push('<div class="banner">' + ICONS.info +
+      " <b>Derived figure.</b> " + esc(card.derivation || "") +
+      " Rate card: " + (card.url
+        ? '<a href="' + esc(card.url) + '">' + esc(card.url) + "</a>"
+        : "unknown") +
+      ", fetched " + esc(card.fetched || "unknown") +
+      ", unit " + esc(card.unit || "unknown") +
+      ". Billing unit: " + esc(card.billing_unit || "unknown") + ".</div>");
+  } else {
+    provenance.push('<div class="banner bad">' + ICONS.fail +
+      " <b>No rate card.</b> " + esc(card.reason || "") +
+      " No credit figure can be derived without it.</div>");
+  }
+  parts.push(provenance.join(""));
+
+  if (credits && isNum(credits.total)) {
+    const rows = [
+      ["Credits, this run", "<b>" + dec(credits.total, 2) + "</b>"],
+      ["Turns priced", "<b>" + esc(credits.turns_priced) + " of " +
+        esc(credits.turns_total) + "</b>"],
+      ["Model requests", isNum(credits.model_requests)
+        ? "<b>" + int(credits.model_requests) + "</b>" : null],
+    ];
+    const perTurn = credits.per_turn_spread;
+    if (perTurn) {
+      rows.push(["Credits per turn",
+        "<b>" + dec(perTurn.p50, 2) + "</b> median, " + dec(perTurn.min, 2) +
+        " to " + dec(perTurn.max, 2) + " across " + perTurn.n + " turns"]);
+    }
+    const perReq = credits.per_request_spread;
+    if (perReq) {
+      rows.push(["Credits per model request",
+        "<b>" + dec(perReq.p50, 2) + "</b> median" +
+        '<br><span class="small">' + esc(perReq.comparison_warning || "") + "</span>"]);
+    }
+    const rpt = credits.requests_per_turn && credits.requests_per_turn.priced_turns_only;
+    if (rpt) {
+      rows.push(["Requests per priced turn",
+        "<b>" + dec(rpt.median, 1) + "</b> median, " + dec(rpt.mean, 1) + " mean, " +
+        int(rpt.max) + " max"]);
+    }
+    if (arm && arm.credits && isNum(arm.credits.coefficient_of_variation)) {
+      rows.push(["How much credits jump around",
+        "<b>" + dec(arm.credits.coefficient_of_variation, 3) + "</b> " +
+        verdictChip(arm.credits_consistency_verdict)]);
+    }
+    parts.push(table(null, [{ label: "Measure" }, { label: "Derived" }], rows));
+
+    if (credits.total_coverage) {
+      parts.push('<p class="note">' + ICONS.info + " " + esc(credits.total_coverage) + "</p>");
+    }
+  } else {
+    const why = (credits && credits.total_unavailable_reason) ||
+      reasonFor("credits", "No credit figure was derived for this run.");
+    parts.push(absentBlock("No credit figure", why));
+  }
+
+  // The two published multipliers with no factor on file. Stated as a caveat on
+  // the number, not buried: without them the figure silently understates.
+  const caveats = (credits && credits.caveats) || card.unquantified_multipliers || [];
+  if (caveats.length) {
+    const rows = caveats.map((c) => [
+      "<b>" + esc(c.name) + "</b>",
+      esc(c.published || ""),
+      c.factor == null
+        ? '<span class="tone-absent">no published factor</span>'
+        : esc(c.factor),
+    ]);
+    parts.push(table(
+      "Published multipliers with no numeric factor on file. Neither is applied, so a " +
+      "credit figure above is a floor rather than a total.",
+      [{ label: "Multiplier" }, { label: "What is published" }, { label: "Factor applied" }],
+      rows));
+  }
+
+  // Unpriced models, shown as absent rather than as zero.
+  const unpriced = (credits && credits.unpriced_models) || card.unpriced_models || {};
+  const keys = Object.keys(unpriced);
+  if (keys.length) {
+    parts.push(table("Models with no published rate. These emit null, never zero.",
+      [{ label: "Model" }, { label: "Why it is unpriced" }],
+      keys.map((k) => ['<span class="mono">' + esc(k) + "</span>", esc(unpriced[k])])));
+  }
+  host.innerHTML = parts.join("");
+}
+
+function renderTime() {
+  const host = $("timeBlock");
+  const run = latestRun();
+  const arm = armBlock("with-skills");
+  const t = (run && run.time) || null;
+  const rows = [];
+  let anyMeasured = false;
+
+  if (t) {
+    // The critical distinction: a machine runtime is not an agent runtime and is
+    // never paired with a human baseline.
+    if (isNum(t.agent_wall_clock_seconds)) {
+      rows.push(["Agent wall clock", "<b>" + secs(t.agent_wall_clock_seconds) + "</b>"]);
+      anyMeasured = true;
+    } else {
+      rows.push(["Agent wall clock", '<span class="tone-absent">' +
+        esc(t.agent_wall_clock_note || t.agent_wall_clock_unavailable_reason ||
+            reasonFor("wall_clock", "Not recorded.")) + "</span>"]);
+    }
+    if (isNum(t.harness_wall_clock_seconds)) {
+      rows.push(["Harness runtime",
+        "<b>" + secs(t.harness_wall_clock_seconds) + "</b> " +
+        '<span class="small">machine speed, not a saving</span>']);
+    }
+    if (arm && arm.wall_clock_seconds && isNum(arm.wall_clock_seconds.p50)) {
+      rows.push(["Average execution time",
+        "<b>" + secs(arm.wall_clock_seconds.p50) + "</b> median across " + arm.runs + " runs"]);
+      anyMeasured = true;
+    }
+    if (isNum(t.human_baseline_minutes)) {
+      rows.push(["Human baseline", "<b>" + mins(t.human_baseline_minutes) + "</b>" +
+        (t.human_baseline_source ? '<br><span class="small">' +
+          esc(t.human_baseline_source) + "</span>" : "")]);
+      anyMeasured = true;
+    } else {
+      rows.push(["Human baseline", '<span class="tone-absent">' +
+        esc(reasonFor("human_baseline", unmeasured("human_baseline_minutes"))) + "</span>"]);
+    }
+    if (isNum(t.time_saved_minutes)) {
+      rows.push(["Time saved", "<b>" + mins(t.time_saved_minutes) + "</b>"]);
+      anyMeasured = true;
+    } else {
+      rows.push(["Time saved", '<span class="tone-absent">' +
+        esc(reasonFor("hours_saved", "Needs an agent elapsed time and a recorded baseline.")) +
+        "</span>"]);
+    }
+  }
+
+  host.innerHTML = rows.length
+    ? table("Latest run.", [{ label: "Measure" }, { label: "Result" }], rows)
+    : absentBlock("No timing recorded", reasonFor("wall_clock", "No run has been recorded."));
+  $("q3Status").innerHTML = anyMeasured ? "" : statusHtml("absent", "tone-absent", "Not measured");
+}
+
+function renderSkillTiming() {
+  const host = $("skillTiming");
+  const run = latestRun();
+  const bySkill = (run && run.time && run.time.skill_call_seconds_by_skill) || null;
+  const keys = bySkill ? Object.keys(bySkill) : [];
+  if (!keys.length) {
+    host.innerHTML = "<br>" + absentBlock("No per-skill call durations",
+      reasonFor("skill_call_duration", unmeasured("skill_call_duration")));
     return;
   }
-  if(!isNum(baselineMinutes)){
-    const grid = h("div", {class:"axes", style:"margin-bottom:16px"});
-    grid.appendChild(h("div", {class:"axis-row"}, [h("span", {text:"agent wall clock, " + facts.scope}),
-      h("span", {text:seconds(agentSeconds)})]));
-    grid.appendChild(h("div", {class:"axis-row"}, [h("span", {text:"recorded human baseline"}),
-      h("span", {text:"none"})]));
-    host.appendChild(grid);
-    host.appendChild(absentBlock("No human baseline recorded",
-      reasonFor("human_baseline_minutes") ||
-      "No human baseline has been recorded for this deliverable, so time saved cannot be stated."));
-    host.appendChild(h("p", {class:"small", style:"margin-top:10px",
-      text:"Time saved is deliberately blank rather than zero. Deriving a baseline from the agent's own run "
-        + "would make the saving a function of itself."}));
+  const rows = keys.sort().map((name) => {
+    const e = bySkill[name];
+    return [
+      '<span class="mono">' + esc(name) + "</span>",
+      "<b>" + esc(e.calls) + "</b>",
+      dec(e.total_seconds, 2) + " s",
+      isNum(e.p50_seconds) ? dec(e.p50_seconds, 2) + " s" : null,
+      e.reading ? '<span class="small">' + esc(e.reading) + "</span>"
+                : (e.tools ? '<span class="small">via ' + esc(e.tools.join(", ")) + "</span>" : null),
+    ];
+  });
+  host.innerHTML = "<br>" + table(
+    "How long each skill call took, from the tool call to its result line.",
+    [{ label: "Skill" }, { label: "Calls", num: true }, { label: "Total", num: true },
+     { label: "Median", num: true }, { label: "What the duration measures" }],
+    rows);
+}
+
+/* Reproducibility. Its own card, and it says in the card that it is not a cost
+   claim, because "consistent output" and "predictable bill" are different
+   sentences that a reader will otherwise merge. */
+function renderDeterminism() {
+  const host = $("determinism");
+  const det = (state.summary && state.summary.determinism) || {};
+  if (!det.available) {
+    $("detStatus").innerHTML = statusHtml("absent", "tone-absent", "Not measured");
+    host.innerHTML = absentBlock("No reproducibility comparison",
+      det.reason || reasonFor("reproducibility", "No determinism block was recorded."));
     return;
   }
-
-  const agentMinutes = agentSeconds / 60;
+  $("detStatus").innerHTML = verdictChip(det.verdict);
   const rows = [
-    {name:"Human baseline", colorVar:"--ordinal-far", value:baselineMinutes, text:minutes(baselineMinutes)},
-    {name:"Agent run (" + facts.scope + ")", colorVar:"--ordinal-near", value:agentMinutes,
-     text:minutes(agentMinutes)}
+    ["Verdict", verdictChip(det.verdict)],
+    ["Runs compared", isNum(det.runs_compared) ? "<b>" + det.runs_compared + "</b>" : null],
+    ["Graded artifacts", isNum(det.graded_artifact_count)
+      ? "<b>" + det.graded_artifact_count + "</b>" : null],
+    ["Byte-identical before normalisation",
+      det.identical_before_normalisation === true
+        ? statusHtml("pass", "tone-measured", "Yes")
+        : statusHtml("info", "tone-absent", "No, and the differences are declared below")],
+    ["Identical after declared normalisation",
+      det.identical_after_declared_normalisation === true
+        ? statusHtml("pass", "tone-measured", "Yes")
+        : statusHtml("fail", "tone-failure", "No")],
   ];
-  const saved = isNum(facts.savedMinutes) ? facts.savedMinutes : baselineMinutes - agentMinutes;
-  let delta = "<b>" + minutes(saved) + " saved</b>"
-    + (saved >= 60 ? " (" + Math.round(saved) + " minutes)" : "") + " on this deliverable.";
-  if(isNum(facts.speedup)) delta += " That is " + facts.speedup + "x faster.";
-  host.appendChild(measureBlock("Minutes for the same deliverable", rows, delta));
-  if(facts.baselineSource){
-    host.appendChild(h("p", {class:"small", style:"margin-top:10px",
-      text:"Baseline source: " + facts.baselineSource}));
+  const digest = Array.isArray(det.canonical_artifact_sha256)
+    ? det.canonical_artifact_sha256[0] : det.canonical_artifact_sha256;
+  if (digest) {
+    rows.push(["Canonical digest", '<span class="mono">' + esc(digest) + "</span>"]);
   }
+  let html = table("Same input, run repeatedly, compared.",
+    [{ label: "Measure" }, { label: "Result" }], rows);
+
+  html += '<div class="banner">' + ICONS.info + " <b>This is not a cost claim.</b> " +
+    esc(det.separation_note || "Reproducibility of an artifact is not predictability of a bill.") +
+    "</div>";
+
+  const vol = det.declared_volatility;
+  if (Array.isArray(vol) && vol.length) {
+    html += table("Variation the suite declares and normalises away. Anything not on this " +
+      "list failing to match would fail the run.",
+      [{ label: "Id" }, { label: "Cause" }, { label: "What would close it" }],
+      vol.map((v) => ['<span class="mono">' + esc(v.id || "") + "</span>",
+        esc(v.cause || v.reason || ""), esc(v.closed_by || v.would_close || "")]));
+  }
+  const undeclared = det.undeclared_variation;
+  if (Array.isArray(undeclared) && undeclared.length) {
+    html += '<div class="banner bad">' + ICONS.fail +
+      " <b>Undeclared variation found.</b> " + esc(JSON.stringify(undeclared)) + "</div>";
+  }
+  const herm = det.hermeticity;
+  if (herm && typeof herm === "object") {
+    const hrows = Object.keys(herm).sort().map((k) => [
+      '<span class="mono">' + esc(k) + "</span>",
+      typeof herm[k] === "object" ? esc(JSON.stringify(herm[k])) : esc(String(herm[k])),
+    ]);
+    html += table("How isolated the run was.",
+      [{ label: "Property" }, { label: "Recorded" }], hrows);
+  } else if (det.hermeticity_unavailable_reason) {
+    html += "<br>" + absentBlock("No isolation record", det.hermeticity_unavailable_reason);
+  }
+  host.innerHTML = html;
 }
 
-/* ------------------------------------------------------------- headline */
-function renderKpi(){
-  const host = clear($("kpi"));
-  const run = latestRun();
-  const withSkills = armOf(state.summary, "with-skills");
-  $("headlineWhen").textContent = run ? "most recent run " + when(run.started_at) : "no run recorded";
+function renderArms() {
+  const host = $("arms");
+  const left = armBlock("with-skills");
+  const right = armBlock("baseline-no-skills");
+  const doc = summaryDoc();
+  const deltas = doc && doc.deltas;
 
-  /* 1 - correctness */
-  const one = h("div", {class:"tile"});
-  one.appendChild(h("span", {class:"q", text:"Did it do the job right?"}));
-  if(run && run.correctness){
-    const passed = run.correctness.outcome === "pass";
-    one.appendChild(h("span", {class:"v " + (passed ? "tone-good" : "tone-critical"),
-      text:passed ? "Pass" : "Fail"}));
-    one.appendChild(h("span", {class:"s", text:isNum(run.correctness.checks_passed)
-      ? run.correctness.checks_passed + " of " + run.correctness.checks_total + " checks held"
-      : "checks that passed: not recorded"}));
-  } else {
-    one.appendChild(h("span", {class:"v absent", text:"No run recorded yet"}));
-    one.appendChild(h("span", {class:"s", text:"Press Run evaluation."}));
-  }
-  one.appendChild(h("span", {class:"k", text:"correctness.outcome"}));
-  host.appendChild(one);
-
-  /* 2 - cost and predictability */
-  const two = h("div", {class:"tile"});
-  two.appendChild(h("span", {class:"q", text:"What did it cost, and was that predictable?"}));
-  const tokens = stat(withSkills, "total_tokens");
-  const dollars = stat(withSkills, "estimated_usd");
-  if(tokens){
-    two.appendChild(h("span", {class:"v", text:num(Math.round(tokens.p50)) + " tok"}));
-    const bits = [];
-    if(dollars && isNum(dollars.p50)) bits.push(usd(dollars.p50) + " median");
-    bits.push((withSkills.consistency_verdict || "no consistency verdict yet").replace(/-/g, " "));
-    two.appendChild(h("span", {class:"s", text:bits.join(" · ")}));
-  } else {
-    two.appendChild(h("span", {class:"v absent", text:"Not measured"}));
-    two.appendChild(h("span", {class:"s", text:"No tokens or dollars recorded for this suite. See question 2."}));
-  }
-  two.appendChild(h("span", {class:"k", text:"cost.total_tokens · consistency_verdict"}));
-  host.appendChild(two);
-
-  /* 3 - time saved */
-  const three = h("div", {class:"tile"});
-  three.appendChild(h("span", {class:"q", text:"How much time did it save?"}));
-  const facts = timeFacts();
-  if(isNum(facts.savedMinutes) && isNum(facts.baselineMinutes)){
-    three.appendChild(h("span", {class:"v tone-good", text:minutes(facts.savedMinutes) + " saved"}));
-    three.appendChild(h("span", {class:"s", text:"agent " + seconds(facts.agentSeconds) + " ("
-      + facts.scope + ") against a recorded human baseline of " + minutes(facts.baselineMinutes)}));
-  } else {
-    three.appendChild(h("span", {class:"v absent", text:"No human baseline recorded"}));
-    three.appendChild(h("span", {class:"s", text:isNum(facts.agentSeconds)
-      ? "Agent wall clock was " + seconds(facts.agentSeconds) + ", but there is nothing to compare it against."
-      : "No run recorded yet."}));
-  }
-  three.appendChild(h("span", {class:"k", text:"time.time_saved_minutes"}));
-  host.appendChild(three);
-}
-
-/* -------------------------------------------------------- run history */
-function renderHistory(){
-  const host = clear($("historyTable"));
-  const runs = (state.runs && state.runs.runs) || [];
-  const total = state.runs && state.runs.total_recorded;
-  $("historyCount").textContent = runs.length
-    ? "showing " + runs.length + " of " + total + " recorded"
-    : "";
-  if(!runs.length){
-    host.appendChild(absentBlock("No runs recorded",
-      (state.runs && state.runs.reason) || "Press Run evaluation to record the first run."));
-    $("outputDetails").hidden = true;
+  if (!right || !right.runs) {
+    host.innerHTML = absentBlock("No comparison arm",
+      reasonFor("skill_vs_no_skill", unmeasured("comparison_arm")));
     return;
   }
-  const table = h("table");
-  const head = h("tr");
-  [["Run", ""], ["When", ""], ["Arm", ""], ["Result", ""], ["Checks", "num"], ["Tokens", "num"],
-   ["Cost", "num"], ["Agent time", "num"]].forEach(pair =>
-    head.appendChild(h("th", {class:pair[1], text:pair[0]})));
-  table.appendChild(h("thead", {}, [head]));
-  const body = h("tbody");
-  runs.forEach(run => {
-    const correctness = run.correctness || {};
-    const cost = run.cost || {};
-    const timing = run.time || {};
-    const row = h("tr");
-    row.appendChild(h("td", {class:"key", text:run.run_id}));
-    row.appendChild(h("td", {class:"small", text:when(run.started_at)}));
-    row.appendChild(h("td", {class:"small", text:run.arm || "unrecorded"}));
-    const passed = correctness.outcome === "pass";
-    row.appendChild(h("td", {}, [statusLine(passed ? "pass" : "fail",
-      passed ? "tone-good" : "tone-critical", passed ? "pass" : "fail")]));
-    row.appendChild(h("td", {class:"num", text:isNum(correctness.checks_passed)
-      ? correctness.checks_passed + "/" + correctness.checks_total
-      : "?/" + (correctness.checks_total || "?")}));
-    row.appendChild(h("td", {class:"num", text:isNum(cost.total_tokens) ? num(cost.total_tokens) : "—",
-      title:isNum(cost.total_tokens) ? "" : ((run.unmeasured && run.unmeasured.cost) || "not measured")}));
-    row.appendChild(h("td", {class:"num", text:usd(cost.estimated_usd) || "—",
-      title:isNum(cost.estimated_usd) ? "" : ((run.unmeasured && run.unmeasured.cost) || "not measured")}));
-    row.appendChild(h("td", {class:"num", text:seconds(timing.agent_wall_clock_seconds) || "—"}));
-    body.appendChild(row);
+
+  const parts = [];
+  const measures = [
+    ["Tokens, median run", "total_tokens", (v) => int(v)],
+    ["Credits, median run", "credits", (v) => dec(v, 2)],
+    ["Dollars, median run", "estimated_usd", (v) => usd(v)],
+    ["Wall clock, median run", "wall_clock_seconds", (v) => secs(v)],
+  ];
+  for (const [label, key, fmt] of measures) {
+    const a = left && left[key] && left[key].p50;
+    const b = right[key] && right[key].p50;
+    if (!isNum(a) || !isNum(b)) continue;
+    const max = Math.max(a, b) || 1;
+    parts.push('<h3>' + esc(label) + "</h3>" +
+      '<div class="bar-row"><span class="bar-label">With Ascent skills</span>' +
+      '<div class="bar-track"><div class="bar-fill with-skills" style="width:' +
+      dec((a / max) * 100, 1) + '%">with skills</div></div>' +
+      '<span class="bar-value">' + fmt(a) + "</span></div>" +
+      '<div class="bar-row"><span class="bar-label">No skills, baseline</span>' +
+      '<div class="bar-track"><div class="bar-fill baseline" style="width:' +
+      dec((b / max) * 100, 1) + '%">baseline</div></div>' +
+      '<span class="bar-value">' + fmt(b) + "</span></div>");
+  }
+  if (parts.length) {
+    parts.push('<div class="legend">' +
+      '<span><i class="swatch with-skills"></i>With Ascent skills</span>' +
+      '<span><i class="swatch baseline"></i>No skills, baseline</span></div>');
+  }
+
+  const rows = [];
+  if (left && isNum(left.correctness_pass_rate) && isNum(right.correctness_pass_rate)) {
+    rows.push(["Passed", "<b>" + pct(left.correctness_pass_rate) + "</b> of " +
+      left.runs + " runs", "<b>" + pct(right.correctness_pass_rate) + "</b> of " +
+      right.runs + " runs"]);
+  }
+  if (rows.length) {
+    parts.push(table("A baseline arm that succeeds sometimes is the honest comparison; it is " +
+      "never collapsed to pass or fail.",
+      [{ label: "" }, { label: "With skills" }, { label: "Baseline" }], rows));
+  }
+
+  if (deltas) {
+    const drows = [];
+    const push = (label, value, fmt) => {
+      if (isNum(value)) drows.push([label, "<b>" + fmt(value) + "</b>"]);
+    };
+    push("Tokens saved, median", deltas.tokens_saved_p50, int);
+    push("Credits saved, median", deltas.credits_saved_p50, (v) => dec(v, 2));
+    push("Dollars saved, median", deltas.usd_saved_p50, usd);
+    push("Minutes saved, median", deltas.minutes_saved_p50, (v) => mins(v));
+    if (isNum(deltas.correctness_pass_rate_delta)) {
+      drows.push(["Pass rate difference",
+        "<b>" + (deltas.correctness_pass_rate_delta >= 0 ? "+" : "") +
+        pct(deltas.correctness_pass_rate_delta) + "</b>"]);
+    }
+    if (deltas.consistency_improvement) {
+      drows.push(["Consistency", esc(deltas.consistency_improvement)]);
+    }
+    if (drows.length) {
+      parts.push(table("Every headline claim is a difference, never an absolute.",
+        [{ label: "Difference" }, { label: "Measured" }], drows));
+    }
+  } else if (doc && doc.deltas_unavailable_reason) {
+    parts.push("<br>" + absentBlock("No deltas", doc.deltas_unavailable_reason));
+  }
+  host.innerHTML = parts.join("");
+}
+
+/* The coverage table. This is the page's honesty contract made visible. */
+function renderCoverage() {
+  const host = $("coverage");
+  const payload = state.metrics;
+  if (!payload || !payload.metrics) {
+    host.innerHTML = absentBlock("Metric catalogue unavailable",
+      "The workbench could not read the metric catalogue from /api/metrics/.");
+    $("coverageCount").textContent = "";
+    return;
+  }
+  $("coverageCount").textContent =
+    payload.measured + " measured, " + payload.absent + " declared absent, " +
+    payload.total + " asked for";
+
+  const QUESTION = {
+    1: "Did it do the job right?",
+    2: "What did it cost, and was that predictable?",
+    3: "How much time did it save?",
+  };
+  const rows = payload.metrics.map((m) => {
+    const measured = m.status === "measured";
+    return [
+      '<span class="small">Q' + m.question + "</span><br><b>" + esc(m.label) + "</b>" +
+        '<br><span class="small">' + esc(m.unit) + "</span>",
+      measured
+        ? statusHtml("pass", "tone-measured", "Measured")
+        : statusHtml("absent", "tone-absent", "Declared absent"),
+      measured
+        ? (m.value == null
+            ? '<span class="small">recorded, see the section above</span>'
+            : "<b>" + esc(m.value) + "</b>")
+        : '<span class="metric-reason">' + esc(m.absent_reason) + "</span>",
+      '<span class="metric-quote">&ldquo;' + esc(m.quote) + "&rdquo;</span>" +
+        '<br><span class="small">' + esc(m.source) + "</span>",
+      '<span class="mono small">' + esc(m.measured_from) + "</span>",
+    ];
   });
-  table.appendChild(body);
-  host.appendChild(table);
-  host.appendChild(h("p", {class:"small", style:"margin-top:10px",
-    text:"An em dash means not measured, not zero. Hover the cell for the reason."}));
-
-  const newest = runs[0];
-  const process = newest.process || {};
-  $("outputDetails").hidden = false;
-  $("output").textContent = [process.stdout, process.stderr].filter(Boolean).join("\n").trim()
-    || "No process output was captured.";
+  host.innerHTML = table(
+    payload.provenance,
+    [{ label: "Metric" }, { label: "Status" }, { label: "Value or reason" },
+     { label: "Who asked for it" }, { label: "Read from" }],
+    rows);
 }
 
-/* ------------------------------------------------------ paste-ready block */
-function renderPaste(){
-  /* Prefer the harness's own emitter, so the page and the CLI never disagree. */
-  if(state.paste && state.paste.available && state.paste.markdown){
-    $("pasteBlock").textContent = state.paste.markdown;
-    $("pasteSource").textContent = "Generated by " + state.paste.command + ".";
+function renderPaste() {
+  const host = $("pasteWrap");
+  const paste = state.paste;
+  if (!paste || !paste.available || !paste.markdown) {
+    host.innerHTML = absentBlock("No paste-ready block",
+      (paste && paste.reason) || "The summary emitter produced no output.",
+      (paste && paste.command) || null);
     return;
   }
-  if(state.paste && state.paste.reason){
-    $("pasteSource").textContent = "The harness emitter has nothing to render yet: "
-      + state.paste.reason + " Until then this block is assembled from the measured "
-      + "fields on the latest run record.";
-  } else {
-    $("pasteSource").textContent = "";
-  }
-  const run = latestRun();
-  const withSkills = armOf(state.summary, "with-skills");
-  const tokens = stat(withSkills, "total_tokens");
-  const dollars = stat(withSkills, "estimated_usd");
-  const lines = [];
-  lines.push("Ascent evaluation — " + SUITE);
-  if(!run){
-    lines.push("Verdict: no run recorded on this machine");
-    $("pasteBlock").textContent = lines.join("\n");
-    return;
-  }
-  const correctness = run.correctness || {};
-  const timing = run.time || {};
-  lines.push("Deliverable: not recorded — this suite grades generated artifacts, not a client deliverable");
-  lines.push("Verdict: " + (correctness.outcome === "pass" ? "PASS" : "FAIL") + " — "
-    + (isNum(correctness.checks_passed) ? correctness.checks_passed : "unknown number")
-    + " of " + correctness.checks_total + " checks");
-  lines.push("Tokens: " + (tokens ? num(Math.round(tokens.p50)) + " median per run" : "not measured"));
-  lines.push("Cost: " + (dollars && isNum(dollars.p50) ? usd(dollars.p50) + " median per run" : "not measured"));
-  lines.push("Agent time: " + (seconds(timing.agent_wall_clock_seconds) || "not measured"));
-  lines.push("Human baseline: " + (isNum(timing.human_baseline_minutes)
-    ? minutes(timing.human_baseline_minutes) + " (" + (timing.human_baseline_source || "source not recorded") + ")"
-    : "not recorded"));
-  lines.push("Time saved: " + (isNum(timing.time_saved_minutes)
-    ? minutes(timing.time_saved_minutes) : "not recorded — needs a human baseline"));
-  lines.push("Consistency: " + ((withSkills && withSkills.consistency_verdict && tokens)
-    ? withSkills.consistency_verdict + " (provisional thresholds)"
-    : "not established — needs repeated runs with cost telemetry"));
-  lines.push("Run: " + run.run_id + " · " + run.started_at);
-  $("pasteBlock").textContent = lines.join("\n");
+  host.innerHTML = '<pre class="paste" id="pasteBlock">' + esc(paste.markdown) + "</pre>" +
+    '<div class="row-actions"><button class="btn" id="copyButton">Copy summary</button>' +
+    '<span class="copied" id="copied"></span>' +
+    '<span class="small">Produced by <span class="mono">' + esc(paste.command) +
+    "</span>. The page does not compose this text.</span></div>";
+  $("copyButton").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(paste.markdown);
+      $("copied").textContent = "Copied";
+    } catch (e) {
+      $("copied").textContent = "Copy failed; select the text above";
+    }
+    setTimeout(() => { $("copied").textContent = ""; }, 2600);
+  });
 }
 
-/* ---------------------------------------------------------- boundary */
-function renderBoundary(){
-  const host = clear($("boundaryList"));
+function renderHistory() {
+  const host = $("historyTable");
+  const payload = state.runs;
+  const runs = (payload && payload.runs) || [];
+  $("historyCount").textContent = payload && isNum(payload.total_recorded)
+    ? payload.total_recorded + (payload.total_recorded === 1 ? " run recorded" : " runs recorded")
+    : "";
+  if (!runs.length) {
+    host.innerHTML = absentBlock("No runs yet",
+      (payload && payload.reason) || "Results appear after the first run.");
+    return;
+  }
+  const rows = runs.map((r) => {
+    const c = r.correctness || {};
+    const ok = c.outcome === "pass";
+    const cost = r.cost || {};
+    const t = r.time || {};
+    return [
+      '<span class="mono small">' + esc(r.run_id) + "</span>",
+      esc(r.arm || ""),
+      statusHtml(ok ? "pass" : "fail", ok ? "tone-measured" : "tone-failure",
+        ok ? "Pass" : "Fail"),
+      isNum(c.checks_passed) && isNum(c.checks_total)
+        ? c.checks_passed + " / " + c.checks_total : null,
+      isNum(cost.total_tokens) ? int(cost.total_tokens) : null,
+      cost.credits && isNum(cost.credits.total) ? dec(cost.credits.total, 2) : null,
+      isNum(cost.estimated_usd) ? usd(cost.estimated_usd) : null,
+      isNum(t.agent_wall_clock_seconds) ? secs(t.agent_wall_clock_seconds) : null,
+      '<span class="small">' + esc(when(r.started_at)) + "</span>",
+    ];
+  });
+  host.innerHTML = table("Blank cells are figures this suite does not measure, not zeros.",
+    [{ label: "Run" }, { label: "Arm" }, { label: "Outcome" }, { label: "Checks", num: true },
+     { label: "Tokens", num: true }, { label: "Credits", num: true },
+     { label: "Cost", num: true }, { label: "Agent time", num: true }, { label: "Started" }],
+    rows);
+}
+
+function renderThresholds() {
+  const host = $("thresholds");
+  const th = (state.summary && state.summary.consistency_thresholds) ||
+    (state.suite && state.suite.consistency_thresholds);
+  if (!th) { host.innerHTML = ""; return; }
+  const rows = (th.bands || []).map((b) => [
+    verdictChip(b.verdict), '<span class="mono">' + esc(b.range) + "</span>", esc(b.reading)]);
+  host.innerHTML = '<p class="note">Measured as the ' + esc(th.measure) +
+    ". These bands are <b>" + esc(th.status || "provisional") +
+    "</b> and are recorded so they can be argued with.</p>" +
+    table(null, [{ label: "Verdict" }, { label: "Range" }, { label: "Plain reading" }], rows);
+}
+
+function renderBoundary() {
   const suite = state.suite || {};
   const items = [
-    ["One allowlisted suite", "The server answers for " + SUITE + " and refuses every other suite id."],
-    ["The browser chooses nothing", "No command, model, file path, fixture or prompt is accepted from this "
-      + "page. The only parameter it can send is the integer history window in the toolbar."],
-    ["One fixed command", "A run executes " + (suite.runner || "the suite runner")
-      + " in a subprocess. The path is compiled into the server."],
-    ["A fresh workspace, under a timeout", "Each run builds its own temporary workspace and is killed after "
-      + (suite.run_timeout_seconds || 90) + " seconds. No cache, credentials or Git history carry over."],
-    ["Results stay local", "Run records are written under evals/" + SUITE + "/results/, which is Git-ignored."]
+    "Suites are discovered under <code>evals/</code> and then allowlisted; anything else is refused.",
+    "The browser supplies no command, model, path, fixture or prompt. Only a run count, an arm and a history limit.",
+    "Each batch runs one fixed runner path in a subprocess under a " +
+      esc(suite.run_timeout_seconds || 90) + " second per-run timeout, with no shell.",
+    "Up to " + esc(suite.max_runs_per_request || 10) + " runs per request, one batch at a time.",
+    "Run records are written under <code>evals/&lt;suite&gt;/results/</code>, which is Git-ignored.",
+    "Telemetry is extracted by code. No model reads a transcript to produce a number here.",
   ];
-  items.forEach(pair => {
-    const item = h("li");
-    item.appendChild(h("b", {text:pair[0]}));
-    item.appendChild(h("div", {class:"note", style:"margin-top:3px", text:pair[1]}));
-    host.appendChild(item);
-  });
-  const telemetry = (state.summary && state.summary.telemetry) || {};
-  const commands = [];
-  ["aggregate", "extractor"].forEach(key => {
-    const entry = telemetry[key];
-    if(entry && entry.command) commands.push(entry.command + (entry.available ? "" : "   [not available yet]"));
-  });
-  if(state.paste && state.paste.command){
-    commands.push(state.paste.command + (state.paste.available ? "" : "   [nothing to render yet]"));
-  }
-  $("telemetryCommands").textContent = commands.join("\n") || "Telemetry commands unavailable.";
+  $("boundaryList").innerHTML = items.map((i) => "<li>" + i + "</li>").join("");
+  const cmds = [
+    "python3 docs/evals_workbench.py --port 8765",
+    "python3 -m evals.lib.telemetry --session <session-log> --out <file>",
+    "python3 -m evals.lib.aggregate --suite " + (state.suiteId || "<suite>"),
+    "python3 -m evals.lib.emit_summary --suite " + (state.suiteId || "<suite>"),
+  ];
+  $("telemetryCommands").textContent = cmds.join("\n");
 }
 
-function renderTaxonomy(){
-  const host = clear($("taxonomy"));
-  const taxonomy = (state.suite && state.suite.taxonomy) || {};
-  const axes = [["eval_type", "eval type"], ["interaction_scope", "interaction scope"],
-    ["graded_surface", "graded surface"], ["grader_types", "graders"], ["scoring", "scoring"],
-    ["reliability_estimator", "reliability"], ["execution_context", "context"],
-    ["failure_mode_provenance", "failure provenance"], ["reference_dependence", "reference"]];
-  axes.forEach(pair => {
-    const value = taxonomy[pair[0]];
-    if(value === undefined) return;
-    host.appendChild(h("div", {class:"axis-row"}, [
-      h("span", {text:pair[1]}),
-      h("span", {text:Array.isArray(value) ? value.join(" + ") : String(value)})
-    ]));
-  });
-}
-
-function renderBanner(){
-  const host = clear($("banner"));
-  if(!state.connected){
-    host.appendChild(h("div", {class:"banner"}, [
-      h("b", {text:"This page is read-only without the local server"}),
-      h("div", {class:"note", text:"Start it, then reload: python3 docs/evals_workbench.py --port 8765 and open "
-        + "http://127.0.0.1:8765/evals-workbench.html"})
-    ]));
+function renderRateCardFoot() {
+  const card = rateCard();
+  const host = $("rateCardFoot");
+  if (!card || !card.available) {
+    host.innerHTML = "<p>" + esc((card && card.reason) || "No rate card available.") + "</p>";
     return;
   }
-  const aggregate = state.summary && state.summary.telemetry && state.summary.telemetry.aggregate;
-  if(aggregate && !aggregate.available){
-    host.appendChild(h("div", {class:"banner"}, [
-      h("b", {text:"Cost, dollar and consistency figures are not available on this machine"}),
-      h("div", {class:"note", text:aggregate.reason || "The telemetry CLI is not installed yet."}),
-      h("div", {class:"note", style:"margin-top:4px",
-        text:"Correctness and agent wall-clock are measured and shown. Everything downstream of tokens is "
-          + "marked not measured rather than filled in."})
-    ]));
-  }
+  host.innerHTML = "<p>Credits are derived from <span class=\"mono\">" +
+    esc(card.file) + "</span>, fetched " + esc(card.fetched) + " from " +
+    (card.url ? '<a href="' + esc(card.url) + '">' + esc(card.url) + "</a>" : "an unknown source") +
+    ". Unit: " + esc(card.unit) + ". Priced models: " +
+    esc((card.priced_models || []).join(", ")) + ".</p>";
 }
 
-/* ------------------------------------------------------------- render */
-function render(){
-  charts.length = 0;
+function renderBanner() {
+  const host = $("banner");
+  const parts = [];
+  const suites = state.suites;
+  if (suites && (!suites.suites || !suites.suites.length)) {
+    parts.push('<div class="banner">' + ICONS.info + " <b>No suite in this checkout.</b> " +
+      esc(suites.reason || "") + "</div>");
+  }
+  const m = state.metrics;
+  if (m && isNum(m.total)) {
+    parts.push('<div class="banner">' + ICONS.info +
+      " <b>" + m.measured + " of " + m.total + " requested metrics are measured here.</b> " +
+      "The other " + m.absent + " are listed in Metric coverage below with the reason each " +
+      "one is absent. Nothing on this page is estimated to fill a gap.</div>");
+  }
+  const agg = state.summary && state.summary.telemetry && state.summary.telemetry.aggregate;
+  if (agg && agg.available === false && agg.reason) {
+    parts.push('<div class="banner bad">' + ICONS.fail + " <b>Aggregator unavailable.</b> " +
+      esc(agg.reason) + "</div>");
+  }
+  host.innerHTML = parts.join("");
+}
+
+function render() {
   renderBanner();
   renderKpi();
   renderCorrectness();
-  renderTasks();
+  renderCost();
   renderSpread();
-  renderArms();
+  renderCredits();
   renderTime();
+  renderSkillTiming();
+  renderDeterminism();
+  renderArms();
+  renderCoverage();
   renderPaste();
   renderHistory();
+  renderThresholds();
   renderBoundary();
-  renderTaxonomy();
-  renderStatusPills();
-  renderGaps($("gaps1"), "correctness");
-  renderGaps($("gaps2"), "cost");
-  renderGaps($("gaps3"), "time");
+  renderRateCardFoot();
+  reveal("main .card");
 }
 
-let resizeTimer = null;
-window.addEventListener("resize", () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => charts.forEach(entry => entry.draw(entry.host)), 150);
-});
+/* ------------------------------------------------------------------ loading */
+function setStatus(text) { $("runStatus").textContent = text; }
 
-/* ------------------------------------------------------------- loading */
-function setStatus(text){ $("runStatus").textContent = text; }
-
-async function getJson(path){
-  const response = await fetch(path, {cache:"no-store"});
-  const payload = await response.json();
-  if(!response.ok) throw new Error(payload.detail || payload.error || ("Request failed: " + path));
+async function getJson(path) {
+  const response = await fetch(path, { headers: { Accept: "application/json" } });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error((payload && (payload.detail || payload.error)) || response.statusText);
+    error.payload = payload; error.status = response.status;
+    throw error;
+  }
   return payload;
 }
 
-async function loadAll(){
-  try{
-    const [suite, runs, summary, paste] = await Promise.all([
-      getJson("/api/suite/" + SUITE),
-      getJson("/api/runs/" + SUITE + "?limit=" + state.limit),
-      getJson("/api/summary/" + SUITE),
-      getJson("/api/paste/" + SUITE)
-    ]);
-    state.suite = suite; state.runs = runs; state.summary = summary; state.paste = paste;
-    state.connected = true;
-    $("suiteId").textContent = suite.suite_id;
-    $("runButton").disabled = false;
-    const run = latestRun();
-    setStatus(run ? "Connected. Last run " + when(run.started_at) : "Connected. No run recorded yet.");
-  } catch(error){
-    state.connected = false;
-    $("runButton").disabled = true;
-    setStatus("No local server. " + error.message);
-  }
+async function loadSuiteData() {
+  const id = state.suiteId;
+  if (!id) { render(); return; }
+  const [suite, summary, runs, metrics, paste] = await Promise.all([
+    getJson("/api/suite/" + id).catch(() => null),
+    getJson("/api/summary/" + id).catch(() => null),
+    getJson("/api/runs/" + id + "?limit=" + state.limit).catch(() => null),
+    getJson("/api/metrics/" + id).catch(() => null),
+    getJson("/api/paste/" + id).catch(() => null),
+  ]);
+  state.suite = suite; state.summary = summary; state.runs = runs;
+  state.metrics = metrics; state.paste = paste;
   render();
 }
 
-$("limit").addEventListener("change", async (event) => {
-  state.limit = Number(event.target.value) || 10;
-  if(!state.connected){ render(); return; }
-  try{
-    state.runs = await getJson("/api/runs/" + SUITE + "?limit=" + state.limit);
-    state.summary = await getJson("/api/summary/" + SUITE);
-  } catch(error){ setStatus(error.message); }
-  render();
+function populateControls() {
+  const suites = (state.suites && state.suites.suites) || [];
+  const suiteSelect = $("suiteSelect");
+  suiteSelect.innerHTML = suites.length
+    ? suites.map((s) => '<option value="' + esc(s.suite_id) + '">' + esc(s.suite_id) +
+        (s.runnable ? "" : " (no runner)") + "</option>").join("")
+    : '<option value="">No suite found</option>';
+  suiteSelect.disabled = !suites.length;
+  if (suites.length && !state.suiteId) state.suiteId = suites[0].suite_id;
+  if (state.suiteId) suiteSelect.value = state.suiteId;
+
+  const arms = (state.suites && state.suites.arms) || ["with-skills", "baseline-no-skills"];
+  const armSelect = $("armSelect");
+  armSelect.innerHTML = arms.map((a) => '<option value="' + esc(a) + '">' +
+    esc(a === "with-skills" ? "With Ascent skills" : "No skills, baseline") + "</option>").join("");
+  armSelect.value = state.arm;
+  armSelect.disabled = !suites.length;
+
+  const max = (state.suites && state.suites.max_runs_per_request) || 10;
+  const runsSelect = $("runsSelect");
+  let options = "";
+  for (let i = 1; i <= max; i += 1) {
+    options += '<option value="' + i + '"' + (i === state.runCount ? " selected" : "") + ">" +
+      i + (i === 1 ? " run" : " runs") + "</option>";
+  }
+  runsSelect.innerHTML = options;
+  runsSelect.disabled = !suites.length;
+
+  const runnable = suites.some((s) => s.suite_id === state.suiteId && s.runnable);
+  $("runButton").disabled = !runnable;
+  if (!suites.length) {
+    setStatus("No suite to run. The telemetry harness is installed; a suite has to land first.");
+  } else if (!runnable) {
+    setStatus("This suite has no runner, so it cannot be started from here.");
+  } else {
+    setStatus("Ready. One run cannot show a spread; ask for two or more.");
+  }
+}
+
+async function loadAll() {
+  try {
+    state.suites = await getJson("/api/suites");
+    state.connected = true;
+  } catch (error) {
+    state.connected = false;
+    setStatus("Cannot reach the workbench server. Start it with: python3 docs/evals_workbench.py");
+    $("banner").innerHTML = '<div class="banner bad">' + ICONS.fail +
+      " <b>No connection to the local workbench.</b> This page reads every figure from " +
+      "<span class=\"mono\">/api/</span> on a local server. Start it with " +
+      "<span class=\"mono\">python3 docs/evals_workbench.py --port 8765</span> and reload. " +
+      "Nothing is rendered from cached or sample data.</div>";
+    return;
+  }
+  populateControls();
+  await loadSuiteData();
+}
+
+$("suiteSelect").addEventListener("change", async (event) => {
+  state.suiteId = event.target.value || null;
+  populateControls();
+  await loadSuiteData();
+});
+$("armSelect").addEventListener("change", (event) => { state.arm = event.target.value; });
+$("runsSelect").addEventListener("change", (event) => {
+  state.runCount = parseInt(event.target.value, 10) || 1;
+});
+$("limitSelect").addEventListener("change", async (event) => {
+  state.limit = parseInt(event.target.value, 10) || 10;
+  await loadSuiteData();
 });
 
 $("runButton").addEventListener("click", async () => {
-  if(state.busy) return;
+  if (state.busy || !state.suiteId) return;
   state.busy = true;
   $("runButton").disabled = true;
-  setStatus("Running " + SUITE + " in a fresh temporary workspace…");
-  try{
-    const response = await fetch("/api/run/" + SUITE, {method:"POST"});
-    const payload = await response.json();
-    if(!response.ok) throw new Error(payload.detail || payload.error || "Run failed");
-    state.runs = await getJson("/api/runs/" + SUITE + "?limit=" + state.limit);
-    state.summary = await getJson("/api/summary/" + SUITE);
-    state.paste = await getJson("/api/paste/" + SUITE);
-    const outcome = payload.run && payload.run.correctness && payload.run.correctness.outcome;
-    setStatus("Run finished: " + (outcome === "pass" ? "pass" : "fail") + ".");
-    render();
-  } catch(error){
+  const n = state.runCount;
+  setStatus("Running " + n + (n === 1 ? " time" : " times") + "; this can take a while.");
+  try {
+    const response = await fetch("/api/run/" + state.suiteId, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ runs: n, arm: state.arm }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      setStatus("Run refused: " + ((payload && (payload.detail || payload.error)) ||
+        response.statusText));
+    } else {
+      const done = payload.completed;
+      setStatus("Completed " + done + " of " + payload.requested +
+        (payload.record_author === "runner" ? ", records written by the runner." : "."));
+      const process = payload.process || {};
+      const text = [process.stdout, process.stderr].filter(Boolean).join("\n");
+      $("output").textContent = text || "No process output.";
+    }
+  } catch (error) {
     setStatus("Run failed: " + error.message);
   } finally {
     state.busy = false;
-    $("runButton").disabled = !state.connected;
+    $("runButton").disabled = false;
+    await loadSuiteData();
   }
 });
-
-$("copyButton").addEventListener("click", async () => {
-  const text = $("pasteBlock").textContent;
-  try{
-    await navigator.clipboard.writeText(text);
-    $("copied").textContent = "Copied.";
-  } catch(error){
-    const area = document.createElement("textarea");
-    area.value = text;
-    document.body.appendChild(area);
-    area.select();
-    const ok = document.execCommand && document.execCommand("copy");
-    document.body.removeChild(area);
-    $("copied").textContent = ok ? "Copied." : "Copy blocked; select the text instead.";
-  }
-  setTimeout(() => { $("copied").textContent = ""; }, 2600);
-});
-
-$("themeButton").addEventListener("click", () => {
-  const dark = document.documentElement.getAttribute("data-theme") === "dark";
-  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
-  try{ localStorage.setItem("ascent-workbench-theme", dark ? "light" : "dark"); } catch(error){}
-  charts.forEach(entry => entry.draw(entry.host));
-});
-try{
-  const stored = localStorage.getItem("ascent-workbench-theme");
-  if(stored) document.documentElement.setAttribute("data-theme", stored);
-} catch(error){}
 
 loadAll();
 </script>
