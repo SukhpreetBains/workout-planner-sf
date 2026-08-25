@@ -1,0 +1,174 @@
+{
+  "schema_version": "ascent.skill-eval-plan.v1",
+  "skill_id": "context-skills",
+  "questions": {
+    "correctness": {
+      "status": "measured",
+      "how": "Four code-based task contracts assert the manifest, brief, ranked evidence, access gaps and cache decision. No golden reference document exists for this deliverable, so there is no golden comparison.",
+      "reported": [
+        "outcome_pass_rate",
+        "evaluated_task_count",
+        "failed_task_ids"
+      ]
+    },
+    "cost": {
+      "status": "not-instrumented",
+      "how": "unknown",
+      "reported": [],
+      "note": "No tokens, dollars or spread have been recorded. The suite runs local Python scripts rather than a model, so there is no session log to parse until an agentic arm exists."
+    },
+    "time": {
+      "status": "not-instrumented",
+      "how": "unknown",
+      "reported": [
+        "duration_ms"
+      ],
+      "note": "duration_ms is harness runtime, not a saving. No human baseline has been recorded, so time saved is unknown and is not reported."
+    }
+  },
+  "arms": {
+    "with-skills": {
+      "status": "implemented",
+      "note": "The deterministic harness exercises the shipped context scripts in a fresh temporary workspace."
+    },
+    "baseline-no-skills": {
+      "status": "not-implemented",
+      "note": "No comparison arm exists. There is no meaningful no-skills version of a script-driven run: the baseline arm becomes constructible once a model, rather than the harness, drives the workflow.",
+      "unblocked_by": "An agentic arm where a model is asked for the same evidence pack with the Ascent skills unavailable."
+    }
+  },
+  "runs_per_arm": 1,
+  "consistency": {
+    "metric": "coefficient_of_variation(total_tokens)",
+    "verdict": "unknown",
+    "thresholds": {
+      "predictable": "< 0.10",
+      "variable": "0.10-0.30",
+      "unpredictable": "> 0.30"
+    },
+    "thresholds_status": "provisional",
+    "note": "Unknown, not predictable. One run of a deterministic script says nothing about the cost spread of the agentic workflow this suite stands in for. Fewer than three runs per arm cannot support a verdict."
+  },
+  "coverage": {
+    "mode": "regression",
+    "rationale": "The implemented contract and scripts should pass reliably; new agent-driven source adapters would be added as capability coverage."
+  },
+  "trials": {
+    "count": 1,
+    "reliability_metric": "outcome_pass_rate",
+    "rationale": "This package exercises deterministic local scripts in an isolated workspace. Per-task trials are distinct from runs_per_arm, which measures cost and time reproducibility."
+  },
+  "graders": [
+    {
+      "id": "artifact-outcome",
+      "type": "code",
+      "required": true,
+      "rationale": "Source records, ranked output, gaps, persisted files, and cache decisions are objectively inspectable."
+    },
+    {
+      "id": "trajectory-boundary",
+      "type": "code",
+      "required": true,
+      "rationale": "Avoiding unavailable source-body leakage and broadening is an explicit behavior requirement."
+    }
+  ],
+  "behavior_checks": {
+    "skills_invoked": {
+      "status": "not-observable",
+      "expected": [
+        "discover-project-context",
+        "retrieve-project-context"
+      ],
+      "note": "The harness calls the scripts directly, so this suite cannot show that a model would invoke the right skills."
+    },
+    "clarifying_questions": {
+      "status": "not-observable",
+      "required": [
+        "Confirm the opportunity root before writing a local projection",
+        "Confirm the concrete task before retrieving source content"
+      ],
+      "note": "There is no user turn in a script-driven run."
+    }
+  },
+  "metrics": [
+    "outcome_pass_rate",
+    "evaluated_task_count",
+    "failed_task_ids",
+    "duration_ms"
+  ],
+  "gaps": [
+    {
+      "id": "no-cost-data",
+      "question": "cost",
+      "statement": "No tokens or dollars have been recorded for this suite.",
+      "unblocked_by": "An agentic arm producing a session log, parsed by the deterministic telemetry harness into ascent.eval-run-record.v1 files."
+    },
+    {
+      "id": "no-baseline-arm",
+      "question": "cost",
+      "statement": "The same job has never been run without the Ascent skills, so nothing here is a saving.",
+      "unblocked_by": "A baseline-no-skills arm on the same host, model, prompt and fixture."
+    },
+    {
+      "id": "consistency-unknown",
+      "question": "cost",
+      "statement": "How much the cost jumps around is unknown; the suite runs once and measures no tokens.",
+      "unblocked_by": "At least three runs per arm with recorded token totals."
+    },
+    {
+      "id": "no-human-baseline",
+      "question": "time",
+      "statement": "No one has timed a human assembling this evidence pack, so no hours-saved figure can be quoted.",
+      "unblocked_by": "One timed manual run, or a dated delivery-lead estimate with a named source."
+    },
+    {
+      "id": "no-golden-reference",
+      "question": "correctness",
+      "statement": "There is no known-good human document to compare against; the deliverable is machine-local state, not a client document.",
+      "unblocked_by": "Moving the reference-based comparison to the downstream document-producing skills, where a real approved deliverable exists."
+    },
+    {
+      "id": "provenance-is-guessed",
+      "question": "correctness",
+      "statement": "We guessed these failures from the design; we have not yet watched it fail for real.",
+      "unblocked_by": "Error analysis on real skill traces: open coding, axial coding, frequency counts."
+    },
+    {
+      "id": "behavior-not-observable",
+      "question": "correctness",
+      "statement": "This suite cannot show that a model would invoke the right skills or ask the right questions, because the harness calls the scripts itself.",
+      "unblocked_by": "An agentic arm whose session log records skill invocations and user turns."
+    }
+  ],
+  "aggregation": {
+    "command": "python3 -m evals.lib.aggregate --suite context-skills",
+    "status": "not-yet-applicable",
+    "note": "The aggregator reads ascent.eval-run-record.v1 files from results/runs/. This suite does not emit them yet; its runner writes a single legacy result to results/latest.json."
+  },
+  "transcript_review": {
+    "sample": "all failures; inspect generated artifacts when a target script changes",
+    "rationale": "The deterministic runner has no agent transcript, so the artifacts are the diagnosis record."
+  },
+  "taxonomy": {
+    "eval_type": "regression",
+    "interaction_scope": "single-turn",
+    "graded_surface": [
+      "outcome",
+      "trajectory"
+    ],
+    "grader_types": [
+      "code-based"
+    ],
+    "scoring": "binary",
+    "reliability_estimator": "single-trial",
+    "execution_context": "ci-offline",
+    "failure_mode_provenance": "contract-enumeration",
+    "reference_dependence": "reference-based",
+    "notes": "Reference classification, not the headline. Deterministic scripts under a code-based harness, so no model or human grader is in the loop and no pass@k/pass^k estimator applies. Interaction scope is single-turn because the harness invokes the skill scripts directly; it is not yet an agentic eval. reference-based here means each task has a reference solution, not that a golden human document exists.",
+    "references": [
+      "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+      "https://hamel.dev/blog/posts/evals-faq/",
+      "https://github.com/ai-evals-course/evals-skills"
+    ]
+  }
+}

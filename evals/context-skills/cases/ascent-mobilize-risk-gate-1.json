@@ -1,0 +1,28 @@
+{
+  "id": "ascent-mobilize-risk-gate-1",
+  "project": {
+    "name": "Ascent",
+    "objective": "Prepare a Mobilize Risk Gate 1 evidence pack.",
+    "phase": "mobilize"
+  },
+  "sources": [
+    {"id":"client-docs","kind":"sharepoint","label":"Client Docs","locator":"Ascent/Account/Opportunity/Content Inbox/Client Docs","purpose":"Canonical scope, governance, architecture, and deliverable inputs.","authority":"canonical","priority":5,"query_hints":["scope","governance","architecture"],"freshness_hours":168,"access_state":"available"},
+    {"id":"mobilize-deliverables","kind":"local","label":"Mobilize Deliverables","locator":"Ascent/Account/Opportunity/Deliverables/Mobilize","purpose":"Canonical Mobilize checklist and approval destination.","authority":"canonical","priority":5,"query_hints":["Mobilize","Risk Gate 1"],"freshness_hours":0,"access_state":"available"},
+    {"id":"email-threads","kind":"other","label":"Email Threads","locator":"Ascent/Account/Opportunity/Content Inbox/Email Threads","purpose":"Potential client approvals.","authority":"supporting","priority":3,"query_hints":["approval"],"freshness_hours":168,"access_state":"unavailable","access_reason":"Email connector is not connected for this fixture."}
+  ],
+  "metrics": {"sources_considered":4,"sources_recorded":3,"connector_calls":1,"items_inspected":9,"characters_inspected":800,"caps":["local=30","document=30","other=10"]},
+  "sentinel": "RESTRICTED_EMAIL_BODY_MUST_NOT_LEAK",
+  "retrieval": {
+    "task": "Build the Mobilize Risk Gate 1 evidence pack with validated scope, governance, and readiness.",
+    "max_per_source": 2,
+    "max_total_chars": 5000,
+    "required_chunk_ids": ["mobilize-gate","validated-scope","governance-model"],
+    "chunks": [
+      {"chunk_id":"mobilize-gate","source_id":"mobilize-deliverables","title":"Risk Gate 1 checklist","text":"Mobilize requires a project charter, RAID tracker, stakeholder map, validated scope, governance model, and readiness approval.","semantic_score":0.98},
+      {"chunk_id":"validated-scope","source_id":"client-docs","title":"Validated scope","text":"The current scope defines measurable outcomes, KPI ownership, assumptions, and remaining decisions before Risk Gate 1.","semantic_score":0.96},
+      {"chunk_id":"governance-model","source_id":"client-docs","title":"Governance","text":"The governance model defines steering, decision rights, escalation routes, and weekly reporting cadence.","semantic_score":0.93},
+      {"chunk_id":"restricted-email","source_id":"email-threads","title":"Restricted approval","text":"RESTRICTED_EMAIL_BODY_MUST_NOT_LEAK The client approved the scope by email.","semantic_score":0.99},
+      {"chunk_id":"low-signal","source_id":"client-docs","title":"Acknowledgement","text":"Thanks.","semantic_score":0.01}
+    ]
+  }
+}

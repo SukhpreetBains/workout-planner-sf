@@ -1,0 +1,4 @@
+interface:
+  display_name: "Design Skill Evals"
+  short_description: "Create outcome-first skill eval scaffolds"
+  default_prompt: "Use $design-skill-evals to analyze this skill and generate an evaluation plan and scaffold."

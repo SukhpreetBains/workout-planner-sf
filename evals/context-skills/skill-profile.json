@@ -1,0 +1,75 @@
+{
+  "schema_version": "ascent.skill-eval-profile.v1",
+  "skill_id": "context-skills",
+  "purpose": "Discover canonical project source locations without retrieving source bodies, then retrieve and persist a bounded, task-relevant evidence pack from recorded accessible sources.",
+  "deliverable": {
+    "name": "Local project-context projection: manifest.json, brief.md and a ranked evidence pack",
+    "kind": "machine-local-state",
+    "client_facing": false,
+    "path_or_form": ".codex/project-context/ under the opportunity root, deliberately untracked",
+    "note": "There is no client-facing document here, so this suite has no golden-document comparison and a thin correctness surface by nature. The document-producing skills downstream of this one are where the reference-based capability evaluation belongs."
+  },
+  "human_baseline": {
+    "recorded": false,
+    "minutes": "unknown",
+    "source": "unknown",
+    "note": "No human effort has been timed for assembling a Risk Gate 1 evidence pack by hand. Record a timed manual run or a dated delivery-lead estimate before any time saving is reported for this workflow."
+  },
+  "golden_reference": {
+    "available": false,
+    "reference_id": null,
+    "owner": null,
+    "note": "The deliverable is machine-local state rather than a document a human would otherwise write, so no known-good human version exists to compare against."
+  },
+  "expected_skill_invocations": [
+    "discover-project-context",
+    "retrieve-project-context"
+  ],
+  "expected_skill_invocations_note": "Not currently observable: the deterministic harness invokes the scripts directly, so nothing in this suite proves a model would have chosen these skills. Recorded here so an agentic arm can assert it later.",
+  "required_clarifying_questions": [
+    "Confirm the opportunity root before writing a local projection",
+    "Confirm the concrete task before retrieving source content"
+  ],
+  "required_clarifying_questions_note": "Not currently observable for the same reason: there is no user turn in a script-driven run.",
+  "interfaces": {
+    "inputs": [
+      "Opportunity-root source-context record",
+      "Task-specific retrieval prompt",
+      "Bounded source metadata and content chunks"
+    ],
+    "outputs": [
+      "Machine-local project-context manifest and brief",
+      "Ranked evidence pack and access-gap record",
+      "Persisted summary-to-evidence hierarchy"
+    ],
+    "tools": [
+      "project_context.py",
+      "rank_context.py",
+      "persist_context.py",
+      "cache_context.py"
+    ],
+    "environment": [
+      "Fresh temporary workspace per trial",
+      "Only recorded sources may be retrieved",
+      "Unavailable and unknown sources remain visible as access gaps"
+    ]
+  },
+  "success_conditions": [
+    "Canonical source locations and bounded discovery measurements are recorded without source bodies.",
+    "Relevant accessible evidence is selected within diversity and character limits.",
+    "Unavailable sources produce access gaps without leaking their body or widening retrieval.",
+    "Persisted context retains a summary-to-evidence hierarchy and cache reuse respects freshness and task relevance."
+  ],
+  "trajectory_requirements": [
+    "Do not use an alternate connector or broaden search around an unavailable recorded source."
+  ],
+  "known_failure_modes": [
+    "Source-body leakage into metadata or access gaps",
+    "Unbounded dense retrieval",
+    "Missing access gaps",
+    "Stale or irrelevant cache reuse"
+  ],
+  "failure_mode_provenance": "contract-enumeration",
+  "failure_mode_provenance_note": "We guessed these failures from the design; we have not yet watched it fail for real. Derived from the skill contract and scripts, not from error analysis on observed traces. Re-derive the taxonomy by open coding and axial coding real skill traces before treating these as representative, and do not attach frequencies to them until then.",
+  "unknowns": []
+}
