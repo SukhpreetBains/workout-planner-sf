@@ -93,14 +93,20 @@ One file per run, at `evals/<suite-id>/results/runs/<run-id>.json`.
   },
 
   "cost": {
-    "input_tokens": 0,
-    "output_tokens": 0,
-    "cache_read_tokens": 0,
-    "cache_creation_tokens": 0,
-    "total_tokens": 0,
-    "estimated_usd": 0.0,
-    "turns": 0,
-    "tool_calls": 0
+    "input_tokens": 18244,
+    "output_tokens": 5310,
+    "cache_read_tokens": 1349247,
+    "cache_creation_tokens": 62880,
+    "total_tokens": 1435681,
+    "reasoning_output_tokens": null,
+    "estimated_usd": 1.03,
+    "turns": 12,
+    "tool_calls": 47,
+    "model_requests": 61,
+    "context_window": 1000000,
+    "peak_context_utilization": 0.49,
+    "credits": null,
+    "credits_unavailable_reason": "Credits are the Codex billing unit. This run was on Claude Code, which is billed in dollars."
   },
 
   "time": {
@@ -131,6 +137,29 @@ One file per run, at `evals/<suite-id>/results/runs/<run-id>.json`.
 `human_baseline_minutes` is omitted when no baseline has been recorded — never
 invent one, and never derive it from the agent's own run.
 
+**The figures above are an illustration, not a template.** An earlier version of
+this example carried `0` in every token field and `0.0` in `estimated_usd`, which
+contradicted this document's own rule two sections down that `estimated_usd` is
+nullable and that a zero is a false cost claim rather than a missing one. Those
+literal zeros were being copied verbatim into the packages the scaffold generator
+produced. A field that has not been measured is `null` with a reason recorded
+beside it, or absent from the document entirely. It is never `0`.
+
+Three fields carry that rule explicitly:
+
+- `reasoning_output_tokens` is a **subset** of `output_tokens` on Codex and
+  `null` on Claude Code, which does not report it. `null` means "this host does
+  not report the figure", not "no reasoning happened", and it is never added to
+  `output_tokens`.
+- `credits` is `null` on any host not billed in credits, with
+  `credits_unavailable_reason` saying which. It is a **derived** figure —
+  measured tokens times a published rate card — so wherever it is displayed it
+  carries the rate card's source and fetch date.
+- `agent_wall_clock_seconds` is `"not-applicable"` for a suite with no model in
+  the loop. A harness runtime belongs in `harness_wall_clock_seconds`, and
+  `time_saved_minutes` and `speedup_factor` are never derived from it: pairing a
+  two-second script with a four-hour human baseline publishes a 7,000x speedup.
+
 ## Schema: suite summary
 
 One file per suite at `evals/<suite-id>/results/latest.json`, aggregating k runs
@@ -144,25 +173,37 @@ per arm.
   "runs_per_arm": 5,
   "arms": {
     "with-skills": {
+      "runs": 5,
       "correctness_pass_rate": 1.0,
-      "total_tokens": { "min": 0, "p50": 0, "p95": 0, "max": 0, "mean": 0,
-                        "coefficient_of_variation": 0.0 },
-      "estimated_usd": { "min": 0.0, "p50": 0.0, "max": 0.0 },
-      "wall_clock_seconds": { "min": 0, "p50": 0, "max": 0,
-                              "coefficient_of_variation": 0.0 },
+      "total_tokens": { "min": 402118, "p50": 431905, "p95": 486330,
+                        "max": 491284, "mean": 438291,
+                        "coefficient_of_variation": 0.082 },
+      "estimated_usd": { "min": 0.29, "p50": 0.31, "max": 0.35 },
+      "credits": null,
+      "credits_unavailable_reason": "No run in this arm was billed in credits.",
+      "wall_clock_seconds": { "min": 141, "p50": 156, "max": 179,
+                              "coefficient_of_variation": 0.094 },
       "consistency_verdict": "predictable"
     },
     "baseline-no-skills": { "…": "same shape" }
   },
   "deltas": {
-    "tokens_saved_p50": 0,
-    "usd_saved_p50": 0.0,
-    "minutes_saved_p50": 0,
-    "correctness_pass_rate_delta": 0.0,
+    "tokens_saved_p50": 1264883,
+    "usd_saved_p50": 0.94,
+    "credits_saved_p50": null,
+    "minutes_saved_p50": 38,
+    "correctness_pass_rate_delta": 0.6,
     "consistency_improvement": "…"
   }
 }
 ```
+
+The same rule applies here. A spread block whose underlying series is empty
+carries `null` in every position, not `0`, and the arm records why — a run count
+below the verdict threshold is `insufficient-runs`, whereas an arm with enough
+runs and no cost telemetry at all is `no-cost-data`. The two want opposite advice
+from the reader: the first says run it again, and the second says running it
+again will never help.
 
 ### Consistency verdict
 
