@@ -294,6 +294,10 @@ METRIC_CATALOGUE: Tuple[Dict[str, Any], ...] = (
         ),
         "source": "2026-08-21 evals discussion",
         "measured_from": "cost.credits.total",
+        "reason_from": [
+            "cost.credits.total_unavailable_reason",
+            "summary.credits_unavailable_reason",
+        ],
         "absent_reason": (
             "Credits are the Codex billing unit, derived from measured tokens and the "
             "published rate card. A run has no credit figure when it was not a Codex "
@@ -311,9 +315,15 @@ METRIC_CATALOGUE: Tuple[Dict[str, Any], ...] = (
         ),
         "source": "2026-08-21 evals discussion",
         "measured_from": "summary.total_tokens.coefficient_of_variation",
+        # Where the harness records the cause. Consulted before the fallback
+        # below, so the displayed reason is derived rather than assumed.
+        "reason_from": [
+            "summary.consistency_unavailable_reason",
+            "summary.total_tokens_unavailable_reason",
+        ],
         "absent_reason": (
-            "A spread needs at least two runs in the same arm. One run has no spread, and "
-            "reporting 0.0 off a single data point would read as perfect predictability."
+            "A cost spread is computed from the per-run token totals within one arm. "
+            "None was available, and reporting 0.0 would read as perfect predictability."
         ),
     },
     {
@@ -439,7 +449,11 @@ METRIC_CATALOGUE: Tuple[Dict[str, Any], ...] = (
         "quote": "And then looking at, you know, the average execution time",
         "source": "2026-08-24 standup",
         "measured_from": "summary.wall_clock_seconds.p50",
-        "absent_reason": "An average across runs needs more than one run in the arm.",
+        "reason_from": ["summary.wall_clock_unavailable_reason"],
+        "absent_reason": (
+            "An average execution time is computed from the per-run agent elapsed times "
+            "within one arm. None was available."
+        ),
     },
     {
         "id": "skill_call_duration",
@@ -501,6 +515,7 @@ METRIC_CATALOGUE: Tuple[Dict[str, Any], ...] = (
         ),
         "source": "2026-08-24 standup",
         "measured_from": "summary.deltas",
+        "reason_from": ["summary.deltas_unavailable_reason"],
         "absent_reason": NO_COMPARISON_ARM_REASON,
     },
     {
@@ -514,6 +529,7 @@ METRIC_CATALOGUE: Tuple[Dict[str, Any], ...] = (
         ),
         "source": "2026-08-20 standup",
         "measured_from": "summary.failed_run_cost",
+        "reason_from": ["summary.failed_run_cost_unavailable_reason"],
         "absent_reason": (
             "Needs at least one failed run carrying cost telemetry. A suite where every "
             "run passes has no failure cost to show, which is a fact rather than a gap."
@@ -1112,7 +1128,7 @@ def fallback_summary(suite: Suite, runs: list) -> Optional[dict]:
             v for v in (measured(i, "time", "agent_wall_clock_seconds") for i in group)
             if v is not None
         ]
-        block: dict = {"runs": len(group), "run_count": len(group)}
+        block: dict = {"runs": len(group)}
         if graded:
             block["correctness_pass_rate"] = graded.count("pass") / len(graded)
         token_spread = spread(tokens, with_cv=True)
@@ -1266,6 +1282,40 @@ def _has_value(value: Any) -> bool:
     return True
 
 
+def _describe_value(value: Any) -> Optional[str]:
+    """Render a measured structure as a short readable string.
+
+    `hermeticity` is a dict of eight recorded facts, `requests_per_turn` is a dict
+    of statistics. Emitting `null` for these while calling them measured claims a
+    measurement the reader cannot see, so a scalar summary is produced here and
+    the full block travels alongside it as `value_detail`.
+    """
+    if isinstance(value, dict):
+        parts = []
+        for key in sorted(value):
+            if key.endswith(("_note", "_reason")):
+                continue  # prose, carried in value_detail rather than the summary
+            item = value[key]
+            if isinstance(item, bool):
+                parts.append("{0}: {1}".format(key, "yes" if item else "no"))
+            elif isinstance(item, (int, float)):
+                parts.append("{0}: {1}".format(key, item))
+            elif isinstance(item, str) and item:
+                parts.append("{0}: {1}".format(key, item))
+        if not parts:
+            return None
+        summary = "; ".join(parts)
+        return summary if len(summary) <= 240 else summary[:237] + "..."
+    if isinstance(value, list):
+        if not value:
+            return None
+        if all(isinstance(item, str) for item in value):
+            joined = ", ".join(value)
+            return joined if len(joined) <= 240 else "{0} entries".format(len(value))
+        return "{0} entries".format(len(value))
+    return None
+
+
 def metrics_payload(suite: Suite) -> dict:
     """Every metric Calvin asked for, with its quote and its measured/absent status.
 
@@ -1304,8 +1354,24 @@ def metrics_payload(suite: Suite) -> dict:
         }
         if present:
             measured_count += 1
-            entry["value"] = value if not isinstance(value, (dict, list)) else None
-        else:
+            if isinstance(value, (dict, list)):
+                described = _describe_value(value)
+                if described is None:
+                    # Nothing legible could be extracted, so this is not a
+                    # measurement a reader can check. Report it as absent.
+                    present = False
+                    measured_count -= 1
+                    entry["status"] = "absent"
+                    entry["absent_reason"] = (
+                        "A {0} was recorded at {1} but held no readable "
+                        "value.".format(type(value).__name__, path)
+                    )
+                else:
+                    entry["value"] = described
+                    entry["value_detail"] = value
+            else:
+                entry["value"] = value
+        if not present and not entry.get("absent_reason"):
             reason = None
             # Reason priority, most specific first. A sentinel restatement -
             # "the harness recorded this as 'not-applicable'" - is technically
@@ -1329,6 +1395,21 @@ def metrics_payload(suite: Suite) -> dict:
                             break
                     if reason:
                         break
+            if reason is None:
+                # Reasons the harness recorded for this specific metric, named on
+                # the catalogue entry. A cause read from the data beats a cause
+                # asserted in a constant: the two hardcoded strings this replaced
+                # both claimed a run-count shortfall on a suite that had run
+                # three times, which sent the reader to do something that could
+                # never help.
+                for source in metric.get("reason_from") or ():
+                    if source.startswith("summary."):
+                        candidate = _dig(treated, source[len("summary."):])
+                    else:
+                        candidate = _dig(latest or {}, source)
+                    if isinstance(candidate, str) and candidate:
+                        reason = candidate
+                        break
             if reason is None and isinstance(latest, dict):
                 declared = latest.get("unmeasured")
                 if isinstance(declared, dict):
@@ -1348,6 +1429,7 @@ def metrics_payload(suite: Suite) -> dict:
             entry["absent_reason"] = reason
         entries.append(entry)
 
+    runs_considered = history.get("total_recorded")
     return {
         "suite_id": suite.id,
         "generated_at": iso_now(),
@@ -1355,6 +1437,9 @@ def metrics_payload(suite: Suite) -> dict:
         "measured": measured_count,
         "absent": len(entries) - measured_count,
         "total": len(entries),
+        # A reader cannot judge a status without knowing how many runs it rests on.
+        "runs_considered": runs_considered,
+        "runs_in_default_arm": treated.get("runs") if isinstance(treated, dict) else None,
         "provenance": (
             "Each metric is traced to the conversation that asked for it. Status is read "
             "from the recorded data, never asserted."

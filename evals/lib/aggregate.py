@@ -360,6 +360,19 @@ def summarise_arm(records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
             "produce a spread when nothing in it spends tokens.".format(len(records))
         )
 
+    if not wall:
+        arm["wall_clock_unavailable_reason"] = (
+            "None of the {0} runs in this arm recorded an agent elapsed time. A suite "
+            "with no model in the loop has none, and a harness runtime is a "
+            "machine-speed figure rather than a substitute for one. Repeating the "
+            "suite cannot produce this figure.".format(len(records))
+        )
+    if not tokens:
+        arm["total_tokens_unavailable_reason"] = (
+            "None of the {0} runs in this arm recorded a token figure, so there is no "
+            "token total and no spread to compute.".format(len(records))
+        )
+
     if credits:
         # The consistency verdict is defined over tokens by the spec. Credits are
         # the unit a Codex user is actually billed in, so its own verdict is

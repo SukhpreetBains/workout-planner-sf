@@ -1101,6 +1101,152 @@ def test_no_cost_data_is_distinct_from_too_few_runs() -> None:
     )
 
 
+def _load_workbench():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "workbench", ROOT / "docs" / "evals_workbench.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_measured_never_means_null(workspace: Path) -> None:
+    """"Measured" beside no value asserts a measurement that is not on the page.
+
+    The mirror image of a fabricated number, and it shipped: `hermeticity` read
+    `measured` with `value: null` because structured values were being dropped
+    rather than summarised.
+    """
+    workbench = _load_workbench()
+
+    hermeticity = {
+        "workspace": "temporary", "network": "blocked", "clock": "pinned",
+        "hash_seed": "varied", "home_redirected": True,
+        "depends_on_repo_checkout": True,
+        "depends_on_repo_checkout_note": "prose that belongs in the detail, not the summary",
+    }
+    described = workbench._describe_value(hermeticity)
+    check(isinstance(described, str) and described, "a populated dict must summarise to a string")
+    check("workspace: temporary" in described, "scalar facts must survive into the summary")
+    check(
+        "prose that belongs" not in described,
+        "a _note key is prose for the detail block, not the one-line summary",
+    )
+    check(workbench._describe_value({}) is None, "an empty dict has nothing to show")
+    check(workbench._describe_value([]) is None, "an empty list has nothing to show")
+    check(
+        workbench._describe_value(["a", "b"]) == "a, b",
+        "a short string list should read as its members",
+    )
+    check(
+        workbench._describe_value([{"x": 1}] * 4) == "4 entries",
+        "a list of structures should report its size",
+    )
+
+    # End to end: a suite whose records carry a structured block must report it
+    # measured WITH a value, and every absent metric must carry a reason.
+    suite_dir = workspace / "evals" / "demo-suite"
+    (suite_dir / "results" / "runs").mkdir(parents=True, exist_ok=True)
+    (suite_dir / "eval-plan.json").write_text(json.dumps({"suite_id": "demo-suite"}), encoding="utf-8")
+    record = {
+        "schema_version": "ascent.eval-run-record.v1",
+        "run_id": "demo-suite-1", "suite_id": "demo-suite", "arm": "with-skills",
+        "started_at": "2026-08-25T10:00:00Z", "ended_at": "2026-08-25T10:00:02Z",
+        "host": {"name": "python-deterministic-runner", "version": "3.9.6", "model": None},
+        "correctness": {"outcome": "pass", "checks_total": 17, "checks_passed": 17},
+        "time": {"agent_wall_clock_seconds": "not-applicable",
+                 "agent_wall_clock_note": "no model in the loop"},
+        "cost": {"total_tokens": "not-applicable"},
+        "hermeticity": hermeticity,
+        "determinism": {"verdict": "reproducible", "runs_compared": 3},
+    }
+    for index in range(3):
+        copy = dict(record)
+        copy["run_id"] = "demo-suite-{0}".format(index + 1)
+        (suite_dir / "results" / "runs" / (copy["run_id"] + ".json")).write_text(
+            json.dumps(copy), encoding="utf-8")
+
+    suite = workbench.Suite("demo-suite", suite_dir)
+    payload = workbench.metrics_payload(suite)
+
+    check(payload["runs_considered"] == 3,
+          "the payload must say how many runs back it, got {0}".format(payload["runs_considered"]))
+    for entry in payload["metrics"]:
+        if entry["status"] == "measured":
+            check(
+                entry.get("value") not in (None, ""),
+                "{0} reads measured with no value".format(entry["id"]),
+            )
+        else:
+            check(
+                bool(entry.get("absent_reason")),
+                "{0} is absent with no stated reason".format(entry["id"]),
+            )
+    herm = [m for m in payload["metrics"] if m["id"] == "hermeticity"][0]
+    check(herm["status"] == "measured", "a recorded hermeticity block is a measurement")
+    check(isinstance(herm.get("value"), str) and herm["value"], "and it must carry a value")
+    check(isinstance(herm.get("value_detail"), dict), "the full block travels as value_detail")
+
+
+def test_absent_reasons_derive_their_cause_not_assert_it() -> None:
+    """A hardcoded reason is a claim about why a number is missing.
+
+    Two catalogue reasons asserted a run-count shortfall. On a suite that had run
+    three times both were false, and both sent the reader to run it again - which
+    could never help, because the suite has no model in it. Same failure mode as
+    a wrong number, in a different field.
+    """
+    workbench = _load_workbench()
+    RUN_COUNT_CLAIMS = (
+        "at least two runs", "more than one run", "one run has no spread",
+        "not enough runs", "too few runs",
+    )
+    for metric in workbench.METRIC_CATALOGUE:
+        reason = (metric.get("absent_reason") or "").lower()
+        for claim in RUN_COUNT_CLAIMS:
+            check(
+                claim not in reason,
+                "{0} asserts a run-count cause ({1!r}) in a constant; derive it from "
+                "the data via reason_from instead".format(metric["id"], claim),
+            )
+        for source in metric.get("reason_from") or ():
+            check(
+                isinstance(source, str) and ("." in source),
+                "{0} has a malformed reason_from entry {1!r}".format(metric["id"], source),
+            )
+
+    # The metrics that depend on cross-run aggregation must name where the
+    # harness records the real cause, or they will fall back to a guess.
+    for metric_id in ("cost_spread", "average_execution_time", "skill_vs_no_skill"):
+        entry = [m for m in workbench.METRIC_CATALOGUE if m["id"] == metric_id][0]
+        check(
+            bool(entry.get("reason_from")),
+            "{0} is a cross-run metric and must derive its absence reason".format(metric_id),
+        )
+
+
+def test_aggregator_records_why_a_spread_is_empty() -> None:
+    """An empty spread must say why, so a consumer never has to guess."""
+    records = [_run_record("r{0}".format(i), "with-skills", None, None, None) for i in range(3)]
+    for record in records:
+        record["cost"] = {"total_tokens": "not-applicable", "estimated_usd": None}
+        record["time"] = {"agent_wall_clock_seconds": "not-applicable"}
+    arm = aggregate.summarise_arm(records)
+    for key in ("wall_clock_unavailable_reason", "total_tokens_unavailable_reason"):
+        check(isinstance(arm.get(key), str) and arm[key], "the arm must record {0}".format(key))
+        check("3 runs" in arm[key] or "3 " in arm[key],
+              "{0} should state the run count it is talking about".format(key))
+    check(
+        "cannot produce" in arm["wall_clock_unavailable_reason"],
+        "a structural absence must say that repeating the suite will not help",
+    )
+    # One canonical name for the run count.
+    check(arm.get("runs") == 3, "the arm reports its run count as `runs`")
+    check("run_count" not in arm, "`run_count` is a second name for the same thing; drop it")
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="ascent-telemetry-test-") as temp:
         workspace = Path(temp)
@@ -1131,6 +1277,9 @@ def main() -> None:
         test_reporting_surfaces()
         test_metric_catalogue_is_traceable()
         test_no_cost_data_is_distinct_from_too_few_runs()
+        test_measured_never_means_null(workspace)
+        test_absent_reasons_derive_their_cause_not_assert_it()
+        test_aggregator_records_why_a_spread_is_empty()
         ran = [name for name in globals() if name.startswith("test_")]
     print(json.dumps({"suite": "telemetry-acceptance", "outcome": "pass",
                       "checks": len(ran)}))
