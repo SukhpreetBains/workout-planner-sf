@@ -21,66 +21,82 @@ CONSISTENCY_THRESHOLDS = {
     "unpredictable": "> 0.30",
 }
 
-RUN_RECORD_EXAMPLE = {
+RUN_RECORD_CONTRACT = {
     "schema_version": "ascent.eval-run-record.v1",
-    "run_id": "<suite-id>-<UTC timestamp>-<nn>",
-    "suite_id": "<suite-id>",
-    "arm": "with-skills",
-    "started_at": "<ISO-8601 UTC>",
-    "ended_at": "<ISO-8601 UTC>",
-    "host": {"name": "claude-code", "version": UNKNOWN, "model": UNKNOWN},
-    "correctness": {
-        "outcome": "pass | fail",
-        "checks_total": 0,
-        "checks_passed": 0,
-        "failed_check_ids": [],
-        "golden_comparison": {
-            "reference_id": "<registered reference document id>",
-            "required_sections_present": 0,
-            "required_sections_total": 0,
-            "missing_sections": [],
-            "unsupported_claims": 0,
-            "verdict": "pass | partial | fail",
-            "_note": "Omit this whole block when the suite has no golden reference document.",
-        },
+    "purpose": (
+        "Machine-readable key contract for this suite's run records. It is a validator input, "
+        "not an example record: it holds no measurements and no illustrative values, so it "
+        "cannot be mistaken for data or copied into a report. Validate every record the harness "
+        "writes against this file, and validate this file from the suite's acceptance test."
+    ),
+    "required_keys": [
+        "schema_version", "run_id", "suite_id", "arm", "started_at", "ended_at",
+        "host", "correctness", "cost", "time", "behavior", "provenance",
+    ],
+    "required_block_keys": {
+        "host": ["name", "version", "model"],
+        "correctness": ["outcome", "checks_total", "checks_passed", "failed_check_ids"],
+        "cost": [
+            "input_tokens", "output_tokens", "cache_read_tokens", "cache_creation_tokens",
+            "total_tokens", "estimated_usd", "turns", "tool_calls",
+        ],
+        "time": ["agent_wall_clock_seconds"],
+        "behavior": [
+            "skills_invoked", "skills_expected", "missing_skill_invocations",
+            "clarifying_questions_asked", "clarifying_questions_required",
+        ],
+        "provenance": ["telemetry_source", "session_path", "extraction"],
     },
-    "cost": {
-        "input_tokens": 0,
-        "output_tokens": 0,
-        "cache_read_tokens": 0,
-        "cache_creation_tokens": 0,
-        "total_tokens": 0,
-        "estimated_usd": 0.0,
-        "turns": 0,
-        "tool_calls": 0,
+    "arm_values": ["with-skills", "baseline-no-skills"],
+    "correctness_outcome_values": ["pass", "fail"],
+    "provenance_extraction_values": ["deterministic"],
+    "omit_unless_recorded": [
+        "correctness.golden_comparison",
+        "time.human_baseline_minutes",
+        "time.human_baseline_source",
+        "time.time_saved_minutes",
+        "time.speedup_factor",
+    ],
+    "nullable": ["cost.estimated_usd"],
+    "absence_markers": {
+        "unknown": "The field could be measured for this suite and has not been.",
+        "not-applicable": "The field cannot exist for this suite's design. A sibling field ending in _note says why.",
+        "not-observable": "Measuring it would need a session log or a user turn this suite does not produce. A sibling _note says why.",
     },
-    "time": {
-        "agent_wall_clock_seconds": 0,
-        "human_baseline_minutes": "omit when no baseline has been recorded",
-        "human_baseline_source": "<method> · <date> · <deliverable>",
-        "time_saved_minutes": "omit when no baseline has been recorded",
-        "speedup_factor": "omit when no baseline has been recorded",
-    },
-    "behavior": {
-        "skills_invoked": [],
-        "skills_expected": [],
-        "missing_skill_invocations": [],
-        "clarifying_questions_asked": 0,
-        "clarifying_questions_required": [],
-    },
-    "provenance": {
-        "telemetry_source": "claude-code-session-jsonl",
-        "session_path": "~/.claude/projects/<slug>/<uuid>.jsonl",
-        "extraction": "deterministic",
-    },
+    "forbidden": (
+        "A zero, an empty list or a plausible-looking default standing in for an unmeasured "
+        "value. Use an absence marker or omit the key and name the gap."
+    ),
 }
 
-ARM_SUMMARY_EXAMPLE = {
-    "correctness_pass_rate": 0.0,
-    "total_tokens": {"min": 0, "p50": 0, "p95": 0, "max": 0, "mean": 0, "coefficient_of_variation": 0.0},
-    "estimated_usd": {"min": 0.0, "p50": 0.0, "max": 0.0},
-    "wall_clock_seconds": {"min": 0, "p50": 0, "max": 0, "coefficient_of_variation": 0.0},
-    "consistency_verdict": "predictable | variable | unpredictable | unknown",
+SUITE_SUMMARY_CONTRACT = {
+    "schema_version": "ascent.eval-suite-summary.v1",
+    "purpose": (
+        "Machine-readable key contract for the suite summary. Written only by "
+        "`python3 -m evals.lib.aggregate`. Contains no values, for the same reason as the run "
+        "record contract."
+    ),
+    "required_keys": ["schema_version", "suite_id", "generated_at", "runs_per_arm", "arms", "deltas"],
+    "arm_keys": [
+        "correctness_pass_rate", "total_tokens", "estimated_usd",
+        "wall_clock_seconds", "consistency_verdict",
+    ],
+    "spread_keys": {
+        "total_tokens": ["min", "p50", "p95", "max", "mean", "coefficient_of_variation"],
+        "estimated_usd": ["min", "p50", "max"],
+        "wall_clock_seconds": ["min", "p50", "max", "coefficient_of_variation"],
+    },
+    "delta_keys": [
+        "tokens_saved_p50", "usd_saved_p50", "minutes_saved_p50",
+        "correctness_pass_rate_delta", "consistency_improvement",
+    ],
+    "consistency_verdict_values": ["predictable", "variable", "unpredictable", "insufficient-runs", "unknown"],
+    "consistency_thresholds_status": "provisional",
+    "rules": [
+        "A spread value that was not measured is null, never 0.",
+        "An arm with fewer than three runs reports consistency_verdict insufficient-runs; do not compute a coefficient of variation from one or two runs.",
+        "Every delta is null or \"unknown\" when either arm has no runs. A with-skills figure alone is not a saving.",
+    ],
 }
 
 
@@ -168,10 +184,19 @@ def build_plan(profile: dict) -> dict:
             "statement": "Cost consistency is unknown until the suite has been run at least three times per arm.",
             "unblocked_by": "Set runs_per_arm to at least three and aggregate the results.",
         },
+        {
+            "id": "reproducibility-unproven",
+            "question": "correctness",
+            "statement": "Nothing yet shows the same input produces the same output; the suite has not been repeated and its artifacts have not been hashed.",
+            "unblocked_by": "Repeat the whole suite over one pinned fixture, hash every graded artifact, compare the runs, and declare every field allowed to vary.",
+        },
     ]
+    for gap in gaps:
+        gap.setdefault("status", "open")
     if not baseline_recorded:
         gaps.append(
             {
+                "status": "open",
                 "id": "no-human-baseline",
                 "question": "time",
                 "statement": "No human effort has been recorded for this deliverable, so time saved cannot be claimed.",
@@ -181,6 +206,7 @@ def build_plan(profile: dict) -> dict:
     if not golden_available:
         gaps.append(
             {
+                "status": "open",
                 "id": "no-golden-reference",
                 "question": "correctness",
                 "statement": "No known-good human version of the deliverable is registered, so correctness rests on assertions alone.",
@@ -206,13 +232,38 @@ def build_plan(profile: dict) -> dict:
                 "note": "Same host, model, prompt and fixture with no Ascent skills. Add this before quoting any saving.",
             },
         },
-        "runs_per_arm": 1,
+        "runs_per_arm": 5,
         "consistency": {
             "metric": "coefficient_of_variation(total_tokens)",
             "verdict": UNKNOWN,
             "thresholds": CONSISTENCY_THRESHOLDS,
             "thresholds_status": "provisional",
             "note": "Fewer than three runs per arm cannot support a consistency verdict.",
+        },
+        "reproducibility": {
+            "status": "unproven",
+            "metric": "sha256 over the graded artifact bundle, compared across runs",
+            "verdict": UNKNOWN,
+            "declared_volatility": [],
+            "note": (
+                "Reproducibility of the output is a different claim from consistency of cost. "
+                "Prove it by running the whole suite at least three times over one pinned fixture "
+                "and comparing hashed artifacts. Enumerate every field allowed to vary, with its "
+                "cause and what would close it, and fail the suite on any difference no declared "
+                "rule explains."
+            ),
+        },
+        "hermeticity": {
+            "workspace": UNKNOWN,
+            "environment": UNKNOWN,
+            "network": UNKNOWN,
+            "clock": UNKNOWN,
+            "inputs": UNKNOWN,
+            "note": (
+                "Record what was actually controlled, and say plainly what was not. Network "
+                "blocking counts only when it is enforced - an injected sitecustomize.py that "
+                "raises on socket use - not when it is merely assumed."
+            ),
         },
         "coverage": {
             "mode": "hybrid",
@@ -296,10 +347,17 @@ Git-ignored.
 
 {checklist}
 
+`schemas/` holds key contracts, not example records: they list required keys,
+permitted arms and permitted absence markers, and contain no values. Validate
+every run record the harness writes against `schemas/run-record.contract.json`,
+and fail the suite when one violates it.
+
 Read the repository `design-skill-evals` skill and its
 [evaluation contract](../../skills/design-skill-evals/references/evaluation-contract.md)
 for the task, grading, cost and time contract. Every unmeasured value is
-`"unknown"`; do not replace one with a plausible-looking number.
+`"unknown"`, every value that cannot exist for this suite is `"not-applicable"`
+or `"not-observable"` with a note saying why, and neither is ever replaced with a
+plausible-looking number.
 """
 
 
@@ -340,42 +398,13 @@ def main() -> None:
         "missing_information": profile.get("unknowns", []),
     }
 
-    run_record = json.loads(json.dumps(RUN_RECORD_EXAMPLE))
-    run_record["suite_id"] = profile["skill_id"]
-    run_record["run_id"] = f"{profile['skill_id']}-<UTC timestamp>-<nn>"
-    if not profile.get("golden_reference", {}).get("available"):
-        run_record["correctness"].pop("golden_comparison", None)
-        run_record["correctness"]["_note"] = (
-            "No golden reference document is registered, so golden_comparison is omitted."
-        )
-    if not profile.get("human_baseline", {}).get("recorded"):
-        for field in ("human_baseline_minutes", "human_baseline_source", "time_saved_minutes", "speedup_factor"):
-            run_record["time"].pop(field, None)
-        run_record["time"]["_note"] = (
-            "No human baseline is recorded, so these fields are omitted rather than set to zero: "
-            "human_baseline_minutes, human_baseline_source, time_saved_minutes, speedup_factor."
-        )
-    run_record["behavior"]["skills_expected"] = profile.get("expected_skill_invocations", [])
-    run_record["behavior"]["clarifying_questions_required"] = profile.get("required_clarifying_questions", [])
-
-    suite_summary = {
-        "schema_version": "ascent.eval-suite-summary.v1",
-        "suite_id": profile["skill_id"],
-        "generated_at": "<ISO-8601 UTC>",
-        "runs_per_arm": 0,
-        "arms": {
-            "with-skills": ARM_SUMMARY_EXAMPLE,
-            "baseline-no-skills": ARM_SUMMARY_EXAMPLE,
-        },
-        "deltas": {
-            "tokens_saved_p50": UNKNOWN,
-            "usd_saved_p50": UNKNOWN,
-            "minutes_saved_p50": UNKNOWN,
-            "correctness_pass_rate_delta": UNKNOWN,
-            "consistency_improvement": UNKNOWN,
-        },
-        "_note": "Written only by `python3 -m evals.lib.aggregate`. Every delta is \"unknown\" until both arms have runs.",
-    }
+    run_record_contract = json.loads(json.dumps(RUN_RECORD_CONTRACT))
+    suite_summary_contract = json.loads(json.dumps(SUITE_SUMMARY_CONTRACT))
+    if profile.get("golden_reference", {}).get("available"):
+        run_record_contract["required_block_keys"]["correctness"].append("golden_comparison")
+        run_record_contract["omit_unless_recorded"].remove("correctness.golden_comparison")
+    if profile.get("human_baseline", {}).get("recorded"):
+        run_record_contract["required_block_keys"]["time"].append("human_baseline_minutes")
 
     human_baseline = {
         "deliverable": profile.get("deliverable", {}).get("name", UNKNOWN),
@@ -391,8 +420,8 @@ def main() -> None:
     write_json(output / "eval-plan.json", plan)
     write_new(output / "cases" / "tasks.jsonl", json.dumps(task) + "\n")
     write_json(output / "baseline" / "human-baseline.json", human_baseline)
-    write_json(output / "schemas" / "run-record.example.json", run_record)
-    write_json(output / "schemas" / "suite-summary.example.json", suite_summary)
+    write_json(output / "schemas" / "run-record.contract.json", run_record_contract)
+    write_json(output / "schemas" / "suite-summary.contract.json", suite_summary_contract)
     write_new(output / "README.md", build_readme(profile, plan, todo))
     write_new(output / ".gitignore", "results/\n")
 

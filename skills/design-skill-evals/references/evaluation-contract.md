@@ -106,10 +106,37 @@ A consistency verdict needs repetition to mean anything. Fewer than three runs i
 
 Sources, both confirmed present:
 
-- **Claude Code** — `~/.claude/projects/<path-slug>/<session-uuid>.jsonl`, one JSON object per line. `type: "assistant"` lines carry `message.usage` with `input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, and `message.model`. Every line carries `timestamp`. Tool calls appear as `tool_use` content blocks. Sum usage across assistant lines; take wall-clock from the first to the last timestamp.
-- **Codex** — `~/.codex/sessions`. Same treatment, different field names. Confirm the shape before relying on it; if it cannot be confirmed, record the adapter as unimplemented rather than guessing.
+- **Claude Code** — `~/.claude/projects/<path-slug>/<session-uuid>.jsonl`, one JSON object per line. `type: "assistant"` lines carry `message.usage` with `input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`, and `message.model`. Every line carries `timestamp`. Tool calls appear as `tool_use` content blocks. Take wall-clock from the first to the last timestamp.
+
+  **Do not sum usage across assistant lines.** An earlier version of this contract said to, and it was wrong. Claude Code writes one assistant message as several JSONL lines, one per content block, and repeats the *same* `message.usage` object on every one of them. Measured on this repo's own sessions: 105 assistant lines collapse to 61 real messages, and in all 37 cases where an id spans multiple lines the usage block is byte-identical. Naive summation inflates totals by 1.76x-2.29x. Deduplicate by `message.id`, falling back to `requestId` then `uuid`, collect content blocks across all lines of a message, and deduplicate tool calls by `tool_use` id.
+
+  **Subagent sessions are separate files and they dominate the bill.** They live at `<session-uuid>/subagents/agent-*.jsonl` with a `.meta.json` beside them. On one real session, main-thread-only reported $3.65 against $23.19 including subagents — a 7.3x understatement. Include them by default and always report the split.
+- **Codex** — `~/.codex/sessions`. Its token semantics are *inverted* from Claude Code's: `cached_input_tokens` is a **subset** of `input_tokens` rather than an addition to it, and `reasoning_output_tokens` is likewise a subset of `output_tokens`, so a naive cross-host field mapping double-counts cache reads. Codex wall-clock is unreliable on resumed threads — one real rollout carries 12 session starts and spans 6.8 days — so flag it rather than trust it when multiple session starts appear. If a host's shape cannot be confirmed, record the adapter as unimplemented rather than guessing.
 
 Aggregation is a code path, not a prompt: `python3 -m evals.lib.aggregate --suite <suite-id>` reads the run records and writes the suite summary.
+
+### Reproducibility is not the same claim as cost consistency
+
+A suite that produces an artifact can also report whether the *same input produces the same output*. Report it in the run record's `determinism` block, and keep it strictly separate from the cost `consistency_verdict`. One is about the artifact, the other about the bill; a reader who conflates them will quote a price off a claim that never mentioned money.
+
+Rules for a reproducibility claim:
+
+1. **One run proves nothing.** Run the whole suite at least three times over the same pinned input and compare. A single run reports `runs_compared: 1` and carries a caveat saying so.
+2. **Compare the artifacts, not the log.** Hash every graded artifact, walk the output directory rather than listing files by name, and report the digest. A stable digest is a drift fingerprint; a changed one is a diff to read, not a number to update.
+3. **Report the raw comparison too.** If the raw artifacts differ, say so, and do not present the normalised result as though nothing varied.
+4. **Enumerate every normalisation rule** with what it masks, the cause, and what would close it. A difference no declared rule explains **fails the suite** and is reported with its file and the differing line.
+5. **Never add a rule to silence a regression.** A rule declares a field legitimately volatile. Adding one to make a red suite green is falsification.
+6. **Vary the incidental, pin the material.** Vary `PYTHONHASHSEED` across runs so set-ordering non-determinism surfaces; pin the fixture, the clock where the interface allows it, and the environment.
+
+### Hermeticity
+
+A reproducibility claim is worthless if the run quietly depends on the machine. Record what was actually controlled in the run record's `hermeticity` block, and say plainly what was not:
+
+- a fresh temporary workspace per run, removed afterwards;
+- a scrubbed environment with `HOME` redirected to a throwaway directory, so no dotfile or developer setting reaches the target;
+- network blocked and **enforced** rather than assumed — an injected `sitecustomize.py` that raises on socket use is enforcement; a sentence in a README is not;
+- the clock pinned wherever the target's interface accepts one, with the residue declared;
+- inputs pinned and hashed, including the digest of every script under test, so a drifted target is visible in the record.
 
 ## Question 3 — How much time did it save?
 
@@ -133,7 +160,7 @@ evals/<suite-id>/
   baseline/              recorded human effort for the deliverable
   results/runs/          one ascent.eval-run-record.v1 per run, Git-ignored
   results/latest.json    ascent.eval-suite-summary.v1, Git-ignored
-  schemas/               run-record and suite-summary example shapes
+  schemas/               machine-readable key contracts, validated by the harness and the tests
 ```
 
 ## Schema: run record
@@ -359,11 +386,14 @@ Use `negative` when a behavior must not occur and `edge` for an intentionally di
 
 ## Marking what is unknown
 
-Never backfill a plausible-looking value. Three mechanisms, and one of them always applies:
+Never backfill a plausible-looking value. Four mechanisms, and one of them always applies:
 
-1. The literal string `"unknown"` in a scalar field whose value has not been measured.
-2. Omission plus a gap, for the fields the run-record schema says to omit (`human_baseline_minutes`, `golden_comparison`).
-3. An entry in the plan's `gaps` array: `id`, which `question` it blocks, a one-sentence `statement` in plain language, and `unblocked_by` — the specific thing that would close it.
+1. The literal string `"unknown"` in a scalar field that *could* be measured for this suite but has not been.
+2. The literal string `"not-applicable"` in a field that **cannot exist** for this suite's design, or `"not-observable"` in one that would need a session log or a user turn the suite does not produce. Both must carry a sibling field ending in `_note` stating why. These are distinct from `"unknown"`: "we did not measure the tokens" and "there is no model, so there are no tokens" are different facts, and collapsing them into one word reads as unfinished work rather than a structural limit.
+3. Omission plus a gap, for the fields the run-record schema says to omit (`human_baseline_minutes`, `time_saved_minutes`, `speedup_factor`, `golden_comparison`).
+4. An entry in the plan's `gaps` array: `id`, which `question` it blocks, a `status`, a one-sentence `statement` in plain language, and `unblocked_by` — the specific thing that would close it.
+
+A gap's `status` distinguishes `open` from `open-and-not-closable-in-this-suite` and `not-applicable-to-this-suite`. A gap is never marked "closed": when it closes, it is deleted and the corresponding question moves to `measured`. Reclassifying a gap is not closing it, and a report must say which happened.
 
 A suite whose gaps are named is more useful than a suite whose numbers are guessed. The gaps are the roadmap.
 
@@ -418,6 +448,12 @@ Required wording. The standard term may appear once, in parentheses, after the p
 | reference-free | graded with no known-good answer to compare against |
 | outcome verification | we checked what it produced |
 | trajectory analysis | we checked the path it took, not just what it produced |
+| `"unknown"` | we could measure this and have not |
+| `"not-applicable"` | this cannot exist for this suite — say why in the same breath |
+| `"not-observable"` | measuring this would need a session log or a user turn this suite does not produce |
+| reproducibility / `determinism` | the same input lands in the same place every time |
+| declared volatility | the short list of fields we know vary, why, and what would stop them |
+| hermeticity | the run does not depend on whose machine it ran on |
 | `capability` eval | can it do the hard new thing yet |
 | `regression` eval | does the thing that already worked still work |
 | `single-trial` | we ran it once |
