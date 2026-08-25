@@ -16,13 +16,34 @@ RUN_RECORD_SCHEMA = "ascent.eval-run-record.v1"
 
 @dataclass
 class CostBlock:
-    """Token counts and dollars for one run.
+    """Token counts, dollars and credits for one run.
 
     `cache_read_tokens` and `cache_creation_tokens` are reported separately from
     `input_tokens` and priced separately, per the spec: folding them together
     makes a cache-heavy session look far more expensive than it is.
     `total_tokens` is the sum of all four, which is the figure the consistency
     verdict is computed from.
+
+    The block is shaped to the **Codex** standard, which is the richer of the two
+    hosts, and Claude Code fills what it can:
+
+    * `reasoning_output_tokens` - a SUBSET of `output_tokens` on Codex, and
+      `None` on Claude Code, which does not report it separately. `None` means
+      "this host does not report the figure", not "no reasoning happened", and
+      it is never added to `output_tokens`.
+    * `per_request` - one entry per model request carrying that request's own
+      token delta. This is what makes a spread visible *inside* one run; without
+      it the only available figure is a total.
+    * `context_window` / `peak_context_utilization` - how close the run came to
+      filling the model's context, which is what triggers a compaction and the
+      cost jump that follows one.
+    * `credits` - the Codex billing unit, always derived and always labelled as
+      derived. `None` on hosts not billed in credits, with the reason recorded
+      in `credits_unavailable_reason` rather than a zero.
+
+    `estimated_usd` stays nullable on purpose. Codex runs non-Anthropic models
+    for which no dollar rate is on file, and `0.0` there would be a false cost
+    claim rather than a missing one.
     """
 
     input_tokens: int = 0
@@ -32,6 +53,13 @@ class CostBlock:
     estimated_usd: Optional[float] = None
     turns: int = 0
     tool_calls: int = 0
+    reasoning_output_tokens: Optional[int] = None
+    per_request: List[Dict[str, Any]] = field(default_factory=list)
+    context_window: Optional[int] = None
+    peak_context_utilization: Optional[float] = None
+    credits: Optional[Dict[str, Any]] = None
+    credits_unavailable_reason: Optional[str] = None
+    model_requests: Optional[int] = None
 
     @property
     def total_tokens(self) -> int:
@@ -43,16 +71,27 @@ class CostBlock:
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        out: Dict[str, Any] = {
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
             "cache_read_tokens": self.cache_read_tokens,
             "cache_creation_tokens": self.cache_creation_tokens,
             "total_tokens": self.total_tokens,
+            "reasoning_output_tokens": self.reasoning_output_tokens,
             "estimated_usd": self.estimated_usd,
             "turns": self.turns,
             "tool_calls": self.tool_calls,
+            "model_requests": self.model_requests,
+            "context_window": self.context_window,
+            "peak_context_utilization": self.peak_context_utilization,
+            "per_request": list(self.per_request),
         }
+        out["credits"] = dict(self.credits) if self.credits is not None else None
+        if self.credits is None:
+            out["credits_unavailable_reason"] = (
+                self.credits_unavailable_reason or "No credit rate card applies to this host."
+            )
+        return out
 
 
 @dataclass
@@ -67,9 +106,22 @@ class TimeBlock:
     agent_wall_clock_seconds: Optional[float] = None
     human_baseline_minutes: Optional[float] = None
     human_baseline_source: Optional[str] = None
+    skill_calls: List[Dict[str, Any]] = field(default_factory=list)
+    skill_call_seconds_by_skill: Dict[str, Any] = field(default_factory=dict)
+    tool_call_seconds: Optional[Dict[str, Any]] = None
+    skill_call_timing_unavailable_reason: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         out: Dict[str, Any] = {"agent_wall_clock_seconds": self.agent_wall_clock_seconds}
+        # Calvin: "Did that skill call out? How long did that skill call out take?
+        # Or how long did the full conversation take as compared to one that
+        # didn't have that skill." The full conversation is the wall clock above;
+        # these are the per-call figures underneath it.
+        out["skill_calls"] = list(self.skill_calls)
+        out["skill_call_seconds_by_skill"] = dict(self.skill_call_seconds_by_skill)
+        out["tool_call_seconds"] = self.tool_call_seconds
+        if not self.skill_calls and self.skill_call_timing_unavailable_reason:
+            out["skill_call_timing_unavailable_reason"] = self.skill_call_timing_unavailable_reason
         if self.human_baseline_minutes is None:
             return out
         out["human_baseline_minutes"] = self.human_baseline_minutes
