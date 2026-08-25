@@ -89,6 +89,49 @@ _CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 _INLINE_CODE_RE = re.compile(r"`[^`]*`")
 
 
+def skills_in_tool_use(block: Dict[str, Any]) -> List[str]:
+    """Skill names implied by one `tool_use` content block, in order.
+
+    Split out of `SkillDetector` so a caller that needs to attribute *one* call
+    to a skill - to time it, for instance - uses exactly the same matching rules
+    as the session-level count, heredoc stripping included. Returns an empty list
+    for a block that implies no skill, and carries every blind spot documented in
+    this module's docstring.
+    """
+    found: List[str] = []
+
+    def add(name: Optional[str]) -> None:
+        if not isinstance(name, str):
+            return
+        name = name.strip()
+        if name and name not in found:
+            found.append(name)
+
+    name = block.get("name")
+    payload = block.get("input")
+    if not isinstance(payload, dict):
+        payload = {}
+
+    if name in SKILL_TOOL_NAMES:
+        skill = payload.get("skill")
+        if isinstance(skill, str):
+            add(skill)
+            if ":" in skill:
+                add(skill.rsplit(":", 1)[-1])
+        return found
+
+    if name == "Bash":
+        command = payload.get("command")
+        if isinstance(command, str):
+            command = _HEREDOC_RE.sub(" ", command.replace("\\n", "\n"))
+            for match in _SKILL_PATH_RE.finditer(command):
+                candidate = match.group("name")
+                if candidate in ("SKILL.md",) or candidate.startswith("*"):
+                    continue
+                add(candidate)
+    return found
+
+
 class SkillDetector:
     """Accumulates skill invocations across a session's tool-use blocks."""
 

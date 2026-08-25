@@ -120,11 +120,16 @@ def render(summary: Dict[str, Any]) -> str:
     usd = treated.get("estimated_usd") or {}
     token_p50 = _fmt_int(tokens.get("p50"))
     usd_p50 = _fmt_usd(usd.get("p50"))
+    credits_block = treated.get("credits") or {}
+    credits_p50 = credits_block.get("p50")
     cost_cell_parts = []
     if token_p50:
         cost_cell_parts.append("{0} tokens (median run)".format(token_p50))
     if usd_p50:
         cost_cell_parts.append(usd_p50)
+    if isinstance(credits_p50, (int, float)) and not isinstance(credits_p50, bool):
+        # Calvin's unit: "is it 70 credits one time and 40 credits another time?"
+        cost_cell_parts.append("{0:,.1f} credits (derived)".format(credits_p50))
     lines.append(
         "| What did it cost? | {0} |".format(
             ", ".join(cost_cell_parts) if cost_cell_parts else "not recorded"
@@ -143,6 +148,18 @@ def render(summary: Dict[str, Any]) -> str:
             VERDICT_PLAIN.get(verdict, verdict),
         )
     lines.append("| Was that predictable? | {0} |".format(cost_spread))
+
+    credits_cv = credits_block.get("coefficient_of_variation")
+    if isinstance(credits_cv, (int, float)) and not isinstance(credits_cv, bool):
+        credits_verdict = treated.get("credits_consistency_verdict") or VERDICT_INSUFFICIENT
+        lines.append(
+            "| Predictable in credits? | {0} to {1} credits across runs; {2:.2f} - {3} |".format(
+                "{0:,.1f}".format(credits_block.get("min") or 0.0),
+                "{0:,.1f}".format(credits_block.get("max") or 0.0),
+                credits_cv,
+                VERDICT_PLAIN.get(credits_verdict, credits_verdict),
+            )
+        )
 
     wall = treated.get("wall_clock_seconds") or {}
     agent_time = _fmt_duration(wall.get("p50"))
@@ -166,6 +183,12 @@ def render(summary: Dict[str, Any]) -> str:
         for label, value in (
             ("Tokens saved (median)", _fmt_int(deltas.get("tokens_saved_p50"))),
             ("Cost saved (median)", _fmt_usd(deltas.get("usd_saved_p50"))),
+            (
+                "Credits saved (median, derived)",
+                None
+                if deltas.get("credits_saved_p50") is None
+                else "{0:,.1f}".format(deltas["credits_saved_p50"]),
+            ),
             ("Time saved (median)", _fmt_minutes(deltas.get("minutes_saved_p50"))),
         ):
             if value is not None:
@@ -191,7 +214,36 @@ def render(summary: Dict[str, Any]) -> str:
             lines.append("")
             lines.append("Human baseline source: {0}".format(source))
 
+    skill_seconds = treated.get("skill_call_seconds") or {}
+    if skill_seconds:
+        lines.append("")
+        lines.append("**Skill calls**")
+        for skill in sorted(skill_seconds):
+            entry = skill_seconds[skill]
+            lines.append(
+                "- {0}: {1} calls, {2:.1f}s total".format(
+                    skill, entry.get("calls", 0), float(entry.get("total_seconds") or 0.0)
+                )
+                + (" ({0})".format(entry["reading"]) if entry.get("reading") else "")
+            )
+
+    reconciliation = treated.get("token_reconciliation")
+    if isinstance(reconciliation, dict) and reconciliation.get("violates"):
+        lines.append("")
+        lines.append(
+            "Token reconciliation: {0} of {1} per-request deltas did not reconcile "
+            "against the cumulative counter. Not repaired; see the run records."
+            .format(reconciliation["violates"], reconciliation.get("checked"))
+        )
+
     lines.append("")
+    if credits_block.get("p50") is not None:
+        lines.append(
+            "Credits are derived, not reported: measured tokens times the published "
+            "rate card. Published multipliers for fast mode and image generation have "
+            "no numeric factor on file and are not applied, so a credit figure here is "
+            "a floor."
+        )
     lines.append(
         "Consistency thresholds are provisional. Telemetry is extracted from session "
         "logs by code; no model reads a transcript to produce these numbers."

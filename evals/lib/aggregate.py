@@ -229,11 +229,93 @@ def _consistent_baseline(records: Sequence[Dict[str, Any]]):
     return values.pop(), (sources.pop() if len(sources) == 1 else None)
 
 
+def _credit_totals(records: Sequence[Dict[str, Any]]) -> List[float]:
+    """Per-run derived credit totals, skipping runs with no priced turn."""
+    out: List[float] = []
+    for record in records:
+        cost = record.get("cost")
+        if not isinstance(cost, dict):
+            continue
+        credits = cost.get("credits")
+        if not isinstance(credits, dict):
+            continue
+        value = credits.get("total")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        out.append(float(value))
+    return out
+
+
+def _reconciliation_total(records: Sequence[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Sum the token reconciliation invariant across an arm's runs.
+
+    Surfaced rather than hidden: a run whose per-request deltas do not reconcile
+    is a run whose in-run spread is partly unexplained, and a reader deciding
+    whether to quote a price needs to know how often that happened.
+    """
+    checked = holds = violates = 0
+    seen = False
+    for record in records:
+        cost = record.get("cost")
+        if not isinstance(cost, dict):
+            continue
+        credits = cost.get("credits")
+        if not isinstance(credits, dict):
+            continue
+        block = credits.get("reconciliation_invariant")
+        if not isinstance(block, dict):
+            continue
+        seen = True
+        checked += int(block.get("checked") or 0)
+        holds += int(block.get("holds") or 0)
+        violates += int(block.get("violates") or 0)
+    if not seen:
+        return None
+    return {
+        "checked": checked,
+        "holds": holds,
+        "violates": violates,
+        "rate": round(holds / checked, 6) if checked else None,
+    }
+
+
+def _skill_call_seconds(records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Per-skill call counts and durations, summed across an arm's runs."""
+    out: Dict[str, Any] = {}
+    for record in records:
+        time_block = record.get("time")
+        if not isinstance(time_block, dict):
+            continue
+        by_skill = time_block.get("skill_call_seconds_by_skill")
+        if not isinstance(by_skill, dict):
+            continue
+        for skill, entry in by_skill.items():
+            if not isinstance(entry, dict):
+                continue
+            bucket = out.setdefault(
+                str(skill), {"runs_invoking": 0, "calls": 0, "total_seconds": 0.0, "reading": None}
+            )
+            bucket["runs_invoking"] += 1
+            bucket["calls"] += int(entry.get("calls") or 0)
+            seconds = entry.get("total_seconds")
+            if isinstance(seconds, (int, float)) and not isinstance(seconds, bool):
+                bucket["total_seconds"] = round(bucket["total_seconds"] + float(seconds), 3)
+            if entry.get("reading") and not bucket["reading"]:
+                bucket["reading"] = entry["reading"]
+    for bucket in out.values():
+        if bucket["reading"] is None:
+            bucket.pop("reading")
+    return out
+
+
 def summarise_arm(records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     """Build one arm block of the suite summary."""
     tokens = _numbers(records, "cost", "total_tokens")
     usd = _numbers(records, "cost", "estimated_usd")
     wall = _numbers(records, "time", "agent_wall_clock_seconds")
+    credits = _credit_totals(records)
+    utilisation = _numbers(records, "cost", "peak_context_utilization")
+    requests = _numbers(records, "cost", "model_requests")
 
     arm: Dict[str, Any] = {
         "runs": len(records),
@@ -242,11 +324,42 @@ def summarise_arm(records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
             tokens, ("min", "p50", "p95", "max", "mean", "coefficient_of_variation"), as_int=True
         ),
         "estimated_usd": _spread(usd, ("min", "p50", "max")),
+        "credits": _spread(
+            credits, ("min", "p50", "p95", "max", "mean", "coefficient_of_variation")
+        ),
         "wall_clock_seconds": _spread(
             wall, ("min", "p50", "max", "coefficient_of_variation"), as_int=False
         ),
+        "model_requests": _spread(requests, ("min", "p50", "max", "mean"), as_int=True),
+        "peak_context_utilization": _spread(utilisation, ("min", "p50", "max")),
         "consistency_verdict": consistency_verdict(tokens),
+        "skill_call_seconds": _skill_call_seconds(records),
     }
+
+    if credits:
+        # The consistency verdict is defined over tokens by the spec. Credits are
+        # the unit a Codex user is actually billed in, so its own verdict is
+        # reported beside it rather than folded into the token one.
+        arm["credits_consistency_verdict"] = consistency_verdict(credits)
+        arm["credits_derivation"] = (
+            "derived: measured token deltas x the published rate card in "
+            "evals/lib/telemetry/codex_rates.json"
+        )
+    else:
+        arm["credits_unavailable_reason"] = (
+            "No run in this arm recorded a derived credit total. Credits apply to "
+            "Codex sessions whose turn model is on the published rate card; a Claude "
+            "Code run is billed in dollars and reports estimated_usd instead."
+        )
+    if credits and len(credits) < len(records):
+        arm["credits_note"] = (
+            "{0} of {1} runs produced no credit figure and are excluded rather than "
+            "counted as zero".format(len(records) - len(credits), len(records))
+        )
+
+    reconciliation = _reconciliation_total(records)
+    if reconciliation is not None:
+        arm["token_reconciliation"] = reconciliation
 
     if len(usd) < len(records):
         arm["estimated_usd_note"] = (
@@ -287,10 +400,14 @@ def compute_deltas(arms: Dict[str, Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     tokens_saved = _delta(treated["total_tokens"]["p50"], control["total_tokens"]["p50"])
     usd_saved = _delta(treated["estimated_usd"]["p50"], control["estimated_usd"]["p50"])
     wall_saved = _delta(treated["wall_clock_seconds"]["p50"], control["wall_clock_seconds"]["p50"])
+    credits_saved = _delta(
+        (treated.get("credits") or {}).get("p50"), (control.get("credits") or {}).get("p50")
+    )
 
     deltas: Dict[str, Any] = {
         "tokens_saved_p50": None if tokens_saved is None else int(round(tokens_saved)),
         "usd_saved_p50": None if usd_saved is None else round(usd_saved, 6),
+        "credits_saved_p50": None if credits_saved is None else round(credits_saved, 6),
         "minutes_saved_p50": None if wall_saved is None else round(wall_saved / 60.0, 2),
         "correctness_pass_rate_delta": _pass_rate_delta(treated, control),
         "consistency_improvement": _consistency_improvement(treated, control),

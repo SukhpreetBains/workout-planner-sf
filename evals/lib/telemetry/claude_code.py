@@ -36,6 +36,26 @@ Subagent transcripts are included by default, because excluding them badly
 understates cost: in session 8ef5b54d the four subagents account for ~1.20M
 cache-read tokens against the main thread's 1.35M. `include_subagents=False`
 gives the main-thread-only figures, and `parse_stats` always reports the split.
+
+PER-CALL DURATIONS
+------------------
+Calvin asked for the timing one level below the conversation: "Did that skill
+call out? How long did that skill call out take? Or how long did the full
+conversation take as compared to one that didn't have that skill." The full
+conversation is first-to-last timestamp. The per-call figure is recoverable from
+data this parser already reads and previously threw away - it collected every
+timestamp and then used only `min()` and `max()`.
+
+A tool call is an assistant `tool_use` block; its result is a `user` line whose
+`message.content[]` holds a `tool_result` with the matching `tool_use_id`, and
+that line carries its own `timestamp`. The duration of a call is the difference.
+Calls whose result never appears - the session was still running, or the call was
+interrupted - are counted as unmatched rather than given a duration.
+
+Skill attribution per call uses `behavior.skills_in_tool_use`, so a timed call is
+attributed by exactly the rules that produce `skills_invoked`, and inherits the
+same blind spots: a skill followed without invoking the `Skill` tool or touching
+a `skills/` path is untimed because it is undetected.
 """
 
 from __future__ import annotations
@@ -46,7 +66,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from . import pricing as _pricing
-from .behavior import QuestionDetector, SkillDetector
+from .behavior import QuestionDetector, SkillDetector, skills_in_tool_use
 from .model import (
     BehaviorBlock,
     CostBlock,
@@ -127,6 +147,12 @@ class _Accumulator:
         self.timestamps: List[Any] = []
         self.iterations_seen = 0
         self.iterations_skipped_tokens = 0
+        # Per-request usage deltas, one entry per deduplicated assistant message.
+        self.per_request: List[Dict[str, Any]] = []
+        # tool_use id -> the call we are waiting on a tool_result for.
+        self.open_calls: Dict[str, Dict[str, Any]] = {}
+        self.completed_calls: List[Dict[str, Any]] = []
+        self.unmatched_results = 0
 
     def note_model(self, model: Optional[str]) -> None:
         if model and model not in self.models:
@@ -151,6 +177,12 @@ def _consume(
         if moment is not None:
             acc.timestamps.append(moment)
 
+        if record.get("type") == "user":
+            # A tool_result closes the call that opened it. This is the only
+            # channel that dates the *end* of a tool call.
+            _close_tool_calls(record, acc, moment)
+            continue
+
         if record.get("type") != "assistant":
             continue
 
@@ -168,11 +200,27 @@ def _consume(
             acc.seen_usage.add(identity)
             acc.assistant_messages += 1
             local["assistant_messages"] += 1
+            request: Dict[str, Any] = {
+                "request_index": acc.assistant_messages,
+                "message_id": identity,
+                "model": message.get("model"),
+                "timestamp": to_iso8601_z(moment),
+                "from_subagent": is_sidechain_file,
+            }
             for wire, field in USAGE_FIELDS:
                 value = usage.get(wire)
                 if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    request[field] = 0
                     continue
                 acc.tokens[field] += int(value)
+                request[field] = int(value)
+            request["total_tokens"] = sum(
+                request[field] for _wire, field in USAGE_FIELDS
+            )
+            # Claude Code does not report a reasoning-token subtotal. None means
+            # "the host does not report it", not "zero".
+            request["reasoning_output_tokens"] = None
+            acc.per_request.append(request)
             # Trap 2: iterations[] restates the same figures. Measure, never add.
             iterations = usage.get("iterations")
             if isinstance(iterations, list):
@@ -200,9 +248,136 @@ def _consume(
                 acc.tool_calls += 1
                 skills.observe_tool_use(block)
                 questions.observe_tool_use(block, from_subagent=is_sidechain_file)
+                if moment is not None:
+                    acc.open_calls[str(block_id)] = {
+                        "tool": block.get("name"),
+                        "skills": skills_in_tool_use(block),
+                        "started": moment,
+                        "from_subagent": is_sidechain_file,
+                        "file": path.name,
+                    }
             elif kind == "text":
                 questions.observe_text(block.get("text"), from_subagent=is_sidechain_file)
     return local
+
+
+# What a call's duration is actually the duration *of*. This matters more than it
+# looks. Invoking the `Skill` tool injects the skill body into context and
+# returns almost immediately - measured at 0.07-0.09 s on real sessions - so that
+# number is a tool round trip and emphatically NOT "how long the skill took". The
+# work a skill directs happens afterwards, spread across later turns and tool
+# calls, and nothing in the transcript brackets it. A Bash call into a skill's
+# scripts is different: that duration is the script actually running.
+_WHAT_A_DURATION_MEASURES = {
+    "Skill": (
+        "tool round trip only. The Skill tool injects instructions into context and "
+        "returns; the work it directs happens in later turns and is not bracketed "
+        "anywhere in the transcript. Do not read this as the cost of the skill."
+    ),
+    "Bash": "the subprocess ran for this long.",
+    None: "time from the tool call to its result line.",
+}
+
+
+def _close_tool_calls(record: Dict[str, Any], acc: "_Accumulator", moment: Any) -> None:
+    """Close any tool call this `user` line reports a result for.
+
+    Claude Code returns tool results as `tool_result` content blocks on a `user`
+    line, keyed by `tool_use_id`. That line's own timestamp is the only record of
+    when the call finished.
+    """
+    message = record.get("message")
+    if not isinstance(message, dict):
+        return
+    content = message.get("content")
+    if not isinstance(content, list):
+        return
+    for block in content:
+        if not isinstance(block, dict) or block.get("type") != "tool_result":
+            continue
+        call_id = block.get("tool_use_id")
+        if not call_id:
+            continue
+        opened = acc.open_calls.pop(str(call_id), None)
+        if opened is None:
+            acc.unmatched_results += 1
+            continue
+        if moment is None:
+            acc.open_calls[str(call_id)] = opened
+            continue
+        acc.completed_calls.append(
+            {
+                "tool_use_id": str(call_id),
+                "tool": opened["tool"],
+                "skills": list(opened["skills"]),
+                "from_subagent": opened["from_subagent"],
+                "transcript": opened["file"],
+                "started_at": to_iso8601_z(opened["started"]),
+                "ended_at": to_iso8601_z(moment),
+                "duration_seconds": round((moment - opened["started"]).total_seconds(), 3),
+                "duration_measures": _WHAT_A_DURATION_MEASURES.get(
+                    opened["tool"], _WHAT_A_DURATION_MEASURES[None]
+                ),
+            }
+        )
+
+
+def _call_timing(acc: "_Accumulator") -> Dict[str, Any]:
+    """Per-skill-call and all-tool-call durations, plus what could not be matched."""
+    skill_calls = [call for call in acc.completed_calls if call["skills"]]
+    by_skill: Dict[str, Any] = {}
+    for call in skill_calls:
+        for skill in call["skills"]:
+            bucket = by_skill.setdefault(skill, {"calls": 0, "total_seconds": 0.0, "durations": []})
+            bucket["calls"] += 1
+            bucket["total_seconds"] = round(bucket["total_seconds"] + call["duration_seconds"], 3)
+            bucket["durations"].append(call["duration_seconds"])
+    for skill, bucket in by_skill.items():
+        durations = bucket.pop("durations")
+        bucket["max_seconds"] = round(max(durations), 3)
+        bucket["p50_seconds"] = round(_median(durations), 3)
+
+    all_durations = [call["duration_seconds"] for call in acc.completed_calls]
+    tool_call_seconds: Optional[Dict[str, Any]] = None
+    if all_durations:
+        tool_call_seconds = {
+            "calls_timed": len(all_durations),
+            "calls_unmatched": len(acc.open_calls),
+            "orphan_results": acc.unmatched_results,
+            "total_seconds": round(sum(all_durations), 3),
+            "p50_seconds": round(_median(all_durations), 3),
+            "max_seconds": round(max(all_durations), 3),
+        }
+        if acc.open_calls:
+            tool_call_seconds["calls_unmatched_reason"] = (
+                "No tool_result line carried these tool_use ids. The session was "
+                "still running, or the call was interrupted, so they have no "
+                "duration rather than a zero one."
+            )
+    if by_skill:
+        for skill, bucket in by_skill.items():
+            bucket["tools"] = sorted(
+                set(
+                    str(call["tool"])
+                    for call in skill_calls
+                    if skill in call["skills"] and call["tool"]
+                )
+            )
+            if bucket["tools"] == ["Skill"]:
+                bucket["reading"] = _WHAT_A_DURATION_MEASURES["Skill"]
+    return {
+        "skill_calls": skill_calls,
+        "skill_call_seconds_by_skill": by_skill,
+        "tool_call_seconds": tool_call_seconds,
+    }
+
+
+def _median(values: List[float]) -> float:
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    return (ordered[middle - 1] + ordered[middle]) / 2.0
 
 
 def parse_session(
@@ -279,6 +454,21 @@ def parse_session(
         pricing=pricing_data,
     )
 
+    # Context window comes from the rate card entry for the model, so a
+    # utilisation figure is derived from a recorded number rather than a guess.
+    context_window = _context_window(model, pricing_data)
+    utilisation: List[float] = []
+    if context_window:
+        for entry in acc.per_request:
+            live_context = (
+                entry["input_tokens"]
+                + entry["cache_read_tokens"]
+                + entry["cache_creation_tokens"]
+            )
+            ratio = live_context / float(context_window)
+            entry["context_utilization"] = round(ratio, 6)
+            utilisation.append(ratio)
+
     cost = CostBlock(
         input_tokens=acc.tokens["input_tokens"],
         output_tokens=acc.tokens["output_tokens"],
@@ -287,7 +477,20 @@ def parse_session(
         estimated_usd=estimated,
         turns=acc.assistant_messages,
         tool_calls=acc.tool_calls,
+        # Claude Code reports no reasoning-token subtotal. None, never 0.
+        reasoning_output_tokens=None,
+        per_request=acc.per_request,
+        context_window=context_window,
+        peak_context_utilization=round(max(utilisation), 6) if utilisation else None,
+        credits=None,
+        credits_unavailable_reason=(
+            "Credits are the Codex / ChatGPT billing unit. Claude Code sessions are "
+            "billed in dollars, which is what estimated_usd reports."
+        ),
+        model_requests=acc.assistant_messages,
     )
+
+    timing = _call_timing(acc)
 
     behavior = BehaviorBlock(
         skills_invoked=skills.invoked(),
@@ -314,6 +517,12 @@ def parse_session(
         "subagents_included": include_subagents,
         "subagent_count": len(subagents),
         "subagents": subagents,
+        "tool_calls_timed": len(acc.completed_calls),
+        "tool_calls_without_a_result_line": len(acc.open_calls),
+        "tool_results_without_a_matching_call": acc.unmatched_results,
+        "context_window_source": (
+            "pricing.json context_tokens for {0}".format(model) if model else None
+        ),
         "cache_write_ttl_assumed": cache_write_ttl or _default_cache_ttl(pricing_data),
         "pricing_checked_on": _pricing.checked_on(model, pricing_data),
         "unpriced_model": model if estimated is None and model else None,
@@ -326,7 +535,17 @@ def parse_session(
         session_path=str(main),
         telemetry_source=TELEMETRY_SOURCE,
         cost=cost,
-        time=TimeBlock(agent_wall_clock_seconds=wall_clock),
+        time=TimeBlock(
+            agent_wall_clock_seconds=wall_clock,
+            skill_calls=timing["skill_calls"],
+            skill_call_seconds_by_skill=timing["skill_call_seconds_by_skill"],
+            tool_call_seconds=timing["tool_call_seconds"],
+            skill_call_timing_unavailable_reason=(
+                "No tool call in this session was attributable to a skill, so there "
+                "is nothing to time. Skill detection sees the Skill tool and Bash "
+                "paths into skills/<name>/ only."
+            ),
+        ),
         behavior=behavior,
         host_version=_host_version(main),
         models=list(acc.models),
@@ -334,6 +553,18 @@ def parse_session(
         ended_at=to_iso8601_z(ended),
         parse_stats=parse_stats,
     )
+
+
+def _context_window(model: Optional[str], pricing_data: Optional[Dict[str, Any]]) -> Optional[int]:
+    """The model's context window from pricing.json, or None when unrecorded."""
+    if not model:
+        return None
+    data = pricing_data if pricing_data is not None else _pricing.load_pricing()
+    key = _pricing.normalise_model(model, data)
+    if key is None:
+        return None
+    value = data["models"][key].get("context_tokens")
+    return int(value) if isinstance(value, int) else None
 
 
 def _default_cache_ttl(pricing_data: Optional[Dict[str, Any]]) -> str:

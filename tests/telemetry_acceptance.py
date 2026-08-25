@@ -28,6 +28,7 @@ if str(ROOT) not in sys.path:
 
 from evals.lib import aggregate, emit_summary  # noqa: E402
 from evals.lib.telemetry import claude_code, codex, detect_host, parse_session  # noqa: E402
+from evals.lib.telemetry import credits as credits_module  # noqa: E402
 from evals.lib.telemetry import pricing as pricing_module  # noqa: E402
 from evals.lib.telemetry.behavior import QuestionDetector, SkillDetector  # noqa: E402
 
@@ -77,6 +78,43 @@ def usage(inp, out, read, create, iterations=1):
     return block
 
 
+def tool_result_line(tool_use_id, timestamp, uuid=None):
+    """A `user` line carrying a tool_result - the only record of when a call ended."""
+    return {
+        "type": "user",
+        "timestamp": timestamp,
+        "uuid": uuid or "res-{0}".format(tool_use_id),
+        "isSidechain": False,
+        "toolUseResult": {"stdout": ""},
+        "message": {
+            "role": "user",
+            "content": [{"type": "tool_result", "tool_use_id": tool_use_id, "content": "ok"}],
+        },
+    }
+
+
+def rollout_line(kind, payload, timestamp):
+    return {"timestamp": timestamp, "type": kind, "payload": payload}
+
+
+def token_count_line(timestamp, cumulative, delta, window=258400):
+    info = {"total_token_usage": cumulative, "model_context_window": window}
+    if delta is not None:
+        info["last_token_usage"] = delta
+    return rollout_line("event_msg", {"type": "token_count", "info": info}, timestamp)
+
+
+def codex_usage(inp, cached, out, reasoning):
+    return {
+        "input_tokens": inp,
+        "cached_input_tokens": cached,
+        "cache_write_input_tokens": 0,
+        "output_tokens": out,
+        "reasoning_output_tokens": reasoning,
+        "total_tokens": inp + out,
+    }
+
+
 def write_session(directory: Path, name: str, lines) -> Path:
     path = directory / name
     with path.open("w", encoding="utf-8") as handle:
@@ -107,7 +145,27 @@ def test_usage_summation_and_line_split_trap(workspace: Path) -> None:
     check(result.cost.cache_read_tokens == 3000, "cache_read should be 3000, got {0}".format(result.cost.cache_read_tokens))
     check(result.cost.cache_creation_tokens == 110, "cache_creation should be 110, got {0}".format(result.cost.cache_creation_tokens))
     check(result.cost.total_tokens == 3415, "total should be 3415, got {0}".format(result.cost.total_tokens))
-    check(result.cost.turns == 2, "two unique messages should be two turns, got {0}".format(result.cost.turns))
+    # Two deduplicated assistant messages are two *model requests*. Naming them
+    # turns conflated two different things; the request count is what was
+    # measured here, and the credit maths depends on the distinction.
+    check(
+        result.cost.model_requests == 2,
+        "two unique messages should be two model requests, got {0}".format(result.cost.model_requests),
+    )
+    check(
+        result.cost.reasoning_output_tokens is None,
+        "Claude Code reports no reasoning subtotal, so it must be None and never 0",
+    )
+    check(
+        len(result.cost.per_request) == 2,
+        "per_request should carry one delta per deduplicated message, got {0}".format(
+            len(result.cost.per_request)
+        ),
+    )
+    check(
+        sum(entry["total_tokens"] for entry in result.cost.per_request) == result.cost.total_tokens,
+        "per_request deltas must sum to the run total",
+    )
     check(result.cost.tool_calls == 2, "two distinct tool_use blocks, got {0}".format(result.cost.tool_calls))
 
     stats = result.parse_stats
@@ -601,6 +659,360 @@ def test_reporting_surfaces() -> None:
     )
 
 
+def test_cost_block_shape_is_the_codex_standard() -> None:
+    """Every field the richer host reports has a slot, and absence has a reason."""
+    from evals.lib.telemetry.model import CostBlock
+
+    required = {
+        "input_tokens", "output_tokens", "cache_read_tokens", "cache_creation_tokens",
+        "total_tokens", "reasoning_output_tokens", "estimated_usd", "turns", "tool_calls",
+        "model_requests", "context_window", "peak_context_utilization", "per_request",
+        "credits",
+    }
+    emitted = set(CostBlock().to_dict())
+    missing = required - emitted
+    check(not missing, "cost block is missing {0}".format(sorted(missing)))
+    empty = CostBlock().to_dict()
+    check(empty["credits"] is None, "an absent credits block must be null, never {}")
+    check(
+        isinstance(empty.get("credits_unavailable_reason"), str) and empty["credits_unavailable_reason"],
+        "a null credits block must carry the reason it is null",
+    )
+    check(empty["reasoning_output_tokens"] is None, "unreported reasoning tokens must be None, not 0")
+
+
+def test_codex_credits_are_derived_per_turn(workspace: Path) -> None:
+    """Credits: per turn, cached input is a subset, unpriced models emit null."""
+    rates = credits_module.load_rates()
+    priced_model = "gpt-5.6-terra"
+    rate = rates["rates"][priced_model]
+
+    path = workspace / "rollout-credits.jsonl"
+    lines = [
+        rollout_line("session_meta", {"session_id": "s", "cwd": "/tmp", "cli_version": "0.148.0"}, "2026-08-25T10:00:00.000Z"),
+        # Turn one, priced model, two model requests.
+        rollout_line("turn_context", {"turn_id": "t1", "model": priced_model, "effort": "high"}, "2026-08-25T10:00:01.000Z"),
+        token_count_line("2026-08-25T10:00:02.000Z", codex_usage(10000, 4000, 500, 200), codex_usage(10000, 4000, 500, 200)),
+        token_count_line("2026-08-25T10:00:06.000Z", codex_usage(30000, 12000, 900, 300), codex_usage(20000, 8000, 400, 100)),
+        # Turn two, a model that is genuinely off the rate card.
+        rollout_line("turn_context", {"turn_id": "t2", "model": "gpt-5.5", "effort": "medium"}, "2026-08-25T10:00:07.000Z"),
+        token_count_line("2026-08-25T10:00:08.000Z", codex_usage(31000, 12500, 1000, 320), codex_usage(1000, 500, 100, 20)),
+    ]
+    with path.open("w", encoding="utf-8") as handle:
+        for line in lines:
+            handle.write(json.dumps(line) + "\n")
+
+    result = codex.parse_session(path)
+    block = result.cost.credits
+    check(block is not None, "a Codex session must carry a credits block")
+    check(block["billing_unit"] == "turn", "the billing unit must be the turn, not the request")
+    check(block["derived"] is True, "credits must be labelled as derived")
+    check(block["turns_total"] == 2, "two turn_context events are two turns, got {0}".format(block["turns_total"]))
+    check(block["model_requests"] == 3, "three token_count events are three model requests")
+
+    per_turn = {entry["turn_id"]: entry for entry in block["per_turn"]}
+    # Expected credits computed from the card, never hardcoded here.
+    expected = 0.0
+    for inp, cached, out in ((10000, 4000, 500), (20000, 8000, 400)):
+        expected += ((inp - cached) * rate["input"] + cached * rate["cached_input"] + out * rate["output"]) / 1_000_000.0
+    check(
+        abs(per_turn["t1"]["credits"] - expected) < 1e-9,
+        "priced turn should be {0}, got {1}".format(expected, per_turn["t1"]["credits"]),
+    )
+    check(per_turn["t1"]["model_requests"] == 2, "turn one grouped both of its requests")
+    check(per_turn["t1"]["cached_input_tokens"] == 12000, "cached input is summed as reported")
+    check(
+        per_turn["t1"]["uncached_input_tokens"] == 30000 - 12000,
+        "billable input is input minus cached; cached is a SUBSET on Codex",
+    )
+    check(
+        per_turn["t2"]["credits"] is None,
+        "gpt-5.5 is off the rate card, so its credits must be null and never 0",
+    )
+    check(
+        isinstance(per_turn["t2"].get("credits_unavailable_reason"), str),
+        "an unpriced turn must say why it has no credits",
+    )
+    check("gpt-5.5" in block["unpriced_models"], "the unpriced model must be named")
+    check(
+        abs(block["total"] - expected) < 1e-9,
+        "the total covers only priced turns",
+    )
+    check("total_coverage" in block, "a partial total must declare its coverage")
+    source = block["rate_card"]
+    check(source.get("fetched"), "the credits block must cite the rate card fetch date")
+    check(source.get("url"), "the credits block must cite the rate card source url")
+    names = [entry["name"] for entry in block["caveats"]]
+    check("fast_mode" in names and "image_generation" in names,
+          "both unquantified multipliers must travel with the figure, got {0}".format(names))
+    check(
+        all(entry["factor"] is None for entry in block["caveats"]),
+        "an unquantified multiplier must not acquire a made-up factor",
+    )
+    spreads = (block["per_turn_spread"], block["per_request_spread"])
+    check(all(s and s.get("unit") for s in spreads), "every credit spread must state its unit")
+    check(block["per_turn_spread"]["unit"] == "turn", "the turn spread must be labelled per turn")
+    check(block["per_request_spread"]["unit"] == "request", "the request spread must be labelled per request")
+    check(
+        isinstance(block["per_request_spread"].get("comparison_warning"), str),
+        "the per-request spread must warn against comparing it to the per-message band",
+    )
+    rpt = block["requests_per_turn"]
+    check(
+        rpt["all_turns"]["n_turns"] == 2 and rpt["priced_turns_only"]["n_turns"] == 1,
+        "requests per turn must be reported on both denominators",
+    )
+    check(result.cost.reasoning_output_tokens == 320, "reasoning tokens are carried through as reported")
+    check(
+        result.cost.output_tokens == 1000,
+        "output must stay as reported; adding reasoning on top would double-count",
+    )
+    check(result.cost.context_window == 258400, "the context window should be read from the log")
+    check(
+        result.cost.peak_context_utilization is not None
+        and result.cost.peak_context_utilization <= 1.0,
+        "peak context utilisation should be a ratio",
+    )
+    check(len(result.cost.per_request) == 3, "one per_request entry per model request")
+    check(
+        result.cost.per_request[0]["uncached_input_tokens"] == 6000,
+        "per-request billable input is that request's input minus its cached portion",
+    )
+
+
+def test_codex_router_alias_is_not_guessed(workspace: Path) -> None:
+    """codex-auto-review is an alias. Unresolved means null credits, not a guess."""
+    path = workspace / "rollout-alias.jsonl"
+    lines = [
+        rollout_line("session_meta", {"session_id": "s", "cwd": "/tmp", "cli_version": "0.148.0", "parent_thread_id": "nonexistent-parent"}, "2026-08-25T11:00:00.000Z"),
+        rollout_line("turn_context", {"turn_id": "t1", "model": "codex-auto-review", "effort": "low"}, "2026-08-25T11:00:01.000Z"),
+        token_count_line("2026-08-25T11:00:02.000Z", codex_usage(5000, 1000, 200, 50), codex_usage(5000, 1000, 200, 50)),
+    ]
+    with path.open("w", encoding="utf-8") as handle:
+        for line in lines:
+            handle.write(json.dumps(line) + "\n")
+
+    block = codex.parse_session(path).cost.credits
+    entry = block["per_turn"][0]
+    check(entry["credits"] is None, "an unresolved router alias must emit null credits")
+    check(entry["model"] is None, "an unresolved alias must not be assigned a model")
+    check(entry["model_as_recorded"] == "codex-auto-review", "the recorded alias must be preserved")
+    check(
+        entry["model_resolution"] == "unresolved-router-alias",
+        "the resolution method must be recorded, got {0}".format(entry["model_resolution"]),
+    )
+    check(block["total"] is None, "no priced turn means no total, not a zero total")
+    check(
+        isinstance(block.get("total_unavailable_reason"), str),
+        "a null total must carry the reason it is null",
+    )
+    check(block["turns_with_unresolved_router_alias"] == 1, "unresolved aliases must be counted")
+
+
+def test_codex_reconciliation_violations_are_surfaced(workspace: Path) -> None:
+    """A delta that does not reconcile is counted and reported, never repaired."""
+    path = workspace / "rollout-recon.jsonl"
+    lines = [
+        rollout_line("session_meta", {"session_id": "s", "cwd": "/tmp", "cli_version": "0.148.0"}, "2026-08-25T12:00:00.000Z"),
+        rollout_line("turn_context", {"turn_id": "t1", "model": "gpt-5.6-luna", "effort": "low"}, "2026-08-25T12:00:01.000Z"),
+        token_count_line("2026-08-25T12:00:02.000Z", codex_usage(1000, 0, 100, 0), codex_usage(1000, 0, 100, 0)),
+        # Reconciles: cumulative rose by exactly the reported delta.
+        token_count_line("2026-08-25T12:00:03.000Z", codex_usage(2000, 0, 200, 0), codex_usage(1000, 0, 100, 0)),
+        # Does not reconcile: a compaction rebuilt the context.
+        rollout_line("event_msg", {"type": "context_compacted"}, "2026-08-25T12:00:04.000Z"),
+        token_count_line("2026-08-25T12:00:05.000Z", codex_usage(2000, 0, 200, 0), codex_usage(9000, 0, 900, 0)),
+    ]
+    with path.open("w", encoding="utf-8") as handle:
+        for line in lines:
+            handle.write(json.dumps(line) + "\n")
+
+    result = codex.parse_session(path)
+    invariant = result.cost.credits["reconciliation_invariant"]
+    check(invariant["checked"] == 2, "two comparisons were possible, got {0}".format(invariant["checked"]))
+    check(invariant["holds"] == 1, "one delta reconciled")
+    check(invariant["violates"] == 1, "one delta did not reconcile and must be reported")
+    check(len(invariant["violations"]) == 1, "the violating request must be identifiable")
+    check(
+        invariant["violations"][0]["compactions_seen_before_this_request"] == 1,
+        "a violation should record how many compactions preceded it",
+    )
+    check(
+        result.cost.per_request[2]["reconciles"] is False,
+        "the non-reconciling request must be flagged in place",
+    )
+    check(
+        result.cost.per_request[2]["total_tokens"] == 9900,
+        "the reported delta must be preserved as reported, not silently corrected",
+    )
+
+
+def test_skill_call_durations_are_measured(workspace: Path) -> None:
+    """Calvin: 'How long did that skill call out take?' - from real timestamps only."""
+    lines = [
+        assistant_line(
+            "msg_1", usage(5, 50, 500, 10),
+            [{"type": "tool_use", "id": "toolu_skill", "name": "Skill", "input": {"skill": "slalom-branding"}}],
+            "2026-08-25T10:00:00.000Z", uuid="a1",
+        ),
+        tool_result_line("toolu_skill", "2026-08-25T10:00:02.500Z"),
+        assistant_line(
+            "msg_2", usage(5, 50, 500, 10),
+            [{"type": "tool_use", "id": "toolu_bash", "name": "Bash", "input": {"command": "python3 skills/design-skill-evals/scripts/run.py"}}],
+            "2026-08-25T10:00:03.000Z", uuid="a2",
+        ),
+        tool_result_line("toolu_bash", "2026-08-25T10:00:15.000Z"),
+        # A call whose result never arrives: no duration, and it must be counted.
+        assistant_line(
+            "msg_3", usage(5, 50, 500, 10),
+            [{"type": "tool_use", "id": "toolu_open", "name": "Bash", "input": {"command": "python3 skills/animejs/scripts/x.py"}}],
+            "2026-08-25T10:00:16.000Z", uuid="a3",
+        ),
+    ]
+    path = write_session(workspace, "durations.jsonl", lines)
+    result = claude_code.parse_session(path)
+
+    calls = {call["tool_use_id"]: call for call in result.time.skill_calls}
+    check(len(calls) == 2, "two calls have results, so two are timed; got {0}".format(len(calls)))
+    check(
+        abs(calls["toolu_skill"]["duration_seconds"] - 2.5) < 1e-6,
+        "the Skill call lasted 2.5s by its timestamps, got {0}".format(calls["toolu_skill"]["duration_seconds"]),
+    )
+    check(
+        abs(calls["toolu_bash"]["duration_seconds"] - 12.0) < 1e-6,
+        "the Bash call lasted 12s by its timestamps, got {0}".format(calls["toolu_bash"]["duration_seconds"]),
+    )
+    check(
+        "round trip" in calls["toolu_skill"]["duration_measures"],
+        "a Skill tool duration must say it is only a tool round trip",
+    )
+    check(
+        calls["toolu_bash"]["skills"] == ["design-skill-evals"],
+        "a Bash call into a skills path must be attributed to that skill",
+    )
+    by_skill = result.time.skill_call_seconds_by_skill
+    check("slalom-branding" in by_skill and "design-skill-evals" in by_skill, "both skills should appear")
+    check(
+        by_skill["slalom-branding"].get("reading"),
+        "a skill only ever seen through the Skill tool must carry the round-trip caveat",
+    )
+    check("animejs" not in by_skill, "an untimed call must not appear with a fabricated duration")
+    timing = result.time.tool_call_seconds
+    check(timing["calls_timed"] == 2, "two calls timed")
+    check(timing["calls_unmatched"] == 1, "the call with no result must be counted as unmatched")
+    check(
+        isinstance(timing.get("calls_unmatched_reason"), str),
+        "unmatched calls need a stated reason, not a zero duration",
+    )
+    emitted = result.time.to_dict()
+    check("skill_calls" in emitted and "skill_call_seconds_by_skill" in emitted,
+          "the time block must emit the per-call figures")
+
+
+def test_codex_has_no_skill_call_timing(workspace: Path) -> None:
+    """Codex cannot time a single call. Say so; do not approximate it."""
+    path = workspace / "rollout-notiming.jsonl"
+    lines = [
+        rollout_line("session_meta", {"session_id": "s", "cwd": "/tmp", "cli_version": "0.148.0"}, "2026-08-25T13:00:00.000Z"),
+        rollout_line("turn_context", {"turn_id": "t1", "model": "gpt-5.6-luna", "effort": "low"}, "2026-08-25T13:00:01.000Z"),
+        rollout_line("response_item", {"type": "local_shell_call", "command": ["bash", "-lc", "cat skills/animejs/SKILL.md"]}, "2026-08-25T13:00:02.000Z"),
+    ]
+    with path.open("w", encoding="utf-8") as handle:
+        for line in lines:
+            handle.write(json.dumps(line) + "\n")
+    result = codex.parse_session(path)
+    check(result.time.skill_calls == [], "Codex must not invent per-call durations")
+    reason = result.time.to_dict().get("skill_call_timing_unavailable_reason")
+    check(isinstance(reason, str) and reason, "Codex must state why per-call timing is absent")
+    check(
+        "animejs" in result.behavior.skills_invoked,
+        "the skill is still detected even though it cannot be timed",
+    )
+
+
+def test_credit_rate_card_integrity() -> None:
+    """The rate card is the only place a credit rate may live."""
+    rates = credits_module.load_rates()
+    check(rates.get("schema") == "ascent.codex-credit-rates.v1", "rate card schema must be declared")
+    source = rates.get("source") or {}
+    check(source.get("fetched") and source.get("url"), "the rate card must carry a url and fetch date")
+    for model, entry in (rates.get("rates") or {}).items():
+        for key in ("input", "cached_input", "output"):
+            check(
+                isinstance(entry.get(key), (int, float)),
+                "{0} is missing a {1} rate".format(model, key),
+            )
+        check(
+            entry["cached_input"] < entry["input"],
+            "{0}: a cached read must be cheaper than uncached input".format(model),
+        )
+    for model, reason in (rates.get("unpriced") or {}).items():
+        check(isinstance(reason, str) and reason, "{0} must record why it is unpriced".format(model))
+        check(
+            credits_module.rate_for(model) is None,
+            "{0} is listed as unpriced but has a rate".format(model),
+        )
+        check(
+            credits_module.credits_for_usage(model, 1000, 100, 100) is None,
+            "{0} must price to None, never 0.0".format(model),
+        )
+    # No rate may be hardcoded in the library.
+    for source_file in sorted((ROOT / "evals" / "lib").rglob("*.py")):
+        text = source_file.read_text(encoding="utf-8")
+        for model in (rates.get("rates") or {}):
+            check(
+                '"{0}":'.format(model) not in text and "'{0}':".format(model) not in text,
+                "{0} maps a rate for {1} in code; rates belong in codex_rates.json".format(
+                    source_file.name, model
+                ),
+            )
+    # cached input is a subset: the same tokens must never be billed twice.
+    model = sorted((rates.get("rates") or {}))[0]
+    rate = rates["rates"][model]
+    all_cached = credits_module.credits_for_usage(model, 1000, 1000, 0)
+    none_cached = credits_module.credits_for_usage(model, 1000, 0, 0)
+    check(
+        abs(all_cached - 1000 * rate["cached_input"] / 1_000_000.0) < 1e-12,
+        "a fully cached input must be billed entirely at the cached rate",
+    )
+    check(all_cached < none_cached, "cache reads must reduce the bill, not add to it")
+
+
+def test_no_zero_stands_in_for_a_missing_figure(workspace: Path) -> None:
+    """Walk an emitted run record: an unknown figure is null with a reason, never 0.
+
+    Behavioural rather than a grep over the source, because a running accumulator
+    legitimately starts at 0.0 - what must never happen is a *0 reaching the
+    record* where the truth is "not known".
+    """
+    path = workspace / "rollout-allunpriced.jsonl"
+    lines = [
+        rollout_line("session_meta", {"session_id": "s", "cwd": "/tmp", "cli_version": "0.148.0"}, "2026-08-25T14:00:00.000Z"),
+        rollout_line("turn_context", {"turn_id": "t1", "model": "gpt-5.5", "effort": "high"}, "2026-08-25T14:00:01.000Z"),
+        token_count_line("2026-08-25T14:00:02.000Z", codex_usage(9000, 2000, 400, 100), codex_usage(9000, 2000, 400, 100)),
+    ]
+    with path.open("w", encoding="utf-8") as handle:
+        for line in lines:
+            handle.write(json.dumps(line) + "\n")
+
+    record = codex.parse_session(path).to_run_record("r1", "s", "with-skills")
+    cost = record["cost"]
+    check(cost["estimated_usd"] is None, "an unpriced model must not report $0.00")
+    credits = cost["credits"]
+    check(credits["total"] is None, "an all-unpriced session must report null credits, not 0")
+    check(isinstance(credits.get("total_unavailable_reason"), str), "null total needs a reason")
+    for entry in credits["per_turn"]:
+        check(entry["credits"] is None, "an unpriced turn must be null, not 0")
+        check(isinstance(entry.get("credits_unavailable_reason"), str), "and must say why")
+    for entry in cost["per_request"]:
+        check(entry["credits"] is None, "an unpriced request must be null, not 0")
+    check(credits["per_turn_spread"] is None, "no priced turn means no spread, not a zero spread")
+
+    # And the same discipline in the other direction: a figure that IS measured
+    # must not be dropped just because a sibling figure is missing.
+    check(cost["total_tokens"] == 9400, "measured tokens survive an unpriced model")
+    check(cost["reasoning_output_tokens"] == 100, "measured reasoning tokens survive too")
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="ascent-telemetry-test-") as temp:
         workspace = Path(temp)
@@ -618,6 +1030,14 @@ def main() -> None:
         test_no_emoji_or_adjectives_in_emitter()
         test_pricing_config_integrity()
         test_codex_token_arithmetic(workspace)
+        test_cost_block_shape_is_the_codex_standard()
+        test_codex_credits_are_derived_per_turn(workspace)
+        test_codex_router_alias_is_not_guessed(workspace)
+        test_codex_reconciliation_violations_are_surfaced(workspace)
+        test_skill_call_durations_are_measured(workspace)
+        test_codex_has_no_skill_call_timing(workspace)
+        test_credit_rate_card_integrity()
+        test_no_zero_stands_in_for_a_missing_figure(workspace)
         test_cli_contracts(workspace)
         test_real_session_files()
         test_reporting_surfaces()

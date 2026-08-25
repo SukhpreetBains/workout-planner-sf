@@ -441,7 +441,7 @@ def parse_session(
                     "model_resolution": resolution["resolution"],
                     "effort": effort,
                     "requests": 0,
-                    "credits": 0.0,
+                    "credits_accumulated": 0.0,
                     "credits_priced": _credits.rate_for(resolution["model"], rates) is not None,
                     "tokens": dict((key, 0) for key in USAGE_DELTA_FIELDS),
                     "first_timestamp": moment,
@@ -543,7 +543,7 @@ def parse_session(
                     for key in USAGE_DELTA_FIELDS:
                         turn["tokens"][key] += delta[key]
                     if request_credits is not None:
-                        turn["credits"] += request_credits
+                        turn["credits_accumulated"] += request_credits
                     if moment is not None:
                         if turn["first_timestamp"] is None:
                             turn["first_timestamp"] = moment
@@ -788,15 +788,15 @@ def _build_credits_block(
         }
         requests_all.append(turn["requests"])
         if priced:
-            entry["credits"] = round(turn["credits"], 6)
-            priced_turn_credits.append(turn["credits"])
+            entry["credits"] = round(turn["credits_accumulated"], 6)
+            priced_turn_credits.append(turn["credits_accumulated"])
             requests_priced.append(turn["requests"])
             bucket = by_model.setdefault(
                 model, {"turns": 0, "model_requests": 0, "credits": 0.0, "priced": True}
             )
             bucket["turns"] += 1
             bucket["model_requests"] += turn["requests"]
-            bucket["credits"] = round(bucket["credits"] + turn["credits"], 6)
+            bucket["credits"] = round(bucket["credits"] + turn["credits_accumulated"], 6)
         else:
             entry["credits"] = None
             recorded = turn["model_as_recorded"]
