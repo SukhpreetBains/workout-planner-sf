@@ -17,6 +17,7 @@
     "max_per_source": 2,
     "max_total_chars": 5000,
     "required_chunk_ids": ["mobilize-gate","validated-scope","governance-model"],
+    "forbidden_chunk_ids": ["restricted-email","low-signal"],
     "chunks": [
       {"chunk_id":"mobilize-gate","source_id":"mobilize-deliverables","title":"Risk Gate 1 checklist","text":"Mobilize requires a project charter, RAID tracker, stakeholder map, validated scope, governance model, and readiness approval.","semantic_score":0.98},
       {"chunk_id":"validated-scope","source_id":"client-docs","title":"Validated scope","text":"The current scope defines measurable outcomes, KPI ownership, assumptions, and remaining decisions before Risk Gate 1.","semantic_score":0.96},
@@ -24,5 +25,12 @@
       {"chunk_id":"restricted-email","source_id":"email-threads","title":"Restricted approval","text":"RESTRICTED_EMAIL_BODY_MUST_NOT_LEAK The client approved the scope by email.","semantic_score":0.99},
       {"chunk_id":"low-signal","source_id":"client-docs","title":"Acknowledgement","text":"Thanks.","semantic_score":0.01}
     ]
+  },
+  "cache": {
+    "source_id": "client-docs",
+    "relevant_task": "validated scope governance",
+    "unrelated_task": "unrelated payroll policy",
+    "stale_offset_hours": 400,
+    "note": "stale_offset_hours must exceed the source's freshness_hours. The harness passes --now as last_retrieved_at plus this offset, so age_hours is an exact reproducible number rather than a reading of the developer's clock."
   }
 }
