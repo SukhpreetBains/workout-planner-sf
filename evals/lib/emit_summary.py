@@ -28,6 +28,7 @@ from .aggregate import (
     BASELINE,
     SUITE_SUMMARY_SCHEMA,
     VERDICT_INSUFFICIENT,
+    VERDICT_NO_COST_DATA,
     WITH_SKILLS,
     suite_dir,
 )
@@ -37,6 +38,7 @@ VERDICT_PLAIN = {
     "variable": "variable - budget with headroom",
     "unpredictable": "unpredictable - do not quote a per-run cost",
     VERDICT_INSUFFICIENT: "not enough runs to say",
+    VERDICT_NO_COST_DATA: "no cost was recorded, so there is nothing to compare",
 }
 
 ARM_LABEL = {

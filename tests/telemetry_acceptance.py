@@ -651,11 +651,32 @@ def test_reporting_surfaces() -> None:
         check(expected in workbench, f"workbench is missing {expected}")
     for question in ("Did it do the job right", "What did it cost", "How much time did it save"):
         check(question in workbench, f"workbench does not lead with the question: {question}")
-    for expected in ('SUITE_ID = "context-skills"', "RUN_LOCK", "RUN_TIMEOUT_SECONDS = 90"):
+    # Boundary asserted by property, not by a hardcoded suite name: suites are
+    # discovered now, so naming one here would just re-hardcode what the
+    # discovery removed.
+    for expected in ("SUITE_ID_PATTERN", "RUN_LOCK", "RUN_TIMEOUT_SECONDS = 90",
+                     "MAX_RUNS_PER_REQUEST", "MAX_REQUEST_BODY_BYTES"):
         check(expected in server, f"workbench server is missing its execution boundary: {expected}")
     check(
         "shell=True" not in server and "shlex" not in server,
         "workbench server must not build a shell command from input",
+    )
+    for expected in ("/api/metrics/", "METRIC_CATALOGUE"):
+        check(expected in server, f"workbench server is missing the metric catalogue: {expected}")
+    # The fabricated-speedup guard, as a property of the source: a machine
+    # runtime must never be named as agent wall clock, and no saving may be
+    # derived from one.
+    check(
+        '"agent_wall_clock_seconds": "not-applicable"' in server,
+        "the workbench must record agent wall clock as not-applicable when there is no agent",
+    )
+    check(
+        "harness_wall_clock_seconds" in server,
+        "the measured harness runtime must be carried under its own name",
+    )
+    check(
+        "speedup_factor" not in server,
+        "the workbench must not derive a speedup factor; that is how a 7,000x claim ships",
     )
 
 
@@ -1013,6 +1034,73 @@ def test_no_zero_stands_in_for_a_missing_figure(workspace: Path) -> None:
     check(cost["reasoning_output_tokens"] == 100, "measured reasoning tokens survive too")
 
 
+def test_metric_catalogue_is_traceable() -> None:
+    """Every metric on the page traces to a quote. That is the anti-slop guard."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "workbench", ROOT / "docs" / "evals_workbench.py"
+    )
+    workbench = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(workbench)
+
+    catalogue = workbench.METRIC_CATALOGUE
+    check(len(catalogue) >= 20, "the catalogue should cover Calvin's asks, got {0}".format(len(catalogue)))
+    seen = set()
+    for metric in catalogue:
+        for field in ("id", "question", "label", "unit", "quote", "source", "measured_from"):
+            check(metric.get(field) not in (None, ""), "metric {0} is missing {1}".format(metric.get("id"), field))
+        check(metric["id"] not in seen, "duplicate metric id {0}".format(metric["id"]))
+        seen.add(metric["id"])
+        check(metric["question"] in (1, 2, 3), "metric {0} must map to one of the three questions".format(metric["id"]))
+        check(len(metric["quote"]) > 25, "metric {0} needs a real quote, not a fragment".format(metric["id"]))
+    questions = set(metric["question"] for metric in catalogue)
+    check(questions == {1, 2, 3}, "all three questions must be represented, got {0}".format(sorted(questions)))
+
+    # The sentinel rule: the harness's words for absence must never read as values.
+    for sentinel in ("not-applicable", "not-recorded", "not-observable", "unknown", ""):
+        check(
+            workbench._has_value(sentinel) is False,
+            "{0!r} must read as absent, not as a measurement".format(sentinel),
+        )
+    for real in (0, 0.0, "pass", ["a"], {"a": 1}, False):
+        check(workbench._has_value(real) is True, "{0!r} is a real value".format(real))
+
+
+def test_no_cost_data_is_distinct_from_too_few_runs() -> None:
+    """Five runs with no tokens is not a shortage of runs. Say which it is."""
+    verdict = aggregate.consistency_verdict([], run_count=5)
+    check(
+        verdict == aggregate.VERDICT_NO_COST_DATA,
+        "five runs with no cost data should read no-cost-data, got {0}".format(verdict),
+    )
+    check(
+        aggregate.consistency_verdict([], run_count=1) == aggregate.VERDICT_INSUFFICIENT,
+        "one run is genuinely too few runs",
+    )
+    check(
+        aggregate.consistency_verdict([100.0, 101.0, 99.0], run_count=3) == "predictable",
+        "a tight three-run spread is still predictable",
+    )
+
+    records = [_run_record("r{0}".format(i), "with-skills", None, None, None) for i in range(5)]
+    for record in records:
+        record["cost"] = {"total_tokens": "not-applicable", "estimated_usd": None}
+    arm = aggregate.summarise_arm(records)
+    check(
+        arm["consistency_verdict"] == aggregate.VERDICT_NO_COST_DATA,
+        "an arm of cost-free runs should read no-cost-data, got {0}".format(arm["consistency_verdict"]),
+    )
+    check(
+        "not a shortage of runs" in (arm.get("consistency_unavailable_reason") or ""),
+        "the reason must not tell the reader to run it more times",
+    )
+    check(
+        arm["total_tokens"]["p50"] is None,
+        '"not-applicable" must never be coerced into a number',
+    )
+
+
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="ascent-telemetry-test-") as temp:
         workspace = Path(temp)
@@ -1041,6 +1129,8 @@ def main() -> None:
         test_cli_contracts(workspace)
         test_real_session_files()
         test_reporting_surfaces()
+        test_metric_catalogue_is_traceable()
+        test_no_cost_data_is_distinct_from_too_few_runs()
         ran = [name for name in globals() if name.startswith("test_")]
     print(json.dumps({"suite": "telemetry-acceptance", "outcome": "pass",
                       "checks": len(ran)}))

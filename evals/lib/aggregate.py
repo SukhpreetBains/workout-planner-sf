@@ -48,6 +48,11 @@ VERDICT_PREDICTABLE = "predictable"
 VERDICT_VARIABLE = "variable"
 VERDICT_UNPREDICTABLE = "unpredictable"
 VERDICT_INSUFFICIENT = "insufficient-runs"
+# Distinct from insufficient-runs, and the distinction is the difference between
+# advice that helps and advice that cannot. A suite with five runs and no cost
+# telemetry is not short of runs; running it again will never produce a spread,
+# because there is no model in the loop to spend anything.
+VERDICT_NO_COST_DATA = "no-cost-data"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -87,8 +92,21 @@ def coefficient_of_variation(values: Sequence[float]) -> Optional[float]:
     return math.sqrt(variance) / abs(mean)
 
 
-def consistency_verdict(values: Sequence[float]) -> str:
-    """Map a series of per-run totals to a provisional consistency verdict."""
+def consistency_verdict(values: Sequence[float], run_count: Optional[int] = None) -> str:
+    """Map a series of per-run totals to a provisional consistency verdict.
+
+    `run_count` separates two cases that both produce an empty series and want
+    opposite advice from the reader:
+
+      * fewer runs than the threshold - run it more times.
+      * enough runs, but not one of them carried a cost figure - running it again
+        will never help, because the suite has nothing to price.
+
+    Without the distinction the second case reads as the first and tells a reader
+    to repeat a suite that can never answer the question.
+    """
+    if not values and run_count is not None and run_count >= MIN_RUNS_FOR_VERDICT:
+        return VERDICT_NO_COST_DATA
     if len(values) < MIN_RUNS_FOR_VERDICT:
         return VERDICT_INSUFFICIENT
     cv = coefficient_of_variation(values)
@@ -332,15 +350,21 @@ def summarise_arm(records: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
         ),
         "model_requests": _spread(requests, ("min", "p50", "max", "mean"), as_int=True),
         "peak_context_utilization": _spread(utilisation, ("min", "p50", "max")),
-        "consistency_verdict": consistency_verdict(tokens),
+        "consistency_verdict": consistency_verdict(tokens, len(records)),
         "skill_call_seconds": _skill_call_seconds(records),
     }
+    if arm["consistency_verdict"] == VERDICT_NO_COST_DATA:
+        arm["consistency_unavailable_reason"] = (
+            "{0} runs are recorded and none carried a token figure, so there is no cost "
+            "to compare. This is not a shortage of runs: repeating the suite cannot "
+            "produce a spread when nothing in it spends tokens.".format(len(records))
+        )
 
     if credits:
         # The consistency verdict is defined over tokens by the spec. Credits are
         # the unit a Codex user is actually billed in, so its own verdict is
         # reported beside it rather than folded into the token one.
-        arm["credits_consistency_verdict"] = consistency_verdict(credits)
+        arm["credits_consistency_verdict"] = consistency_verdict(credits, len(records))
         arm["credits_derivation"] = (
             "derived: measured token deltas x the published rate card in "
             "evals/lib/telemetry/codex_rates.json"

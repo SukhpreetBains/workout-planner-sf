@@ -1238,17 +1238,25 @@ def _dig(payload: Any, path: str) -> Any:
     return node
 
 
-def _has_value(value: Any) -> bool:
-    """True when a figure is genuinely present.
+# The harness's vocabulary for "this figure does not exist". Any string starting
+# `not-` is one of these by convention - `not-applicable`, `not-recorded`,
+# `not-observable` - and a UI that treated them as values would render the word
+# "not-observable" where a reader expects a number. Caught in integration: the
+# skills-invoked and questions-asked metrics reported themselves measured, with
+# `not-observable` as the measurement.
+ABSENT_SENTINEL_PREFIX = "not-"
+ABSENT_SENTINELS = ("unknown", "unavailable", "n/a", "none")
 
-    `"not-applicable"` and `"not-recorded"` are the harness's own words for a
-    figure that does not exist, so they read as absent rather than as a string
-    that happens to be non-empty.
-    """
+
+def _has_value(value: Any) -> bool:
+    """True when a figure is genuinely present."""
     if value is None:
         return False
     if isinstance(value, str):
-        return bool(value) and value not in ("not-applicable", "not-recorded", "unknown")
+        text = value.strip().lower()
+        if not text or text in ABSENT_SENTINELS or text.startswith(ABSENT_SENTINEL_PREFIX):
+            return False
+        return True
     if isinstance(value, bool):
         return True
     if isinstance(value, (int, float)):
@@ -1299,9 +1307,19 @@ def metrics_payload(suite: Suite) -> dict:
             entry["value"] = value if not isinstance(value, (dict, list)) else None
         else:
             reason = None
-            if isinstance(value, str) and value in ("not-applicable", "not-recorded", "unknown"):
-                # The harness said so itself, in its own words.
-                reason = "The harness recorded this as {0!r}.".format(value)
+            if isinstance(value, str) and value:
+                # The harness said so itself, in its own words. Prefer any adjacent
+                # note it wrote over a generic restatement of the sentinel.
+                container = _dig(latest or {}, ".".join(path.split(".")[:-1])) or {}
+                leaf = path.split(".")[-1]
+                note = None
+                if isinstance(container, dict):
+                    for suffix in ("_note", "_reason", "_unavailable_reason"):
+                        candidate = container.get(leaf + suffix)
+                        if isinstance(candidate, str) and candidate:
+                            note = candidate
+                            break
+                reason = note or "The harness recorded this as {0!r}.".format(value)
             if reason is None and latest is None and not path.startswith("summary."):
                 reason = "No run has been recorded for this suite yet."
             if reason is None and isinstance(latest, dict):
