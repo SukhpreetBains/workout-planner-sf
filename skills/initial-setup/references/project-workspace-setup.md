@@ -47,7 +47,11 @@ The project communications record remains `workspace/.system/source-context.yaml
 
 ## 4. Process starting material
 
-If `workspace/inbox/` contains files, invoke `workspace-ingest-documents` for ordinary documents or `workspace-capture-meeting-notes` for a transcript or raw meeting notes. If the inbox is empty, continue without treating it as an error.
+For a **new** Opportunity, ask the user: "Do you have any starting documents to add to `workspace/inbox/` now — SOWs, notes, transcripts, exports? Let me know when they're in place, or tell me to continue without them." Wait for their reply before re-checking the inbox; do not treat silence or a quick reply as "no documents" without confirming.
+
+For an **existing** Opportunity, check `workspace/inbox/` once without prompting — documents may already be filed or waiting from prior sessions.
+
+In both cases: if `workspace/inbox/` contains files, invoke `workspace-ingest-documents` for ordinary documents or `workspace-capture-meeting-notes` for a transcript or raw meeting notes. If the inbox is empty after this check, continue without treating it as an error — the user can add material at any later time and mention it to trigger the same skills.
 
 Do not apply proposed updates. Direct the user to `workspace-review-updates` when review is needed.
 
