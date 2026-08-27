@@ -10,8 +10,7 @@ microsite. **This skill is a presentation layer.** It renders findings that a
 specialist skill or the consultant already produced; it does not author findings,
 invent numbers, or decide recommendations.
 
-For a deck or a document, use `compose-deliverable` instead. This skill owns the
-web medium only.
+This skill owns the web medium only.
 
 ## Quick start
 
