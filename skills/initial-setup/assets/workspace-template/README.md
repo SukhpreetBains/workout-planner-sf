@@ -25,18 +25,23 @@ cites the document it came from.
 
 ## Trackers
 
-Four workbooks, ten categories:
+Four workbooks, twelve categories:
 
 - `stakeholders.xlsx` — stakeholders
 - `current-state.xlsx` — pain points, systems
 - `future-state.xlsx` — objectives, requirements
-- `raid.xlsx` — risks, assumptions, constraints, decisions, open questions
+- `raid.xlsx`: risks, assumptions, issues, decisions, dependencies, constraints, open questions
 
 They are normal Excel files — open and edit them by hand whenever you
 like. Afterwards, ask the agent to run sync so the search index and the
 plain-text copies in `.system/tracker-copies/` catch up. The full schema
 (columns, allowed values, what belongs in each category) is supplied by
 the shared workspace engine in the installed skill library.
+
+When ingestion creates validated proposals, the agent posts a loopback-only
+review link in chat. The link opens a guided inbox where you can edit, accept,
+reject, or flag one proposal at a time. The agent never opens the browser
+automatically.
 
 ## Rules of thumb
 

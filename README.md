@@ -10,7 +10,7 @@ The implemented workspace workflow is:
 
 1. `initial-setup` creates or resumes an Opportunity's standard `workspace/`, verifies Python 3.10+, records Account and Opportunity source locations, and initializes trackers.
 2. `workspace-ingest-documents` turns source material — including meeting transcripts and raw notes — into filed workspace evidence and proposed tracker updates.
-3. `workspace-review-updates` applies only changes approved by the user.
+3. `workspace-review-updates` provides a local visual inbox and applies only changes approved by the user.
 4. `workspace-summarize` produces evidence-grounded narrative outputs inside `workspace/`.
 
 Use `slalom-branding` to apply or review approved Slalom colors, typography, accessibility, voice, imagery, logos, and graphic elements across deliverables.
