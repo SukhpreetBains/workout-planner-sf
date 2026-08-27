@@ -1,23 +1,18 @@
----
-name: retrieve-project-context
-description: Retrieve, re-rank, trim, and persist task-relevant project context from sources recorded by initial setup and discovery. Use when Codex needs evidence from known local files, Slack or Teams conversations, SharePoint folders, or other confirmed sources; when long histories would otherwise consume excessive context; when a cached briefing should be refreshed; or when downstream work needs a compact evidence hierarchy. Import workspace/.system/source-context.yaml into the local manifest, fetch narrowly, rank against the task, and store bounded summaries with provenance.
----
+# Evidence Mode — Retrieve Project Context
 
-# Retrieve Project Context
-
-Build a task-specific evidence pack from sources already identified by `$discover-project-context`. Keep retrieval narrow, ranking explicit, and persisted context bounded.
+Build a task-specific evidence pack from sources already identified in map mode (`discover.md`). Keep retrieval narrow, ranking explicit, and persisted context bounded.
 
 ## Preconditions
 
-Require the setup-generated `workspace/.system/source-context.yaml` beneath the Opportunity root. Validate it, initialize the local `workspace/.system/project-context/manifest.json` projection when needed, and run the discovery skill's `import-source-context` command before planning retrieval. Read `workspace/.system/project-context/brief.md`, then validate the imported manifest.
+Require the setup-generated `workspace/.system/source-context.yaml` beneath the Opportunity root. Validate it, initialize the local `workspace/.system/project-context/manifest.json` projection when needed, and run map mode's `import-source-context` command before planning retrieval. Read `workspace/.system/project-context/brief.md`, then validate the imported manifest.
 
-If the shared record is absent or lacks the sources needed for the task, invoke `$discover-project-context` or ask only for the missing location. Do not compensate with an unbounded workspace or connector search. Do not edit shared locations as an incidental retrieval side effect.
+If the shared record is absent or lacks the sources needed for the task, switch to map mode (`discover.md`) or ask only for the missing location. Do not compensate with an unbounded workspace or connector search. Do not edit shared locations as an incidental retrieval side effect.
 
 Read these references before retrieval:
 
-- [references/context-contract.md](references/context-contract.md) for the shared manifest, chunk, and pack contracts
-- [references/connector-routing.md](references/connector-routing.md) for current Slack, Teams, and SharePoint routing
-- [references/ranking.md](references/ranking.md) for scoring, diversity, and deep-trim rules
+- [context-contract.md](context-contract.md) for the shared manifest, chunk, and pack contracts
+- [connector-routing.md](connector-routing.md) for current Slack, Teams, and SharePoint routing
+- [ranking.md](ranking.md) for scoring, diversity, and deep-trim rules
 
 ## Workflow
 
@@ -91,13 +86,13 @@ The script combines task relevance, source fit, authority, source priority, rece
 
 ### 6. Deep-trim dense histories when needed
 
-Use the two-pass procedure in [references/ranking.md](references/ranking.md) when a source yields more than 100 messages, 40 chunks, or twice the total character budget. Summarize bounded chronological windows into attributed facts first; rank those window summaries; expand original messages only for the selected facts.
+Use the two-pass procedure in [ranking.md](ranking.md) when a source yields more than 100 messages, 40 chunks, or twice the total character budget. Summarize bounded chronological windows into attributed facts first; rank those window summaries; expand original messages only for the selected facts.
 
 Preserve unresolved disagreement, decision changes, dates, owners, and links. Drop greetings, acknowledgements, repeated bot output, and quoted duplication.
 
 ### 7. Synthesize and persist the hierarchy
 
-Create a pack JSON using the contract in [references/context-contract.md](references/context-contract.md). Every claim in the overview or a source summary must be supported by a persisted excerpt or clearly marked as an inference.
+Create a pack JSON using the contract in [context-contract.md](context-contract.md). Every claim in the overview or a source summary must be supported by a persisted excerpt or clearly marked as an inference.
 
 Include the `access_gaps` emitted by ranking, even when accessible sources produced useful evidence. The gap list is part of the retrieval result and must not be omitted because it contains no source content.
 
