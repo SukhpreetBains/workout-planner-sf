@@ -51,7 +51,7 @@ For a **new** Opportunity, ask the user: "Do you have any starting documents to 
 
 For an **existing** Opportunity, check `workspace/inbox/` once without prompting — documents may already be filed or waiting from prior sessions.
 
-In both cases: if `workspace/inbox/` contains files, invoke `workspace-ingest-documents` for ordinary documents or `workspace-capture-meeting-notes` for a transcript or raw meeting notes. If the inbox is empty after this check, continue without treating it as an error — the user can add material at any later time and mention it to trigger the same skills.
+In both cases: if `workspace/inbox/` contains files, invoke `workspace-ingest-documents` — it handles both ordinary documents and meeting transcripts or raw notes. If the inbox is empty after this check, continue without treating it as an error — the user can add material at any later time and mention it to trigger the same skill.
 
 Do not apply proposed updates. Direct the user to `workspace-review-updates` when review is needed.
 
