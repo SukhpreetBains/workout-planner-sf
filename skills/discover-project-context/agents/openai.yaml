@@ -1,4 +1,0 @@
-interface:
-  display_name: "Discover Project Context"
-  short_description: "Capture reusable project context and sources"
-  default_prompt: "Use $discover-project-context to establish this project’s brief and canonical context sources."

@@ -26,7 +26,7 @@ Explain a script's effect before running it. Obtain approval before package-mana
 5. Create or complete the standard `workspace/` and `Deliverables/` structure without overwriting existing files.
 6. Confirm relevant SharePoint and messaging locations, then offer to save them in the project communications record.
 7. Initialize the workspace environment, trackers, Account and Opportunity basics, and search index.
-8. If starting documents exist in `workspace/inbox/`, invoke `workspace-ingest-documents`. Use `workspace-capture-meeting-notes` for transcripts or raw meeting notes.
+8. For a new Opportunity, pause and ask whether the user has starting documents to add to `workspace/inbox/` now, then wait for their response before re-checking the inbox. For an existing Opportunity, check `workspace/inbox/` once without prompting. Either way, if files are present, invoke `workspace-ingest-documents` — it handles both ordinary documents and meeting transcripts or raw notes.
 9. Report setup readiness and direct the user to `workspace-review-updates` when proposed tracker changes exist.
 
 ## Verify the local environment

@@ -16,7 +16,7 @@ cites the document it came from.
 | --- | --- | --- |
 | `inbox/` | New, unprocessed documents — the only folder you need to remember | You |
 | `project/` | Project overview, timeline, phase context | You + agent |
-| `meetings/` | Session notes and transcripts, named `YYYY-MM-DD - Title` | Agent through `workspace-capture-meeting-notes` |
+| `meetings/` | Session notes and transcripts, named `YYYY-MM-DD - Title` | Agent through `workspace-ingest-documents` |
 | `current-state/` | How things work today — summaries, landscape docs | You + agent |
 | `future-state/` | Where things are heading — options, scope, focus areas | You + agent |
 | `reference/` | Background material: SOWs, proposals, exports, client docs | Agent files these from the inbox |

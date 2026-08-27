@@ -1,27 +1,10 @@
----
-name: discover-project-context
-description: Establish or refresh reusable project context before implementation work begins. Use when Codex is starting work in an unfamiliar project, repeatedly searching for project references, onboarding to an existing effort, handing context to later skills, or identifying local folders, Slack channels, Teams chats/channels, SharePoint folders, stakeholders, terminology, constraints, or authoritative sources. Run measured, metadata-only discovery, update the setup-generated workspace/.system/source-context.yaml record, and generate a bounded projection inside workspace/.system/project-context without ingesting dense histories.
----
+# Map Mode — Discover Project Context
 
-# Discover Project Context
-
-Create the small, durable context map that later skills read before exploring a project. Discover locations and meaning; do not retrieve dense histories in this skill.
+Create the small, durable context map that later skills read before exploring a project. Discover locations and meaning; do not retrieve dense histories in this mode — that is evidence mode's job (`retrieve.md`).
 
 ## Contract
 
-Use the setup-generated project communications record as the shared source of truth and generate a machine-local projection for ranking and cache state:
-
-```text
-<Opportunity folder>/
-└── workspace/.system/
-    ├── source-context.yaml       # shared source locations from initial-setup
-    └── project-context/
-        ├── .gitignore
-        ├── manifest.json         # generated local retrieval projection
-        └── brief.md              # compact local projection
-```
-
-Read the initial-setup [project communications record contract](../initial-setup/references/source-context.md) before changing shared locations. Read [references/context-contract.md](references/context-contract.md) before writing the local projection. Do not make `manifest.json` a second independently maintained source inventory.
+Read [context-contract.md](context-contract.md) before writing the local projection. Do not make `manifest.json` a second independently maintained source inventory.
 
 Discovery is read-only and lightweight. It returns a shortlist of canonical source references and narrow retrieval hints—not file contents, message bodies, document bodies, transcripts, or connector payloads. Every recorded source carries a bounded access state (`available`, `unavailable`, or `unknown`) and a short reason.
 
@@ -73,7 +56,7 @@ Resolve these fields in order:
 2. Canonical requirements, decisions, status, and implementation locations.
 3. Remote sources that cannot be inferred safely: Slack, Teams, SharePoint, issue trackers, or other systems.
 
-Ask for names or links the user naturally knows; do not require connector IDs. Offer likely locations discovered in the metadata pass for confirmation. Read [references/interview-guide.md](references/interview-guide.md) for the gap rubric and examples.
+Ask for names or links the user naturally knows; do not require connector IDs. Offer likely locations discovered in the metadata pass for confirmation. Read [interview-guide.md](interview-guide.md) for the gap rubric and examples.
 
 ### 5. Run a measured, per-system source pass
 
@@ -107,7 +90,7 @@ python3 <skill-dir>/scripts/project_context.py record-discovery \
   --cap other=10
 ```
 
-The resulting `discovery_runs` entry provides an auditable token estimate without retaining source content. If the supplied preview would exceed the bounds above, stop and hand off to `$retrieve-project-context` for a task-specific, ranked retrieval.
+The resulting `discovery_runs` entry provides an auditable token estimate without retaining source content. If the supplied preview would exceed the bounds above, stop and switch to evidence mode (`retrieve.md`) for a task-specific, ranked retrieval.
 
 ### 6. Resolve locations, not histories
 
@@ -162,6 +145,6 @@ python3 <skill-dir>/scripts/project_context.py validate --root <opportunity-root
 
 ## Handoff
 
-Report the project communications record status, local manifest path, confirmed source count by kind, discovery measurement (including estimated or reported tokens), permission gaps, and next recommended action. Tell later skills to read the shared record, then `brief.md` and `manifest.json`, before searching. Invoke `$retrieve-project-context` only when the user needs source content gathered for a concrete task.
+Report the project communications record status, local manifest path, confirmed source count by kind, discovery measurement (including estimated or reported tokens), permission gaps, and next recommended action. Tell later skills to read the shared record, then `brief.md` and `manifest.json`, before searching. Switch to evidence mode only when the user needs source content gathered for a concrete task.
 
 Do not claim that remote content was reviewed when this skill only resolved its location.

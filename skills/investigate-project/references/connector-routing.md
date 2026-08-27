@@ -4,7 +4,7 @@ Treat connectors as interchangeable systems with different surfaced operations. 
 
 ## Chat systems
 
-Resolve a named channel, team, or chat; search within it using project terms and date filters; read a bounded message slice; and expand a selected thread only when it contains a likely decision or requirement. Start with no more than 20 search hits or 50 history messages for retrieval. A discovery pass uses the stricter cap in `$discover-project-context`.
+Resolve a named channel, team, or chat; search within it using project terms and date filters; read a bounded message slice; and expand a selected thread only when it contains a likely decision or requirement. Start with no more than 20 search hits or 50 history messages for retrieval. A map-mode pass uses the stricter cap in `discover.md`.
 
 Search private content only with explicit user consent or `source_policy.allow_private_search: true`. Preserve message permalinks or stable IDs for selected evidence.
 

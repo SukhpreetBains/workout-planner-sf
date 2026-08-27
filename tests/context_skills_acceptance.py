@@ -11,11 +11,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DISCOVERY = ROOT / "skills" / "discover-project-context" / "scripts" / "project_context.py"
+DISCOVERY = ROOT / "skills" / "investigate-project" / "scripts" / "project_context.py"
 SOURCE_CONTEXT = ROOT / "skills" / "initial-setup" / "scripts" / "manage-source-context.py"
-RANK = ROOT / "skills" / "retrieve-project-context" / "scripts" / "rank_context.py"
-PERSIST = ROOT / "skills" / "retrieve-project-context" / "scripts" / "persist_context.py"
-CACHE = ROOT / "skills" / "retrieve-project-context" / "scripts" / "cache_context.py"
+RANK = ROOT / "skills" / "investigate-project" / "scripts" / "rank_context.py"
+PERSIST = ROOT / "skills" / "investigate-project" / "scripts" / "persist_context.py"
+CACHE = ROOT / "skills" / "investigate-project" / "scripts" / "cache_context.py"
 VALIDATOR = ROOT / "tests" / "validate_context_skills.py"
 
 

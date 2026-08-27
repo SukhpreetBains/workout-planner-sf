@@ -1,8 +1,13 @@
-# Project Context Contract v1
+# Context Contract v1
+
+The shared contract for the manifest both modes read and write, plus
+the chunk, pack, and access-gap formats evidence mode produces from it.
 
 Use `workspace/.system/source-context.yaml`, created by `initial-setup`, as the project-owned source-location record. Use `workspace/.system/project-context/manifest.json` as its machine-local retrieval projection and stable handoff to ranking scripts. Import the shared record before retrieval; do not maintain conflicting source identities in the local projection.
 
-## Required shape
+## Manifest
+
+### Required shape
 
 ```json
 {
@@ -76,9 +81,9 @@ Use `workspace/.system/source-context.yaml`, created by `initial-setup`, as the 
 }
 ```
 
-## Field rules
+### Field rules
 
-### Project
+#### Project
 
 - `id`: Stable lowercase slug. Do not repurpose an ID for a different project.
 - `name`: User-facing project name.
@@ -87,22 +92,22 @@ Use `workspace/.system/source-context.yaml`, created by `initial-setup`, as the 
 - `workspace_roots`: Workspace-relative paths when possible. Use absolute paths only for roots outside the workspace.
 - `technology`, `terms`, `stakeholders`, `constraints`: Compact strings. Keep detailed prose elsewhere.
 
-### Source policy
+#### Source policy
 
 - `default_freshness_hours`: Default age after which remote cached context should be reconsidered.
 - `max_excerpt_chars`: Maximum persisted characters for one excerpt.
 - `max_total_chars`: Maximum persisted excerpt characters in one ranked context pack.
 - `allow_private_search`: Whether private-message search was explicitly permitted. `false` never prevents direct reads of a source the user explicitly supplied and authorized; it prevents unbounded private search.
 
-### Source-context projection
+#### Source-context projection
 
 - `path`: Workspace-relative path to the setup-generated project communications record when possible.
 - `last_imported_at`: When shared source references were last synchronized into this local manifest.
 - `source_count`: Number of shared source references present at import time.
 
-Run `project_context.py import-source-context` after setup or discovery changes the shared record. Import updates matching source IDs and preserves local-only entries; it never deletes an unrelated cached source merely because a narrow shared update omitted it.
+Run `project_context.py import-source-context` after setup or map-mode work changes the shared record. Import updates matching source IDs and preserves local-only entries; it never deletes an unrelated cached source merely because a narrow shared update omitted it.
 
-### Sources
+#### Sources
 
 - `id`: Unique lowercase identifier using letters, digits, and hyphens.
 - `kind`: One of `local`, `slack`, `teams`, `sharepoint`, `web`, or `other`.
@@ -119,9 +124,11 @@ Run `project_context.py import-source-context` after setup or discovery changes 
 - `access`: A bounded access record with `state` `available`, `unavailable`, or `unknown`, and a short non-sensitive `reason`. New source records must include it. Older manifests may omit it and are treated as legacy sources until refreshed.
 - `last_confirmed_at`: When the source identity and intended scope were last confirmed.
 
-Discovery uses `access.state` to distinguish a resolved source from a permission or capability gap. An `unavailable` or `unknown` source remains a valid reference; it is not an invitation to search a different location.
+Map mode uses `access.state` to distinguish a resolved source from a permission or capability gap. An `unavailable` or `unknown` source remains a valid reference; it is not an invitation to search a different location.
 
-### Discovery runs
+**Fields evidence mode relies on**: `project.objective`, `project.terms`, and `project.current_phase` expand the task query; `source_policy` sets privacy and excerpt budgets; `sources[].purpose`, `authority`, `priority`, `query_hints`, `include`, `exclude`, `time_window`, `freshness_hours`, `sensitivity`, `enabled`, and `access` control selection and scoring; source `id` values are stable join keys for chunks and cached hierarchy paths. Only sources with `access.state: available` may be retrieved — an `unavailable` or `unknown` source remains in the manifest and becomes an access gap for the current retrieval; evidence mode must preserve its label, locator, state, and short reason, and must not try another connector, request broader permissions, or widen the source search unless the user explicitly asks.
+
+#### Discovery runs
 
 `discovery_runs` is an append-only, bounded measurement log for lightweight source discovery. It stores counts only, never source content. Each entry records:
 
@@ -131,7 +138,7 @@ Discovery uses `access.state` to distinguish a resolved source from a permission
 - `estimated_tokens`: A runtime-reported input-token total when available, otherwise `ceil(characters_inspected / 4)`.
 - `exploration_caps`: Positive per-system item caps stated for the pass. The stable keys are `local`, `chat`, `document`, and `other`.
 
-Keep the most recent 20 entries. Older manifests without this optional field remain valid, but record a run whenever performing a new discovery pass.
+Keep the most recent 20 entries. Older manifests without this optional field remain valid, but record a run whenever performing a new map-mode pass.
 
 ## Invariants
 
@@ -147,3 +154,72 @@ Keep the most recent 20 entries. Older manifests without this optional field rem
 ## Consumer behavior
 
 A downstream skill must read `brief.md` first, load the manifest only as needed, and search outside listed sources only when the manifest is incomplete for the current task. It must explain any scope expansion and offer to update the manifest afterward.
+
+## Evidence mode outputs
+
+### Normalized chunk JSONL
+
+Write one JSON object per line:
+
+```json
+{
+  "chunk_id": "decisions-2026-08-04-001",
+  "source_id": "architecture-decisions",
+  "title": "Decision to use event-driven updates",
+  "text": "Bounded source excerpt or faithful window summary",
+  "url": "https://stable-source-link",
+  "timestamp": "2026-08-04T12:00:00Z",
+  "author": "Source author or Unknown",
+  "retrieved_at": "2026-08-04T13:00:00Z",
+  "semantic_score": 0.92,
+  "is_summary": false
+}
+```
+
+Required fields are `chunk_id`, `source_id`, and non-empty `text`. Use a unique `chunk_id` within a retrieval run. Omit unknown optional fields instead of inventing them. `semantic_score`, when present, must be between 0 and 1 and represent relevance to the explicit retrieval task.
+
+For a summary derived from a dense window, set `is_summary: true` and include:
+
+```json
+{"derived_from":["message-id-1","message-id-2"],"window_start":"...","window_end":"..."}
+```
+
+Retain stable source URLs or message IDs so selected facts can be expanded and verified.
+
+### Pack JSON
+
+After ranking, synthesize a pack:
+
+```json
+{
+  "task": "What the evidence pack supports",
+  "overview": "Compact answer grounded in the selected excerpts.",
+  "decisions": ["Decision — owner, date, and status when known"],
+  "open_questions": ["Material unresolved point"],
+  "sources": [
+    {
+      "source_id": "architecture-decisions",
+      "summary": "Why this source matters and what it establishes.",
+      "excerpts": [
+        {
+          "chunk_id": "decisions-2026-08-04-001",
+          "source_id": "architecture-decisions",
+          "title": "Decision to use event-driven updates",
+          "text": "Selected evidence",
+          "url": "https://stable-source-link",
+          "timestamp": "2026-08-04T12:00:00Z",
+          "author": "Example Person",
+          "retrieved_at": "2026-08-04T13:00:00Z",
+          "_ranking": {"score": 91.4}
+        }
+      ]
+    }
+  ]
+}
+```
+
+`persist_context.py` verifies source IDs, enforces excerpt limits, writes the hierarchy, and records manifest hash and refresh state. It intentionally retains cached source folders not touched by the current run; a narrow task must not erase unrelated context.
+
+### Access gaps
+
+Retrieval runs may include an `access_gaps` array in the pack, or pass the gap JSON emitted by `rank_context.py` to `persist_context.py`. Each gap contains `source_id`, `label`, `locator`, `state`, `reason`, and `recorded_at`. Gaps are written to `state.json` and a separate `Access Gaps` section in `index.md`; they are not mixed with retrieved findings or excerpts.

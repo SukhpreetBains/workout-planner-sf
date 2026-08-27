@@ -1,4 +1,0 @@
-interface:
-  display_name: "Retrieve Project Context"
-  short_description: "Rank and cache relevant project context"
-  default_prompt: "Use $retrieve-project-context to assemble the most relevant cached context for this task."

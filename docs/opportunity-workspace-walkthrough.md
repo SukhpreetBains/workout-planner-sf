@@ -84,14 +84,14 @@ The trackers are:
 - `future-state.xlsx`
 - `raid.xlsx`
 
-## 6. Ingest documents
+## 6. Ingest documents and capture meetings
 
 Place new material in `workspace/inbox/`, then invoke `workspace-ingest-documents`.
 
 The skill:
 
 1. Reads or converts each document.
-2. Files it into `workspace/meetings/`, `current-state/`, `future-state/`, or `reference/`.
+2. For a meeting transcript or raw notes, writes a structured session note under `workspace/meetings/` and files the transcript beside it. For everything else, files it into `current-state/`, `future-state/`, or `reference/`.
 3. Records it in `workspace/.system/sources.yaml`.
 4. Extracts evidence-backed stakeholders, pain points, systems, objectives, requirements, risks, assumptions, constraints, decisions, and open questions.
 5. Writes proposed changes into `workspace/.system/proposed-updates/`.
@@ -99,13 +99,7 @@ The skill:
 
 It does not modify the trackers.
 
-## 7. Capture meetings
-
-Invoke `workspace-capture-meeting-notes` for a transcript or raw meeting notes.
-
-The skill creates a structured session note under `workspace/meetings/`, preserves the transcript beside it, extracts evidence-backed proposed tracker updates, and refreshes the search index.
-
-## 8. Review proposed updates
+## 7. Review proposed updates
 
 Invoke `workspace-review-updates` to inspect pending changes. For each proposal, it shows:
 
@@ -118,7 +112,7 @@ The user can approve, edit, or reject each proposal. Only approved changes are w
 
 This is the only skill authorized to write tracker changes.
 
-## 9. Summarize workspace knowledge
+## 8. Summarize workspace knowledge
 
 Invoke `workspace-summarize` for current-state summaries, weekly rollups, stakeholder views, system or process deep dives, and future-state summaries.
 
@@ -139,5 +133,3 @@ Approved tracker knowledge
     ↓
 workspace-summarize
 ```
-
-For meetings, `workspace-capture-meeting-notes` enters the same flow at the proposed-update stage.
