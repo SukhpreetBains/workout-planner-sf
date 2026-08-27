@@ -184,7 +184,7 @@ function checkValue(v, spec, where, problems, ctx) {
     case 'icon':
       if (typeof v !== 'string') { problems.push(`${where}: expected an icon name, found ${describe(v)}`); return; }
       if (ctx.iconNames && !ctx.iconNames.has(v)) {
-        problems.push(`${where}: \`${v}\` is not an approved icon. Pick one from slalom-branding/assets/iconography/ (never draw a new one).`);
+        problems.push(`${where}: \`${v}\` is not an approved icon. Pick one from the active branding pack's assets/iconography/ (never draw a new one).`);
       }
       break;
 

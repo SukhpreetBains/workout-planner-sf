@@ -70,7 +70,7 @@ Clear space is at least the width of an "o" (0.428 × the logo height on the
 216 × 56.1 viewBox), applied as padding with a negative margin so it does not
 push the layout around. A client logo forms a partner lockup separated by a
 rule, never larger than the Slalom mark. Read
-`../../slalom-branding/references/logo.md` before repositioning either.
+the active branding pack's `logo.md` (see `../../utilities-ui-generation/references/branding.md`) before repositioning either.
 
 **`kpi-row`** — `value` may be non-numeric, in which case `count-up` degrades to
 a plain render because the builder simply omits `data-count-to`. The source line

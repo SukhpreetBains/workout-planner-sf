@@ -53,11 +53,12 @@ missing.
 Both warn on every relevant build. Surface them to the user rather than burying
 them, and disclose them if the deliverable goes to a brand review.
 
-**The quote has no serif.** Both approved quote pairings in
-`slalom-branding/references/typography.md` want a supporting serif, and no serif
-ships with this repo. The `quote` component uses a Slalom Sans–only treatment
-instead: Regular for the quote, Bold for the name, Light for the title. If a
-serif is added to `slalom-branding/assets/fonts/`, revisit this.
+**The quote has no serif.** Both approved quote pairings in the Slalom pack's
+`typography.md` (`utilities-ui-generation/branding/packs/slalom/docs/typography.md`)
+want a supporting serif, and no serif ships with this repo. The `quote`
+component uses a Slalom Sans–only treatment instead: Regular for the quote,
+Bold for the name, Light for the title. If a serif is added to that pack's
+`assets/fonts/`, revisit this.
 
 **The Slalom line is drawn.** `graphic-elements.md` asks for the Creative Library
 vector files rather than a hand-drawn line, and those files are not in this repo.

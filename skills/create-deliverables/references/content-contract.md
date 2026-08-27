@@ -72,7 +72,7 @@ An ordered list. Each item has a `type` and that type's fields. `cover`,
 | `evidence` | yes | What was observed, and how much of it. |
 | `implication` | yes | **The so-what.** Theme plus evidence without an implication is not a finding, and it is the implication that makes a readout defensible. |
 | `severity` | no | `high`, `medium`, `low`. Renders as a step meter **plus** the word — never colour alone. |
-| `icon` | no | Must be a filename (without extension) in `slalom-branding/assets/iconography/`. Never invent one. |
+| `icon` | no | Must be a filename (without extension) in the active branding pack's `assets/iconography/`. Never invent one. |
 
 ### `recommendations`
 | Item field | Required |

@@ -1,6 +1,6 @@
 # Logo, Lockups, and Sub-branding
 
-Source: *Slalom Brand Guide*, February 2025, pp. 24-32. Logo files: `assets/logos/`.
+Source: *Slalom Brand Guide*, February 2025, pp. 24-32. Logo files: `../assets/logos/`.
 
 ## Color
 
