@@ -14,3 +14,6 @@ local-evals/
 
 # Downloaded meeting transcripts may contain project-specific content.
 Call Transcripts/
+
+# Salesforce CLI local org cache (machine-local, org-specific).
+.sf/
