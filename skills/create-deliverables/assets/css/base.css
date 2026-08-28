@@ -116,7 +116,6 @@ a { color: var(--on-white-emphasis); text-underline-offset: 0.15em; }
 .page {
   display: block;
   max-width: 100%;
-  overflow-x: hidden;
 }
 
 .section {
