@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import mimetypes
 import os
 import secrets
 import subprocess
@@ -174,6 +175,61 @@ class ReviewHandler(BaseHTTPRequestHandler):
         if path == "/api/inbox":
             self.json(200, review_store.list_cards())
             return
+        if path == "/api/accepted":
+            from paths import load_schema
+            from trackers import id_column, read_rows
+
+            schema = load_schema()
+            items = []
+            for category, definition in schema["categories"].items():
+                try:
+                    rows = read_rows(category, schema)
+                except FileNotFoundError:
+                    rows = []
+                for row in rows:
+                    title = row.get(f"{category.replace('_', ' ').title()} Title") or row.get("Statement") or "Untitled"
+                    items.append({
+                        "category": category,
+                        "category_label": category.replace("_", " ").title(),
+                        "tracker_id": row.get(id_column(category, schema), ""),
+                        "title": title,
+                        "status": row.get("Status", ""),
+                        "fields": row,
+                        "field_schema": definition.get("columns", []),
+                    })
+            self.json(200, {"items": items})
+            return
+        if path == "/source":
+            source_ref = query.get("path", [""])[0]
+            candidate = (self.server.root_path / source_ref).resolve()
+            try:
+                candidate.relative_to(self.server.root_path / "workspace")
+            except ValueError:
+                self.json(403, {"error": "source path is outside the workspace"})
+                return
+            content_type = mimetypes.guess_type(candidate.name)[0] or "application/octet-stream"
+            self.file(candidate, content_type)
+            return
+        if path == "/api/reveal-source":
+            if not self.require_token():
+                return
+            source_ref = query.get("path", [""])[0]
+            candidate = (self.server.root_path / source_ref).resolve()
+            try:
+                candidate.relative_to(self.server.root_path / "workspace")
+            except ValueError:
+                self.json(403, {"error": "source path is outside the workspace"})
+                return
+            if not candidate.is_file():
+                self.json(404, {"error": "source file was not found"})
+                return
+            try:
+                subprocess.run(["open", "-R", str(candidate)], check=True, capture_output=True)
+            except (OSError, subprocess.CalledProcessError):
+                self.json(500, {"error": "Finder could not reveal the source file"})
+                return
+            self.json(200, {"revealed": source_ref})
+            return
         if path == "/api/events":
             try:
                 after = int(query.get("after", ["0"])[0])
@@ -191,6 +247,7 @@ class ReviewHandler(BaseHTTPRequestHandler):
         static = {
             "/": ("index.html", "text/html; charset=utf-8"),
             "/index.html": ("index.html", "text/html; charset=utf-8"),
+            "/accepted": ("index.html", "text/html; charset=utf-8"),
             "/app.css": ("app.css", "text/css; charset=utf-8"),
             "/app.js": ("app.js", "text/javascript; charset=utf-8"),
             "/vendor/anime.esm.min.js": ("vendor/anime.esm.min.js", "text/javascript; charset=utf-8"),
@@ -226,6 +283,28 @@ class ReviewHandler(BaseHTTPRequestHandler):
             self.json(200, {"stopping": True})
             import threading
             threading.Thread(target=self.server.shutdown, daemon=True).start()
+            return
+        if path == "/api/accepted/update":
+            from paths import load_schema
+            from trackers import id_column, upsert_row
+
+            body = self.body()
+            category = str(body.get("category", ""))
+            schema = load_schema()
+            if category not in schema["categories"]:
+                self.json(400, {"error": "unknown tracker category"})
+                return
+            fields = body.get("fields")
+            if not isinstance(fields, dict):
+                self.json(400, {"error": "fields must be an object"})
+                return
+            fields[id_column(category, schema)] = str(body.get("tracker_id", ""))
+            try:
+                tracker_id = upsert_row(category, fields, schema)
+            except (TypeError, ValueError) as exc:
+                self.json(422, {"error": str(exc)})
+                return
+            self.json(200, {"tracker_id": tracker_id})
             return
         if path not in routes:
             self.json(404, {"error": "not found"})

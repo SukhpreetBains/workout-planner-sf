@@ -4,27 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Workspace review inbox</title>
-  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/app.css?v=review-layout-4">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to review content</a>
   <header class="site-header">
     <img class="brand-logo" src="/logo.svg" alt="Slalom">
     <div class="header-copy">
-      <span class="eyebrow">Opportunity workspace</span>
-      <span>Human review inbox</span>
+      <span id="header-title">Review Inbox</span>
     </div>
+    <button id="view-accepted" class="quiet accepted-button" type="button">View accepted</button>
   </header>
   <main id="main" tabindex="-1">
     <section id="loading" class="state-panel" aria-live="polite">
       <p class="eyebrow">Loading</p>
       <h1>Preparing your review inbox</h1>
     </section>
-    <section id="dashboard" hidden></section>
     <section id="review-flow" hidden></section>
     <section id="error-state" class="state-panel" hidden role="alert"></section>
   </main>
   <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
-  <script type="module" src="/app.js"></script>
+  <script type="module" src="/app.js?v=review-layout-15"></script>
 </body>
 </html>
