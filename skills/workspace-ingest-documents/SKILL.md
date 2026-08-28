@@ -125,10 +125,25 @@ state. Post its loopback URL in chat as, for example, "7 new items ready for
 review." Never open the browser automatically. If there are no proposals, do
 not start the server and do not post an app alert.
 
-Then tell the user what was filed (including where any session note lives), how
-many updates were proposed per category, and that `workspace-review-updates` is
-the next step. If the trackers are empty of stakeholders/systems that
-findings need to link to, propose those rows in the same batch — order
-within one file does not matter for validation of links to *existing*
-rows, so link only to IDs that are already in the trackers and mention
-the rest in Notes.
+Then give the user a clear,
+plain-English handoff. Do not merely mention a workflow or leave the next
+step implicit. State:
+
+- that the project trackers have **not** been changed yet;
+- the total number of evidence-backed items ready for their review, with
+  counts by category;
+- that these are proposed facts, not yet the project's official working
+  record, and need their approval before they are added; and
+- the exact next action in user language: for example, “I have 16 items
+  ready for your approval. Would you like me to review and populate the
+  project trackers now?”
+
+If the user approves, invoke `workspace-review-updates` and walk the
+proposals through its governed review. If they do not approve, leave the
+proposals in place and make clear that they are available for a later
+review. Also report what was filed (including where any session note
+lives). If the trackers are empty of stakeholders/systems that findings
+need to link to, propose those rows in the same batch - order within one
+file does not matter for validation of links to *existing* rows, so link
+only to IDs that are already in the trackers and mention the rest in
+Notes.

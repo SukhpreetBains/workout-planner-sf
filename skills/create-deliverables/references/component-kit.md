@@ -24,7 +24,7 @@ Every component is a pure function `(section, ctx) => htmlString` in
 | `quote` | Client voice | `fade-up` |
 | `heatmap` | Capability ratings, current against target | `cell-sweep` |
 | `roadmap` / `timeline` | Phases, windows, outcomes | `path-draw` |
-| `recommendations` | Prioritised actions with owner and horizon | `stagger-up` |
+| `recommendations` | Prioritized actions with owner and horizon | `stagger-up` |
 | `next-steps` | Short closing list | `stagger-up` |
 | `methodology` | What was reviewed and who was spoken to, in aggregate | none |
 | `footer` | Logo, classification, prepared-for, date | none |
@@ -70,7 +70,7 @@ Clear space is at least the width of an "o" (0.428 × the logo height on the
 216 × 56.1 viewBox), applied as padding with a negative margin so it does not
 push the layout around. A client logo forms a partner lockup separated by a
 rule, never larger than the Slalom mark. Read
-`../../slalom-branding/references/logo.md` before repositioning either.
+the active branding pack's `logo.md` (see `../../utilities-ui-generation/references/branding.md`) before repositioning either.
 
 **`kpi-row`** — `value` may be non-numeric, in which case `count-up` degrades to
 a plain render because the builder simply omits `data-count-to`. The source line

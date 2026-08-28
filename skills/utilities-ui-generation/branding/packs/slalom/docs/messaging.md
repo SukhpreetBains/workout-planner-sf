@@ -48,7 +48,7 @@ Bring it to life with one concrete customer story — Virgin Voyages' Vivi digit
 
 ## Services
 
-Twelve service areas, each with a two-letter icon (see `assets/` services icons in the Creative Library):
+Twelve service areas, each with a two-letter icon (see `../assets/` services icons in the Creative Library):
 
 | Code | Service | Includes |
 |---|---|---|

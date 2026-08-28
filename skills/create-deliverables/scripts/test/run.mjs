@@ -389,6 +389,21 @@ test('build: a JSON content file is a first-class input', () => {
   eq(result.manifest.accent, 'chartreuse');
 });
 
+test('build: the long-content layout stress fixture builds', () => {
+  const result = build(path.join(FIXTURES, 'layout-stress.json'), { out: path.join(TMP, 'layout-stress') });
+  includes(result.html, 'A deliberately long KPI value');
+  includes(result.html, 'A recommendation title designed to exercise wrapping');
+});
+
+test('layout: components keep content visible and constrain data-driven columns', () => {
+  const baseCss = readFileSync(path.join(SKILL_ROOT, 'assets', 'css', 'base.css'), 'utf8');
+  const componentsCss = readFileSync(path.join(SKILL_ROOT, 'assets', 'css', 'components.css'), 'utf8');
+  ok(!/overflow-x:\s*hidden/.test(baseCss), 'page-level horizontal overflow must not hide layout failures');
+  includes(componentsCss, 'container-type: inline-size;', 'KPI tiles need container-aware typography');
+  includes(componentsCss, 'minmax(10rem, 18rem)', 'recommendation metadata needs a bounded column');
+  includes(componentsCss, 'overflow-wrap: anywhere;', 'long client-provided content must be able to wrap');
+});
+
 test('build: the minimal YAML fixture and its JSON twin render identically', () => {
   const y = build(path.join(FIXTURES, 'valid-minimal.yaml'), { out: path.join(TMP, 'yaml') });
   const j = build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json2') });

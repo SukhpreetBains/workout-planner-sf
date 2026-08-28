@@ -1,6 +1,0 @@
-interface:
-  display_name: "Anime.js"
-  short_description: "Design and build Anime.js v4 animations"
-  icon_small: "./assets/skill-icon.svg"
-  icon_large: "./assets/skill-icon.svg"
-  default_prompt: "Use $animejs to design and build an Anime.js v4 animation for this interface."

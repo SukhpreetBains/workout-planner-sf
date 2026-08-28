@@ -36,7 +36,7 @@ Be diverse and inclusive across a set: vary age, skin tone, ability, and geograp
 
 ## Illustration
 
-Bundled library: `assets/illustrations/` (116 SVGs, 37 subjects, indexed in its README).
+Bundled library: `../assets/illustrations/` (116 SVGs, 37 subjects, indexed in its README).
 
 - The brand is photo-first. Use illustration as an accent, not the primary subject, and avoid overusing it. A project leaning heavily on illustration should go through the Global Marketing Studio.
 - Approved illustration colors are black, Slalom Blue, and Slalom Dark Blue. Recolor by importing the SVG, selecting it, and applying a brand swatch; in InDesign, open the SVG in Illustrator first and paste it in.

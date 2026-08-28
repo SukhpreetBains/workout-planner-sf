@@ -27,18 +27,18 @@ sections:
   - type: exec-summary
     title: In brief
     body: |
-      Northwind's service organisation is carrying the cost of a fragmented
+      Northwind's service organization is carrying the cost of a fragmented
       agent desktop. Agents move between three systems to answer a routine
       billing question, and the handling time that follows shows up in reopen
       rates, in overtime, and in CSAT.
 
       Nothing we found requires a platform decision to be revisited. The
       remedies are consolidation, one data contract, and a deliberate
-      knowledge practice — all deliverable inside the current licence
+      knowledge practice — all deliverable inside the current license
       footprint.
 
       We recommend committing to a ninety-day foundation phase now, and
-      deferring the self-service programme until the desktop is stable.
+      deferring the self-service program until the desktop is stable.
 
   - type: kpi-row
     title: Where the cost shows up
@@ -162,7 +162,7 @@ sections:
         horizon: 90-180 days
         owner: Service operations
 
-      - action: Defer the self-service programme
+      - action: Defer the self-service program
         rationale: >
           Self-service built on the current knowledge base would publish the
           inconsistency to customers. Sequence it after the knowledge work.
