@@ -93,7 +93,7 @@ The skill:
 1. Reads or converts each document.
 2. For a meeting transcript or raw notes, writes a structured session note under `workspace/meetings/` and files the transcript beside it. For everything else, files it into `current-state/`, `future-state/`, or `reference/`.
 3. Records it in `workspace/.system/sources.yaml`.
-4. Extracts evidence-backed stakeholders, pain points, systems, objectives, requirements, risks, assumptions, constraints, decisions, and open questions.
+4. Extracts evidence-backed stakeholders, pain points, systems, objectives, requirements, risks, assumptions, issues, decisions, dependencies, constraints, and open questions.
 5. Writes proposed changes into `workspace/.system/proposed-updates/`.
 6. Validates the proposals and refreshes the search index.
 
@@ -102,6 +102,10 @@ It does not modify the trackers.
 ## 7. Review proposed updates
 
 Invoke `workspace-review-updates` to inspect pending changes. For each proposal, it shows:
+
+- a loopback-only visual review link when proposals are ready
+- category counts and a completed-versus-remaining progress bar
+- one governed proposal card at a time, with autosaved edits and source evidence
 
 - the proposed addition or change
 - supporting source evidence

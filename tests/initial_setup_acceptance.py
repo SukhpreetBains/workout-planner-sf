@@ -8,6 +8,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from openpyxl import load_workbook
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PREPARE = ROOT / "skills" / "initial-setup" / "scripts" / "prepare-opportunity-folder.py"
@@ -38,6 +40,10 @@ def main() -> None:
         run(str(PREPARE), "--mode", "new", *common)
         assert (opportunity / "workspace" / "inbox").is_dir()
         assert (opportunity / "workspace" / "trackers" / "stakeholders.xlsx").is_file()
+        raid = load_workbook(opportunity / "workspace" / "trackers" / "raid.xlsx", read_only=True)
+        assert "Issues" in raid.sheetnames
+        assert "Dependencies" in raid.sheetnames
+        raid.close()
         assert (opportunity / "Deliverables" / "Discover").is_dir()
         assert (opportunity / "AGENTS.md").is_file()
         assert not (opportunity / "Content Inbox").exists()

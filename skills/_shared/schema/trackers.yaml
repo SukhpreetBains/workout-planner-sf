@@ -17,7 +17,7 @@
 #   - "Source Refs", "Created At", "Updated At" exist on every tab and are
 #     managed by apply_updates.py ("Source Refs" comes from the update file).
 
-schema_version: "1.0"
+schema_version: "1.1"
 list_delimiter: "; "
 
 trackers:
@@ -32,7 +32,7 @@ trackers:
     tabs: [objective, requirement]
   raid:
     file: workspace/trackers/raid.xlsx
-    tabs: [risk, assumption, constraint, decision, open_question]
+    tabs: [risk, assumption, issue, decision, dependency, constraint, open_question]
 
 categories:
   stakeholder:
@@ -145,12 +145,27 @@ categories:
       pain already happening and not vague worry.
     columns:
       - {name: Statement, required: true}
+      - {name: Risk Title}
+      - {name: Description}
+      - {name: Calculated Severity, computed: risk_severity}
+      - {name: Risk Score, type: number, computed: risk_score}
+      - {name: Status, default: open,
+         enum: [new, open, active, monitoring, mitigated, cancelled, closed]}
+      - {name: Category}
+      - {name: Raised By}
+      - {name: Date Raised, type: date}
+      - {name: Date Closed, type: date}
+      - {name: Probability, type: number, minimum: 0.1, maximum: 0.9}
       - {name: Likelihood, enum: [low, medium, high]}
-      - {name: Impact, enum: [low, medium, high, critical]}
+      - {name: Impact, enum: [very_low, low, moderate, medium, high, very_high, critical],
+         weights: {very_low: 0.05, low: 0.1, moderate: 0.2, medium: 0.2,
+                   high: 0.4, very_high: 0.8, critical: 0.8}}
+      - {name: Impact Date, type: date}
       - {name: Mitigation}
       - {name: Owner}
-      - {name: Status, required: true, default: open,
-         enum: [open, monitoring, mitigated, closed]}
+      - {name: Response, enum: [avoid, transfer, mitigate, accept]}
+      - {name: Response Description}
+      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
 
   assumption:
     tab: Assumptions
@@ -162,9 +177,47 @@ categories:
       incidental beliefs nothing depends on stay out.
     columns:
       - {name: Statement, required: true}
+      - {name: Assumption Title}
+      - {name: Description}
+      - {name: Category}
+      - {name: Raised By}
+      - {name: Date Raised, type: date}
+      - {name: Action Due Date, type: date}
+      - {name: Owner}
+      - {name: Reason for Assumption}
       - {name: Validation Plan}
+      - {name: Action to Validate}
+      - {name: Impact if Incorrect}
+      - {name: Contingency}
       - {name: Status, required: true, default: unvalidated,
-         enum: [unvalidated, validated, invalidated]}
+         enum: [unvalidated, under_investigation, validated, invalidated]}
+      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
+
+  issue:
+    tab: Issues
+    id_prefix: ISS-
+    what_belongs: >
+      An event or condition that is happening now and is negatively affecting
+      delivery, operations, scope, schedule, cost, quality, or outcomes.
+    bar_to_clear: >
+      A current, material problem with a concrete impact, not a future
+      uncertainty and not a general current-state pain point outside delivery.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Issue Title}
+      - {name: Description}
+      - {name: Status, required: true, default: active,
+         enum: [active, cancelled, closed]}
+      - {name: Priority, enum: [low, medium, high]}
+      - {name: Impact, enum: [low, medium, high]}
+      - {name: Category}
+      - {name: Raised By}
+      - {name: Date Raised, type: date}
+      - {name: Owner}
+      - {name: Due Date, type: date}
+      - {name: Resolution Date, type: date}
+      - {name: Resolution}
+      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
 
   constraint:
     tab: Constraints
@@ -194,11 +247,47 @@ categories:
       approval) — options still under discussion stay out.
     columns:
       - {name: Statement, required: true}
+      - {name: Decision Title}
+      - {name: Description}
+      - {name: Priority, enum: [low, medium, high]}
+      - {name: Category}
+      - {name: Owner}
+      - {name: Date Raised, type: date}
+      - {name: Date Required, type: date}
       - {name: Decided By}
-      - {name: Decision Date}
+      - {name: Decision Date, type: date}
+      - {name: Options Considered}
+      - {name: Selected Decision}
       - {name: Rationale}
+      - {name: Follow-up Actions}
+      - {name: Action Owner}
+      - {name: Action Due Date, type: date}
+      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
+      - {name: Stakeholders Informed}
       - {name: Status, required: true, default: decided,
-         enum: [proposed, decided, superseded, reversed]}
+         enum: [open, proposed, decided, deferred, escalated, superseded, reversed]}
+
+  dependency:
+    tab: Dependencies
+    id_prefix: DEP-
+    what_belongs: >
+      A plan, process, team, or delivery event whose completion relies on the
+      completion or outcome of another event.
+    bar_to_clear: >
+      A named external or cross-team prerequisite with a meaningful delivery
+      consequence and identifiable owner or delivery date.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Dependency Title}
+      - {name: Description}
+      - {name: Importance, enum: [low, medium, high]}
+      - {name: Status, required: true, default: open, enum: [open, closed]}
+      - {name: Category}
+      - {name: Raised By}
+      - {name: Date Raised, type: date}
+      - {name: Owning Team}
+      - {name: Delivery Date, type: date}
+      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
 
   open_question:
     tab: Open Questions
