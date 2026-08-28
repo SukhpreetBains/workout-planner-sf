@@ -151,7 +151,7 @@ export const COMPONENTS = {
       const valueAttrs = numeric
         ? ` data-count-to="${esc(numeric.value)}" data-count-decimals="${numeric.decimals}"`
         : '';
-      const unit = item.unit ? `<span class="kpi__unit">${typeset(item.unit)}</span>` : '';
+      const unit = item.unit ? `<span class="kpi__unit">&nbsp;${typeset(item.unit)}</span>` : '';
       return `
           <li class="kpi" data-motion-item>
             <p class="kpi__value"><span${valueAttrs}>${typeset(item.value)}</span>${unit}</p>
