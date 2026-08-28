@@ -135,6 +135,10 @@ the 1–5 scale, so nothing depends on colour.
 Straight quotes and apostrophes become curly; ` -- ` becomes an em dash.
 Everything else is escaped and rendered as literal text.
 
+Client-visible generated prose uses standard American English unless the
+consultant or client requests another convention. Preserve verbatim source
+quotations when fidelity matters.
+
 **External links are an error.** A client deliverable makes no network request,
 so a link to `https://…` is refused at authoring time rather than discovered by
 the validator after the build. Quote the source in text instead.
