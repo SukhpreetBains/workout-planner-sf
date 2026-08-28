@@ -395,6 +395,17 @@ test('build: the long-content layout stress fixture builds', () => {
   includes(result.html, 'A recommendation title designed to exercise wrapping');
 });
 
+test('build: the project-kickoff worked example builds end to end and passes the gate', () => {
+  const example = path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'content.example.yaml');
+  const result = build(example, { out: path.join(TMP, 'kickoff') });
+  eq(result.manifest.archetype, 'project-kickoff');
+  ok(existsSync(path.join(result.outDir, 'index.html')));
+  includes(result.html, 'class="agenda"');
+  includes(result.html, 'class="data-table"');
+  const report = validateBuild(result.outDir);
+  eq(report.errors.length, 0, `unexpected errors: ${report.errors.map((e) => e.message).join('; ')}`);
+});
+
 test('layout: components keep content visible and constrain data-driven columns', () => {
   const baseCss = readFileSync(path.join(SKILL_ROOT, 'assets', 'css', 'base.css'), 'utf8');
   const componentsCss = readFileSync(path.join(SKILL_ROOT, 'assets', 'css', 'components.css'), 'utf8');

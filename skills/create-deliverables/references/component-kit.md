@@ -27,6 +27,9 @@ Every component is a pure function `(section, ctx) => htmlString` in
 | `recommendations` | Prioritized actions with owner and horizon | `stagger-up` |
 | `next-steps` | Short closing list | `stagger-up` |
 | `methodology` | What was reviewed and who was spoken to, in aggregate | none |
+| `purpose` | Why the engagement exists and what is in scope, before any findings exist | `fade-up` |
+| `agenda` | Numbered list of session topics | `stagger-up` |
+| `table` | Generic column/row data — team & roles, deliverables, assumptions | `fade-up` |
 | `footer` | Logo, classification, prepared-for, date | none |
 
 `cover`, `progress-rail` and `footer` are injected by the archetype.
