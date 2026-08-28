@@ -21,13 +21,23 @@ Update file format:
 from __future__ import annotations
 
 import sys
+from datetime import date, datetime
 from pathlib import Path
 
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from paths import REPO_ROOT, load_schema
-from trackers import id_column, read_rows
+from trackers import id_column, normalize_enum, read_rows
+
+
+def contained_source(ref: str) -> Path | None:
+    try:
+        path = (REPO_ROOT / ref).resolve()
+        path.relative_to(REPO_ROOT)
+        return path
+    except (OSError, ValueError):
+        return None
 
 
 def load_updates(path: Path) -> dict:
@@ -70,6 +80,9 @@ def validate(doc: dict, schema: dict) -> list[str]:
                 problems.append(f"{where}: id '{rid}' does not exist in the tracker")
 
         fields = upd.get("fields") or {}
+        if not isinstance(fields, dict):
+            problems.append(f"{where}: fields must be a mapping")
+            continue
         cols = {c["name"]: c for c in cat["columns"]}
         for name in fields:
             if name not in cols:
@@ -83,25 +96,63 @@ def validate(doc: dict, schema: dict) -> list[str]:
                     else:
                         problems.append(f"{where}: required column '{name}' is missing")
         for name, col in cols.items():
-            value = str(fields.get(name, "")).strip()
+            raw_value = fields.get(name, "")
+            value = str(raw_value).strip()
             if not value:
                 continue
+            if "enum" in col:
+                normalized = normalize_enum(value)
+                fields[name] = normalized
+                value = normalized
             if "enum" in col and value not in col["enum"]:
                 problems.append(f"{where}: '{name}' must be one of "
                                 f"{col['enum']}, got '{value}'")
+            if col.get("type") == "number":
+                try:
+                    number = float(raw_value)
+                    if "minimum" in col and number < col["minimum"]:
+                        problems.append(f"{where}: '{name}' must be at least {col['minimum']}")
+                    if "maximum" in col and number > col["maximum"]:
+                        problems.append(f"{where}: '{name}' must be at most {col['maximum']}")
+                    fields[name] = number
+                except (TypeError, ValueError):
+                    problems.append(f"{where}: '{name}' must be a number")
+            if col.get("type") == "date":
+                try:
+                    if not isinstance(raw_value, (date, datetime)):
+                        datetime.fromisoformat(value)
+                except ValueError:
+                    problems.append(f"{where}: '{name}' must be an ISO date")
             if "links_to" in col:
                 for linked in [v.strip() for v in value.split(";") if v.strip()]:
                     if linked not in ids_for(col["links_to"]):
                         problems.append(f"{where}: '{name}' points at '{linked}' "
                                         f"which is not an existing {col['links_to']} ID")
+            if "links_to_any" in col:
+                valid_ids = set()
+                for linked_category in col["links_to_any"]:
+                    valid_ids.update(ids_for(linked_category))
+                for linked in [v.strip() for v in value.split(";") if v.strip()]:
+                    if linked not in valid_ids:
+                        problems.append(f"{where}: '{name}' points at '{linked}' which is not "
+                                        "an existing RAIDD ID")
 
         refs = upd.get("source_refs") or default_refs
         if not refs:
             problems.append(f"{where}: no source_refs (each update must cite "
                             "the document it came from)")
         for ref in refs:
-            if not (REPO_ROOT / ref).exists():
+            source_path = contained_source(str(ref))
+            if source_path is None:
+                problems.append(f"{where}: source ref '{ref}' escapes the workspace root")
+            elif not source_path.exists():
                 problems.append(f"{where}: source ref '{ref}' does not exist")
+        evidence = upd.get("evidence") or []
+        if not isinstance(evidence, list):
+            problems.append(f"{where}: evidence must be a list")
+        for entry in evidence if isinstance(evidence, list) else []:
+            if not isinstance(entry, dict) or not entry.get("source_ref"):
+                problems.append(f"{where}: each evidence entry needs source_ref")
     return problems
 
 

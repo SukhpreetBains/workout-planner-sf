@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from copy import copy
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
@@ -26,6 +27,48 @@ def header(category: str, schema: dict) -> list[str]:
     cols += [c["name"] for c in cat["columns"]]
     cols += MANAGED_COLUMNS
     return cols
+
+
+def normalize_enum(value: object) -> str:
+    """Normalize human labels such as ``Very High`` to schema enum keys."""
+    return str(value).strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def coerce_value(column: dict, value: object) -> object:
+    """Convert schema-typed values before they are written to Excel."""
+    if value in (None, ""):
+        return ""
+    if column.get("type") == "number":
+        return float(value)
+    if column.get("type") == "date":
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, date):
+            return datetime.combine(value, datetime.min.time())
+        return datetime.fromisoformat(str(value).strip())
+    if "enum" in column:
+        return normalize_enum(value)
+    return value
+
+
+def apply_computed_fields(category: str, fields: dict, schema: dict) -> None:
+    """Fill computed fields only when all inputs are supplied on this write."""
+    if category != "risk":
+        return
+    probability = fields.get("Probability")
+    impact = fields.get("Impact")
+    if probability in (None, "") or impact in (None, ""):
+        return
+    impact_col = next(c for c in schema["categories"]["risk"]["columns"]
+                      if c["name"] == "Impact")
+    weight = impact_col["weights"].get(normalize_enum(impact))
+    if weight is None:
+        return
+    score = float(probability) * float(weight)
+    fields["Risk Score"] = score
+    fields["Calculated Severity"] = (
+        "Sev 1" if score >= 0.5 else "Sev 2" if score >= 0.2 else "Sev 3"
+    )
 
 
 def init_trackers(schema: dict | None = None, reset: bool = False) -> list[str]:
@@ -52,16 +95,30 @@ def init_trackers(schema: dict | None = None, reset: bool = False) -> list[str]:
             else:
                 ws = wb[tab]
                 have = [c.value for c in ws[1] if c.value]
-                if have != want and (reset or ws.max_row <= 1):
+                if have != want and (reset and ws.max_row <= 1):
                     ws.delete_rows(1, ws.max_row)
                     ws.append(want)
                     changed.append(f"reset header of '{tab}' in {tracker['file']}")
-        # drop tabs the schema does not know about only if they are empty
-        known = {schema["categories"][c]["tab"] for c in tracker["tabs"]}
-        for name in list(wb.sheetnames):
-            if name not in known and wb[name].max_row <= 1:
-                wb.remove(wb[name])
-                changed.append(f"removed empty unknown tab '{name}' from {tracker['file']}")
+                else:
+                    for name in want:
+                        if name in have:
+                            continue
+                        new_col = ws.max_column + 1
+                        source = ws.cell(1, max(1, new_col - 1))
+                        target = ws.cell(1, new_col, name)
+                        if source.has_style:
+                            target._style = copy(source._style)
+                        if source.font:
+                            target.font = copy(source.font)
+                        if source.fill:
+                            target.fill = copy(source.fill)
+                        if source.border:
+                            target.border = copy(source.border)
+                        if source.alignment:
+                            target.alignment = copy(source.alignment)
+                        changed.append(f"added column '{name}' to '{tab}' in {tracker['file']}")
+                        have.append(name)
+        # Unknown tabs and custom columns are user-owned and are never removed.
         wb.save(path)
     return changed
 
@@ -102,15 +159,21 @@ def next_id(category: str, schema: dict) -> str:
 def upsert_row(category: str, fields: dict, schema: dict) -> str:
     """Insert (no ID key) or update (ID key present) one row. Returns the ID."""
     cat = schema["categories"][category]
+    init_trackers(schema)
     path = REPO_ROOT / cat["tracker_file"]
-    if not path.exists():
-        init_trackers(schema)
     wb = load_workbook(path)
     ws = wb[cat["tab"]]
     cols = [c.value for c in ws[1] if c.value]
     idcol = id_column(category, schema)
     stamp = now_iso()
 
+    fields = dict(fields)
+    apply_computed_fields(category, fields, schema)
+    definitions = {column["name"]: column for column in cat["columns"]}
+    fields = {
+        name: coerce_value(definitions[name], value) if name in definitions else value
+        for name, value in fields.items()
+    }
     row_id = fields.get(idcol, "")
     target = None
     if row_id:
@@ -128,5 +191,13 @@ def upsert_row(category: str, fields: dict, schema: dict) -> str:
         row_id = next_id(category, schema)
         values = {**fields, idcol: row_id, "Created At": stamp, "Updated At": stamp}
         ws.append([values.get(c, "") for c in cols])
+    for name, column in definitions.items():
+        if name not in cols:
+            continue
+        cell = ws.cell(target[0].row if target else ws.max_row, cols.index(name) + 1)
+        if column.get("type") == "date" and cell.value not in (None, ""):
+            cell.number_format = "yyyy-mm-dd"
+        if column.get("type") == "number" and cell.value not in (None, ""):
+            cell.number_format = "0.00"
     wb.save(path)
     return row_id

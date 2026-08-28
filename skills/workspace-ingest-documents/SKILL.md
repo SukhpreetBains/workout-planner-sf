@@ -86,11 +86,18 @@ Write one file per batch to
 source_refs: ["workspace/reference/Acme SOW.pdf"]
 updates:
   - category: pain_point
+    proposal_id: "<uuid>"    # stable across edits and review
+    revision: 1
     action: add            # or: update (then also give `id: PAIN-003`)
     fields:
       Statement: Invoice approvals take 9 days because the handoff is manual.
       Pain Type: process
       Severity: high
+    evidence:
+      - source_ref: workspace/meetings/2026-08-14 - Kickoff.md
+        excerpt: "Invoice approvals take 9 days because the handoff is manual."
+        line_start: 42       # optional when line information is available
+        line_end: 42
     # source_refs: [...]   # per-update override when updates span documents
 ```
 
@@ -100,9 +107,25 @@ Validate, and fix anything it reports:
 PY <shared-skill-dir>/scripts/validate_updates.py workspace/.system/proposed-updates/<file>.yaml
 ```
 
+Use a UUID for every `proposal_id`. Increment `revision` whenever an agent
+rewrites a proposal after it has been created. Evidence excerpts must be short,
+verbatim support for the specific proposal. Do not manufacture line numbers.
+
 ## Step 4 — Sync and hand off
 
-Run `PY <shared-skill-dir>/scripts/sync.py`, then give the user a clear,
+Run `PY <shared-skill-dir>/scripts/sync.py`. If validation produced one or more
+proposals, run:
+
+```
+PY <shared-skill-dir>/scripts/review_server.py start --root "$EAD_REPO_ROOT"
+```
+
+The command health-checks and reuses a running inbox or safely replaces stale
+state. Post its loopback URL in chat as, for example, "7 new items ready for
+review." Never open the browser automatically. If there are no proposals, do
+not start the server and do not post an app alert.
+
+Then give the user a clear,
 plain-English handoff. Do not merely mention a workflow or leave the next
 step implicit. State:
 
@@ -120,7 +143,7 @@ proposals through its governed review. If they do not approve, leave the
 proposals in place and make clear that they are available for a later
 review. Also report what was filed (including where any session note
 lives). If the trackers are empty of stakeholders/systems that findings
-need to link to, propose those rows in the same batch — order within one
+need to link to, propose those rows in the same batch - order within one
 file does not matter for validation of links to *existing* rows, so link
 only to IDs that are already in the trackers and mention the rest in
 Notes.
