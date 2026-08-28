@@ -1,2 +1,2 @@
-# Preserve approved Slalom SVG assets byte-for-byte and avoid text normalization.
-skills/slalom-branding/assets/**/*.svg -text -diff
+# Preserve approved branding-pack SVG assets byte-for-byte and avoid text normalization.
+skills/utilities-ui-generation/branding/packs/**/assets/**/*.svg -text -diff

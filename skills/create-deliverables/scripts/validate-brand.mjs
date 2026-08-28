@@ -12,6 +12,12 @@
  * The allowed palette is parsed out of the built tokens.css at runtime, so the
  * palette has exactly one source of truth. The canonical brand values below
  * exist only to check that tokens.css itself has not drifted.
+ *
+ * These canonical values are Slalom's, not pack-aware: swapping the active
+ * branding pack (branding/active.json in utilities-ui-generation) changes
+ * which assets and docs this build reads, but every rule in this file still
+ * checks against Slalom's exact palette, fonts, and copy. See the "Canonical
+ * brand values" section below before deploying a non-Slalom pack.
  */
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -24,6 +30,18 @@ import { Report, fatal } from './lib/report.mjs';
 
 /* ==========================================================================
    Canonical brand values (Slalom Brand Guide, February 2025)
+
+   TODO(brand-packs): everything in this block — PALETTE, APPROVED_ON,
+   SLALOM_BLUES, ACCENTS, DARK_3, SHIPPED_WEIGHTS — is hardcoded to Slalom's
+   brand guide. Adding a client branding pack (see
+   utilities-ui-generation/references/branding.md) does not make this file
+   enforce that client's rules; it still validates every build against these
+   exact values. Making the gate pack-aware means sourcing this block from
+   the active pack (branding/packs/<pack>/) instead of literals here — e.g. a
+   brand-rules.json alongside each pack's assets/ and docs/ — and threading
+   that through every rule below that references PALETTE, APPROVED_ON, a
+   Slalom-specific weight or copy check (rules 2-11, 15-19). Until then, this
+   validator is Slalom-only regardless of which pack is active.
    ========================================================================== */
 
 const PALETTE = {
@@ -540,7 +558,7 @@ export function validateBuild(dir) {
   for (const file of logoFiles) {
     const bytes = readFileSync(file.abs);
     report.check(approvedLogos.some((l) => l.bytes.equals(bytes)), 'rule 13',
-      `\`${file.rel}\` does not byte-match any approved logo in slalom-branding/assets/logos/. `
+      `\`${file.rel}\` does not byte-match any approved logo in the active branding pack's assets/logos/. `
       + 'The mark is used unaltered — never recoloured or edited.');
   }
 
@@ -554,7 +572,7 @@ export function validateBuild(dir) {
     `--logo-clear-space is \`${clearSpace}\`. Clear space must be at least the width of an "o" `
     + '(0.428 × the logo height on the 216 × 56.1 viewBox).');
 
-  // 15. Every icon and illustration traces back to slalom-branding/assets.
+  // 15. Every icon and illustration traces back to the active branding pack's assets.
   const brandAssetBytes = collectBrandAssets();
   for (const el of elements.filter((e) => e.tag === 'img')) {
     const src = el.attrs.src ?? '';
@@ -565,7 +583,7 @@ export function validateBuild(dir) {
     if (/logo-slalom/.test(src)) continue;              // rule 13 owns the logo
     const bytes = readFileSync(full);
     report.check(brandAssetBytes.some((b) => b.equals(bytes)), 'rule 15',
-      `\`${src}\` does not match any approved asset in slalom-branding/assets/. `
+      `\`${src}\` does not match any approved asset in the active branding pack's assets/. `
       + 'Never invent an icon or illustration; use the approved library.');
   }
 

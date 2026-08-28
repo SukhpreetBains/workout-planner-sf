@@ -47,7 +47,7 @@ import { utils }           from 'animejs/utils';
 ## CDN - no build step (ESM)
 
 In a plain HTML file, use a `type="module"` script and import directly from a CDN. This is the
-fastest way to try something and is what `assets/demo.html` uses.
+fastest way to try something and is what `../../assets/animejs/demo.html` uses.
 
 ```html
 <script type="module">
@@ -79,7 +79,7 @@ Pin a version for stability, e.g. `https://cdn.jsdelivr.net/npm/animejs@4/+esm`.
 
 ## Vendored local copy - no build step, no network
 
-`assets/vendor/anime.esm.min.js` is a pinned v4 bundle committed to this skill. Reach for it over
+`../../assets/animejs/vendor/anime.esm.min.js` is a pinned v4 bundle committed to this skill. Reach for it over
 the CDN whenever the page must work offline, or is a client-facing artifact that should make no
 external requests. Copy the bundle **and `LICENSE.md`** next to the page — MIT requires the notice
 travel with the code.
@@ -100,7 +100,7 @@ The import map is worth the two extra lines: every snippet in these references i
 
 One difference from npm: **subpath imports like `animejs/svg` do not work here.** They are a
 bundler feature. Take every export from the single bundle. See
-[assets/vendor/README.md](../assets/vendor/README.md) for the version, hashes, and update steps.
+[../../assets/animejs/vendor/README.md](../../assets/animejs/vendor/README.md) for the version, hashes, and update steps.
 
 ## TypeScript
 

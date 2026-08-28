@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "archetype": "executive-readout",
+    "client": "Layout Stress Test Client",
+    "title": "A deliberately long executive readout title for layout verification",
+    "subtitle": "A deliberately long subtitle used to verify client-ready wrapping at constrained widths",
+    "date": "2026-01-15",
+    "classification": "Confidential — prepared for Layout Stress Test Client",
+    "accent": "cyan"
+  },
+  "sections": [
+    {
+      "type": "exec-summary",
+      "body": "A layout stress fixture with intentionally long text."
+    },
+    {
+      "type": "kpi-row",
+      "title": "Long metrics",
+      "items": [
+        {
+          "value": "A deliberately long KPI value",
+          "unit": "with a descriptive unit",
+          "label": "A deliberately long label that must remain readable rather than overlap another metric",
+          "source": "A deliberately long source label used to test safe wrapping in the metric card"
+        },
+        {
+          "value": "123.45",
+          "unit": "%",
+          "label": "A second long metric label for responsive-column testing",
+          "source": "Long source text for a second metric"
+        }
+      ]
+    },
+    {
+      "type": "theme-group",
+      "title": "Long findings",
+      "findings": [
+        {
+          "theme": "A deliberately long finding heading designed to wrap without expanding the card",
+          "evidence": "Evidence text.",
+          "implication": "Implication text."
+        }
+      ]
+    },
+    {
+      "type": "recommendations",
+      "title": "Long recommendations",
+      "items": [
+        {
+          "action": "A recommendation title designed to exercise wrapping without colliding with its metadata",
+          "rationale": "A deliberately long recommendation rationale used to verify that the narrative column stays readable when the owner and horizon are also long.",
+          "horizon": "A deliberately long horizon description for responsive-layout testing",
+          "owner": "A deliberately long cross-functional executive owner description for responsive-layout testing"
+        }
+      ]
+    },
+    {
+      "type": "next-steps",
+      "items": ["A deliberately long next step used to verify normal text wrapping."]
+    }
+  ]
+}

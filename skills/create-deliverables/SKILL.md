@@ -54,8 +54,8 @@ Full detail in `references/workflow.md`.
 | Motion vocabulary, restraint rules, recipes | `references/motion-doctrine.md` |
 | Grid, type scale, spacing, print | `references/layout-system.md` |
 | Handoff, confidentiality, font licensing | `references/delivery.md` |
-| A brand judgement call this skill does not cover | invoke `slalom-branding` |
-| A motion request outside the documented vocabulary | invoke `animejs` |
+| A brand judgement call this skill does not cover | invoke `utilities-ui-generation` (brand) |
+| A motion request outside the documented vocabulary | invoke `utilities-ui-generation` (motion) |
 
 ## Content-contract first
 
@@ -87,7 +87,7 @@ archetype and rebuild.
   motion alone. Severity is a meter *plus* a word; a heatmap cell prints its
   numeral.
 - **Never invent a logo, icon, or illustration.** Take them from
-  `slalom-branding/assets/`.
+  the active branding pack's `assets/`.
 - **Resolve the Slalom Sans licensing question before the first handoff.**
   See `references/delivery.md`.
 
@@ -110,12 +110,16 @@ references/             one file per topic, listed above
 ## Assets and dependencies
 
 Zero npm dependencies and zero runtime dependencies. Node's standard library
-only. Two sibling skills supply the raw material, resolved by relative path:
+only. A sibling skill, `utilities-ui-generation`, supplies the raw material,
+resolved by relative path:
 
-- `../slalom-branding/assets/` — Slalom Sans webfonts, the four approved logo
-  colours, 102 approved icons, illustrations, colour bars.
-- `../animejs/assets/vendor/` — a pinned Anime.js v4.5.0 ESM bundle (MIT) and its
-  licence, which is copied next to the bundle on every build.
+- The active branding pack's `assets/` (resolved via
+  `../utilities-ui-generation/branding/active.json`) — webfonts, the four
+  approved logo colours, approved icons, illustrations, colour bars. Slalom's
+  own pack ships as the default.
+- `../utilities-ui-generation/assets/animejs/vendor/` — a pinned Anime.js
+  v4.5.0 ESM bundle (MIT) and its licence, which is copied next to the bundle
+  on every build.
 
 The dependency on those **assets** is hard: the build fails with an actionable
 message rather than emitting a deliverable with a missing logo or font.

@@ -13,7 +13,7 @@ The implemented workspace workflow is:
 3. `workspace-review-updates` applies only changes approved by the user.
 4. `workspace-summarize` produces evidence-grounded narrative outputs inside `workspace/`.
 
-Use `slalom-branding` to apply or review approved Slalom colors, typography, accessibility, voice, imagery, logos, and graphic elements across deliverables.
+Use `utilities-ui-generation` to add Anime.js motion to a page, or to apply or review brand colors, typography, accessibility, voice, imagery, logos, and graphic elements from the active branding pack across deliverables.
 
 ## Architecture
 

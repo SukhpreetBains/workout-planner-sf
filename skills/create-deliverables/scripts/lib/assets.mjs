@@ -14,12 +14,7 @@ import { fileURLToPath } from 'node:url';
 export const SKILL_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const SKILLS_DIR = path.resolve(SKILL_ROOT, '..');
 
-export const BRANDING = path.join(SKILLS_DIR, 'slalom-branding', 'assets');
-export const ANIME_VENDOR = path.join(SKILLS_DIR, 'animejs', 'assets', 'vendor');
-
-const WEBFONT_DIR = path.join(BRANDING, 'fonts', 'slalom-sans', 'Webfont Files');
-const ICON_DIR = path.join(BRANDING, 'iconography');
-const LOGO_DIR = path.join(BRANDING, 'logos');
+const UI_GENERATION_DIR = path.join(SKILLS_DIR, 'utilities-ui-generation');
 
 export class AssetError extends Error {
   constructor(message) {
@@ -37,6 +32,27 @@ function require_(file, what) {
   }
   return file;
 }
+
+/**
+ * Resolve the active branding pack's assets directory from
+ * `branding/active.json`. Swapping the active pack (see
+ * utilities-ui-generation/references/branding.md) changes what this
+ * resolves to without any code change here.
+ */
+function resolveActiveBrandingAssets() {
+  const pointer = path.join(UI_GENERATION_DIR, 'branding', 'active.json');
+  const pointerFile = require_(pointer, 'the active branding pack pointer');
+  const { pack: name } = JSON.parse(readFileSync(pointerFile, 'utf8'));
+  if (!name) throw new AssetError(`${pointer} does not name a "pack"`);
+  return path.join(UI_GENERATION_DIR, 'branding', 'packs', name, 'assets');
+}
+
+export const BRANDING = resolveActiveBrandingAssets();
+export const ANIME_VENDOR = path.join(UI_GENERATION_DIR, 'assets', 'animejs', 'vendor');
+
+const WEBFONT_DIR = path.join(BRANDING, 'fonts', 'slalom-sans', 'Webfont Files');
+const ICON_DIR = path.join(BRANDING, 'iconography');
+const LOGO_DIR = path.join(BRANDING, 'logos');
 
 /**
  * Slalom Sans, flattened to space-free filenames. The source directories

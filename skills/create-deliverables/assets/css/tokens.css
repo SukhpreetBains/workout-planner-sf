@@ -116,7 +116,7 @@
   --size-body: 1.0625rem;
   --size-small: 0.875rem;
   --size-eyebrow: 0.75rem;
-  --size-kpi: clamp(3rem, 7vw, 5rem);
+  --size-kpi: clamp(2.5rem, 4vw, 4rem);
 
   /* Leading. graphic guidance gives print starting points of 0.90 for
      headlines and 1.1 for body; 1.1 is unreadable for on-screen prose, so
