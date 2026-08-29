@@ -30,12 +30,18 @@ from pathlib import Path
 SCRIPT = Path(__file__).resolve()
 APP_DIR = SCRIPT.parents[2] / "workspace-review-updates" / "assets" / "review-app"
 STARTED_PROCESSES: dict[str, subprocess.Popen] = {}
+CONFIGURED_ROOT: Path | None = None
 
 
 def configure_root(root: Path) -> None:
-    os.environ["EAD_REPO_ROOT"] = str(root.resolve())
+    global CONFIGURED_ROOT
+    resolved = root.resolve()
+    if CONFIGURED_ROOT == resolved:
+        return
+    os.environ["EAD_REPO_ROOT"] = str(resolved)
     for module in ("paths", "trackers", "validate_updates", "review_store"):
         sys.modules.pop(module, None)
+    CONFIGURED_ROOT = resolved
 
 
 def state_path(root: Path) -> Path:
