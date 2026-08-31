@@ -9,10 +9,13 @@ can instead derive from the artifact under test.
 from __future__ import annotations
 
 import json
+import importlib.util
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
+from urllib.request import Request, urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +23,7 @@ EVAL = ROOT / "evals" / "context-skills"
 GENERATOR = ROOT / "skills" / "design-skill-evals" / "scripts" / "generate_eval_scaffold.py"
 RUNNER = EVAL / "run_deterministic.py"
 CONTRACT_DOC = ROOT / "skills" / "design-skill-evals" / "references" / "evaluation-contract.md"
+WORKBENCH_SERVER = ROOT / "docs" / "evals_workbench.py"
 
 # The markers a package may use in place of a measured value. A plausible-looking
 # number standing in for an unmeasured one is the failure mode this file guards
@@ -108,6 +112,11 @@ def check_stale_paths() -> None:
                     raise AssertionError(
                         "{0} still uses the retired .codex path: {1}".format(path.relative_to(ROOT), line.strip())
                     )
+
+    contract = CONTRACT_DOC.read_text(encoding="utf-8")
+    check("Measure a specific skill by isolation" in contract, "contract does not define a skill-run cost boundary")
+    check("workflow cost" in contract, "contract does not distinguish multi-skill workflow cost")
+    check("not skill-run cost" in contract, "contract conflates tool-call duration with skill-run cost")
 
 
 def check_run_record(record: dict, record_contract: dict, tasks: list, plan: dict) -> None:
@@ -304,6 +313,38 @@ def check_inspect_poc() -> None:
     check("verify_context_case.py" in dockerfile, "Inspect sandbox omits its verifier")
 
 
+def check_workbench_cache_policy() -> None:
+    spec = importlib.util.spec_from_file_location("evals_workbench_acceptance", WORKBENCH_SERVER)
+    check(spec is not None and spec.loader is not None, "cannot load the workbench server")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    server = module.ThreadingHTTPServer(("127.0.0.1", 0), module.WorkbenchHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        port = server.server_address[1]
+        request = Request(
+            "http://127.0.0.1:{0}/evals-workbench.html".format(port),
+            headers={"If-Modified-Since": "Fri, 28 Aug 2099 12:00:00 GMT"},
+        )
+        with urlopen(request) as response:
+            check(response.status == 200, "workbench HTML did not load")
+            check(
+                response.headers.get("Cache-Control") == "no-store",
+                "workbench HTML may be cached across branch/server switches",
+            )
+            body = response.read().decode("utf-8")
+            check(
+                "Did it work, what did it cost, and how much time did it save?" in body,
+                "conditional request reused a stale workbench shell",
+            )
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=2)
+
+
 def main() -> None:
     profile = load_json(EVAL / "skill-profile.json")
     plan = load_json(EVAL / "eval-plan.json")
@@ -315,6 +356,7 @@ def main() -> None:
     check_failure_is_detected(tasks)
     check_scaffold_generator(profile)
     check_inspect_poc()
+    check_workbench_cache_policy()
 
     print("Passed skill-evaluation acceptance fixtures")
 

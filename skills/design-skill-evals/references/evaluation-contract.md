@@ -80,6 +80,25 @@ Both live in the run record's `behavior` block. Both are reported alongside corr
 
 Per run, report input tokens, output tokens, cache-read tokens, cache-creation tokens, total tokens, estimated dollars, turns and tool calls. Across runs in an arm, report min, p50, p95, max, mean and the coefficient of variation ("how much the cost jumps around").
 
+### What a skill run costs
+
+Measure a specific skill by isolation: one run is one fresh agent session with
+one target skill workflow, one controlled prompt and fixture, and one graded
+deliverable. Attribute the whole session to that run, including later turns,
+tool calls and subagents caused by the workflow. This is the figure labelled
+"credits per run" or "tokens per run."
+
+Do not assign tokens to the `Skill` tool's own round trip. Loading instructions
+usually takes a fraction of a second; the work they direct happens later and is
+not bracketed by that tool result. Per-skill-call duration is diagnostic timing,
+not skill-run cost.
+
+When one session invokes several skills as an end-to-end Ascent process, report
+the total as **workflow cost** and list the skills invoked. Do not manufacture a
+per-skill split from timestamps or nearby model requests. To compare individual
+skill costs, run each target workflow in its own isolated session as a separate
+suite or task, then compare those complete run records.
+
 Rules:
 
 1. **Never report a mean without a spread.** One number with no spread cannot answer "is it 70 credits one time and 40 credits another time?"

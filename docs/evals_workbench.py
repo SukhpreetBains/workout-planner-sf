@@ -1733,6 +1733,15 @@ class WorkbenchHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, directory=str(DOCS), **kwargs)
 
+    def end_headers(self) -> None:
+        has_cache_policy = any(
+            header.lower().startswith(b"cache-control:")
+            for header in getattr(self, "_headers_buffer", [])
+        )
+        if not has_cache_policy:
+            self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def log_message(self, format: str, *args: Any) -> None:  # noqa: A002
         sys.stderr.write("%s %s\n" % (self.address_string(), format % args))
 
@@ -1834,6 +1843,10 @@ class WorkbenchHandler(SimpleHTTPRequestHandler):
             return
 
         if not path.startswith("/api/"):
+            if path.endswith(".html"):
+                for header in ("If-Modified-Since", "If-None-Match"):
+                    if header in self.headers:
+                        del self.headers[header]
             super().do_GET()
             return
 

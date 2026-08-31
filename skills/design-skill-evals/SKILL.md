@@ -79,6 +79,12 @@ Use one trial for deterministic scripts. For variable behavior, set trials to th
 
 Both are extracted by code from the host's session log. No model reads a transcript to produce a metric.
 
+- **Run boundary.** For a specific skill's cost, one fresh agent session is one
+	controlled run of that target workflow, including its later turns, tools and
+	subagents. A multi-skill session is an end-to-end workflow cost, not a
+	defensible per-skill allocation. Never treat the `Skill` tool's load duration
+	as the cost of executing the skill.
+
 - **Cost.** Input, output, cache-read and cache-creation tokens, total tokens, estimated dollars, turns, tool calls. Report cache reads separately; they price differently. Take per-model rates from one config file with the date they were checked — get current rates from the `claude-api` skill, never hardcode a price inline.
 - **Spread.** Across the runs in an arm report min, p50, p95, max, mean and the coefficient of variation ("how much the cost jumps around"), and derive the `consistency_verdict` from the provisional thresholds in the contract. Label the thresholds provisional wherever they are shown.
 - **Time.** Agent wall-clock from the first to the last session timestamp, against the recorded human baseline in minutes. Omit `time_saved_minutes` and `speedup_factor` when no baseline is recorded. Never write zero, and never claim a saving against an unsourced number. A harness's own runtime is machine speed, not agent time: report it under its own name and never substitute it for `agent_wall_clock_seconds`.
