@@ -1,0 +1,43 @@
+meta:
+  archetype: executive-readout
+  client: Synthetic demonstration
+  title: From approved content to editable PowerPoint
+  subtitle: A mechanism spike for the Ascent delivery workflow
+  date: 2026-08-28
+  authors:
+    - name: Ascent team
+      role: Demonstration fixture
+  classification: Synthetic content — not for customer delivery
+  accent: cyan
+sections:
+  - type: exec-summary
+    title: What the spike proves
+    body: |
+      One approved content contract can drive both a microsite and an editable PowerPoint deck.
+
+      The deck renderer owns slide boundaries. It does not infer them from a continuous web page.
+  - type: theme-group
+    title: Design decisions
+    body: The mechanism keeps the stable parts explicit.
+    findings:
+      - theme: Shared source of truth
+        evidence: This synthetic fixture follows the existing create-deliverables content contract.
+        implication: Editorial approval can happen before either presentation medium is rendered.
+        severity: low
+      - theme: Native output
+        evidence: Text and layout surfaces are emitted as PowerPoint text boxes and shapes.
+        implication: Consultants can revise the deck without returning to the conversion tool.
+        severity: low
+  - type: recommendations
+    title: Recommended direction
+    items:
+      - action: Continue with the shared-contract renderer.
+        rationale: It is deterministic, editable, and independent of microsite layout changes.
+        horizon: After the Monday mechanism demo
+        owner: Ascent team
+  - type: next-steps
+    title: Before customer delivery
+    items:
+      - Obtain the approved golden reference deck from Gada.
+      - Complete the visual and accessibility pass against the PowerPoint template.
+      - Add the agentic evaluation after the evaluation harness reaches main.

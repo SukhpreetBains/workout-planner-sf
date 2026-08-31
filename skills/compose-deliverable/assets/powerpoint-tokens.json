@@ -1,0 +1,28 @@
+{
+  "primary": {
+    "slalomBlue": "#0C62FB",
+    "slalomDarkBlue": "#002FAF"
+  },
+  "secondary": {
+    "cyan": "#1BE1F2",
+    "coral-red": "#FF4D5F",
+    "purple": "#C7B9FF",
+    "chartreuse": "#DEFF4D"
+  },
+  "neutral": {
+    "white": "#FFFFFF",
+    "lightGray": "#E6E6E6",
+    "darkGray": "#666666",
+    "black": "#000000"
+  },
+  "font": {
+    "powerPoint": "Avenir Next LT Pro",
+    "fallback": "Arial"
+  },
+  "stage": {
+    "widthPixels": 1920,
+    "heightPixels": 1080,
+    "widthInches": 13.333,
+    "heightInches": 7.5
+  }
+}

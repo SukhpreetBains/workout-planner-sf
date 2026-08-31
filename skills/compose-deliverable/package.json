@@ -1,0 +1,17 @@
+{
+  "name": "@ascent/compose-deliverable",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:demo": "node scripts/build.mjs examples/reference-informed-content.yaml --storyboard examples/reference-informed-storyboard.json --out build/reference-informed-demo.pptx",
+    "validate:demo": "python3 scripts/validate_pptx.py build/reference-informed-demo.pptx --manifest build/reference-informed-demo.manifest.json",
+    "validate:broken": "python3 scripts/test/validator_cases.py build/reference-informed-demo.pptx build/reference-informed-demo.manifest.json",
+    "build:spike": "node scripts/build.mjs examples/demo-content.yaml --out build/ascent-demo.pptx",
+    "demo": "npm run build:demo && npm run validate:demo",
+    "test": "node scripts/test/run.mjs"
+  },
+  "dependencies": {
+    "dom-to-pptx": "2.1.1"
+  }
+}
