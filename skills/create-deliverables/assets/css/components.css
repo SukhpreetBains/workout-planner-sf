@@ -504,6 +504,51 @@
 .methodology .prose { max-width: var(--measure); }
 
 /* ==========================================================================
+   AGENDA
+   ========================================================================== */
+
+.agenda { display: grid; gap: var(--space-3); counter-reset: agenda-item; max-width: 46rem; }
+
+.agenda-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-4);
+  align-items: baseline;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule-color);
+  font-weight: var(--weight-bullet);
+}
+
+.agenda-item__index { font-weight: var(--weight-subhead); color: var(--on-white-emphasis); font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   DATA TABLE
+   A generic table with no rating or colour semantics — team/roles,
+   deliverables, assumptions. See heatmap above for the rated variant.
+   ========================================================================== */
+
+.data-table { display: grid; gap: var(--space-4); }
+.data-table__scroll { overflow-x: auto; }
+.data-table table { border-collapse: collapse; width: 100%; min-width: 32rem; }
+
+.data-table th, .data-table td {
+  text-align: left;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--rule-color);
+  vertical-align: top;
+}
+
+.data-table thead th {
+  font-size: var(--size-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: var(--weight-subhead);
+  color: var(--on-white-muted);
+}
+
+.data-table tbody th { font-weight: var(--weight-body-tight); }
+
+/* ==========================================================================
    FOOTER
    ========================================================================== */
 

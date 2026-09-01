@@ -15,7 +15,7 @@ Two top-level keys, `meta` and `sections`. Anything else is an error.
 
 | Field | Required | Notes |
 |---|---|---|
-| `archetype` | yes | Selects `templates/<archetype>/`. Currently `executive-readout`. |
+| `archetype` | yes | Selects `templates/<archetype>/`. Currently `executive-readout` or `project-kickoff`. |
 | `client` | yes | The client's name as they write it. |
 | `title` | yes | Sentence case. |
 | `subtitle` | no | One line of scope or timeframe. |
@@ -47,6 +47,17 @@ An ordered list. Each item has a `type` and that type's fields. `cover`,
 | Field | Required |
 |---|---|
 | `title` | no (defaults to "In brief") |
+| `body` | yes — prose |
+
+### `purpose`
+Same shape as `exec-summary`, same rendering — a title plus a lead prose
+block. Distinct type because it means something different: why the
+engagement exists and what is in scope, stated before any findings exist to
+summarize.
+
+| Field | Required |
+|---|---|
+| `title` | no (defaults to "Purpose & scope") |
 | `body` | yes — prose |
 
 ### `kpi-row`
@@ -123,6 +134,27 @@ the 1–5 scale, so nothing depends on colour.
 |---|---|
 | `title` | no |
 | `body` | yes — prose |
+
+### `agenda`
+| Field | Required |
+|---|---|
+| `title` | no |
+| `items` | yes — a list of short strings |
+
+### `table`
+Generic column/row data — no rating or colour semantics. Reused across a
+deck for team & roles, deliverables, a workshop plan, or key assumptions,
+each with its own `columns`.
+
+| Field | Required | Notes |
+|---|---|---|
+| `title` | yes | What this table is — unlike other sections, there is no useful fallback. |
+| `columns` | yes, at least 1 | Column headers, in order. |
+| `rows` | yes, at least 1 | |
+
+| Row field | Required | Notes |
+|---|---|---|
+| `cells` | yes, at least 1 | One string per column, in order. The first cell is the row's header (e.g. a name or a deliverable), not just its first value. |
 
 ## Prose subset
 

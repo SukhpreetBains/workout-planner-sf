@@ -43,6 +43,10 @@ export const SECTION_SCHEMA = {
     title: { type: 'string' },
     body: { type: 'prose', required: true },
   },
+  purpose: {
+    title: { type: 'string' },
+    body: { type: 'prose', required: true },
+  },
   'kpi-row': {
     title: { type: 'string' },
     items: {
@@ -120,6 +124,20 @@ export const SECTION_SCHEMA = {
   methodology: {
     title: { type: 'string' },
     body: { type: 'prose', required: true },
+  },
+  agenda: {
+    title: { type: 'string' },
+    items: { type: 'stringlist', required: true, min: 1 },
+  },
+  table: {
+    title: { type: 'string', required: true },
+    columns: { type: 'stringlist', required: true, min: 1 },
+    rows: {
+      type: 'list', required: true, min: 1,
+      of: {
+        cells: { type: 'stringlist', required: true, min: 1 },
+      },
+    },
   },
 };
 

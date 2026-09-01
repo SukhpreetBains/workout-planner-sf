@@ -67,6 +67,7 @@ The resulting structure is:
     AGENTS.md
     workspace/
       inbox/
+      deliverables/
       project/
       meetings/
       current-state/
@@ -81,7 +82,7 @@ The resulting structure is:
       Transition/
 ```
 
-Keep agent-created project files, working documents, trackers, indexes, and source records inside `workspace/`. Do not write agent work into `Deliverables/`.
+Keep agent-created project files, working documents, trackers, indexes, and source records inside `workspace/`. Store generated output artifacts such as decks, documents, and sites in `workspace/deliverables/`. Do not write agent work into `Deliverables/`; that folder is reserved for human promotion of reviewed material into a delivery phase.
 
 ## Confirm messaging sources
 

@@ -2,6 +2,8 @@
 
 Initialize the standard workspace after the Opportunity path is confirmed and writable. The workflow is resumable: create missing state and preserve existing files and tracker rows.
 
+Generated output artifacts, including decks, documents, and sites, belong in `workspace/deliverables/`. `Deliverables/` is reserved for a human to promote reviewed material into the appropriate delivery phase.
+
 ## 1. Locate the workspace engine
 
 Locate `skills/_shared` alongside the installed skill library. Set `EAD_REPO_ROOT` to the Opportunity folder before invoking its `scripts/py` launcher so all generated state lands beneath `<Opportunity>/workspace/`.

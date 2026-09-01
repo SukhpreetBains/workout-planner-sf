@@ -102,6 +102,7 @@ export function slalomLine() {
 
 const EYEBROW = {
   'exec-summary': 'Summary',
+  purpose: 'Purpose',
   'kpi-row': 'By the numbers',
   'theme-group': 'What we heard',
   recommendations: 'Recommendations',
@@ -110,10 +111,12 @@ const EYEBROW = {
   heatmap: 'Assessment',
   'next-steps': 'Next steps',
   methodology: 'Method',
+  agenda: 'Agenda',
 };
 
 const FALLBACK_TITLE = {
   'exec-summary': 'In brief',
+  purpose: 'Purpose & scope',
   'kpi-row': 'By the numbers',
   'theme-group': 'What we heard',
   recommendations: 'Recommendations',
@@ -122,6 +125,8 @@ const FALLBACK_TITLE = {
   heatmap: 'Assessment',
   'next-steps': 'Next steps',
   methodology: 'How we got here',
+  agenda: 'Agenda',
+  table: 'Details',
 };
 
 /** The label a section contributes to the progress rail. */
@@ -139,11 +144,22 @@ export function sectionId(section, index) {
    Components
    ========================================================================== */
 
-export const COMPONENTS = {
-  'exec-summary': (section) => `
+/**
+ * `exec-summary` and `purpose` are the same shape and the same box — a title
+ * plus a lead prose block, the thing a reader hits first. Only the chrome
+ * (EYEBROW/FALLBACK_TITLE) differs: one summarizes findings, the other
+ * states why an engagement exists before any findings exist to summarize.
+ */
+function renderProseBox(section) {
+  return `
       <div class="exec-summary" data-motion="fade-up">
         <div class="prose">${renderProse(section.body)}</div>
-      </div>`,
+      </div>`;
+}
+
+export const COMPONENTS = {
+  'exec-summary': renderProseBox,
+  purpose: renderProseBox,
 
   'kpi-row': (section) => {
     const tiles = section.items.map((item) => {
@@ -302,6 +318,46 @@ export const COMPONENTS = {
       <div class="methodology">
         <div class="prose">${renderProse(section.body)}</div>
       </div>`,
+
+  agenda: (section) => {
+    const items = section.items.map((item, i) => `
+          <li class="agenda-item" data-motion-item>
+            <span class="agenda-item__index" aria-hidden="true">${i + 1}</span>
+            <span>${typeset(item)}</span>
+          </li>`).join('');
+    return `
+      <ol class="agenda" data-motion="stagger-up">${items}
+      </ol>`;
+  },
+
+  /**
+   * A generic data table: one authorable column set and rows of cells, no
+   * rating or colour semantics. The first cell of each row is a row header
+   * (the natural identifying column — a name, a deliverable, an assumption).
+   * Reused across a kickoff's team/roles, deliverables, and assumptions
+   * tables rather than one bespoke component per table.
+   */
+  table: (section) => {
+    const head = section.columns.map((c) => `<th scope="col">${typeset(c)}</th>`).join('');
+    const body = section.rows.map((row) => {
+      const [first, ...rest] = row.cells;
+      const cells = rest.map((c) => `<td>${typeset(c)}</td>`).join('');
+      return `
+            <tr>
+              <th scope="row">${typeset(first ?? '')}</th>${cells}
+            </tr>`;
+    }).join('');
+    return `
+      <div class="data-table" data-motion="fade-up">
+        <div class="data-table__scroll">
+          <table>
+            <thead><tr>${head}</tr></thead>
+            <tbody>${body}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  },
 };
 
 const HEATMAP_SCALE = [

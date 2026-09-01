@@ -75,7 +75,8 @@
   .rec,
   .quote,
   .exec-summary,
-  .next-step {
+  .next-step,
+  .agenda-item {
     break-inside: avoid;
   }
 
@@ -83,6 +84,8 @@
 
   .heatmap__scroll { overflow: visible; }
   .heatmap table { min-width: 0; }
+  .data-table__scroll { overflow: visible; }
+  .data-table table { min-width: 0; }
 
   /* A link's URL is useless on paper and this deliverable has no external
      links by design, so suppress decoration rather than print href text. */
