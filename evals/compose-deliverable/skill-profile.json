@@ -1,0 +1,30 @@
+{
+  "schema_version": "ascent.skill-eval-profile.v1",
+  "skill_id": "compose-deliverable",
+  "purpose": "Build an editable Slalom-branded PowerPoint executive readout from approved shared content and a reviewed storyboard, without inventing findings or scraping a microsite DOM.",
+  "deliverable": {
+    "name": "Editable executive-readout PowerPoint deck from approved content",
+    "kind": "document",
+    "client_facing": true,
+    "path_or_form": "A native .pptx with a fixture-derived manifest and HTML conversion preview",
+    "note": "The committed fixture is a labelled synthetic reconstruction. It demonstrates content-to-deck traceability but is not a customer deliverable."
+  },
+  "human_baseline": {"recorded": false, "minutes": "unknown", "source": "unknown", "note": "No timed manual run or dated delivery-lead estimate exists for this exact deck."},
+  "golden_reference": {"available": false, "reference_id": null, "owner": null, "note": "Gada's approved deck has not yet been cleared for repository evaluation use. The synthetic fixture cannot serve as a human golden document."},
+  "expected_skill_invocations": ["compose-deliverable", "slalom-branding"],
+  "expected_skill_invocations_note": "Not observable in this deterministic runner. An agentic arm must extract these from the host session log.",
+  "required_clarifying_questions": ["Confirm the approved source content artifact.", "Confirm the deck title, classification, accent, and slide sequence."],
+  "required_clarifying_questions_note": "Not observable in this deterministic runner because it has no user turn.",
+  "interfaces": {
+    "inputs": ["Approved content.yaml", "Reviewed storyboard JSON for dense sections", "Approved local brand artwork"],
+    "outputs": ["Native editable .pptx", "Fixture-derived manifest", "Fixed-stage HTML conversion preview"],
+    "tools": ["node scripts/build.mjs", "python3 scripts/validate_pptx.py", "python3 scripts/test/validator_cases.py"],
+    "environment": ["Fresh temporary output directory per run", "Pinned synthetic fixture and storyboard", "Installed local dom-to-pptx and Chromium dependency"]
+  },
+  "success_conditions": ["Declared source titles and selected source statements survive as native editable PPTX text.", "Every source section is represented by the declared storyboard slide sequence.", "The deck has native text and shapes, approved font and palette, classification, source notes, and resolved packaged images.", "Deliberately corrupted PPTX packages are rejected with specific validation errors."],
+  "trajectory_requirements": ["Read the shared content contract rather than scraping the microsite DOM.", "Do not invent findings, sources, or numbers."],
+  "known_failure_modes": ["Source content missing from native PPTX text", "Storyboard does not cover a source section", "Raster-only or non-editable output", "Unapproved font, palette, dimension, logo, or source-note state", "Broken packaged image relationship"],
+  "failure_mode_provenance": "contract-enumeration",
+  "failure_mode_provenance_note": "We guessed these failures from the skill contract and its existing negative validator cases; no agent trace error analysis has been performed.",
+  "unknowns": []
+}

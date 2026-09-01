@@ -1,0 +1,104 @@
+meta:
+  archetype: executive-readout
+  client: Synthetic regional bank
+  title: Customer-growth platform pilot
+  subtitle: Executive readout—scope, delivery guardrails, and leadership actions
+  date: 2026-08-28
+  authors:
+    - name: Ascent team
+      role: Demonstration fixture
+  classification: Synthetic reconstruction — not customer content
+  accent: cyan
+sections:
+  - type: exec-summary
+    title: A focused pilot creates a foundation for scale
+    body: |
+      The pilot creates a bounded path to test a new customer-growth platform without recreating the legacy environment.
+
+      Its value depends on protecting scope, naming accountable decision owners, and building adoption into delivery from the start.
+
+      Leadership can maintain momentum by confirming the first workflows, success measures, and data boundaries before build capacity is committed.
+  - type: kpi-row
+    title: The pilot is intentionally bounded
+    items:
+      - value: 12
+        unit: weeks
+        label: fixed-capacity delivery window
+        source: Synthetic demonstration assumption
+      - value: 3
+        unit: phases
+        label: design, build, and adoption
+        source: Synthetic demonstration assumption
+      - value: 4
+        unit: decisions
+        label: needed before the build starts
+        source: Synthetic demonstration assumption
+  - type: theme-group
+    title: Three conditions will determine whether the pilot can scale
+    body: The reconstruction mirrors the source readout's finding density without retaining customer content.
+    findings:
+      - theme: A clean foundation is the right starting point
+        evidence: The synthetic scope separates the pilot from legacy customization and migration work.
+        implication: Reintroducing legacy complexity would consume capacity intended for learning and validation.
+        severity: high
+      - theme: Adoption is part of delivery
+        evidence: The synthetic plan includes business ownership, training, feedback, and readiness activities.
+        implication: A technically complete pilot will not create durable value without visible business participation.
+        severity: high
+      - theme: Data choices must remain deliberate
+        evidence: The synthetic pilot depends on curated data and a minimum viable integration set.
+        implication: Clear data ownership and boundaries are necessary to stay focused while preserving a path to scale.
+        severity: high
+  - type: recommendations
+    title: Protect the decisions that keep the pilot useful
+    items:
+      - action: Confirm the first workflows and success measures
+        rationale: Early clarity turns the pilot into a prioritized backlog with a measurable outcome.
+        horizon: Mobilization
+        owner: Business and product leadership
+      - action: Maintain the greenfield guardrails
+        rationale: Explicit exclusions keep migration and customization from consuming pilot capacity.
+        horizon: Throughout delivery
+        owner: Program leadership
+      - action: Name accountable decision and data owners
+        rationale: Timely decisions and source-system expertise prevent avoidable delivery stalls.
+        horizon: Weeks 1–3
+        owner: Business and data leadership
+      - action: Build adoption into the plan
+        rationale: Training, feedback, and readiness should remain visible alongside technical progress.
+        horizon: Weeks 1–12
+        owner: Business and change leadership
+  - type: roadmap
+    title: Each phase resolves a leadership question
+    phases:
+      - name: Design the pilot
+        window: Weeks 1–3
+        outcomes:
+          - Confirm workflows and outcomes
+          - Define architecture and ownership
+          - Prioritize the pilot backlog
+      - name: Build and validate
+        window: Weeks 4–10
+        outcomes:
+          - Configure bounded pilot capabilities
+          - Complete user validation
+          - Prepare training and readiness
+      - name: Learn and hand off
+        window: Weeks 11–12
+        outcomes:
+          - Support pilot users
+          - Document the operating foundation
+          - Prioritize scale-up actions
+  - type: next-steps
+    title: Four actions keep mobilization moving
+    items:
+      - Confirm the initial workflows and success measures.
+      - Name business, product, data, security, and integration decision owners.
+      - Confirm the pilot's data and integration boundaries.
+      - Establish a governance cadence that keeps adoption visible.
+  - type: methodology
+    title: The demo preserves structure—not customer content
+    body: |
+      This synthetic reconstruction preserves the inspected microsite's ordered section types and relative density: summary, metrics, findings, recommendations, roadmap, actions, and evidence base.
+
+      It does not retain the customer source file, customer findings, customer metrics, or customer logos. The generated manifest provides the coverage expectations used by structural validation.
