@@ -1,7 +1,7 @@
 interface:
   display_name: "Initial Setup"
   short_description: "Prepare an Opportunity workspace and project context"
-  default_prompt: "Use $initial-setup to prepare a new or existing Opportunity workspace in my synced Account folder."
+  default_prompt: "Use $initial-setup to prepare a new or existing Opportunity workspace and help me choose shared or local-only storage."
 
 policy:
   allow_implicit_invocation: false
