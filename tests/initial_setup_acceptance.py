@@ -37,7 +37,9 @@ def main() -> None:
         opportunity = account / "Synthetic Opportunity"
         assert not opportunity.exists()
 
-        run(str(PREPARE), "--mode", "new", *common)
+        output = run(str(PREPARE), "--mode", "new", *common)
+        assert "managed by a sync client" in output
+        assert "OneDrive will sync" not in output
         assert (opportunity / "workspace" / "inbox").is_dir()
         assert (opportunity / "workspace" / "trackers" / "stakeholders.xlsx").is_file()
         raid = load_workbook(opportunity / "workspace" / "trackers" / "raid.xlsx", read_only=True)

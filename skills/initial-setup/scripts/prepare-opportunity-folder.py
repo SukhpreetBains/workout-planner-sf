@@ -60,7 +60,7 @@ def validate_opportunity_name(name: str) -> str:
         raise ValueError("Opportunity name must be 128 characters or fewer.")
     if any(character in INVALID_NAME_CHARACTERS or ord(character) < 32 for character in candidate):
         raise ValueError(
-            "Opportunity name contains characters that are unsafe for SharePoint, OneDrive, or Windows."
+            "Opportunity name contains characters that are unsafe for common enterprise storage or Windows."
         )
     if candidate.split(".", 1)[0].upper() in WINDOWS_RESERVED_NAMES:
         raise ValueError("Opportunity name uses a reserved Windows device name.")
@@ -135,7 +135,7 @@ def check_local_write_readiness(path: Path) -> bool:
         return True
     print(
         f"Local write readiness is unavailable for: {path}. "
-        "Open the synced folder as the agent workspace or grant local write access.",
+        "Open the local working folder as the agent workspace or grant local write access.",
         file=sys.stderr,
     )
     return False
@@ -151,7 +151,7 @@ def prepare_opportunity(opportunity_path: Path, template_root: Path) -> int:
         print(f"Could not prepare Opportunity folder: {error}", file=sys.stderr)
         return 1
     print(f"prepared: {opportunity_path}")
-    print("OneDrive will sync this structure to SharePoint when synchronization is healthy.")
+    print("If this Account folder is managed by a sync client, verify its synchronization status separately.")
     return 0
 
 
@@ -160,7 +160,7 @@ def main() -> int:
         description="Prepare or resume an Opportunity folder from the standard workspace template."
     )
     parser.add_argument("--mode", choices=("new", "existing"), required=True)
-    parser.add_argument("--account-root", required=True, help="Existing OneDrive-synced Account folder.")
+    parser.add_argument("--account-root", required=True, help="Existing local or locally synced Account folder.")
     parser.add_argument("--opportunity-name", required=True)
     parser.add_argument("--workspace-template", help="Override the standard workspace template path.")
     parser.add_argument("--check-only", action="store_true", help="Report readiness without changing files.")
