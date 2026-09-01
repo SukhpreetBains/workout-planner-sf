@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ascent Skill Evaluation System</title>
+  <style>
+    :root { --ink:#102a43; --muted:#52606d; --paper:#f7fafc; --line:#d9e2ec; --blue:#0b6e99; --navy:#163c5a; --teal:#0f766e; --amber:#b45309; --rose:#be123c; --pale:#e6f6fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font:16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    header { color:white; background:linear-gradient(125deg, #102a43, #0b6e99); padding:68px max(24px, calc((100% - 1080px)/2)); }
+    header p { max-width:780px; margin:12px 0 0; color:#d9eef7; font-size:1.13rem; }
+    h1 { font-size:clamp(2.25rem, 6vw, 4.25rem); line-height:1; margin:0; letter-spacing:-.055em; }
+    h2 { margin:0 0 12px; font-size:1.55rem; letter-spacing:-.025em; }
+    h3 { margin:0 0 8px; font-size:1rem; }
+    main { max-width:1080px; margin:auto; padding:38px 24px 64px; }
+    section { margin:0 0 34px; }
+    .eyebrow { color:#9bd7ef; font-size:.78rem; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
+    .lede { max-width:820px; color:var(--muted); font-size:1.12rem; }
+    .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+    .card { background:white; border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 6px 18px rgba(16,42,67,.04); }
+    .card p, li { color:var(--muted); }
+    .tag { display:inline-block; margin-bottom:10px; color:var(--blue); font-size:.76rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .flow { display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; align-items:center; margin-top:20px; }
+    .step { min-height:104px; padding:14px; border-radius:12px; background:white; border:1px solid var(--line); font-size:.87rem; font-weight:700; }
+    .step span { display:block; margin-bottom:6px; color:var(--blue); font-size:.72rem; text-transform:uppercase; }
+    .arrow { color:var(--blue); font-size:1.3rem; text-align:center; }
+    .decision { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:14px; }
+    .decision .card:first-child { background:var(--navy); color:white; border:none; }
+    .decision .card:first-child p { color:#d7ecf5; }
+    .decision .cap { border-top:5px solid var(--amber); }
+    .decision .reg { border-top:5px solid var(--teal); }
+    .decision .hybrid { border-top:5px solid var(--blue); }
+    table { width:100%; border-collapse:collapse; background:white; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+    th, td { padding:14px; border-bottom:1px solid var(--line); vertical-align:top; text-align:left; }
+    th { background:#edf4f8; font-size:.82rem; letter-spacing:.04em; text-transform:uppercase; }
+    tr:last-child td { border-bottom:none; }
+    .map { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
+    .map .card { display:flex; gap:14px; align-items:flex-start; }
+    .num { flex:0 0 auto; display:grid; width:30px; height:30px; place-items:center; border-radius:50%; background:var(--pale); color:var(--blue); font-weight:800; }
+    .callout { border-left:5px solid var(--blue); padding:18px 20px; background:#eaf7fb; border-radius:0 12px 12px 0; }
+    .check { color:var(--teal); font-weight:800; }
+    code { padding:2px 5px; border-radius:4px; background:#e9f0f4; font-size:.9em; }
+    a { color:#076b98; }
+    footer { color:var(--muted); border-top:1px solid var(--line); padding-top:24px; font-size:.9rem; }
+    @media (max-width:800px) { .grid, .decision, .map { grid-template-columns:1fr; } .flow { grid-template-columns:1fr; } .arrow { transform:rotate(90deg); } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">SGAF-717 · Ascent evaluation architecture</div>
+    <h1>Every skill gets an evidence trail.</h1>
+    <p>A reusable, outcome-first way to design, run, inspect, and improve evaluations for Ascent skills and future agent harnesses.</p>
+  </header>
+  <main>
+    <section>
+      <h2>The evaluation loop</h2>
+      <p class="lede">A skill is not evaluated by whether it followed one preferred sequence. It is evaluated by whether it produced the right safe outcome in a controlled environment—and whether that remains true as the skill, tools, and model change.</p>
+      <div class="flow" aria-label="Evaluation lifecycle">
+        <div class="step"><span>1</span>Profile the skill</div><div class="arrow">→</div>
+        <div class="step"><span>2</span>Choose coverage</div><div class="arrow">→</div>
+        <div class="step"><span>3</span>Write balanced tasks</div><div class="arrow">→</div>
+        <div class="step"><span>4</span>Run isolated trials</div><div class="arrow">→</div>
+        <div class="step"><span>5</span>Grade outcomes + inspect evidence</div>
+      </div>
+    </section>
+    <section class="grid">
+      <article class="card"><div class="tag">Profile</div><h3>Know the contract</h3><p>Capture purpose, inputs, outputs, tools, environment, state boundary, safety constraints, and observable success conditions. Missing facts become <code>insufficient-information</code>, never invented requirements.</p></article>
+      <article class="card"><div class="tag">Tasks</div><h3>Test both directions</h3><p>Pair positive cases with “must not” cases. Include edge cases and a reference solution where a concrete answer exists. A task must be solvable from its prompt and fixture.</p></article>
+      <article class="card"><div class="tag">Evidence</div><h3>Learn from every run</h3><p>Keep results, artifacts, and transcripts. Review failures, close calls, and grader disagreement to separate agent problems from a broken task or grader.</p></article>
+    </section>
+    <section>
+      <h2>Choose coverage intentionally</h2>
+      <div class="decision">
+        <article class="card"><h3>What should this suite tell us?</h3><p>Start from behavior and product risk, not framework preference. A task can move from difficult capability coverage into continuous regression coverage only after it becomes reliably solvable.</p></article>
+        <article class="card cap"><h3>Capability</h3><p>“Can the skill do this useful but difficult new thing?” Expect headroom; use results to guide improvement.</p></article>
+        <article class="card reg"><h3>Regression</h3><p>“Does the skill still do what users already rely on?” Require a near-perfect baseline and run continuously.</p></article>
+        <article class="card hybrid"><h3>Hybrid</h3><p>Protect trusted behavior while hill-climbing a new capability. This is the default for an evolving skill.</p></article>
+      </div>
+    </section>
+    <section>
+      <h2>Grade the outcome, then the path only when it matters</h2>
+      <table>
+        <thead><tr><th>What to check</th><th>Preferred grader</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td>Created artifact, state, schema, bounds, tests, prohibited content</td><td><strong>Code</strong></td><td>Fast, reproducible, and debuggable. This is the default release gate.</td></tr>
+          <tr><td>Groundedness, usefulness, completeness, communication quality</td><td><strong>Model judge</strong></td><td>Use a focused binary rubric when code cannot capture the criterion. Return <em>Unknown</em> when evidence is inadequate; calibrate against expert labels.</td></tr>
+          <tr><td>Domain interpretation, ambiguous outcomes, judge calibration</td><td><strong>Human review</strong></td><td>Establishes ground truth and keeps model graders honest without making every run manual.</td></tr>
+          <tr><td>Required approval, policy guardrail, or mandated tool restriction</td><td><strong>Trajectory check</strong></td><td>The path is part of success. Otherwise, retain it as diagnostic evidence rather than a brittle pass/fail gate.</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Reliability for non-deterministic agents</h2>
+      <div class="grid">
+        <article class="card"><h3>One trial</h3><p>Use for deterministic scripts such as the current project-context runner. Report outcome pass rate and duration.</p></article>
+        <article class="card"><h3><code>pass@k</code></h3><p>Use when one good attempt is enough—for example, a research assistant offering several candidate paths.</p></article>
+        <article class="card"><h3><code>pass^k</code></h3><p>Use when every repeat must succeed—for example, a customer-facing workflow with no tolerance for sporadic failure.</p></article>
+      </div>
+    </section>
+    <section>
+      <h2>One contract, multiple harnesses</h2>
+      <p class="lede">The canonical Ascent scaffold is framework-neutral. This avoids coupling a reusable skill to one host while retaining a direct path to richer agent evaluation infrastructure.</p>
+      <div class="map">
+        <article class="card"><div class="num">1</div><div><h3>Ascent task contract</h3><p><code>skill-profile.json</code>, <code>eval-plan.json</code>, and <code>cases/tasks.jsonl</code> define portable behavior, fixtures, graders, trials, and metrics.</p></div></article>
+        <article class="card"><div class="num">2</div><div><h3>Deterministic runner</h3><p>Python or host-native tests execute outcome checks in a fresh workspace. The migrated project-context suite is this first regression package.</p></div></article>
+        <article class="card"><div class="num">3</div><div><h3>Inspect adapter</h3><p>Map task records to a Dataset; map the harness to a Solver or ReAct agent; map outcome checks to Scorers; use Docker for sandboxed tool calls.</p></div></article>
+        <article class="card"><div class="num">4</div><div><h3>Run review</h3><p>Use run logs and transcript review to diagnose failures, update failure modes, and promote reliable capability tasks into regression coverage.</p></div></article>
+      </div>
+    </section>
+    <section class="callout"><strong>Inspect recommendation:</strong> adopt it as an optional adapter for multi-turn, tool-using, or repeated-trial suites—not as a mandatory dependency of every Ascent skill. Resolve package availability, sandbox access, host bridges, model credentials, and log-retention policy before direct production adoption.</section>
+    <section>
+      <h2>What changed for project context</h2>
+      <div class="grid">
+        <article class="card"><div class="check">✓ Ported</div><p>The original local smoke case now lives in tracked <code>evals/context-skills</code> and still uses an isolated temporary workspace.</p></article>
+        <article class="card"><div class="check">✓ Strengthened</div><p>Its coverage is explicit: positive discovery and retrieval outcomes, negative leakage and cache-reuse cases, reference runner, outcome graders, and tracked metrics.</p></article>
+        <article class="card"><div class="check">✓ Extrapolated</div><p>Future skills start from the same profile, task, grader, trial, and maintenance contract rather than reinventing an evaluation format.</p></article>
+      </div>
+    </section>
+    <footer>
+      Guidance synthesized from <a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Anthropic’s agent-evaluation framework</a>, <a href="https://inspect.aisi.org.uk/">Inspect documentation</a>, and <a href="https://github.com/hamelsmu/evals-skills">evals-skills</a>. See the repository’s <code>design-skill-evals</code> skill for executable guidance and adoption constraints.
+    </footer>
+  </main>
+</body>
+</html>

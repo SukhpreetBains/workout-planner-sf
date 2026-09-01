@@ -15,5 +15,7 @@ local-evals/
 # Downloaded meeting transcripts may contain project-specific content.
 Call Transcripts/
 
+# Local dependency environment for the optional Inspect proof of concept.
+.venv-inspect-poc/
 # Salesforce CLI local org cache (machine-local, org-specific).
 .sf/

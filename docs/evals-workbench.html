@@ -1,0 +1,1533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ascent evaluation workbench</title>
+<!--
+  Slalom brand implementation, per skills/slalom-branding/references/.
+
+  Typography (typography.md): Slalom Sans is the primary face for all brand
+  material including web, self-hosted from the skill's own assets/fonts via the
+  server's read-only /brand/ mount. Only the four weights actually loaded are
+  declared, and font-synthesis is off, because there is no Medium or SemiBold in
+  the family and a browser must not fake one. Sentence case throughout, flush
+  left, ragged right. Avenir Next LT Pro is deliberately absent: it is
+  PowerPoint-only. Lora is not bundled, so nothing here sets a serif.
+
+  Colour (color.md): a Slalom Blue appears in every composition and is paired
+  with exactly one secondary - Coral Red - outside the charts. The brand guide
+  permits all brand colours together in "infographic charts, bar graphs, and the
+  official color bar", which is the only place a third hue appears here.
+
+  Accessibility (accessibility.md, WCAG 2.1 AA): every text pair below was
+  measured, not eyeballed, against white -
+    Slalom Dark Blue #002FAF  10.37:1   body and emphasis
+    Black                     21.00:1   headings
+    Dark Gray #666666          5.74:1   secondary text
+    Slalom Blue #0C62FB        5.05:1   links, primary accent
+    Coral Red Dark 3 #E6154A   4.59:1   failure text
+    Coral Red core #FF4D5F     3.24:1   CHART FILL AND BORDERS ONLY - never text
+    Chartreuse on white        1.81:1   FAILS. Never text on white; only as a
+                                        fill behind black text (18.52:1).
+  Nothing communicates by colour alone: every status carries an icon and a word,
+  and every chart series is labelled directly on the mark.
+-->
+<style>
+@font-face{font-family:"Slalom Sans";
+  src:url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Light.woff2") format("woff2"),
+      url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Light.woff") format("woff");
+  font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"Slalom Sans";
+  src:url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Regular.woff2") format("woff2"),
+      url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Regular.woff") format("woff");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Slalom Sans";
+  src:url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Bold.woff2") format("woff2"),
+      url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Bold.woff") format("woff");
+  font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"Slalom Sans";
+  src:url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Black.woff2") format("woff2"),
+      url("/brand/fonts/slalom-sans/Webfont%20Files/SlalomSans-Black.woff") format("woff");
+  font-weight:900;font-style:normal;font-display:swap}
+
+:root{
+  /* Primary. A Slalom Blue is present in every composition. */
+  --slalom-blue:#0C62FB;
+  --slalom-dark-blue:#002FAF;
+  /* The one secondary paired with blue outside the charts. */
+  --coral-red:#FF4D5F;
+  --coral-red-dark-3:#E6154A;
+  /* Chart-only hues. Permitted together in infographic charts and bar graphs. */
+  --cyan:#1BE1F2;
+  --purple:#C7B9FF;
+  --chartreuse:#DEFF4D;
+  /* Neutrals. */
+  --white:#FFFFFF;
+  --light-gray:#E6E6E6;
+  --dark-gray:#666666;
+  --black:#000000;
+  /* Tone-on-tone depth, used sparingly and never as a dominant flood. */
+  --blue-tint:#F4F7FF;
+  --blue-tint-2:#E8EEFF;
+
+  --surface:var(--white);
+  --surface-recessed:var(--blue-tint);
+  --page:#FAFAFA;
+  --text:var(--black);
+  --text-secondary:var(--dark-gray);
+  --text-emphasis:var(--slalom-dark-blue);
+  --border:var(--light-gray);
+  --link:var(--slalom-blue);
+
+  /* Semantic roles. Each is always paired with an icon and a word. */
+  --measured:var(--slalom-dark-blue);
+  --absent:var(--dark-gray);
+  --failure:var(--coral-red-dark-3);
+  --series-with-skills:var(--slalom-blue);
+  --series-baseline:var(--coral-red);
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--text);
+  font-family:"Slalom Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-weight:300;font-size:16px;line-height:1.45;
+  font-synthesis:none;-webkit-font-smoothing:antialiased}
+.frame{width:min(1180px,calc(100% - 48px));margin-inline:auto}
+
+/* Type scale kept to three sizes per composition where practical. */
+h1{margin:0 0 8px;font-weight:700;font-size:2rem;line-height:1.05;letter-spacing:-.02em}
+h2{margin:0;font-weight:700;font-size:1.15rem;line-height:1.15}
+h3{margin:0 0 6px;font-weight:700;font-size:.95rem}
+p{margin:0 0 12px;max-width:78ch}
+p:last-child{margin-bottom:0}
+a{color:var(--link);text-decoration:underline;text-underline-offset:2px}
+strong,b{font-weight:700}
+ul{margin:0 0 12px;padding-left:1.1em}
+li{margin-bottom:4px}
+li::marker{font-weight:400}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85em}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.84em;
+  background:var(--surface-recessed);padding:1px 5px;border-radius:3px;color:var(--text-emphasis)}
+.eyebrow{margin:0 0 10px;color:var(--slalom-blue);font-weight:700;font-size:.7rem;
+  letter-spacing:.14em;text-transform:uppercase}
+.lede{max-width:76ch;color:var(--text-secondary);font-size:1.02rem}
+.note{color:var(--text-secondary);font-size:.88rem}
+.small{color:var(--text-secondary);font-size:.79rem}
+:focus-visible{outline:3px solid var(--slalom-blue);outline-offset:2px;border-radius:2px}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* The official color bar. One per layout, never reordered, never over 20%. */
+.color-bar{display:flex;height:6px;width:100%}
+.color-bar i{flex:1}
+.color-bar i:nth-child(1){background:var(--slalom-blue)}
+.color-bar i:nth-child(2){background:var(--cyan)}
+.color-bar i:nth-child(3){background:var(--coral-red)}
+.color-bar i:nth-child(4){background:var(--purple)}
+.color-bar i:nth-child(5){background:var(--chartreuse)}
+
+header.top{background:var(--surface);border-bottom:1px solid var(--border)}
+header.top .frame{padding:30px 0 26px;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+header.top .head-text{flex:1 1 420px}
+.brandmark{width:132px;height:auto;flex:0 0 auto;margin-top:4px}
+
+.controls{position:sticky;top:0;z-index:30;background:var(--surface);
+  border-bottom:1px solid var(--border)}
+.controls .frame{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;padding:14px 0}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-secondary)}
+select{font:inherit;font-weight:400;font-size:.9rem;padding:8px 10px;
+  border:1px solid var(--dark-gray);border-radius:4px;background:var(--white);color:var(--text);
+  min-width:170px}
+select:disabled{color:var(--text-secondary);background:var(--light-gray)}
+.grow{flex:1 1 auto}
+button{font:inherit;cursor:pointer}
+.btn{font-weight:700;font-size:.9rem;padding:9px 18px;border-radius:4px;
+  border:1px solid var(--slalom-blue);background:var(--white);color:var(--slalom-dark-blue)}
+.btn:hover{background:var(--blue-tint)}
+.btn-primary{background:var(--slalom-blue);border-color:var(--slalom-blue);color:var(--white)}
+.btn-primary:hover{background:var(--slalom-dark-blue);border-color:var(--slalom-dark-blue)}
+.btn-primary:disabled{background:var(--dark-gray);border-color:var(--dark-gray);cursor:progress}
+.run-status{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--text-secondary);
+  flex:1 1 260px;min-height:24px}
+
+main{padding:26px 0 72px}
+section.card{background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:24px;margin-bottom:20px}
+.card-head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;margin-bottom:6px}
+.card-head .q{color:var(--slalom-blue);font-weight:700;font-size:.7rem;letter-spacing:.13em;
+  text-transform:uppercase}
+.card-sub{margin:4px 0 20px;color:var(--text-secondary);font-size:.9rem;max-width:82ch}
+.quote{margin:0 0 18px;padding:12px 16px;border-left:3px solid var(--slalom-blue);
+  background:var(--surface-recessed);color:var(--text-emphasis);font-size:.9rem;max-width:84ch}
+.quote cite{display:block;margin-top:6px;font-style:normal;font-size:.78rem;color:var(--text-secondary)}
+
+/* Stat tiles. A measured figure is large; an absent one states its reason at
+   body size instead, because a big grey dash reads as a number that is zero. */
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:16px}
+.tile{border:1px solid var(--border);border-radius:5px;padding:18px;background:var(--surface)}
+.tile.absent{border-style:dashed;border-color:var(--dark-gray);background:var(--page)}
+.tile .q{display:block;margin-bottom:10px;font-weight:700;font-size:.9rem;color:var(--text)}
+.tile .v{display:block;font-weight:900;font-size:2.1rem;line-height:1.05;letter-spacing:-.02em;
+  color:var(--text-emphasis);font-variant-numeric:tabular-nums}
+.tile .v small{font-weight:700;font-size:.42em;letter-spacing:0;color:var(--text-secondary)}
+.tile .s{display:block;margin-top:8px;font-size:.84rem;color:var(--text-secondary)}
+.tile .why{display:block;margin-top:2px;font-size:.84rem;color:var(--text-secondary);font-weight:400}
+.tile .absent-label{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:.9rem;
+  color:var(--absent)}
+
+.status{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.status svg{flex:0 0 auto}
+.tone-measured{color:var(--measured)}
+.tone-failure{color:var(--failure)}
+.tone-absent{color:var(--absent)}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;
+  font-weight:700;font-size:.82rem;border:1px solid var(--border);background:var(--surface-recessed);
+  color:var(--text-emphasis)}
+.chip.warn{background:var(--chartreuse);border-color:#B3CC3E;color:var(--black)}
+.chip.bad{background:var(--white);border-color:var(--coral-red-dark-3);color:var(--failure)}
+
+.absent-block{border:1px dashed var(--dark-gray);border-radius:5px;padding:16px 18px;
+  background:var(--page)}
+.absent-block h3{color:var(--text)}
+.absent-block p{color:var(--text-secondary);font-size:.88rem;max-width:82ch}
+.absent-block .cmd{display:block;margin-top:10px;padding:9px 11px;border-radius:4px;
+  background:var(--white);border:1px solid var(--border);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;
+  color:var(--text-emphasis);overflow-x:auto;white-space:pre}
+
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+caption{text-align:left;padding-bottom:10px;color:var(--text-secondary);font-size:.84rem}
+th{text-align:left;font-weight:700;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text-secondary);padding:8px 12px 8px 0;border-bottom:2px solid var(--slalom-blue);
+  white-space:nowrap}
+td{padding:10px 12px 10px 0;border-bottom:1px solid var(--border);vertical-align:top;font-weight:400}
+tbody tr:hover{background:var(--surface-recessed)}
+td.num{text-align:right;font-variant-numeric:tabular-nums;padding-right:18px}
+.scroll{overflow-x:auto}
+
+/* Charts. A 1px top border on each bar, per accessibility.md, and every series
+   labelled on the mark rather than only in a legend. */
+.chart{margin-top:6px}
+.bar-row{display:grid;grid-template-columns:190px 1fr 120px;gap:12px;align-items:center;
+  margin-bottom:9px}
+.bar-row .bar-label{font-size:.84rem;font-weight:400;color:var(--text)}
+.bar-track{height:22px;background:var(--light-gray);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-top:1px solid rgba(0,0,0,.35);
+  display:flex;align-items:center;justify-content:flex-end;padding-right:7px;
+  font-size:.74rem;font-weight:700;color:var(--white)}
+.bar-fill.with-skills{background:var(--series-with-skills)}
+.bar-fill.baseline{background:var(--series-baseline);color:var(--black);
+  border-top-color:rgba(0,0,0,.45)}
+.bar-row .bar-value{font-size:.84rem;font-weight:700;font-variant-numeric:tabular-nums;
+  color:var(--text-emphasis)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:14px 0 0;font-size:.8rem;
+  color:var(--text-secondary)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.swatch{width:13px;height:13px;border-radius:2px;border:1px solid rgba(0,0,0,.35)}
+.swatch.with-skills{background:var(--series-with-skills)}
+.swatch.baseline{background:var(--series-baseline)}
+
+.strip{position:relative;height:74px;margin:10px 0 4px}
+.strip svg{display:block;width:100%;height:100%;overflow:visible}
+
+pre.paste{margin:0;padding:16px;background:var(--surface-recessed);border:1px solid var(--border);
+  border-radius:5px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;
+  line-height:1.5;white-space:pre-wrap;color:var(--text);max-height:420px;overflow:auto}
+pre.output{margin:10px 0 0;padding:14px;background:var(--black);color:#F2F2F2;border-radius:5px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.74rem;line-height:1.45;
+  white-space:pre-wrap;max-height:340px;overflow:auto}
+details{margin-top:14px}
+summary{cursor:pointer;font-weight:700;font-size:.88rem;color:var(--text-emphasis)}
+.row-actions{display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.copied{font-size:.82rem;font-weight:700;color:var(--measured)}
+
+.banner{border-radius:5px;padding:16px 18px;margin-bottom:20px;font-size:.9rem;
+  border:1px solid var(--slalom-blue);background:var(--surface-recessed);color:var(--text-emphasis)}
+.banner.bad{border-color:var(--coral-red-dark-3);background:var(--white);color:var(--failure)}
+.banner b{font-weight:700}
+
+.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.metric-quote{font-size:.82rem;color:var(--text-secondary);max-width:62ch}
+.metric-reason{font-size:.82rem;color:var(--text-secondary);max-width:62ch}
+footer.foot{border-top:1px solid var(--border);background:var(--surface);padding:26px 0 40px}
+footer.foot .frame{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px}
+
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+@media print{.controls,.row-actions{display:none}body{background:var(--white)}}
+</style>
+</head>
+<body>
+<div class="color-bar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+
+<header class="top">
+  <div class="frame">
+    <img class="brandmark" src="/brand/logos/slalom-logo-blue-RGB.svg"
+         alt="Slalom" width="132" height="34">
+    <div class="head-text">
+      <p class="eyebrow">Ascent &middot; skill evaluation</p>
+      <h1>Did it work, what did it cost, and how much time did it save?</h1>
+      <p class="lede">Three questions, measured from session logs by code. Every number on
+        this page is either measured or marked absent with the reason it is missing. Nothing
+        here is estimated to look complete.</p>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="frame">
+    <div class="field">
+      <label for="suiteSelect">Suite</label>
+      <select id="suiteSelect" disabled><option>Loading&hellip;</option></select>
+    </div>
+    <div class="field">
+      <label for="armSelect">Arm</label>
+      <select id="armSelect" disabled></select>
+    </div>
+    <div class="field">
+      <label for="runsSelect">Runs</label>
+      <select id="runsSelect" disabled></select>
+    </div>
+    <div class="field">
+      <label for="limitSelect">History</label>
+      <select id="limitSelect">
+        <option value="5">Last 5</option>
+        <option value="10" selected>Last 10</option>
+        <option value="25">Last 25</option>
+        <option value="100">All</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" id="runButton" disabled>Run evaluation</button>
+    <span class="run-status" id="runStatus" role="status" aria-live="polite">Connecting to the local workbench&hellip;</span>
+  </div>
+</div>
+
+<main>
+  <div class="frame">
+    <div id="banner"></div>
+
+    <!-- Headline. Deliberately not a single "score": three questions, three answers. -->
+    <section class="card" id="headlineCard">
+      <div class="card-head"><h2>Headline</h2><span class="q" id="headlineWhen"></span></div>
+      <p class="card-sub">The three questions, in the order a reader asks them.</p>
+      <div class="kpi" id="kpi"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><span class="q">Question 1</span><h2>Did it do the job right?</h2>
+        <span class="q" id="q1Status"></span></div>
+      <blockquote class="quote">&ldquo;Those are two of the important metrics, and the third one
+        is, and it did the right thing. If we can validate those three things somehow, I feel
+        like that is our test suite, or that&rsquo;s our sales pitch.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <div id="correctness"></div>
+      <div class="scroll" id="checkTable"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><span class="q">Question 2</span><h2>What did it cost, and was that predictable?</h2>
+        <span class="q" id="q2Status"></span></div>
+      <blockquote class="quote">&ldquo;Is it as token efficient in between runs? Like how
+        different is the cost between each run? Is it, when you do like the PowerPoint one, is
+        it 70 credits one time and 40 credits another time?&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <p class="card-sub">Both halves are required. A cheap average with a wide spread is a
+        worse product than a slightly dearer run that lands in the same place every time,
+        because consistency is what is being sold.</p>
+      <div id="costBlock"></div>
+      <div id="spread"></div>
+    </section>
+
+    <!-- Credits are derived, and labelled as derived everywhere they appear. -->
+    <section class="card" id="creditsCard">
+      <div class="card-head"><span class="q">Question 2, in credits</span><h2>Credits per run</h2>
+        <span class="q">derived figure</span></div>
+      <p class="card-sub">Credits are not reported by any host. They are measured tokens
+        multiplied by a published rate card, so the rate card and the date it was fetched
+        travel with the number.</p>
+      <div id="credits"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><span class="q">Question 3</span><h2>How much time did it save?</h2>
+        <span class="q" id="q3Status"></span></div>
+      <blockquote class="quote">&ldquo;This PowerPoint, it took us this many hours or days to
+        put it together. Now, the agent puts it together in this amount of time &hellip; it puts
+        in some metric around hours saved versus doing it manually. Instead of it just being
+        some vague, like, oh, it feels like it took an 8 point story to a 5 point story.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <div id="timeBlock"></div>
+      <div id="skillTiming"></div>
+    </section>
+
+    <!-- Reproducibility is a separate claim from cost. Kept in its own card, and
+         it says so, so nothing here can be quoted as a price or a saving. -->
+    <section class="card" id="determinismCard">
+      <div class="card-head"><h2>Same input, same output</h2>
+        <span class="q" id="detStatus"></span></div>
+      <blockquote class="quote">&ldquo;A lot of our focus going forward is going to be on the
+        eval stuff, to prove that what gets created is consistent.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-20</cite></blockquote>
+      <div id="determinism"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Arm against arm</h2><span class="q">with skills vs no skills</span></div>
+      <blockquote class="quote">&ldquo;What makes what we&rsquo;re building different than just
+        throwing it into Claude? &hellip; The real value of what we&rsquo;re building is
+        consistency and cost savings.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <div id="arms"></div>
+    </section>
+
+    <!-- The coverage table is the honesty contract made visible: every metric
+         asked for, present or absent, with the quote and the reason. -->
+    <section class="card">
+      <div class="card-head"><h2>Metric coverage</h2><span class="q" id="coverageCount"></span></div>
+      <p class="card-sub">Every metric asked for in the evaluation conversations, the quote that
+        asked for it, and whether this harness measures it. A metric this suite cannot measure
+        stays on the list and says why, rather than disappearing from the page.</p>
+      <div class="scroll" id="coverage"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Paste-ready summary</h2><span class="q">for a Jira comment or PR body</span></div>
+      <blockquote class="quote">&ldquo;One of the outputs &hellip; in the resolution of the JIRA
+        story or in the pull request that the agent makes, it puts in some metric around hours
+        saved versus doing it manually.&rdquo;
+        <cite>Calvin O&rsquo;Keefe, 2026-08-21</cite></blockquote>
+      <div id="pasteWrap"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Run history</h2><span class="q" id="historyCount"></span></div>
+      <p class="card-sub">Newest first. One row per recorded run.</p>
+      <div class="scroll" id="historyTable"></div>
+      <details id="outputDetails"><summary>Process output from the most recent batch</summary>
+        <pre class="output" id="output">No run recorded.</pre></details>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>How to read this page</h2><span class="q">method and limits</span></div>
+      <div class="split">
+        <div>
+          <h3>Extraction is deterministic</h3>
+          <p class="note">Telemetry is parsed out of host session logs by code. No model reads
+            a transcript to produce a figure on this page. Calvin&rsquo;s constraint, and the
+            reason his own first attempt was expensive.</p>
+          <h3>Consistency thresholds are provisional</h3>
+          <div id="thresholds"></div>
+        </div>
+        <div>
+          <h3>Execution boundary</h3>
+          <ul class="note" id="boundaryList"></ul>
+          <h3>Commands behind these figures</h3>
+          <code class="cmd" id="telemetryCommands"></code>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="frame">
+    <div>
+      <p class="eyebrow">Rate card</p>
+      <div class="small" id="rateCardFoot"></div>
+    </div>
+    <div>
+      <p class="eyebrow">Sources</p>
+      <p class="small">Metric asks are quoted from the 2026-08-17, 18, 20, 21 and 24 recordings.
+        Schemas are fixed by <code>docs/sgaf-717-evals-redesign-spec.md</code>.</p>
+    </div>
+    <div>
+      <p class="eyebrow">Brand</p>
+      <p class="small">Slalom Sans, self-hosted. Colour, type and contrast per the Slalom Brand
+        Guide, February 2025. Text and chart contrast measured against WCAG 2.1 AA.</p>
+    </div>
+  </div>
+</footer>
+<script type="module">
+/* ------------------------------------------------------------------ motion
+   Anime.js v4, self-hosted from skills/animejs via the server's /vendor/ mount.
+   v4 named imports, never the v3 default export. Motion is decoration only:
+   every figure is in the DOM before anything animates, so a reader with reduced
+   motion, a failed import, or JavaScript throttled sees the same numbers. */
+let animate = null, stagger = null;
+const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (!REDUCED_MOTION) {
+  try {
+    const anime = await import("/vendor/anime.esm.min.js");
+    animate = anime.animate; stagger = anime.stagger;
+  } catch (error) { animate = null; }
+}
+function reveal(selector) {
+  if (!animate) return;
+  const nodes = document.querySelectorAll(selector);
+  if (!nodes.length) return;
+  animate(nodes, {
+    opacity: [0, 1], translateY: [8, 0], duration: 420, ease: "outQuad",
+    delay: stagger ? stagger(45) : 0,
+  });
+}
+function countUp(node, value, format) {
+  if (!animate || !isFinite(value)) { node.textContent = format(value); return; }
+  const state = { n: 0 };
+  animate(state, {
+    n: value, duration: 700, ease: "outQuad",
+    onUpdate: () => { node.textContent = format(state.n); },
+    onComplete: () => { node.textContent = format(value); },
+  });
+}
+
+/* ------------------------------------------------------------------- state */
+const $ = (id) => document.getElementById(id);
+const state = {
+  suites: null, suite: null, summary: null, runs: null, metrics: null, paste: null,
+  suiteId: null, limit: 10, arm: "with-skills", runCount: 3, busy: false, connected: false,
+};
+
+const ICONS = {
+  pass: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8.6l3.6 3.6L14 3.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  fail: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.4 3.4l9.2 9.2M12.6 3.4l-9.2 9.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  absent: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  info: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 7v4.2M8 4.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+};
+
+/* Never colour alone: a tone always ships with an icon and a word. */
+const VERDICT_WORDS = {
+  predictable: ["pass", "tone-measured", "Predictable"],
+  variable: ["info", "tone-absent", "Variable"],
+  unpredictable: ["fail", "tone-failure", "Unpredictable"],
+  "insufficient-runs": ["absent", "tone-absent", "Not enough runs to say"],
+  "no-cost-data": ["absent", "tone-absent", "No cost recorded"],
+  reproducible: ["pass", "tone-measured", "Reproducible"],
+  "reproducible-modulo-declared-volatility": ["pass", "tone-measured", "Reproducible, with declared volatility"],
+  "not-reproducible": ["fail", "tone-failure", "Not reproducible"],
+};
+
+/* --------------------------------------------------------------- formatting */
+const isNum = (v) => typeof v === "number" && isFinite(v);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g,
+  (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const int = (v) => Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
+const dec = (v, d) => Number(v).toLocaleString(undefined,
+  { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function usd(v) {
+  if (!isNum(v)) return null;
+  return Math.abs(v) >= 0.01 ? "$" + dec(v, 2) : "$" + dec(v, 4);
+}
+function secs(v) {
+  if (!isNum(v)) return null;
+  if (v < 1) return dec(v, 2) + " s";
+  if (v < 90) return dec(v, 1) + " s";
+  if (v < 5400) return dec(v / 60, 1) + " min";
+  return dec(v / 3600, 1) + " h";
+}
+function mins(v) {
+  if (!isNum(v)) return null;
+  return v < 90 ? dec(v, 0) + " min" : dec(v / 60, 1) + " h";
+}
+function pct(v) { return isNum(v) ? dec(v * 100, 0) + "%" : null; }
+function when(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return isNaN(d) ? String(iso) : d.toLocaleString();
+}
+
+function statusHtml(icon, tone, text) {
+  return '<span class="status ' + tone + '">' + ICONS[icon] + "<span>" + esc(text) + "</span></span>";
+}
+function verdictChip(verdict) {
+  const v = VERDICT_WORDS[verdict];
+  if (!v) return '<span class="chip">' + esc(verdict || "unknown") + "</span>";
+  const cls = v[1] === "tone-failure" ? "chip bad" : (v[1] === "tone-absent" ? "chip warn" : "chip");
+  return '<span class="' + cls + '">' + ICONS[v[0]] + "<span>" + esc(v[2]) + "</span></span>";
+}
+
+/* A measured tile carries a big number. An absent tile carries the reason at
+   body size, because a large grey dash reads as a value that happens to be zero. */
+function tile(question, value, sub, absentReason) {
+  if (value == null) {
+    return '<div class="tile absent"><span class="q">' + esc(question) + "</span>" +
+      '<span class="absent-label">' + ICONS.absent + "<span>Not measured</span></span>" +
+      '<span class="why">' + esc(absentReason || "No reason recorded.") + "</span></div>";
+  }
+  return '<div class="tile"><span class="q">' + esc(question) + "</span>" +
+    '<span class="v">' + value + "</span>" +
+    (sub ? '<span class="s">' + esc(sub) + "</span>" : "") + "</div>";
+}
+
+function absentBlock(title, why, command) {
+  return '<div class="absent-block"><h3>' + statusHtml("absent", "tone-absent", title) + "</h3>" +
+    "<p>" + esc(why) + "</p>" +
+    (command ? '<code class="cmd">' + esc(command) + "</code>" : "") + "</div>";
+}
+
+function table(caption, headers, rows) {
+  if (!rows.length) return "";
+  let html = "<table>";
+  if (caption) html += "<caption>" + esc(caption) + "</caption>";
+  html += "<thead><tr>" + headers.map((h) =>
+    "<th" + (h.num ? ' class="num"' : "") + ">" + esc(h.label) + "</th>").join("") + "</tr></thead><tbody>";
+  for (const row of rows) {
+    html += "<tr>" + row.map((cell, i) =>
+      "<td" + (headers[i] && headers[i].num ? ' class="num"' : "") + ">" +
+      (cell == null ? '<span class="tone-absent">not measured</span>' : cell) + "</td>").join("") + "</tr>";
+  }
+  return html + "</tbody></table>";
+}
+
+/* ------------------------------------------------------------ data helpers */
+const summaryDoc = () => (state.summary && state.summary.summary) || null;
+const armBlock = (name) => {
+  const doc = summaryDoc();
+  return (doc && doc.arms && doc.arms[name]) || null;
+};
+const latestRun = () => (state.runs && state.runs.runs && state.runs.runs[0]) || null;
+const rateCard = () => (state.summary && state.summary.rate_card) ||
+  (state.suites && state.suites.rate_card) || {};
+function unmeasured(key) {
+  const run = latestRun();
+  if (run && run.unmeasured && typeof run.unmeasured[key] === "string") return run.unmeasured[key];
+  const s = state.summary && state.summary.unmeasured;
+  if (s && typeof s[key] === "string") return s[key];
+  return null;
+}
+function metric(id) {
+  const list = (state.metrics && state.metrics.metrics) || [];
+  for (const m of list) if (m.id === id) return m;
+  return null;
+}
+/* A metric's own absent reason is the single source of truth for why a figure
+   is missing, so the tile and the coverage table can never disagree. */
+function reasonFor(id, fallback) {
+  const m = metric(id);
+  if (m && m.status === "absent" && m.absent_reason) return m.absent_reason;
+  return fallback || "Not recorded.";
+}
+
+/* -------------------------------------------------------------- renderers */
+
+function renderKpi() {
+  const host = $("kpi");
+  const arm = armBlock("with-skills");
+  const run = latestRun();
+  const tiles = [];
+
+  // Q1: correctness. Pass rate across the arm when there is one, else the
+  // latest outcome, which is a weaker claim and is labelled as one.
+  let q1 = null, q1sub = null;
+  if (arm && isNum(arm.correctness_pass_rate)) {
+    q1 = pct(arm.correctness_pass_rate);
+    q1sub = "passed on " + arm.runs + (arm.runs === 1 ? " run" : " runs");
+  } else if (run && run.correctness && run.correctness.outcome) {
+    const ok = run.correctness.outcome === "pass";
+    q1 = statusHtml(ok ? "pass" : "fail", ok ? "tone-measured" : "tone-failure",
+      ok ? "Pass" : "Fail");
+    q1sub = "latest run only";
+  }
+  tiles.push(tile("Did it do the job right?", q1, q1sub,
+    reasonFor("correctness", "No run has been recorded.")));
+
+  // Q2: cost. Tokens lead; credits and dollars are shown in their own places.
+  const tokens = arm && arm.total_tokens;
+  let q2 = null, q2sub = null;
+  if (tokens && isNum(tokens.p50)) {
+    q2 = '<span data-countup="tokens">' + int(tokens.p50) +
+      '</span> <small>tokens</small>';
+    const cv = tokens.coefficient_of_variation;
+    q2sub = isNum(cv)
+      ? "median run; cost varies by " + dec(cv, 2) + " across " + arm.runs + " runs"
+      : "median run";
+  }
+  tiles.push(tile("What did it cost?", q2, q2sub,
+    reasonFor("tokens", unmeasured("cost"))));
+
+  // Q3: time saved. Never derived from a machine runtime.
+  const saved = run && run.time && run.time.time_saved_minutes;
+  let q3 = null, q3sub = null;
+  if (isNum(saved)) {
+    q3 = mins(saved);
+    q3sub = "against a recorded human baseline of " +
+      mins(run.time.human_baseline_minutes);
+  }
+  tiles.push(tile("How much time did it save?", q3, q3sub,
+    reasonFor("hours_saved", unmeasured("human_baseline_minutes"))));
+
+  host.innerHTML = tiles.join("");
+  // Count up only a tile that carries a real measured number, and only ever
+  // towards the value already written into the DOM.
+  if (tokens && isNum(tokens.p50)) {
+    const node = host.querySelector('[data-countup="tokens"]');
+    if (node) countUp(node, tokens.p50, (n) => int(n));
+  }
+  $("headlineWhen").textContent = summaryDoc() && summaryDoc().generated_at
+    ? "generated " + when(summaryDoc().generated_at) : "";
+  reveal("#kpi .tile");
+}
+
+function renderCorrectness() {
+  const host = $("correctness");
+  const run = latestRun();
+  const arm = armBlock("with-skills");
+  if (!run) {
+    host.innerHTML = absentBlock("No run recorded",
+      "Results appear here after the first run. Use the Run evaluation button above.");
+    $("q1Status").textContent = "";
+    $("checkTable").innerHTML = "";
+    return;
+  }
+  const c = run.correctness || {};
+  const ok = c.outcome === "pass";
+  $("q1Status").innerHTML = statusHtml(ok ? "pass" : "fail",
+    ok ? "tone-measured" : "tone-failure", ok ? "Pass" : "Fail");
+
+  const rows = [];
+  rows.push(["Outcome, latest run",
+    statusHtml(ok ? "pass" : "fail", ok ? "tone-measured" : "tone-failure",
+      ok ? "Pass" : "Fail")]);
+  if (arm && isNum(arm.correctness_pass_rate)) {
+    rows.push(["Pass rate across " + arm.runs + (arm.runs === 1 ? " run" : " runs"),
+      "<b>" + pct(arm.correctness_pass_rate) + "</b>"]);
+  }
+  if (isNum(c.checks_passed) && isNum(c.checks_total)) {
+    rows.push(["Checks passed", "<b>" + c.checks_passed + " of " + c.checks_total + "</b>"]);
+  } else if (isNum(c.checks_total)) {
+    rows.push(["Checks graded", "<b>" + c.checks_total + "</b>"]);
+    if (c.checks_passed_unavailable_reason) {
+      rows.push(["Checks passed", '<span class="tone-absent">' +
+        esc(c.checks_passed_unavailable_reason) + "</span>"]);
+    }
+  }
+  if (isNum(c.evaluated_task_count)) {
+    rows.push(["Task contracts evaluated", "<b>" + c.evaluated_task_count + "</b>"]);
+  }
+  const failed = (c.failed_check_ids || []).concat(c.failed_task_ids || []);
+  if (failed.length) {
+    rows.push(["Failed", '<span class="tone-failure mono">' +
+      esc(failed.join(", ")) + "</span>"]);
+  }
+  const golden = c.golden_comparison;
+  if (golden && typeof golden === "object") {
+    rows.push(["Matches the human reference",
+      "<b>" + esc(golden.required_sections_present) + " of " +
+      esc(golden.required_sections_total) + " required sections</b>" +
+      (golden.verdict ? " &middot; " + esc(golden.verdict) : "")]);
+  }
+  host.innerHTML = table(null, [{ label: "Measure" }, { label: "Result" }], rows);
+
+  if (!golden) {
+    host.innerHTML += "<br>" + absentBlock("No comparison against a human document",
+      reasonFor("golden_comparison", unmeasured("golden_comparison")));
+  }
+  const review = c.human_review;
+  if (!review) {
+    host.innerHTML += "<br>" + absentBlock("No human review recorded",
+      reasonFor("human_review"));
+  }
+  renderChecks(c);
+}
+
+function renderChecks(correctness) {
+  const host = $("checkTable");
+  const checks = correctness && correctness.checks;
+  if (!Array.isArray(checks) || !checks.length) { host.innerHTML = ""; return; }
+  const rows = checks.map((check) => {
+    const ok = check.outcome === "pass" || check.passed === true;
+    return [
+      '<span class="mono">' + esc(check.id || check.check_id || "") + "</span>",
+      esc(check.description || check.assertion || check.name || ""),
+      statusHtml(ok ? "pass" : "fail", ok ? "tone-measured" : "tone-failure",
+        ok ? "Pass" : "Fail"),
+      check.reason ? esc(check.reason) : null,
+    ];
+  });
+  host.innerHTML = table("Every graded check in the latest run.",
+    [{ label: "Check" }, { label: "What it asserts" }, { label: "Result" }, { label: "Note" }],
+    rows);
+}
+
+function renderCost() {
+  const host = $("costBlock");
+  const arm = armBlock("with-skills");
+  const run = latestRun();
+  const cost = (run && run.cost) || null;
+  const rows = [];
+
+  if (cost) {
+    const add = (label, value) => { if (isNum(value)) rows.push([label, "<b>" + int(value) + "</b>"]); };
+    add("Uncached input tokens", cost.input_tokens);
+    add("Output tokens", cost.output_tokens);
+    add("Cache reads", cost.cache_read_tokens);
+    add("Cache writes", cost.cache_creation_tokens);
+    add("Total tokens", cost.total_tokens);
+    if (isNum(cost.reasoning_output_tokens)) {
+      rows.push(["Reasoning tokens",
+        "<b>" + int(cost.reasoning_output_tokens) + "</b> " +
+        '<span class="small">(a subset of output, not an addition)</span>']);
+    } else if ("reasoning_output_tokens" in cost) {
+      rows.push(["Reasoning tokens",
+        '<span class="tone-absent">not reported by this host</span>']);
+    }
+    if (isNum(cost.model_requests)) add("Model requests", cost.model_requests);
+    if (isNum(cost.turns)) add("Turns", cost.turns);
+    if (isNum(cost.tool_calls)) add("Tool calls", cost.tool_calls);
+    if (isNum(cost.estimated_usd)) {
+      rows.push(["Estimated cost", "<b>" + usd(cost.estimated_usd) + "</b>"]);
+    } else {
+      rows.push(["Estimated cost", '<span class="tone-absent">' +
+        esc(reasonFor("usd", "No dollar rate is on file for this model.")) + "</span>"]);
+    }
+    if (isNum(cost.peak_context_utilization) && isNum(cost.context_window)) {
+      rows.push(["Peak context used",
+        "<b>" + pct(cost.peak_context_utilization) + "</b> of " +
+        int(cost.context_window) + " tokens"]);
+    }
+  }
+
+  if (rows.length) {
+    host.innerHTML = table("Latest run, from its session log.",
+      [{ label: "Channel" }, { label: "Measured" }], rows);
+  } else {
+    host.innerHTML = absentBlock("No token or dollar figures",
+      reasonFor("tokens", unmeasured("cost")),
+      "python3 -m evals.lib.telemetry --session <session-log> --out <file>");
+  }
+
+  const verdict = arm && arm.consistency_verdict;
+  $("q2Status").innerHTML = verdict ? verdictChip(verdict) : "";
+}
+
+function renderSpread() {
+  const host = $("spread");
+  const arm = armBlock("with-skills");
+  const tokens = arm && arm.total_tokens;
+  const parts = [];
+
+  if (tokens && isNum(tokens.p50)) {
+    const rows = [
+      ["Cheapest run", "<b>" + int(tokens.min) + "</b>"],
+      ["Median run", "<b>" + int(tokens.p50) + "</b>"],
+      ["95th percentile", isNum(tokens.p95) ? "<b>" + int(tokens.p95) + "</b>" : null],
+      ["Dearest run", "<b>" + int(tokens.max) + "</b>"],
+      ["How much the cost jumps around",
+        isNum(tokens.coefficient_of_variation)
+          ? "<b>" + dec(tokens.coefficient_of_variation, 3) +
+            "</b> <span class=\"small\">(coefficient of variation)</span>"
+          : null],
+    ];
+    parts.push(table("Token spread across " + arm.runs + " runs in the with-skills arm.",
+      [{ label: "Across runs" }, { label: "Tokens", num: false }], rows));
+    parts.push("<p>" + verdictChip(arm.consistency_verdict) + "</p>");
+    parts.push(perRunStrip());
+  } else {
+    const why = (arm && arm.consistency_unavailable_reason) ||
+      reasonFor("cost_spread", unmeasured("consistency"));
+    parts.push(absentBlock("No cost spread", why,
+      "python3 -m evals.lib.aggregate --suite " + (state.suiteId || "<suite>")));
+  }
+
+  const recon = arm && arm.token_reconciliation;
+  if (recon && isNum(recon.violates) && recon.violates > 0) {
+    parts.push('<div class="banner bad">' + ICONS.info + " <b>" + recon.violates +
+      " of " + recon.checked + " per-request token deltas did not reconcile</b> against " +
+      "the cumulative counter. They cluster at compaction boundaries, are counted rather " +
+      "than repaired, and are listed in the run records. A repaired delta would be an " +
+      "invented token count.</div>");
+  }
+  host.innerHTML = parts.join("");
+}
+
+/* Per-run marks, so a spread is visible as a shape rather than only as a
+   number. Each mark is labelled by its run index in the title attribute and the
+   axis is stated in text, so the chart is not carrying meaning by colour. */
+function perRunStrip() {
+  const runs = ((state.runs && state.runs.runs) || []).slice().reverse();
+  const points = runs
+    .map((r, i) => ({ i: i + 1, v: r.cost && r.cost.total_tokens, id: r.run_id }))
+    .filter((p) => isNum(p.v));
+  if (points.length < 2) return "";
+  const lo = Math.min.apply(null, points.map((p) => p.v));
+  const hi = Math.max.apply(null, points.map((p) => p.v));
+  const span = hi - lo || 1;
+  const w = 100, h = 46;
+  const marks = points.map((p, idx) => {
+    const x = points.length === 1 ? 50 : (idx / (points.length - 1)) * w;
+    const y = h - ((p.v - lo) / span) * (h - 12) - 6;
+    return '<circle cx="' + dec(x, 2) + '%" cy="' + dec(y, 2) + '" r="4" ' +
+      'fill="var(--series-with-skills)" stroke="#FFFFFF" stroke-width="1.5">' +
+      "<title>Run " + p.i + ": " + int(p.v) + " tokens</title></circle>";
+  }).join("");
+  return '<div class="chart"><div class="strip"><svg viewBox="0 0 100 ' + h +
+    '" preserveAspectRatio="none" role="img" aria-label="Tokens per run, ' +
+    "oldest on the left, " + int(lo) + " to " + int(hi) + ' tokens">' +
+    '<line x1="0" y1="' + (h - 3) + '" x2="100" y2="' + (h - 3) +
+    '" stroke="var(--border)" stroke-width="1"/>' + marks + "</svg></div>" +
+    '<p class="small">Tokens per run, oldest on the left. Vertical range ' +
+    int(lo) + " to " + int(hi) + " tokens.</p></div>";
+}
+
+/* Credits: derived, and never displayed without the derivation and the source. */
+function renderCredits() {
+  const host = $("credits");
+  const card = rateCard();
+  const arm = armBlock("with-skills");
+  const run = latestRun();
+  const credits = (run && run.cost && run.cost.credits) || null;
+  const parts = [];
+
+  const provenance = [];
+  if (card.available) {
+    provenance.push('<div class="banner">' + ICONS.info +
+      " <b>Derived figure.</b> " + esc(card.derivation || "") +
+      " Rate card: " + (card.url
+        ? '<a href="' + esc(card.url) + '">' + esc(card.url) + "</a>"
+        : "unknown") +
+      ", fetched " + esc(card.fetched || "unknown") +
+      ", unit " + esc(card.unit || "unknown") +
+      ". Billing unit: " + esc(card.billing_unit || "unknown") + ".</div>");
+  } else {
+    provenance.push('<div class="banner bad">' + ICONS.fail +
+      " <b>No rate card.</b> " + esc(card.reason || "") +
+      " No credit figure can be derived without it.</div>");
+  }
+  parts.push(provenance.join(""));
+
+  if (credits && isNum(credits.total)) {
+    const rows = [
+      ["Credits, this run", "<b>" + dec(credits.total, 2) + "</b>"],
+      ["Turns priced", "<b>" + esc(credits.turns_priced) + " of " +
+        esc(credits.turns_total) + "</b>"],
+      ["Model requests", isNum(credits.model_requests)
+        ? "<b>" + int(credits.model_requests) + "</b>" : null],
+    ];
+    const perTurn = credits.per_turn_spread;
+    if (perTurn) {
+      rows.push(["Credits per turn",
+        "<b>" + dec(perTurn.p50, 2) + "</b> median, " + dec(perTurn.min, 2) +
+        " to " + dec(perTurn.max, 2) + " across " + perTurn.n + " turns"]);
+    }
+    const perReq = credits.per_request_spread;
+    if (perReq) {
+      rows.push(["Credits per model request",
+        "<b>" + dec(perReq.p50, 2) + "</b> median" +
+        '<br><span class="small">' + esc(perReq.comparison_warning || "") + "</span>"]);
+    }
+    const rpt = credits.requests_per_turn && credits.requests_per_turn.priced_turns_only;
+    if (rpt) {
+      rows.push(["Requests per priced turn",
+        "<b>" + dec(rpt.median, 1) + "</b> median, " + dec(rpt.mean, 1) + " mean, " +
+        int(rpt.max) + " max"]);
+    }
+    if (arm && arm.credits && isNum(arm.credits.coefficient_of_variation)) {
+      rows.push(["How much credits jump around",
+        "<b>" + dec(arm.credits.coefficient_of_variation, 3) + "</b> " +
+        verdictChip(arm.credits_consistency_verdict)]);
+    }
+    parts.push(table(null, [{ label: "Measure" }, { label: "Derived" }], rows));
+
+    if (credits.total_coverage) {
+      parts.push('<p class="note">' + ICONS.info + " " + esc(credits.total_coverage) + "</p>");
+    }
+  } else {
+    const why = (credits && credits.total_unavailable_reason) ||
+      reasonFor("credits", "No credit figure was derived for this run.");
+    parts.push(absentBlock("No credit figure", why));
+  }
+
+  // The two published multipliers with no factor on file. Stated as a caveat on
+  // the number, not buried: without them the figure silently understates.
+  const caveats = (credits && credits.caveats) || card.unquantified_multipliers || [];
+  if (caveats.length) {
+    const rows = caveats.map((c) => [
+      "<b>" + esc(c.name) + "</b>",
+      esc(c.published || ""),
+      c.factor == null
+        ? '<span class="tone-absent">no published factor</span>'
+        : esc(c.factor),
+    ]);
+    parts.push(table(
+      "Published multipliers with no numeric factor on file. Neither is applied, so a " +
+      "credit figure above is a floor rather than a total.",
+      [{ label: "Multiplier" }, { label: "What is published" }, { label: "Factor applied" }],
+      rows));
+  }
+
+  // Unpriced models, shown as absent rather than as zero.
+  const unpriced = (credits && credits.unpriced_models) || card.unpriced_models || {};
+  const keys = Object.keys(unpriced);
+  if (keys.length) {
+    parts.push(table("Models with no published rate. These emit null, never zero.",
+      [{ label: "Model" }, { label: "Why it is unpriced" }],
+      keys.map((k) => ['<span class="mono">' + esc(k) + "</span>", esc(unpriced[k])])));
+  }
+  host.innerHTML = parts.join("");
+}
+
+function renderTime() {
+  const host = $("timeBlock");
+  const run = latestRun();
+  const arm = armBlock("with-skills");
+  const t = (run && run.time) || null;
+  const rows = [];
+  let anyMeasured = false;
+
+  if (t) {
+    // The critical distinction: a machine runtime is not an agent runtime and is
+    // never paired with a human baseline.
+    if (isNum(t.agent_wall_clock_seconds)) {
+      rows.push(["Agent wall clock", "<b>" + secs(t.agent_wall_clock_seconds) + "</b>"]);
+      anyMeasured = true;
+    } else {
+      rows.push(["Agent wall clock", '<span class="tone-absent">' +
+        esc(t.agent_wall_clock_note || t.agent_wall_clock_unavailable_reason ||
+            reasonFor("wall_clock", "Not recorded.")) + "</span>"]);
+    }
+    if (isNum(t.harness_wall_clock_seconds)) {
+      rows.push(["Harness runtime",
+        "<b>" + secs(t.harness_wall_clock_seconds) + "</b> " +
+        '<span class="small">machine speed, not a saving</span>']);
+    }
+    if (arm && arm.wall_clock_seconds && isNum(arm.wall_clock_seconds.p50)) {
+      rows.push(["Average execution time",
+        "<b>" + secs(arm.wall_clock_seconds.p50) + "</b> median across " + arm.runs + " runs"]);
+      anyMeasured = true;
+    }
+    if (isNum(t.human_baseline_minutes)) {
+      rows.push(["Human baseline", "<b>" + mins(t.human_baseline_minutes) + "</b>" +
+        (t.human_baseline_source ? '<br><span class="small">' +
+          esc(t.human_baseline_source) + "</span>" : "")]);
+      anyMeasured = true;
+    } else {
+      rows.push(["Human baseline", '<span class="tone-absent">' +
+        esc(reasonFor("human_baseline", unmeasured("human_baseline_minutes"))) + "</span>"]);
+    }
+    if (isNum(t.time_saved_minutes)) {
+      rows.push(["Time saved", "<b>" + mins(t.time_saved_minutes) + "</b>"]);
+      anyMeasured = true;
+    } else {
+      rows.push(["Time saved", '<span class="tone-absent">' +
+        esc(reasonFor("hours_saved", "Needs an agent elapsed time and a recorded baseline.")) +
+        "</span>"]);
+    }
+  }
+
+  host.innerHTML = rows.length
+    ? table("Latest run.", [{ label: "Measure" }, { label: "Result" }], rows)
+    : absentBlock("No timing recorded", reasonFor("wall_clock", "No run has been recorded."));
+  $("q3Status").innerHTML = anyMeasured ? "" : statusHtml("absent", "tone-absent", "Not measured");
+}
+
+function renderSkillTiming() {
+  const host = $("skillTiming");
+  const run = latestRun();
+  const bySkill = (run && run.time && run.time.skill_call_seconds_by_skill) || null;
+  const keys = bySkill ? Object.keys(bySkill) : [];
+  if (!keys.length) {
+    host.innerHTML = "<br>" + absentBlock("No per-skill call durations",
+      reasonFor("skill_call_duration", unmeasured("skill_call_duration")));
+    return;
+  }
+  const rows = keys.sort().map((name) => {
+    const e = bySkill[name];
+    return [
+      '<span class="mono">' + esc(name) + "</span>",
+      "<b>" + esc(e.calls) + "</b>",
+      dec(e.total_seconds, 2) + " s",
+      isNum(e.p50_seconds) ? dec(e.p50_seconds, 2) + " s" : null,
+      e.reading ? '<span class="small">' + esc(e.reading) + "</span>"
+                : (e.tools ? '<span class="small">via ' + esc(e.tools.join(", ")) + "</span>" : null),
+    ];
+  });
+  host.innerHTML = "<br>" + table(
+    "How long each skill call took, from the tool call to its result line.",
+    [{ label: "Skill" }, { label: "Calls", num: true }, { label: "Total", num: true },
+     { label: "Median", num: true }, { label: "What the duration measures" }],
+    rows);
+}
+
+/* Reproducibility. Its own card, and it says in the card that it is not a cost
+   claim, because "consistent output" and "predictable bill" are different
+   sentences that a reader will otherwise merge. */
+function renderDeterminism() {
+  const host = $("determinism");
+  const det = (state.summary && state.summary.determinism) || {};
+  if (!det.available) {
+    $("detStatus").innerHTML = statusHtml("absent", "tone-absent", "Not measured");
+    host.innerHTML = absentBlock("No reproducibility comparison",
+      det.reason || reasonFor("reproducibility", "No determinism block was recorded."));
+    return;
+  }
+  $("detStatus").innerHTML = verdictChip(det.verdict);
+  const rows = [
+    ["Verdict", verdictChip(det.verdict)],
+    ["Runs compared", isNum(det.runs_compared) ? "<b>" + det.runs_compared + "</b>" : null],
+    ["Graded artifacts", isNum(det.graded_artifact_count)
+      ? "<b>" + det.graded_artifact_count + "</b>" : null],
+    ["Byte-identical before normalisation",
+      det.identical_before_normalisation === true
+        ? statusHtml("pass", "tone-measured", "Yes")
+        : statusHtml("info", "tone-absent", "No, and the differences are declared below")],
+    ["Identical after declared normalisation",
+      det.identical_after_declared_normalisation === true
+        ? statusHtml("pass", "tone-measured", "Yes")
+        : statusHtml("fail", "tone-failure", "No")],
+  ];
+  const digest = Array.isArray(det.canonical_artifact_sha256)
+    ? det.canonical_artifact_sha256[0] : det.canonical_artifact_sha256;
+  if (digest) {
+    rows.push(["Canonical digest", '<span class="mono">' + esc(digest) + "</span>"]);
+  }
+  let html = table("Same input, run repeatedly, compared.",
+    [{ label: "Measure" }, { label: "Result" }], rows);
+
+  html += '<div class="banner">' + ICONS.info + " <b>This is not a cost claim.</b> " +
+    esc(det.separation_note || "Reproducibility of an artifact is not predictability of a bill.") +
+    "</div>";
+
+  const vol = det.declared_volatility;
+  if (Array.isArray(vol) && vol.length) {
+    html += table("Variation the suite declares and normalises away. Anything not on this " +
+      "list failing to match would fail the run.",
+      [{ label: "Id" }, { label: "Cause" }, { label: "What would close it" }],
+      vol.map((v) => ['<span class="mono">' + esc(v.id || "") + "</span>",
+        esc(v.cause || v.reason || ""), esc(v.closed_by || v.would_close || "")]));
+  }
+  const undeclared = det.undeclared_variation;
+  if (Array.isArray(undeclared) && undeclared.length) {
+    html += '<div class="banner bad">' + ICONS.fail +
+      " <b>Undeclared variation found.</b> " + esc(JSON.stringify(undeclared)) + "</div>";
+  }
+  const herm = det.hermeticity;
+  if (herm && typeof herm === "object") {
+    const hrows = Object.keys(herm).sort().map((k) => [
+      '<span class="mono">' + esc(k) + "</span>",
+      typeof herm[k] === "object" ? esc(JSON.stringify(herm[k])) : esc(String(herm[k])),
+    ]);
+    html += table("How isolated the run was.",
+      [{ label: "Property" }, { label: "Recorded" }], hrows);
+  } else if (det.hermeticity_unavailable_reason) {
+    html += "<br>" + absentBlock("No isolation record", det.hermeticity_unavailable_reason);
+  }
+  host.innerHTML = html;
+}
+
+function renderArms() {
+  const host = $("arms");
+  const left = armBlock("with-skills");
+  const right = armBlock("baseline-no-skills");
+  const doc = summaryDoc();
+  const deltas = doc && doc.deltas;
+
+  if (!right || !right.runs) {
+    host.innerHTML = absentBlock("No comparison arm",
+      reasonFor("skill_vs_no_skill", unmeasured("comparison_arm")));
+    return;
+  }
+
+  const parts = [];
+  const measures = [
+    ["Tokens, median run", "total_tokens", (v) => int(v)],
+    ["Credits, median run", "credits", (v) => dec(v, 2)],
+    ["Dollars, median run", "estimated_usd", (v) => usd(v)],
+    ["Wall clock, median run", "wall_clock_seconds", (v) => secs(v)],
+  ];
+  for (const [label, key, fmt] of measures) {
+    const a = left && left[key] && left[key].p50;
+    const b = right[key] && right[key].p50;
+    if (!isNum(a) || !isNum(b)) continue;
+    const max = Math.max(a, b) || 1;
+    parts.push('<h3>' + esc(label) + "</h3>" +
+      '<div class="bar-row"><span class="bar-label">With Ascent skills</span>' +
+      '<div class="bar-track"><div class="bar-fill with-skills" style="width:' +
+      dec((a / max) * 100, 1) + '%">with skills</div></div>' +
+      '<span class="bar-value">' + fmt(a) + "</span></div>" +
+      '<div class="bar-row"><span class="bar-label">No skills, baseline</span>' +
+      '<div class="bar-track"><div class="bar-fill baseline" style="width:' +
+      dec((b / max) * 100, 1) + '%">baseline</div></div>' +
+      '<span class="bar-value">' + fmt(b) + "</span></div>");
+  }
+  if (parts.length) {
+    parts.push('<div class="legend">' +
+      '<span><i class="swatch with-skills"></i>With Ascent skills</span>' +
+      '<span><i class="swatch baseline"></i>No skills, baseline</span></div>');
+  }
+
+  const rows = [];
+  if (left && isNum(left.correctness_pass_rate) && isNum(right.correctness_pass_rate)) {
+    rows.push(["Passed", "<b>" + pct(left.correctness_pass_rate) + "</b> of " +
+      left.runs + " runs", "<b>" + pct(right.correctness_pass_rate) + "</b> of " +
+      right.runs + " runs"]);
+  }
+  if (rows.length) {
+    parts.push(table("A baseline arm that succeeds sometimes is the honest comparison; it is " +
+      "never collapsed to pass or fail.",
+      [{ label: "" }, { label: "With skills" }, { label: "Baseline" }], rows));
+  }
+
+  if (deltas) {
+    const drows = [];
+    const push = (label, value, fmt) => {
+      if (isNum(value)) drows.push([label, "<b>" + fmt(value) + "</b>"]);
+    };
+    push("Tokens saved, median", deltas.tokens_saved_p50, int);
+    push("Credits saved, median", deltas.credits_saved_p50, (v) => dec(v, 2));
+    push("Dollars saved, median", deltas.usd_saved_p50, usd);
+    push("Minutes saved, median", deltas.minutes_saved_p50, (v) => mins(v));
+    if (isNum(deltas.correctness_pass_rate_delta)) {
+      drows.push(["Pass rate difference",
+        "<b>" + (deltas.correctness_pass_rate_delta >= 0 ? "+" : "") +
+        pct(deltas.correctness_pass_rate_delta) + "</b>"]);
+    }
+    if (deltas.consistency_improvement) {
+      drows.push(["Consistency", esc(deltas.consistency_improvement)]);
+    }
+    if (drows.length) {
+      parts.push(table("Every headline claim is a difference, never an absolute.",
+        [{ label: "Difference" }, { label: "Measured" }], drows));
+    }
+  } else if (doc && doc.deltas_unavailable_reason) {
+    parts.push("<br>" + absentBlock("No deltas", doc.deltas_unavailable_reason));
+  }
+  host.innerHTML = parts.join("");
+}
+
+/* The coverage table. This is the page's honesty contract made visible. */
+function renderCoverage() {
+  const host = $("coverage");
+  const payload = state.metrics;
+  if (!payload || !payload.metrics) {
+    host.innerHTML = absentBlock("Metric catalogue unavailable",
+      "The workbench could not read the metric catalogue from /api/metrics/.");
+    $("coverageCount").textContent = "";
+    return;
+  }
+  $("coverageCount").textContent =
+    payload.measured + " measured, " + payload.absent + " declared absent, " +
+    payload.total + " asked for";
+
+  const QUESTION = {
+    1: "Did it do the job right?",
+    2: "What did it cost, and was that predictable?",
+    3: "How much time did it save?",
+  };
+  const rows = payload.metrics.map((m) => {
+    const measured = m.status === "measured";
+    return [
+      '<span class="small">Q' + m.question + "</span><br><b>" + esc(m.label) + "</b>" +
+        '<br><span class="small">' + esc(m.unit) + "</span>",
+      measured
+        ? statusHtml("pass", "tone-measured", "Measured")
+        : statusHtml("absent", "tone-absent", "Declared absent"),
+      measured
+        ? (m.value == null
+            ? '<span class="small">recorded, see the section above</span>'
+            : "<b>" + esc(m.value) + "</b>")
+        : '<span class="metric-reason">' + esc(m.absent_reason) + "</span>",
+      '<span class="metric-quote">&ldquo;' + esc(m.quote) + "&rdquo;</span>" +
+        '<br><span class="small">' + esc(m.source) + "</span>",
+      '<span class="mono small">' + esc(m.measured_from) + "</span>",
+    ];
+  });
+  host.innerHTML = table(
+    payload.provenance,
+    [{ label: "Metric" }, { label: "Status" }, { label: "Value or reason" },
+     { label: "Who asked for it" }, { label: "Read from" }],
+    rows);
+}
+
+function renderPaste() {
+  const host = $("pasteWrap");
+  const paste = state.paste;
+  if (!paste || !paste.available || !paste.markdown) {
+    host.innerHTML = absentBlock("No paste-ready block",
+      (paste && paste.reason) || "The summary emitter produced no output.",
+      (paste && paste.command) || null);
+    return;
+  }
+  host.innerHTML = '<pre class="paste" id="pasteBlock">' + esc(paste.markdown) + "</pre>" +
+    '<div class="row-actions"><button class="btn" id="copyButton">Copy summary</button>' +
+    '<span class="copied" id="copied"></span>' +
+    '<span class="small">Produced by <span class="mono">' + esc(paste.command) +
+    "</span>. The page does not compose this text.</span></div>";
+  $("copyButton").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(paste.markdown);
+      $("copied").textContent = "Copied";
+    } catch (e) {
+      $("copied").textContent = "Copy failed; select the text above";
+    }
+    setTimeout(() => { $("copied").textContent = ""; }, 2600);
+  });
+}
+
+function renderHistory() {
+  const host = $("historyTable");
+  const payload = state.runs;
+  const runs = (payload && payload.runs) || [];
+  $("historyCount").textContent = payload && isNum(payload.total_recorded)
+    ? payload.total_recorded + (payload.total_recorded === 1 ? " run recorded" : " runs recorded")
+    : "";
+  if (!runs.length) {
+    host.innerHTML = absentBlock("No runs yet",
+      (payload && payload.reason) || "Results appear after the first run.");
+    return;
+  }
+  const rows = runs.map((r) => {
+    const c = r.correctness || {};
+    const ok = c.outcome === "pass";
+    const cost = r.cost || {};
+    const t = r.time || {};
+    return [
+      '<span class="mono small">' + esc(r.run_id) + "</span>",
+      esc(r.arm || ""),
+      statusHtml(ok ? "pass" : "fail", ok ? "tone-measured" : "tone-failure",
+        ok ? "Pass" : "Fail"),
+      isNum(c.checks_passed) && isNum(c.checks_total)
+        ? c.checks_passed + " / " + c.checks_total : null,
+      isNum(cost.total_tokens) ? int(cost.total_tokens) : null,
+      cost.credits && isNum(cost.credits.total) ? dec(cost.credits.total, 2) : null,
+      isNum(cost.estimated_usd) ? usd(cost.estimated_usd) : null,
+      isNum(t.agent_wall_clock_seconds) ? secs(t.agent_wall_clock_seconds) : null,
+      '<span class="small">' + esc(when(r.started_at)) + "</span>",
+    ];
+  });
+  host.innerHTML = table("Blank cells are figures this suite does not measure, not zeros.",
+    [{ label: "Run" }, { label: "Arm" }, { label: "Outcome" }, { label: "Checks", num: true },
+     { label: "Tokens", num: true }, { label: "Credits", num: true },
+     { label: "Cost", num: true }, { label: "Agent time", num: true }, { label: "Started" }],
+    rows);
+}
+
+function renderThresholds() {
+  const host = $("thresholds");
+  const th = (state.summary && state.summary.consistency_thresholds) ||
+    (state.suite && state.suite.consistency_thresholds);
+  if (!th) { host.innerHTML = ""; return; }
+  const rows = (th.bands || []).map((b) => [
+    verdictChip(b.verdict), '<span class="mono">' + esc(b.range) + "</span>", esc(b.reading)]);
+  host.innerHTML = '<p class="note">Measured as the ' + esc(th.measure) +
+    ". These bands are <b>" + esc(th.status || "provisional") +
+    "</b> and are recorded so they can be argued with.</p>" +
+    table(null, [{ label: "Verdict" }, { label: "Range" }, { label: "Plain reading" }], rows);
+}
+
+function renderBoundary() {
+  const suite = state.suite || {};
+  const items = [
+    "Suites are discovered under <code>evals/</code> and then allowlisted; anything else is refused.",
+    "The browser supplies no command, model, path, fixture or prompt. Only a run count, an arm and a history limit.",
+    "Each batch runs one fixed runner path in a subprocess under a " +
+      esc(suite.run_timeout_seconds || 90) + " second per-run timeout, with no shell.",
+    "Up to " + esc(suite.max_runs_per_request || 10) + " runs per request, one batch at a time.",
+    "Run records are written under <code>evals/&lt;suite&gt;/results/</code>, which is Git-ignored.",
+    "Telemetry is extracted by code. No model reads a transcript to produce a number here.",
+  ];
+  $("boundaryList").innerHTML = items.map((i) => "<li>" + i + "</li>").join("");
+  const cmds = [
+    "python3 docs/evals_workbench.py --port 8765",
+    "python3 -m evals.lib.telemetry --session <session-log> --out <file>",
+    "python3 -m evals.lib.aggregate --suite " + (state.suiteId || "<suite>"),
+    "python3 -m evals.lib.emit_summary --suite " + (state.suiteId || "<suite>"),
+  ];
+  $("telemetryCommands").textContent = cmds.join("\n");
+}
+
+function renderRateCardFoot() {
+  const card = rateCard();
+  const host = $("rateCardFoot");
+  if (!card || !card.available) {
+    host.innerHTML = "<p>" + esc((card && card.reason) || "No rate card available.") + "</p>";
+    return;
+  }
+  host.innerHTML = "<p>Credits are derived from <span class=\"mono\">" +
+    esc(card.file) + "</span>, fetched " + esc(card.fetched) + " from " +
+    (card.url ? '<a href="' + esc(card.url) + '">' + esc(card.url) + "</a>" : "an unknown source") +
+    ". Unit: " + esc(card.unit) + ". Priced models: " +
+    esc((card.priced_models || []).join(", ")) + ".</p>";
+}
+
+function renderBanner() {
+  const host = $("banner");
+  const parts = [];
+  const suites = state.suites;
+  if (suites && (!suites.suites || !suites.suites.length)) {
+    parts.push('<div class="banner">' + ICONS.info + " <b>No suite in this checkout.</b> " +
+      esc(suites.reason || "") + "</div>");
+  }
+  const m = state.metrics;
+  if (m && isNum(m.total)) {
+    parts.push('<div class="banner">' + ICONS.info +
+      " <b>" + m.measured + " of " + m.total + " requested metrics are measured here.</b> " +
+      "The other " + m.absent + " are listed in Metric coverage below with the reason each " +
+      "one is absent. Nothing on this page is estimated to fill a gap.</div>");
+  }
+  const agg = state.summary && state.summary.telemetry && state.summary.telemetry.aggregate;
+  if (agg && agg.available === false && agg.reason) {
+    parts.push('<div class="banner bad">' + ICONS.fail + " <b>Aggregator unavailable.</b> " +
+      esc(agg.reason) + "</div>");
+  }
+  host.innerHTML = parts.join("");
+}
+
+function render() {
+  renderBanner();
+  renderKpi();
+  renderCorrectness();
+  renderCost();
+  renderSpread();
+  renderCredits();
+  renderTime();
+  renderSkillTiming();
+  renderDeterminism();
+  renderArms();
+  renderCoverage();
+  renderPaste();
+  renderHistory();
+  renderThresholds();
+  renderBoundary();
+  renderRateCardFoot();
+  reveal("main .card");
+}
+
+/* ------------------------------------------------------------------ loading */
+function setStatus(text) { $("runStatus").textContent = text; }
+
+async function getJson(path) {
+  const response = await fetch(path, { headers: { Accept: "application/json" } });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error((payload && (payload.detail || payload.error)) || response.statusText);
+    error.payload = payload; error.status = response.status;
+    throw error;
+  }
+  return payload;
+}
+
+async function loadSuiteData() {
+  const id = state.suiteId;
+  if (!id) { render(); return; }
+  const [suite, summary, runs, metrics, paste] = await Promise.all([
+    getJson("/api/suite/" + id).catch(() => null),
+    getJson("/api/summary/" + id).catch(() => null),
+    getJson("/api/runs/" + id + "?limit=" + state.limit).catch(() => null),
+    getJson("/api/metrics/" + id).catch(() => null),
+    getJson("/api/paste/" + id).catch(() => null),
+  ]);
+  state.suite = suite; state.summary = summary; state.runs = runs;
+  state.metrics = metrics; state.paste = paste;
+  render();
+}
+
+function populateControls() {
+  const suites = (state.suites && state.suites.suites) || [];
+  const suiteSelect = $("suiteSelect");
+  suiteSelect.innerHTML = suites.length
+    ? suites.map((s) => '<option value="' + esc(s.suite_id) + '">' + esc(s.suite_id) +
+        (s.runnable ? "" : " (no runner)") + "</option>").join("")
+    : '<option value="">No suite found</option>';
+  suiteSelect.disabled = !suites.length;
+  if (suites.length && !state.suiteId) state.suiteId = suites[0].suite_id;
+  if (state.suiteId) suiteSelect.value = state.suiteId;
+
+  const arms = (state.suites && state.suites.arms) || ["with-skills", "baseline-no-skills"];
+  const armSelect = $("armSelect");
+  armSelect.innerHTML = arms.map((a) => '<option value="' + esc(a) + '">' +
+    esc(a === "with-skills" ? "With Ascent skills" : "No skills, baseline") + "</option>").join("");
+  armSelect.value = state.arm;
+  armSelect.disabled = !suites.length;
+
+  const max = (state.suites && state.suites.max_runs_per_request) || 10;
+  const runsSelect = $("runsSelect");
+  let options = "";
+  for (let i = 1; i <= max; i += 1) {
+    options += '<option value="' + i + '"' + (i === state.runCount ? " selected" : "") + ">" +
+      i + (i === 1 ? " run" : " runs") + "</option>";
+  }
+  runsSelect.innerHTML = options;
+  runsSelect.disabled = !suites.length;
+
+  const runnable = suites.some((s) => s.suite_id === state.suiteId && s.runnable);
+  $("runButton").disabled = !runnable;
+  if (!suites.length) {
+    setStatus("No suite to run. The telemetry harness is installed; a suite has to land first.");
+  } else if (!runnable) {
+    setStatus("This suite has no runner, so it cannot be started from here.");
+  } else {
+    setStatus("Ready. One run cannot show a spread; ask for two or more.");
+  }
+}
+
+async function loadAll() {
+  try {
+    state.suites = await getJson("/api/suites");
+    state.connected = true;
+  } catch (error) {
+    state.connected = false;
+    setStatus("Cannot reach the workbench server. Start it with: python3 docs/evals_workbench.py");
+    $("banner").innerHTML = '<div class="banner bad">' + ICONS.fail +
+      " <b>No connection to the local workbench.</b> This page reads every figure from " +
+      "<span class=\"mono\">/api/</span> on a local server. Start it with " +
+      "<span class=\"mono\">python3 docs/evals_workbench.py --port 8765</span> and reload. " +
+      "Nothing is rendered from cached or sample data.</div>";
+    return;
+  }
+  populateControls();
+  await loadSuiteData();
+}
+
+$("suiteSelect").addEventListener("change", async (event) => {
+  state.suiteId = event.target.value || null;
+  populateControls();
+  await loadSuiteData();
+});
+$("armSelect").addEventListener("change", (event) => { state.arm = event.target.value; });
+$("runsSelect").addEventListener("change", (event) => {
+  state.runCount = parseInt(event.target.value, 10) || 1;
+});
+$("limitSelect").addEventListener("change", async (event) => {
+  state.limit = parseInt(event.target.value, 10) || 10;
+  await loadSuiteData();
+});
+
+$("runButton").addEventListener("click", async () => {
+  if (state.busy || !state.suiteId) return;
+  state.busy = true;
+  $("runButton").disabled = true;
+  const n = state.runCount;
+  setStatus("Running " + n + (n === 1 ? " time" : " times") + "; this can take a while.");
+  try {
+    const response = await fetch("/api/run/" + state.suiteId, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ runs: n, arm: state.arm }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      setStatus("Run refused: " + ((payload && (payload.detail || payload.error)) ||
+        response.statusText));
+    } else {
+      const done = payload.completed;
+      setStatus("Completed " + done + " of " + payload.requested +
+        (payload.record_author === "runner" ? ", records written by the runner." : "."));
+      const process = payload.process || {};
+      const text = [process.stdout, process.stderr].filter(Boolean).join("\n");
+      $("output").textContent = text || "No process output.";
+    }
+  } catch (error) {
+    setStatus("Run failed: " + error.message);
+  } finally {
+    state.busy = false;
+    $("runButton").disabled = false;
+    await loadSuiteData();
+  }
+});
+
+loadAll();
+</script>
+</body>
+</html>

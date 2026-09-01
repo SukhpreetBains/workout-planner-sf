@@ -1,0 +1,167 @@
+{
+  "schema_version": "ascent.eval-pricing.v1",
+  "provenance": {
+    "primary_source": "claude-api skill (bundled with Claude Code), Current Models table cached 2026-06-24",
+    "cache_multipliers_source": "claude-api skill, shared/prompt-caching.md - Economics: cache reads ~0.1x base input; cache writes 1.25x base input at 5-minute TTL, 2x at 1-hour TTL",
+    "retrieved_by": "Skill tool invocation of claude-api, 2026-08-21",
+    "note": "Rates are Anthropic first-party API list prices in USD per million tokens. They also apply to Claude on Microsoft Foundry. Amazon Bedrock and Vertex AI are partner-operated with separate pricing and are not covered here."
+  },
+  "cache_write_default_ttl": "5m",
+  "models": {
+    "claude-opus-5": {
+      "provider": "anthropic",
+      "display_name": "Claude Opus 5",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "usd_per_million": {
+        "input": 5.0,
+        "output": 25.0,
+        "cache_read": 0.5,
+        "cache_write_5m": 6.25,
+        "cache_write_1h": 10.0
+      }
+    },
+    "claude-opus-4-8": {
+      "provider": "anthropic",
+      "display_name": "Claude Opus 4.8",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "usd_per_million": {
+        "input": 5.0,
+        "output": 25.0,
+        "cache_read": 0.5,
+        "cache_write_5m": 6.25,
+        "cache_write_1h": 10.0
+      }
+    },
+    "claude-opus-4-7": {
+      "provider": "anthropic",
+      "display_name": "Claude Opus 4.7",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "usd_per_million": {
+        "input": 5.0,
+        "output": 25.0,
+        "cache_read": 0.5,
+        "cache_write_5m": 6.25,
+        "cache_write_1h": 10.0
+      }
+    },
+    "claude-opus-4-6": {
+      "provider": "anthropic",
+      "display_name": "Claude Opus 4.6",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "usd_per_million": {
+        "input": 5.0,
+        "output": 25.0,
+        "cache_read": 0.5,
+        "cache_write_5m": 6.25,
+        "cache_write_1h": 10.0
+      }
+    },
+    "claude-sonnet-5": {
+      "provider": "anthropic",
+      "display_name": "Claude Sonnet 5",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "note": "Introductory pricing of 2.00 input / 10.00 output runs through 2026-08-31; the list rates below are what applies from 2026-09-01. See introductory_usd_per_million.",
+      "introductory_usd_per_million": {
+        "through": "2026-08-31",
+        "input": 2.0,
+        "output": 10.0,
+        "cache_read": 0.2,
+        "cache_write_5m": 2.5,
+        "cache_write_1h": 4.0
+      },
+      "usd_per_million": {
+        "input": 3.0,
+        "output": 15.0,
+        "cache_read": 0.3,
+        "cache_write_5m": 3.75,
+        "cache_write_1h": 6.0
+      }
+    },
+    "claude-sonnet-4-6": {
+      "provider": "anthropic",
+      "display_name": "Claude Sonnet 4.6",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "usd_per_million": {
+        "input": 3.0,
+        "output": 15.0,
+        "cache_read": 0.3,
+        "cache_write_5m": 3.75,
+        "cache_write_1h": 6.0
+      }
+    },
+    "claude-haiku-4-5": {
+      "provider": "anthropic",
+      "display_name": "Claude Haiku 4.5",
+      "context_tokens": 200000,
+      "checked_on": "2026-08-21",
+      "usd_per_million": {
+        "input": 1.0,
+        "output": 5.0,
+        "cache_read": 0.1,
+        "cache_write_5m": 1.25,
+        "cache_write_1h": 2.0
+      }
+    },
+    "claude-fable-5": {
+      "provider": "anthropic",
+      "display_name": "Claude Fable 5",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "usd_per_million": {
+        "input": 10.0,
+        "output": 50.0,
+        "cache_read": 1.0,
+        "cache_write_5m": 12.5,
+        "cache_write_1h": 20.0
+      }
+    },
+    "claude-mythos-5": {
+      "provider": "anthropic",
+      "display_name": "Claude Mythos 5 (Project Glasswing)",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "usd_per_million": {
+        "input": 10.0,
+        "output": 50.0,
+        "cache_read": 1.0,
+        "cache_write_5m": 12.5,
+        "cache_write_1h": 20.0
+      }
+    },
+    "claude-opus-5-fast": {
+      "provider": "anthropic",
+      "display_name": "Claude Opus 5, fast mode",
+      "context_tokens": 1000000,
+      "checked_on": "2026-08-21",
+      "note": "Fast mode (speed=fast) is billed at a premium over standard Opus 5. Session logs do not currently record the speed setting, so the parsers never select this entry automatically.",
+      "usd_per_million": {
+        "input": 10.0,
+        "output": 50.0,
+        "cache_read": 1.0,
+        "cache_write_5m": 12.5,
+        "cache_write_1h": 20.0
+      }
+    }
+  },
+  "aliases": {
+    "claude-opus-5[1m]": "claude-opus-5",
+    "claude-opus-4-8[1m]": "claude-opus-4-8",
+    "claude-sonnet-5[1m]": "claude-sonnet-5",
+    "claude-sonnet-4-6[1m]": "claude-sonnet-4-6",
+    "claude-fable-5[1m]": "claude-fable-5",
+    "anthropic.claude-opus-5": "claude-opus-5",
+    "anthropic.claude-opus-4-8": "claude-opus-4-8",
+    "anthropic.claude-sonnet-5": "claude-sonnet-5",
+    "anthropic.claude-haiku-4-5": "claude-haiku-4-5"
+  },
+  "unpriced_models": {
+    "gpt-5.6-terra": "OpenAI model served through Codex. No Anthropic rate applies and no OpenAI rate has been recorded here, so estimated_usd is null for Codex sessions on this model.",
+    "codex-auto-review": "Codex internal review model. No published per-token rate recorded."
+  }
+}
