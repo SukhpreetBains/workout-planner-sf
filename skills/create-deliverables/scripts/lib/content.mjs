@@ -43,6 +43,10 @@ export const SECTION_SCHEMA = {
     title: { type: 'string' },
     body: { type: 'prose', required: true },
   },
+  purpose: {
+    title: { type: 'string' },
+    body: { type: 'prose', required: true },
+  },
   'kpi-row': {
     title: { type: 'string' },
     items: {
@@ -121,6 +125,20 @@ export const SECTION_SCHEMA = {
     title: { type: 'string' },
     body: { type: 'prose', required: true },
   },
+  agenda: {
+    title: { type: 'string' },
+    items: { type: 'stringlist', required: true, min: 1 },
+  },
+  table: {
+    title: { type: 'string', required: true },
+    columns: { type: 'stringlist', required: true, min: 1 },
+    rows: {
+      type: 'list', required: true, min: 1,
+      of: {
+        cells: { type: 'stringlist', required: true, min: 1 },
+      },
+    },
+  },
 };
 
 /** `timeline` and `roadmap` are the same section under two names. */
@@ -184,7 +202,7 @@ function checkValue(v, spec, where, problems, ctx) {
     case 'icon':
       if (typeof v !== 'string') { problems.push(`${where}: expected an icon name, found ${describe(v)}`); return; }
       if (ctx.iconNames && !ctx.iconNames.has(v)) {
-        problems.push(`${where}: \`${v}\` is not an approved icon. Pick one from slalom-branding/assets/iconography/ (never draw a new one).`);
+        problems.push(`${where}: \`${v}\` is not an approved icon. Pick one from the active branding pack's assets/iconography/ (never draw a new one).`);
       }
       break;
 

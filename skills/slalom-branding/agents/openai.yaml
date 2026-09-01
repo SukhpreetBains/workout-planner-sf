@@ -1,6 +1,0 @@
-interface:
-  display_name: "Slalom Branding"
-  short_description: "Apply Slalom brand style to deliverables"
-  icon_small: "./assets/logos/slalom-logo-blue-RGB.svg"
-  icon_large: "./assets/logos/slalom-logo-blue-RGB.svg"
-  default_prompt: "Use $slalom-branding to brand this deliverable with Slalom styling."

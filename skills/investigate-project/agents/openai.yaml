@@ -1,0 +1,4 @@
+interface:
+  display_name: "Investigate Project"
+  short_description: "Map project context, or fetch ranked task evidence from it"
+  default_prompt: "Use $investigate-project to map this project's context, or to assemble the most relevant cached context for a task."

@@ -1,0 +1,36 @@
+{
+  "schema_version": "ascent.skill-eval-plan.v1",
+  "skill_id": "compose-deliverable",
+  "questions": {
+    "correctness": {"status": "measured", "how": "A deterministic runner builds the pinned shared-content fixture, checks independently declared source text and section coverage, invokes the PPTX structural validator, and proves the validator rejects seven corrupted-package cases.", "reported": ["outcome", "checks_total", "checks_passed", "failed_check_ids", "evaluated_task_count", "outcome_pass_rate"]},
+    "cost": {"status": "not-instrumented", "how": "unknown", "reported": [], "note": "This runner has no model session, so it must not turn local build time into token or dollar figures."},
+    "time": {"status": "not-instrumented", "how": "unknown", "reported": ["harness_wall_clock_seconds"], "note": "Harness duration is a machine-speed measurement, not agent elapsed time or time saved."}
+  },
+  "arms": {
+    "with-skills": {"status": "implemented", "note": "The deterministic runner exercises the shipped compose-deliverable renderer and validators against a pinned fixture."},
+    "baseline-no-skills": {"status": "not-implemented", "note": "A real model-driven comparison must run the same source fixture, host, model, and prompt with the Ascent skills withheld. The deterministic runner cannot construct that control by calling the renderer directly."}
+  },
+  "runs_per_arm": 5,
+  "consistency": {"metric": "coefficient_of_variation(total_tokens)", "verdict": "unknown", "thresholds": {"predictable": "< 0.10", "variable": "0.10-0.30", "unpredictable": "> 0.30"}, "thresholds_status": "provisional", "note": "The runner can repeat correctness checks, but cost consistency remains unknown until at least three recorded agent runs exist in each arm."},
+  "coverage": {"mode": "hybrid", "rationale": "Protect the shipped renderer and structural gates as regression behavior while establishing the first document-output capability evaluation."},
+  "trials": {"count": 1, "reliability_metric": "outcome_pass_rate", "rationale": "The local fixture and structural checks are deterministic. Whole-suite repeats are exposed through --runs for the workbench."},
+  "graders": [
+    {"id": "source-content-contract", "type": "code", "required": true, "rationale": "Independent required text and section counts check source-to-PPTX mapping."},
+    {"id": "pptx-structural-outcome", "type": "code", "required": true, "rationale": "OOXML structure, native editability, brand tokens, notes, and image relationships are objectively inspectable."}
+  ],
+  "behavior_checks": {
+    "skills_invoked": {"status": "not-observable", "expected": ["compose-deliverable", "slalom-branding"], "note": "The deterministic harness invokes scripts, not an agent session."},
+    "clarifying_questions": {"status": "not-observable", "required": ["Confirm the approved source content artifact.", "Confirm the deck title, classification, accent, and slide sequence."], "note": "The deterministic harness has no user turn."}
+  },
+  "metrics": ["outcome", "checks_total", "checks_passed", "failed_check_ids", "evaluated_task_count", "outcome_pass_rate", "harness_wall_clock_seconds"],
+  "gaps": [
+    {"id": "no-cost-data", "question": "cost", "statement": "No token or dollar figures exist because this runner has no model session.", "unblocked_by": "Run the same fixture through the host agent and extract its session log deterministically."},
+    {"id": "no-baseline-arm", "question": "cost", "statement": "The same task has not yet been run with Ascent skills withheld.", "unblocked_by": "Run baseline-no-skills on the same host, model, prompt, and fixture."},
+    {"id": "consistency-unknown", "question": "cost", "statement": "Cost spread is unknown without at least three token-bearing runs per arm.", "unblocked_by": "Record at least three agent runs in each arm and aggregate them."},
+    {"id": "no-human-baseline", "question": "time", "statement": "No human effort has been recorded for this exact deck.", "unblocked_by": "One timed manual run or a dated delivery-lead estimate."},
+    {"id": "no-golden-reference", "question": "correctness", "statement": "No approved human deck is registered for golden-document comparison.", "unblocked_by": "Clear and register an approved reference deck with owner and required sections."},
+    {"id": "behavior-not-observable", "question": "correctness", "statement": "The runner cannot establish that a model invoked the skills or asked the required questions.", "unblocked_by": "A model-driven arm with session-log extraction."}
+  ],
+  "aggregation": {"command": "python3 -m evals.lib.aggregate --suite compose-deliverable", "status": "available-after-evals-pr-merge"},
+  "taxonomy": {"eval_type": "hybrid", "interaction_scope": "single-turn", "graded_surface": ["outcome", "trajectory"], "grader_types": ["code-based"], "scoring": "binary", "reliability_estimator": "repeated-whole-suite-runs", "execution_context": "local-browser", "failure_mode_provenance": "contract-enumeration", "reference_dependence": "reference-free", "note": "Reference classification only. The synthetic source fixture is an independent source-content contract, not an approved human golden document."}
+}

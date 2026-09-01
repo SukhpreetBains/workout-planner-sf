@@ -235,11 +235,13 @@
 .kpi-row {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 }
 
 .kpi {
   display: grid;
+  container-type: inline-size;
+  min-inline-size: 0;
   /* Value, label, then the source pinned to the bottom so the tiles line up
      whatever the label length. */
   grid-template-rows: auto 1fr auto;
@@ -254,15 +256,16 @@
 
 .kpi__value {
   font-weight: var(--weight-display);
-  font-size: var(--size-kpi);
+  font-size: clamp(2.25rem, 14cqi, var(--size-kpi));
   line-height: var(--leading-display);
+  overflow-wrap: anywhere;
   color: var(--on-white-display);
 }
 
 /* The unit stays at the value's size — one type size, not two. */
 .kpi__unit { font-weight: var(--weight-display); }
-.kpi__label { font-weight: var(--weight-body-tight); }
-.kpi__source { color: var(--on-white-muted); font-size: var(--size-small); }
+.kpi__label { min-inline-size: 0; overflow-wrap: anywhere; font-weight: var(--weight-body-tight); }
+.kpi__source { min-inline-size: 0; overflow-wrap: anywhere; color: var(--on-white-muted); font-size: var(--size-small); }
 
 /* ==========================================================================
    FINDING CARD
@@ -272,6 +275,7 @@
 
 .finding {
   display: grid;
+  min-inline-size: 0;
   gap: var(--space-3);
   padding: var(--space-5);
   border: 1px solid var(--rule-color);
@@ -288,12 +292,13 @@
   gap: var(--space-3);
 }
 
-.finding__title { display: flex; align-items: center; gap: var(--space-3); }
+.finding__title { display: flex; min-inline-size: 0; align-items: center; gap: var(--space-3); }
+.finding__title .subhead { min-inline-size: 0; overflow-wrap: anywhere; }
 
 .finding__fields {
   display: grid;
   gap: var(--space-4) var(--space-5);
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
 }
 .finding__icon { width: 2rem; height: 2rem; flex: 0 0 auto; }
 .finding__field { display: grid; gap: var(--space-1); align-content: start; }
@@ -397,11 +402,12 @@
 .roadmap__phases {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
 }
 
 .phase {
   display: grid;
+  min-inline-size: 0;
   gap: var(--space-2);
   padding: var(--space-4);
   border: 1px solid var(--rule-color);
@@ -424,6 +430,7 @@
 
 .rec {
   display: grid;
+  min-inline-size: 0;
   gap: var(--space-2);
   grid-template-columns: auto 1fr;
   column-gap: var(--space-4);
@@ -443,28 +450,31 @@
   font-variant-numeric: tabular-nums;
 }
 
-.rec__action { font-weight: var(--weight-subhead); font-size: var(--size-h3); }
-.rec__rationale { max-width: var(--measure); }
+.rec__action { min-inline-size: 0; overflow-wrap: anywhere; font-weight: var(--weight-subhead); font-size: var(--size-h3); }
+.rec__rationale { min-inline-size: 0; max-width: var(--measure); overflow-wrap: anywhere; }
 
-.rec__tags { display: flex; flex-wrap: wrap; gap: var(--space-2); font-size: var(--size-small); }
+.rec__tags { display: flex; min-inline-size: 0; flex-wrap: wrap; gap: var(--space-2); font-size: var(--size-small); }
 
 /* Wide enough for the horizon and owner to sit alongside the rationale rather
    than leaving the right half of the card empty. */
 @media (min-width: 62rem) {
-  .rec { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .rec { grid-template-columns: auto minmax(0, 1fr) minmax(10rem, 18rem); }
   .rec__index { grid-row: 1 / span 2; }
   .rec__action { grid-column: 2; }
   .rec__rationale { grid-column: 2; }
-  .rec__tags { grid-column: 3; grid-row: 1 / span 2; flex-direction: column; align-items: start; align-self: center; }
+  .rec__tags { grid-column: 3; grid-row: 1 / span 2; flex-direction: column; align-items: start; align-self: start; }
 }
 
 .tag {
   display: inline-flex;
+  max-inline-size: 100%;
+  min-inline-size: 0;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-2);
   background: var(--surface-accent-bg);
   color: var(--on-accent-body);
   font-weight: var(--weight-body-tight);
+  overflow-wrap: anywhere;
 }
 
 .tag b { font-weight: var(--weight-subhead); }
@@ -492,6 +502,51 @@
    ========================================================================== */
 
 .methodology .prose { max-width: var(--measure); }
+
+/* ==========================================================================
+   AGENDA
+   ========================================================================== */
+
+.agenda { display: grid; gap: var(--space-3); counter-reset: agenda-item; max-width: 46rem; }
+
+.agenda-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-4);
+  align-items: baseline;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule-color);
+  font-weight: var(--weight-bullet);
+}
+
+.agenda-item__index { font-weight: var(--weight-subhead); color: var(--on-white-emphasis); font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   DATA TABLE
+   A generic table with no rating or colour semantics — team/roles,
+   deliverables, assumptions. See heatmap above for the rated variant.
+   ========================================================================== */
+
+.data-table { display: grid; gap: var(--space-4); }
+.data-table__scroll { overflow-x: auto; }
+.data-table table { border-collapse: collapse; width: 100%; min-width: 32rem; }
+
+.data-table th, .data-table td {
+  text-align: left;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--rule-color);
+  vertical-align: top;
+}
+
+.data-table thead th {
+  font-size: var(--size-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: var(--weight-subhead);
+  color: var(--on-white-muted);
+}
+
+.data-table tbody th { font-weight: var(--weight-body-tight); }
 
 /* ==========================================================================
    FOOTER

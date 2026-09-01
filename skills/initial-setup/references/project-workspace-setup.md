@@ -2,6 +2,8 @@
 
 Initialize the standard workspace after the Opportunity path is confirmed and writable. The workflow is resumable: create missing state and preserve existing files and tracker rows.
 
+Generated output artifacts, including decks, documents, and sites, belong in `workspace/deliverables/`. `Deliverables/` is reserved for a human to promote reviewed material into the appropriate delivery phase.
+
 ## 1. Locate the workspace engine
 
 Locate `skills/_shared` alongside the installed skill library. Set `EAD_REPO_ROOT` to the Opportunity folder before invoking its `scripts/py` launcher so all generated state lands beneath `<Opportunity>/workspace/`.
@@ -47,7 +49,11 @@ The project communications record remains `workspace/.system/source-context.yaml
 
 ## 4. Process starting material
 
-If `workspace/inbox/` contains files, invoke `workspace-ingest-documents` for ordinary documents or `workspace-capture-meeting-notes` for a transcript or raw meeting notes. If the inbox is empty, continue without treating it as an error.
+For a **new** Opportunity, ask the user: "Do you have any starting documents to add to `workspace/inbox/` now — SOWs, notes, transcripts, exports? Let me know when they're in place, or tell me to continue without them." Wait for their reply before re-checking the inbox; do not treat silence or a quick reply as "no documents" without confirming.
+
+For an **existing** Opportunity, check `workspace/inbox/` once without prompting — documents may already be filed or waiting from prior sessions.
+
+In both cases: if `workspace/inbox/` contains files, invoke `workspace-ingest-documents` — it handles both ordinary documents and meeting transcripts or raw notes. If the inbox is empty after this check, continue without treating it as an error — the user can add material at any later time and mention it to trigger the same skill.
 
 Do not apply proposed updates. Direct the user to `workspace-review-updates` when review is needed.
 

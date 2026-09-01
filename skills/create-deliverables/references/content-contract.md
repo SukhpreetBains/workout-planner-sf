@@ -15,7 +15,7 @@ Two top-level keys, `meta` and `sections`. Anything else is an error.
 
 | Field | Required | Notes |
 |---|---|---|
-| `archetype` | yes | Selects `templates/<archetype>/`. Currently `executive-readout`. |
+| `archetype` | yes | Selects `templates/<archetype>/`. Currently `executive-readout` or `project-kickoff`. |
 | `client` | yes | The client's name as they write it. |
 | `title` | yes | Sentence case. |
 | `subtitle` | no | One line of scope or timeframe. |
@@ -49,6 +49,17 @@ An ordered list. Each item has a `type` and that type's fields. `cover`,
 | `title` | no (defaults to "In brief") |
 | `body` | yes — prose |
 
+### `purpose`
+Same shape as `exec-summary`, same rendering — a title plus a lead prose
+block. Distinct type because it means something different: why the
+engagement exists and what is in scope, stated before any findings exist to
+summarize.
+
+| Field | Required |
+|---|---|
+| `title` | no (defaults to "Purpose & scope") |
+| `body` | yes — prose |
+
 ### `kpi-row`
 2 to 4 items. More than four breaks the layout and comprehension both.
 
@@ -72,7 +83,7 @@ An ordered list. Each item has a `type` and that type's fields. `cover`,
 | `evidence` | yes | What was observed, and how much of it. |
 | `implication` | yes | **The so-what.** Theme plus evidence without an implication is not a finding, and it is the implication that makes a readout defensible. |
 | `severity` | no | `high`, `medium`, `low`. Renders as a step meter **plus** the word — never colour alone. |
-| `icon` | no | Must be a filename (without extension) in `slalom-branding/assets/iconography/`. Never invent one. |
+| `icon` | no | Must be a filename (without extension) in the active branding pack's `assets/iconography/`. Never invent one. |
 
 ### `recommendations`
 | Item field | Required |
@@ -124,6 +135,27 @@ the 1–5 scale, so nothing depends on colour.
 | `title` | no |
 | `body` | yes — prose |
 
+### `agenda`
+| Field | Required |
+|---|---|
+| `title` | no |
+| `items` | yes — a list of short strings |
+
+### `table`
+Generic column/row data — no rating or colour semantics. Reused across a
+deck for team & roles, deliverables, a workshop plan, or key assumptions,
+each with its own `columns`.
+
+| Field | Required | Notes |
+|---|---|---|
+| `title` | yes | What this table is — unlike other sections, there is no useful fallback. |
+| `columns` | yes, at least 1 | Column headers, in order. |
+| `rows` | yes, at least 1 | |
+
+| Row field | Required | Notes |
+|---|---|---|
+| `cells` | yes, at least 1 | One string per column, in order. The first cell is the row's header (e.g. a name or a deliverable), not just its first value. |
+
 ## Prose subset
 
 `body` fields accept a small markdown subset:
@@ -134,6 +166,10 @@ the 1–5 scale, so nothing depends on colour.
 
 Straight quotes and apostrophes become curly; ` -- ` becomes an em dash.
 Everything else is escaped and rendered as literal text.
+
+Client-visible generated prose uses standard American English unless the
+consultant or client requests another convention. Preserve verbatim source
+quotations when fidelity matters.
 
 **External links are an error.** A client deliverable makes no network request,
 so a link to `https://…` is refused at authoring time rather than discovered by

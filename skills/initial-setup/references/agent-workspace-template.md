@@ -6,6 +6,7 @@ Use `workspace/` for all agent-created project work, including working documents
 {{OPPORTUNITY_NAME}}/
   workspace/
     inbox/
+    deliverables/
     project/
     meetings/
     current-state/
@@ -20,6 +21,6 @@ Use `workspace/` for all agent-created project work, including working documents
     Transition/
 ```
 
-Preserve existing files when initializing or resuming the workspace. Use the relevant skill for governed operations: `workspace-ingest-documents`, `workspace-capture-meeting-notes`, `workspace-review-updates`, or `workspace-summarize`.
+Preserve existing files when initializing or resuming the workspace. Use the relevant skill for governed operations: `workspace-ingest-documents`, `workspace-review-updates`, or `workspace-summarize`.
 
-Do not create agent working files in `Deliverables/`. A human may promote reviewed material from `workspace/` into the appropriate delivery phase.
+Do not create agent working files in `Deliverables/`. Store agent-created output artifacts, including decks, documents, and generated sites, in `workspace/deliverables/`. A human may promote reviewed material from `workspace/` into the appropriate delivery phase.

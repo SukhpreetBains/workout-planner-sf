@@ -68,15 +68,16 @@ client staring at empty space.
    `transform` — a drawn stroke needs `stroke-dashoffset: 0`, for instance.
 4. Stay inside the duration bounds above.
 
-For anything outside this vocabulary, invoke the `animejs` skill: it owns the
-Anime.js v4 API surface, and `../../animejs/references/` covers easings, stagger,
+For anything outside this vocabulary, invoke `utilities-ui-generation` for
+motion: it owns the Anime.js v4 API surface, and
+`../../utilities-ui-generation/references/animejs/` covers easings, stagger,
 scroll observers, and SVG drawing in detail. Come back with a recipe, not with
 animation code inside a component.
 
 ## Loading
 
-The deliverable imports Anime.js through an import map so that snippets from the
-`animejs` skill's references paste in unchanged:
+The deliverable imports Anime.js through an import map so that snippets from
+`utilities-ui-generation/references/animejs.md` paste in unchanged:
 
 ```html
 <script type="importmap">{"imports":{"animejs":"./js/anime.esm.min.js"}}</script>

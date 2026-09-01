@@ -1,0 +1,20 @@
+{
+  "fixture": "skills/compose-deliverable/examples/reference-informed-content.yaml",
+  "storyboard": "skills/compose-deliverable/examples/reference-informed-storyboard.json",
+  "expected_slide_count": 11,
+  "expected_section_count": 7,
+  "required_native_text": [
+    "Customer-growth platform pilot",
+    "Synthetic reconstruction — not customer content",
+    "A focused pilot creates a foundation for scale",
+    "The pilot is intentionally bounded",
+    "A clean foundation is the right starting point",
+    "Adoption is part of delivery",
+    "Each phase resolves a leadership question",
+    "Four actions keep mobilization moving",
+    "The demo preserves structure—not customer content",
+    "Confirm the first workflows and success measures",
+    "Build adoption into the plan"
+  ],
+  "note": "These assertions are independently declared from the generated PPTX manifest. They represent the shared approved-content fixture that would also drive the companion microsite; the suite never scrapes the microsite DOM."
+}

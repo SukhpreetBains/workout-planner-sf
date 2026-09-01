@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOM to PPTX + evaluation demo track</title>
+<style>
+@font-face{
+  font-family:"Slalom Sans";
+  src:url("../skills/slalom-branding/assets/fonts/slalom-sans/Webfont%20Files/SlalomSans-Light.woff2") format("woff2");
+  font-weight:300;
+  font-display:swap;
+}
+@font-face{
+  font-family:"Slalom Sans";
+  src:url("../skills/slalom-branding/assets/fonts/slalom-sans/Webfont%20Files/SlalomSans-Regular.woff2") format("woff2");
+  font-weight:400;
+  font-display:swap;
+}
+@font-face{
+  font-family:"Slalom Sans";
+  src:url("../skills/slalom-branding/assets/fonts/slalom-sans/Webfont%20Files/SlalomSans-Bold.woff2") format("woff2");
+  font-weight:700;
+  font-display:swap;
+}
+:root{
+  color-scheme:light;
+  --blue:#0C62FB;
+  --dark-blue:#002FAF;
+  --cyan:#1BE1F2;
+  --cyan-soft:#D1F9FC;
+  --white:#FFFFFF;
+  --surface:#F7F7F7;
+  --rule:#E6E6E6;
+  --gray:#666666;
+  --black:#000000;
+  --focus:rgba(12,98,251,.2);
+  --shadow:0 16px 42px rgba(0,47,175,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--surface);
+  color:var(--black);
+  font-family:"Slalom Sans","Helvetica Neue",Arial,sans-serif;
+  font-size:16px;
+  line-height:1.42;
+  letter-spacing:0;
+  -webkit-font-smoothing:antialiased;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+a{color:var(--blue)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.brand-strip{height:8px;background:var(--blue)}
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  border-bottom:1px solid var(--rule);
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(12px);
+}
+.topbar-inner{
+  width:min(1440px,calc(100% - 40px));
+  min-height:70px;
+  margin-inline:auto;
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+.logo{display:block;width:110px;height:auto}
+.brand-rule{width:1px;height:32px;background:var(--rule)}
+.product{font-size:.9rem;font-weight:300}
+.top-progress{margin-left:auto;display:flex;align-items:center;gap:12px}
+.progress-copy{text-align:right}
+.progress-copy b{display:block;color:var(--dark-blue);font-size:.86rem}
+.progress-copy span{display:block;color:var(--gray);font-size:.75rem}
+.progress-track{width:118px;height:8px;background:var(--rule);overflow:hidden}
+.progress-fill{width:0;height:100%;background:var(--blue);transition:width .25s ease}
+.icon-button{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(0,47,175,.2);
+  border-radius:0 8px 0 0;
+  background:var(--white);
+}
+.icon-button:hover{background:var(--cyan-soft)}
+.icon-button img{width:19px;height:19px}
+.layout{
+  width:min(1440px,calc(100% - 40px));
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:230px minmax(0,1fr) 320px;
+  align-items:start;
+}
+.rail{
+  position:sticky;
+  top:78px;
+  min-height:calc(100vh - 78px);
+  padding:38px 26px 60px 0;
+  border-right:1px solid var(--rule);
+}
+.rail-label,.eyebrow,.section-kicker,.panel-label{
+  margin:0;
+  color:var(--dark-blue);
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+.phase-nav{display:grid;gap:4px;margin-top:18px}
+.phase-nav a{
+  display:grid;
+  grid-template-columns:28px 1fr;
+  gap:8px;
+  align-items:center;
+  min-height:43px;
+  padding:7px 8px;
+  color:var(--gray);
+  text-decoration:none;
+  border-left:3px solid transparent;
+}
+.phase-nav a:hover,.phase-nav a.active{color:var(--dark-blue);border-left-color:var(--blue);background:var(--white)}
+.phase-num{font-size:.76rem;font-weight:700}
+.phase-name{font-size:.88rem;font-weight:700}
+.run-time{margin:34px 0 0;padding-top:18px;border-top:1px solid var(--rule)}
+.run-time b{display:block;color:var(--dark-blue);font-size:1.55rem;line-height:1}
+.run-time span{display:block;margin-top:6px;color:var(--gray);font-size:.78rem}
+.main{padding:48px 50px 90px}
+.intro{padding-bottom:40px;border-bottom:1px solid var(--rule)}
+h1{max-width:760px;margin:12px 0 18px;font-size:clamp(2.6rem,5.8vw,5.5rem);line-height:.92;font-weight:700;letter-spacing:0}
+.lede{max-width:720px;margin:0;color:var(--gray);font-size:1.12rem;font-weight:300}
+.storyline{
+  margin-top:28px;
+  padding:16px 18px;
+  border-left:8px solid var(--cyan);
+  background:var(--dark-blue);
+  color:var(--white);
+  font-size:.92rem;
+}
+.storyline b{color:var(--cyan)}
+.phase{padding:48px 0 10px;scroll-margin-top:90px}
+.phase-head{display:grid;grid-template-columns:82px minmax(0,1fr);gap:20px;margin-bottom:12px}
+.phase-index{color:var(--blue);font-size:1.7rem;font-weight:700;line-height:1}
+h2{margin:0;font-size:clamp(1.65rem,3vw,2.6rem);line-height:1;font-weight:700}
+.phase-purpose{max-width:660px;margin:12px 0 24px 102px;color:var(--gray);font-weight:300}
+.task-list{margin:0;padding:0;list-style:none}
+.task{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr);
+  gap:16px;
+  padding:22px 0;
+  border-top:1px solid var(--rule);
+}
+.task:last-child{border-bottom:1px solid var(--rule)}
+.task-check{
+  appearance:none;
+  width:22px;
+  height:22px;
+  margin:2px 0 0;
+  border:2px solid var(--blue);
+  background:var(--white);
+  cursor:pointer;
+}
+.task-check:checked{
+  background-color:var(--cyan-soft);
+  background-image:url("../skills/slalom-branding/assets/iconography/check-box.svg");
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:16px;
+}
+.task-body h3{margin:0;color:var(--black);font-size:1.06rem;line-height:1.2}
+.task-body>p{margin:7px 0 0;color:var(--gray);font-size:.92rem;font-weight:300}
+.task.is-complete h3{text-decoration:line-through;text-decoration-color:var(--blue)}
+.task.is-complete{opacity:.62}
+.command{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 38px;
+  gap:8px;
+  align-items:stretch;
+  margin-top:14px;
+}
+.command pre{
+  min-width:0;
+  margin:0;
+  padding:12px 14px;
+  overflow-x:auto;
+  border-left:6px solid var(--cyan);
+  background:var(--black);
+  color:var(--white);
+  font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  white-space:pre-wrap;
+}
+.copy-button{
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(0,47,175,.2);
+  border-radius:0 8px 0 0;
+  background:var(--white);
+}
+.copy-button:hover{background:var(--cyan-soft)}
+.copy-button img{width:18px;height:18px}
+.talk-track{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:92px 1fr;
+  gap:12px;
+  color:var(--gray);
+  font-size:.86rem;
+}
+.talk-track b{color:var(--dark-blue)}
+.quick-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.quick-links a{
+  display:inline-flex;
+  align-items:center;
+  min-height:34px;
+  padding:6px 10px;
+  border:1px solid rgba(0,47,175,.22);
+  border-radius:0 8px 0 0;
+  background:var(--white);
+  color:var(--dark-blue);
+  font-size:.8rem;
+  font-weight:700;
+  text-decoration:none;
+}
+.quick-links a:hover{background:var(--cyan-soft)}
+.evidence{
+  position:sticky;
+  top:78px;
+  min-height:calc(100vh - 78px);
+  padding:38px 0 60px 28px;
+  border-left:1px solid var(--rule);
+}
+.evidence h2{margin-top:12px;font-size:1.35rem;line-height:1.05}
+.evidence-list{margin:24px 0 0;padding:0;list-style:none}
+.evidence-list li{padding:15px 0;border-top:1px solid var(--rule)}
+.evidence-list b{display:block;color:var(--dark-blue);font-size:.84rem}
+.evidence-list span{display:block;margin-top:4px;color:var(--gray);font-size:.82rem;font-weight:300}
+.evidence-list .metric{color:var(--black);font-size:1.18rem;font-weight:700}
+.proof{
+  margin-top:28px;
+  padding:18px;
+  border-top:8px solid var(--blue);
+  background:var(--white);
+  box-shadow:var(--shadow);
+}
+.proof h3{margin:0 0 12px;color:var(--dark-blue);font-size:1rem}
+.proof p{margin:0 0 10px;color:var(--gray);font-size:.83rem;font-weight:300}
+.proof p:last-child{margin-bottom:0}
+.proof strong{color:var(--black)}
+.now-next{margin-top:28px;padding:18px;background:var(--dark-blue);color:var(--white)}
+.now-next b{display:block;margin-bottom:7px;color:var(--cyan);font-size:.82rem}
+.now-next span{display:block;font-size:.84rem;font-weight:300}
+.finish{
+  margin-top:48px;
+  padding:28px;
+  background:var(--blue);
+  color:var(--white);
+}
+.finish h2{color:var(--white)}
+.finish p{max-width:680px;margin:12px 0 0;font-weight:300}
+.finish b{color:var(--cyan)}
+.mobile-evidence{display:none}
+@media (max-width:1120px){
+  .layout{grid-template-columns:200px minmax(0,1fr)}
+  .evidence{display:none}
+  .mobile-evidence{display:block;margin-top:34px}
+  .main{padding-right:0}
+}
+@media (max-width:760px){
+  .topbar-inner,.layout{width:min(100% - 28px,1440px)}
+  .product,.brand-rule,.progress-copy{display:none}
+  .top-progress{margin-left:auto}
+  .progress-track{width:86px}
+  .layout{display:block}
+  .rail{position:static;min-height:0;padding:22px 0;border-right:0;border-bottom:1px solid var(--rule)}
+  .phase-nav{grid-template-columns:repeat(4,1fr);gap:2px}
+  .phase-nav a{grid-template-columns:1fr;padding:8px 4px;border-left:0;border-bottom:3px solid transparent;text-align:center}
+  .phase-nav a:hover,.phase-nav a.active{border-left-color:transparent;border-bottom-color:var(--blue)}
+  .phase-num{display:none}
+  .run-time{display:none}
+  .main{padding:36px 0 70px}
+  .phase-head{grid-template-columns:50px minmax(0,1fr)}
+  .phase-purpose{margin-left:70px}
+  .talk-track{grid-template-columns:1fr;gap:4px}
+  .finish{padding:22px}
+}
+@media (max-width:480px){
+  .logo{width:96px}
+  .phase-nav{grid-template-columns:1fr 1fr}
+  .task{grid-template-columns:26px minmax(0,1fr);gap:12px}
+  .command{grid-template-columns:minmax(0,1fr) 38px}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.progress-fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="brand-strip" aria-hidden="true"></div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <img class="logo" src="../skills/slalom-branding/assets/logos/slalom-logo-blue-RGB.svg" alt="Slalom">
+    <span class="brand-rule" aria-hidden="true"></span>
+    <span class="product">Ascent live demo track</span>
+    <div class="top-progress" aria-live="polite">
+      <div class="progress-copy"><b id="progressCount">0 of 11 complete</b><span id="progressPhase">Start with setup</span></div>
+      <div class="progress-track" role="progressbar" aria-label="Demo progress" aria-valuemin="0" aria-valuemax="11" aria-valuenow="0"><div class="progress-fill" id="progressFill"></div></div>
+      <button class="icon-button" id="resetButton" type="button" title="Reset checklist" aria-label="Reset checklist"><img src="../skills/slalom-branding/assets/iconography/refresh.svg" alt=""></button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="rail" aria-label="Demo phases">
+    <p class="rail-label">Demo phases</p>
+    <nav class="phase-nav">
+      <a href="#setup" class="active"><span class="phase-num">00</span><span class="phase-name">Set up</span></a>
+      <a href="#generate"><span class="phase-num">01</span><span class="phase-name">Generate</span></a>
+      <a href="#evaluate"><span class="phase-num">02</span><span class="phase-name">Evaluate</span></a>
+      <a href="#report"><span class="phase-num">03</span><span class="phase-name">Report</span></a>
+    </nav>
+    <div class="run-time"><b>15 min</b><span>Target walkthrough</span></div>
+  </aside>
+
+  <main class="main">
+    <section class="intro">
+      <p class="eyebrow">Today’s Ascent stand-up</p>
+      <h1>One source. Two agents. Fresh proof.</h1>
+      <p class="lede">A new Codex session turns an authorized SharePoint microsite into an editable PowerPoint. A second, clean Codex session evaluates the finished deck against the same source and reports fresh usage for both jobs.</p>
+      <div class="storyline"><b>Why two sessions:</b> the producer proves the skill can do the job; the independent evaluator judges only the source and finished artifact. Separate rollout logs keep generation cost and evaluation cost attributable.</div>
+    </section>
+
+    <section class="phase" id="setup" data-phase="Set up">
+      <div class="phase-head"><span class="phase-index">00</span><div><p class="section-kicker">Before the call</p><h2>Use one integrated demo worktree</h2></div></div>
+      <p class="phase-purpose">Both sessions need the compose-deliverable skill, the evaluation skill, the Codex telemetry adapter, and a clean output location.</p>
+      <ol class="task-list">
+        <li class="task" data-task="integrated-worktree">
+          <input class="task-check" type="checkbox" aria-label="Open the integrated demo worktree">
+          <div class="task-body"><h3>Open the integrated demo worktree</h3><p>Use a local branch containing SGAF-717 first and the compose-deliverable changes second. This is the same dependency order proposed for merge.</p>
+            <div class="talk-track"><b>Confirm</b><span>`skills/design-skill-evals`, `evals/lib`, `skills/compose-deliverable`, and `evals/compose-deliverable` are all visible to Codex.</span></div>
+          </div>
+        </li>
+        <li class="task" data-task="source-and-output">
+          <input class="task-check" type="checkbox" aria-label="Prepare the SharePoint source and output path">
+          <div class="task-body"><h3>Prepare the source and output path</h3><p>Have the authorized SharePoint microsite URL ready. Use a local ignored output folder so customer content and generated artifacts are not committed.</p>
+            <div class="command"><pre>mkdir -p /private/tmp/ascent-live-demo</pre><button class="copy-button" type="button" title="Copy command" aria-label="Copy output setup command"><img src="../skills/slalom-branding/assets/iconography/document.svg" alt=""></button></div>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="phase" id="generate" data-phase="Generate">
+      <div class="phase-head"><span class="phase-index">01</span><div><p class="section-kicker">Session one · producer</p><h2>Give Codex the SharePoint link</h2></div></div>
+      <p class="phase-purpose">Start from a blank Codex thread. The agent retrieves the authorized source, creates the structured handoff, invokes compose-deliverable, and validates the PowerPoint.</p>
+      <ol class="task-list">
+        <li class="task" data-task="new-producer-session">
+          <input class="task-check" type="checkbox" aria-label="Launch a new producer session">
+          <div class="task-body"><h3>Launch a brand-new Codex session</h3><p>Open the integrated worktree and start a new thread with no prior deck or evaluation context.</p>
+            <div class="talk-track"><b>Say</b><span>“This session begins with only the source URL and the installed Ascent skills.”</span></div>
+          </div>
+        </li>
+        <li class="task" data-task="producer-prompt">
+          <input class="task-check" type="checkbox" aria-label="Send the PowerPoint generation request">
+          <div class="task-body"><h3>Send the PowerPoint generation request</h3><p>Replace the placeholder with the live SharePoint microsite URL.</p>
+            <div class="command"><pre>Create an editable Slalom-branded PowerPoint from this authorized SharePoint microsite:
+
+[PASTE SHAREPOINT MICROSITE URL]
+
+Use the signed-in browser to inspect every relevant page section. Capture the approved visible content and source locations in a temporary structured content artifact; do not invent findings, numbers, or sources, and do not commit customer content.
+
+Then invoke compose-deliverable and slalom-branding to create the deck. Save the final PPTX to /private/tmp/ascent-live-demo/sharepoint-readout.pptx. Run the structural validator, render and inspect every slide, and correct any overflow, broken content, or visual issue before finishing.
+
+In your final response, report the PPTX path, manifest path, source artifact path, skills invoked, validation result, and the exact Codex rollout JSONL path for this fresh session.</pre><button class="copy-button" type="button" title="Copy prompt" aria-label="Copy producer prompt"><img src="../skills/slalom-branding/assets/iconography/document.svg" alt=""></button></div>
+          </div>
+        </li>
+        <li class="task" data-task="watch-production">
+          <input class="task-check" type="checkbox" aria-label="Watch Codex produce and validate the deck">
+          <div class="task-body"><h3>Watch Codex produce the deck</h3><p>Let the audience see the source retrieval, structured-content handoff, skill invocation, PPTX generation, rendering, and validation happen in one agentic run.</p>
+            <div class="talk-track"><b>Watch for</b><span>Browser access succeeds, claims stay grounded, `compose-deliverable` and `slalom-branding` are invoked, and the validator passes before Codex says it is done.</span></div>
+          </div>
+        </li>
+        <li class="task" data-task="inspect-live-deck">
+          <input class="task-check" type="checkbox" aria-label="Inspect the generated PowerPoint">
+          <div class="task-body"><h3>Open and inspect the generated PowerPoint</h3><p>Open the file in Microsoft PowerPoint. Edit one title, scan the narrative, and retain the producer rollout path for session two.</p>
+            <div class="command"><pre>open /private/tmp/ascent-live-demo/sharepoint-readout.pptx</pre><button class="copy-button" type="button" title="Copy command" aria-label="Copy PowerPoint command"><img src="../skills/slalom-branding/assets/iconography/document.svg" alt=""></button></div>
+            <div class="talk-track"><b>Say</b><span>“The first session is finished. Its output and usage log are now fixed inputs to an independent evaluation.”</span></div>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="phase" id="evaluate" data-phase="Evaluate">
+      <div class="phase-head"><span class="phase-index">02</span><div><p class="section-kicker">Session two · evaluator</p><h2>Judge the finished deck in a clean thread</h2></div></div>
+      <p class="phase-purpose">The evaluator receives the SharePoint source, final PPTX, structured source artifact, manifest, and producer rollout path. It does not receive the producer’s reasoning as grading context.</p>
+      <ol class="task-list">
+        <li class="task" data-task="new-evaluator-session">
+          <input class="task-check" type="checkbox" aria-label="Launch a new evaluator session">
+          <div class="task-body"><h3>Launch a second brand-new Codex session</h3><p>Use the same integrated worktree and model, but start a clean thread. This session owns evaluation only.</p>
+            <div class="talk-track"><b>Say</b><span>“The evaluator did not create the deck. It sees the same source an evaluator would receive in production.”</span></div>
+          </div>
+        </li>
+        <li class="task" data-task="evaluator-prompt">
+          <input class="task-check" type="checkbox" aria-label="Send the independent evaluation request">
+          <div class="task-body"><h3>Send the independent evaluation request</h3><p>Paste the source URL and the producer rollout path from session one.</p>
+            <div class="command"><pre>Evaluate this PowerPoint against its authorized SharePoint microsite source.
+
+Source: [PASTE SHAREPOINT MICROSITE URL]
+PPTX: /private/tmp/ascent-live-demo/sharepoint-readout.pptx
+Manifest: /private/tmp/ascent-live-demo/sharepoint-readout.manifest.json
+Structured source: [PASTE THE PRODUCER'S SOURCE ARTIFACT PATH]
+Producer rollout: [PASTE THE PRODUCER'S CODEX ROLLOUT JSONL PATH]
+
+Use design-skill-evals. Do not modify the deck. Render and inspect every slide, then grade the produced artifact with:
+1. deterministic PPTX validation and source-section coverage;
+2. source fidelity and unsupported claims;
+3. content completeness;
+4. audience comprehension and decision usefulness;
+5. narrative coherence and slide-to-slide flow;
+6. visual communication, readability, and editability.
+
+Give each non-objective criterion a narrow Pass, Fail, or Unknown verdict with evidence. Extract the producer session's tokens, cache usage, credits, elapsed time, tool calls, skills invoked, and questions asked using the deterministic Codex telemetry adapter. Write the correctness result and producer run record under evals/compose-deliverable/results/runs/. State all unknowns and do not claim cost predictability, savings, or a no-skills delta from one run.
+
+In your final response, show the evaluation verdict, failed or unknown criteria, producer usage, result paths, and the exact rollout JSONL path for this evaluator session.</pre><button class="copy-button" type="button" title="Copy prompt" aria-label="Copy evaluator prompt"><img src="../skills/slalom-branding/assets/iconography/document.svg" alt=""></button></div>
+          </div>
+        </li>
+        <li class="task" data-task="watch-evaluation">
+          <input class="task-check" type="checkbox" aria-label="Watch the evaluator grade the deck">
+          <div class="task-body"><h3>Watch the evaluator grade the actual artifact</h3><p>The evaluator should render the deck, compare it with the source, run code-based checks, make narrow quality judgments, and write a reviewable result.</p>
+            <div class="talk-track"><b>Watch for</b><span>Evidence beside every judgment, unsupported claims called out explicitly, deterministic checks kept separate from content-quality judgments, and no invented human baseline.</span></div>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="phase" id="report" data-phase="Report">
+      <div class="phase-head"><span class="phase-index">03</span><div><p class="section-kicker">Fresh evidence</p><h2>Refresh evaluator usage and show both costs</h2></div></div>
+      <p class="phase-purpose">One short follow-up in session two captures the completed evaluation request. The report keeps production and evaluation usage separate.</p>
+      <ol class="task-list">
+        <li class="task" data-task="telemetry-refresh">
+          <input class="task-check" type="checkbox" aria-label="Refresh telemetry after evaluation">
+          <div class="task-body"><h3>Ask the evaluator to refresh telemetry</h3><p>Send this only after the evaluation response has finished, so that request’s complete token usage is present in the rollout log.</p>
+            <div class="command"><pre>Now refresh the telemetry after the completed evaluation request.
+
+Parse both the producer rollout and this evaluator rollout with the deterministic Codex adapter. Update or write separate run records for generation and evaluation. Report generation usage, evaluation-request usage, and the combined end-to-end total: input, output, cached-input and total tokens; derived credits; elapsed time; turns; tool calls; and skills invoked.
+
+Do not treat the two sessions as comparison arms, do not compute predictability from one run, and do not claim time saved without a recorded human baseline. Show the final correctness verdict and paths to the run records.</pre><button class="copy-button" type="button" title="Copy prompt" aria-label="Copy telemetry refresh prompt"><img src="../skills/slalom-branding/assets/iconography/document.svg" alt=""></button></div>
+          </div>
+        </li>
+        <li class="task" data-task="close-demo">
+          <input class="task-check" type="checkbox" aria-label="Close with the measured result">
+          <div class="task-body"><h3>Close with the fresh measured result</h3><p>Show the PPTX, evaluation verdict, producer usage, evaluator usage, combined usage, and the two rollout paths. Keep missing comparison data visible as unknown.</p>
+            <div class="talk-track"><b>Say</b><span>“We gave one agent a SharePoint source and got a usable PowerPoint. We gave a clean agent the source and finished deck and got a reviewable quality verdict. Both jobs now have attributable Codex usage.”</span></div>
+          </div>
+        </li>
+      </ol>
+
+      <div class="finish"><p class="panel-label" style="color:#D1F9FC">Closing line</p><h2>The deck and its evaluation came from separate, measurable runs.</h2><p>This proves the end-to-end agentic track and produces fresh evidence for correctness and cost. <b>Repeated runs, a no-skills arm, and a recorded human baseline remain the path to predictability and savings claims.</b></p></div>
+
+      <div class="mobile-evidence"><div class="proof"><h3>Show these live</h3><p><strong>Producer:</strong> PPTX, validation, rollout, usage.</p><p><strong>Evaluator:</strong> quality verdict, evidence, rollout, usage.</p><p><strong>Combined:</strong> end-to-end credits and elapsed time.</p><p><strong>Unknown:</strong> predictability, no-skills delta, and time saved.</p></div></div>
+    </section>
+  </main>
+
+  <aside class="evidence" aria-label="Demo evidence">
+    <p class="panel-label">Live evidence</p>
+    <h2>Fill these from the two fresh sessions</h2>
+    <ul class="evidence-list">
+      <li><b>Producer artifact</b><span class="metric">PowerPoint path</span><span>Editable deck plus manifest and structured source.</span></li>
+      <li><b>Producer correctness</b><span class="metric">Pass / Fail</span><span>Structural validation and visible PowerPoint inspection.</span></li>
+      <li><b>Producer usage</b><span class="metric">Fresh credits</span><span>Generation tokens, cache usage, elapsed time, and tools.</span></li>
+      <li><b>Evaluator verdict</b><span class="metric">Pass / Fail / Unknown</span><span>Source fidelity, completeness, comprehension, narrative, and visuals.</span></li>
+      <li><b>Evaluator usage</b><span class="metric">Fresh credits</span><span>Evaluation-request tokens, elapsed time, and tools.</span></li>
+      <li><b>Combined cost</b><span class="metric">End-to-end total</span><span>Producer plus independent evaluator, reported separately and together.</span></li>
+    </ul>
+    <div class="proof"><h3>Keep the claims precise</h3><p><strong>Measured today:</strong> one production run, one independent evaluation run, artifact correctness, content-quality findings, and per-session Codex usage.</p><p><strong>Still unknown:</strong> cost predictability, with-skills versus no-skills delta, and time saved against a human baseline.</p></div>
+    <div class="now-next"><b>Session boundary</b><span>1. Producer receives source and creates deck<br>2. Evaluator receives source and finished deck<br>3. Evaluator refreshes both rollout records</span></div>
+  </aside>
+</div>
+
+<script>
+"use strict";
+
+const STORAGE_KEY = "ascent-dom-pptx-eval-demo-v1";
+const tasks = [...document.querySelectorAll(".task")];
+const checks = tasks.map((task) => task.querySelector(".task-check"));
+const progressFill = document.getElementById("progressFill");
+const progressCount = document.getElementById("progressCount");
+const progressPhase = document.getElementById("progressPhase");
+const progressTrack = document.querySelector(".progress-track");
+
+function savedState(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");}
+  catch{return {};}
+}
+
+function update(){
+  const state = {};
+  let complete = 0;
+  tasks.forEach((task) => {
+    const checked = task.querySelector(".task-check").checked;
+    state[task.dataset.task] = checked;
+    task.classList.toggle("is-complete", checked);
+    if(checked) complete += 1;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const percent = complete / tasks.length * 100;
+  progressFill.style.width = `${percent}%`;
+  progressCount.textContent = `${complete} of ${tasks.length} complete`;
+  progressTrack.setAttribute("aria-valuemax", String(tasks.length));
+  progressTrack.setAttribute("aria-valuenow", String(complete));
+  const next = tasks.find((task) => !task.querySelector(".task-check").checked);
+  progressPhase.textContent = next ? `Next: ${next.closest(".phase").dataset.phase}` : "Demo track complete";
+}
+
+const initial = savedState();
+tasks.forEach((task) => {
+  task.querySelector(".task-check").checked = Boolean(initial[task.dataset.task]);
+});
+checks.forEach((check) => check.addEventListener("change", update));
+
+document.getElementById("resetButton").addEventListener("click", () => {
+  checks.forEach((check) => {check.checked = false;});
+  update();
+});
+
+document.querySelectorAll(".copy-button").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const command = button.previousElementSibling.textContent.trim();
+    await navigator.clipboard.writeText(command);
+    const original = button.title;
+    button.title = "Copied";
+    setTimeout(() => {button.title = original;}, 1200);
+  });
+});
+
+const navLinks = [...document.querySelectorAll(".phase-nav a")];
+const observer = new IntersectionObserver((entries) => {
+  const visible = entries.filter((entry) => entry.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+  if(!visible) return;
+  navLinks.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`));
+}, {rootMargin:"-22% 0px -62%", threshold:[0,.2,.5]});
+document.querySelectorAll(".phase").forEach((phase) => observer.observe(phase));
+
+update();
+</script>
+</body>
+</html>

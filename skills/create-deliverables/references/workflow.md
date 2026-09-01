@@ -29,6 +29,18 @@ Then **show the draft to the user and get confirmation.** This is the editorial
 checkpoint. Correcting a sentence here costs nothing; correcting it after the
 build means rebuilding, and correcting it after handoff means a new version.
 
+For every client-facing deliverable, perform a whole-deliverable polish pass
+before showing the draft. This applies to every current and future template or
+archetype. Treat every visible title, eyebrow, metric, label, source line,
+finding, recommendation, roadmap item, and closing action as client-ready.
+Check spelling, punctuation, grammar, capitalization, terminology, and whether
+the wording is suitably formal for the stated audience. Follow the active brand
+pack's sentence-case standard unless the consultant confirms a different
+treatment for a specific element. Do not expose internal workflow labels or
+casual shorthand to the reader. Use standard American English in all
+client-visible generated copy unless the consultant or client requests a
+different convention; preserve verbatim source quotations when fidelity matters.
+
 Two things to push on while drafting:
 
 - **Every finding needs an implication.** If the source has theme and evidence

@@ -22,11 +22,11 @@ Explain a script's effect before running it. Obtain approval before package-mana
 1. Verify Python 3.10+ and any workflow-specific dependencies.
 2. Resolve the existing SharePoint Account folder and guide the user through its one-time OneDrive connection.
 3. Ask whether the user is starting a new Opportunity or joining an existing one.
-4. Confirm the local synced Account path, Account name, Opportunity name, user-reported SharePoint Edit access, and local write readiness.
+4. Confirm the local synced Account path, Account name, Opportunity name, user-reported SharePoint Edit access, and local write readiness. Keep a runtime sandbox boundary separate from local write readiness: if the agent cannot write because of its session boundary, say so and request scoped command access; do not imply the user must change OneDrive or folder permissions unless an operating-system check shows that they are unavailable.
 5. Create or complete the standard `workspace/` and `Deliverables/` structure without overwriting existing files.
 6. Confirm relevant SharePoint and messaging locations, then offer to save them in the project communications record.
 7. Initialize the workspace environment, trackers, Account and Opportunity basics, and search index.
-8. If starting documents exist in `workspace/inbox/`, invoke `workspace-ingest-documents`. Use `workspace-capture-meeting-notes` for transcripts or raw meeting notes.
+8. For a new Opportunity, pause and ask whether the user has starting documents to add to `workspace/inbox/` now, then wait for their response before re-checking the inbox. For an existing Opportunity, check `workspace/inbox/` once without prompting. If files are present—including files copied from a confirmed external source—report what is staged. Unless the user has already requested this work, use plain language rather than the internal term “ingestion”: explain that the next step will organize the documents into the project folders, pull out key facts, and prepare suggested tracker updates for the user to review. State that source documents stay intact and trackers will not change without the user’s approval, then ask whether to do that now. After the user consents, invoke `workspace-ingest-documents`.
 9. Report setup readiness and direct the user to `workspace-review-updates` when proposed tracker changes exist.
 
 ## Verify the local environment
@@ -67,6 +67,7 @@ The resulting structure is:
     AGENTS.md
     workspace/
       inbox/
+      deliverables/
       project/
       meetings/
       current-state/
@@ -81,7 +82,7 @@ The resulting structure is:
       Transition/
 ```
 
-Keep agent-created project files, working documents, trackers, indexes, and source records inside `workspace/`. Do not write agent work into `Deliverables/`.
+Keep agent-created project files, working documents, trackers, indexes, and source records inside `workspace/`. Store generated output artifacts such as decks, documents, and sites in `workspace/deliverables/`. Do not write agent work into `Deliverables/`; that folder is reserved for human promotion of reviewed material into a delivery phase.
 
 ## Confirm messaging sources
 
