@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
 SKILLS = (
     "initial-setup",
     "investigate-project",
@@ -20,7 +21,7 @@ LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 
 def validate_skill(name: str) -> list[str]:
     errors: list[str] = []
-    skill_dir = ROOT / "skills" / name
+    skill_dir = SKILLS_ROOT / name
     skill_file = skill_dir / "SKILL.md"
     if not skill_file.is_file():
         return [f"{name}: missing SKILL.md"]

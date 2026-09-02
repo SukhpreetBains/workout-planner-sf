@@ -83,7 +83,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 EVALS = ROOT / "evals"
-SKILLS = ROOT / "skills"
+SKILLS = ROOT / "plugins" / "ascent" / "skills"
 
 BRAND_ROOT = SKILLS / "slalom-branding" / "assets"
 VENDOR_ROOT = SKILLS / "animejs" / "assets" / "vendor"

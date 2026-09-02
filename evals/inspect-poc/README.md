@@ -23,4 +23,4 @@ The agent receives a bounded challenge, operates only in the Docker sandbox, and
 
 ## Interpretation
 
-This is a working shape validation, not a production agent-host bridge. A production adapter must substitute the target skill’s real fixtures, implement its harness connection and tool policy, preserve logs safely, and replace the sentinel scorer with task-specific outcome checks. See `skills/design-skill-evals/references/inspect-adoption.md` for the adoption recommendation and constraints.
+This is a working shape validation, not a production agent-host bridge. A production adapter must substitute the target skill’s real fixtures, implement its harness connection and tool policy, preserve logs safely, and replace the sentinel scorer with task-specific outcome checks. See `plugins/ascent/skills/design-skill-evals/references/inspect-adoption.md` for the adoption recommendation and constraints.

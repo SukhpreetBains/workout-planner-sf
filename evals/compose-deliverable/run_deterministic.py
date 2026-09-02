@@ -13,7 +13,7 @@ from pathlib import Path
 
 EVAL_DIR = Path(__file__).resolve().parent
 ROOT = EVAL_DIR.parents[1]
-SKILL_DIR = ROOT / "skills" / "compose-deliverable"
+SKILL_DIR = ROOT / "plugins" / "ascent" / "skills" / "compose-deliverable"
 SOURCE_CONTRACT = EVAL_DIR / "cases" / "reference-informed-source.json"
 BUILD = SKILL_DIR / "scripts" / "build.mjs"
 VALIDATOR = SKILL_DIR / "scripts" / "validate_pptx.py"

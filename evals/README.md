@@ -42,4 +42,4 @@ Run deterministic packages with their documented Python command, then aggregate 
 | [`context-skills`](context-skills/README.md) | Correctness and reproducibility of the project-context scripts. No cost, no time, no baseline arm, and structurally none possible — eight named gaps, none closed |
 | [`inspect-poc`](inspect-poc/README.md) | An assessment of Inspect AI as an implementation option. Not adopted |
 
-The enforced requirements and the plain-language glossary are in [the evaluation contract](../skills/design-skill-evals/references/evaluation-contract.md).
+The enforced requirements and the plain-language glossary are in [the evaluation contract](../plugins/ascent/skills/design-skill-evals/references/evaluation-contract.md).

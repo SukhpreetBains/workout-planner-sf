@@ -109,7 +109,7 @@ This is also a regression suite only. No capability tasks, no model-based grader
 
 ## Inspect AI: assessed, not adopted
 
-Do not adopt Inspect as a required dependency for these deterministic checks. A local Python runner is simpler to read and to review. The proof of concept in `evals/inspect-poc/` exists to assess Inspect for one genuinely variable, tool-using workflow later; adoption depends on confirming Python compatibility, sandbox availability, model credentials, log retention policy and a host bridge. See [the Inspect assessment](../../skills/design-skill-evals/references/inspect-adoption.md).
+Do not adopt Inspect as a required dependency for these deterministic checks. A local Python runner is simpler to read and to review. The proof of concept in `evals/inspect-poc/` exists to assess Inspect for one genuinely variable, tool-using workflow later; adoption depends on confirming Python compatibility, sandbox availability, model credentials, log retention policy and a host bridge. See [the Inspect assessment](../../plugins/ascent/skills/design-skill-evals/references/inspect-adoption.md).
 
 ## Review and ownership
 
@@ -122,4 +122,4 @@ Two review rules specific to this suite:
 
 If this package gains a model-based grader — a second model reading the output and voting — calibrate it before trusting its score: expert labels on disjoint train/dev/test splits, and report how often it agrees with a human about the good ones and about the bad ones (TPR and TNR). An uncalibrated judge is not ground truth. Name one domain expert as the final authority on pass/fail rather than averaging reviewer opinion.
 
-The full requirements this package is measured against are in [the evaluation contract](../../skills/design-skill-evals/references/evaluation-contract.md).
+The full requirements this package is measured against are in [the evaluation contract](../../plugins/ascent/skills/design-skill-evals/references/evaluation-contract.md).

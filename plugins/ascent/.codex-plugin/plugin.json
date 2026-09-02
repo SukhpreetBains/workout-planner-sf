@@ -1,0 +1,29 @@
+{
+  "name": "ascent",
+  "version": "0.1.0+codex.plugin-migration",
+  "description": "Governed, evidence-backed skills for accelerated Discovery engagements and Opportunity delivery.",
+  "author": {
+    "name": "Slalom"
+  },
+  "homepage": "https://github.com/Slalom/ascent",
+  "repository": "https://github.com/Slalom/ascent",
+  "keywords": ["discovery", "opportunity", "delivery", "agent-skills"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Ascent",
+    "shortDescription": "Run governed Discovery and Opportunity workflows.",
+    "longDescription": "A portable collection of skills for setting up Opportunity workspaces, gathering and governing evidence, reviewing tracker updates, producing summaries and deliverables, and improving delivery workflows.",
+    "developerName": "Slalom",
+    "category": "Productivity",
+    "capabilities": ["Interactive", "Write"],
+    "defaultPrompt": [
+      "Set up an Opportunity workspace for this engagement.",
+      "Ingest these project documents and propose tracker updates.",
+      "Summarize the approved evidence in this workspace."
+    ],
+    "brandColor": "#0077C8",
+    "composerIcon": "./assets/icons/plugin.svg",
+    "logo": "./assets/icons/plugin.svg",
+    "logoDark": "./assets/icons/plugin.svg"
+  }
+}

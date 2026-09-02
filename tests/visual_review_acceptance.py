@@ -9,17 +9,18 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
 
 
 def main() -> None:
     result = subprocess.run(
-        [sys.executable, "-m", "unittest", "skills._shared.scripts.test_visual_review"],
+        [sys.executable, "-m", "unittest", "plugins.ascent.shared.scripts.test_visual_review"],
         cwd=ROOT, text=True, capture_output=True,
     )
     if result.returncode:
         raise RuntimeError(f"visual review acceptance failed:\n{result.stdout}\n{result.stderr}")
 
-    app = ROOT / "skills" / "workspace-review-updates" / "assets" / "review-app"
+    app = SKILLS_ROOT / "workspace-review-updates" / "assets" / "review-app"
     required = [
         app / "index.html",
         app / "app.css",

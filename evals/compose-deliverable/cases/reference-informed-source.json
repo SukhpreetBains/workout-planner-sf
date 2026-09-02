@@ -1,6 +1,6 @@
 {
-  "fixture": "skills/compose-deliverable/examples/reference-informed-content.yaml",
-  "storyboard": "skills/compose-deliverable/examples/reference-informed-storyboard.json",
+  "fixture": "plugins/ascent/skills/compose-deliverable/examples/reference-informed-content.yaml",
+  "storyboard": "plugins/ascent/skills/compose-deliverable/examples/reference-informed-storyboard.json",
   "expected_slide_count": 11,
   "expected_section_count": 7,
   "required_native_text": [

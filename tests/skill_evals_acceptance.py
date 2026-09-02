@@ -20,9 +20,10 @@ from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 EVAL = ROOT / "evals" / "context-skills"
-GENERATOR = ROOT / "skills" / "design-skill-evals" / "scripts" / "generate_eval_scaffold.py"
+SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
+GENERATOR = SKILLS_ROOT / "design-skill-evals" / "scripts" / "generate_eval_scaffold.py"
 RUNNER = EVAL / "run_deterministic.py"
-CONTRACT_DOC = ROOT / "skills" / "design-skill-evals" / "references" / "evaluation-contract.md"
+CONTRACT_DOC = SKILLS_ROOT / "design-skill-evals" / "references" / "evaluation-contract.md"
 WORKBENCH_SERVER = ROOT / "docs" / "evals_workbench.py"
 
 # The markers a package may use in place of a measured value. A plausible-looking
