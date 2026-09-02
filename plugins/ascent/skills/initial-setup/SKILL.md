@@ -1,6 +1,6 @@
 ---
 name: initial-setup
-description: Bootstrap or resume an accelerated-delivery Opportunity workspace for a non-technical business user. Use when starting a new project or joining an existing project; choosing shared or local-only storage; resolving an enterprise storage location and its local sync; verifying Python 3.10+; confirming Slack or Microsoft Teams sources; creating the standard workspace and trackers; recording account and opportunity context; or processing the first project documents.
+description: Bootstrap or resume an accelerated-delivery Opportunity workspace for a non-technical business user. Use when starting a new project or joining an existing project; choosing shared or local-only storage; resolving an enterprise storage location and its local sync; verifying Python 3.10+; guiding Codex project creation; confirming Slack or Microsoft Teams sources; creating the standard workspace and trackers; recording account and opportunity context; or processing the first project documents.
 ---
 
 # Initial Setup
@@ -14,6 +14,7 @@ Prepare one resumable Opportunity workspace. Preserve existing files, ask before
 - Use `scripts/manage-source-context.py` to manage the project communications record. Read [the source-context contract](references/source-context.md) before its first write.
 - Read [project workspace setup](references/project-workspace-setup.md) before initializing trackers, project basics, starting documents, or the search index.
 - Read [Slack](references/slack.md) or [Microsoft Teams](references/microsoft-teams.md) only when the user confirms that platform is relevant.
+- Invoke `project-setup` only after the local Opportunity folder and its exact Account and Opportunity names are confirmed and the user says they use Codex.
 
 Explain a script's effect before running it. Obtain approval before package-manager installs or other system-level changes.
 
@@ -24,10 +25,11 @@ Explain a script's effect before running it. Obtain approval before package-mana
 3. Ask whether the user is starting a new Opportunity or joining an existing one.
 4. Confirm the local working Account path, Account name, Opportunity name, applicable user-reported storage access, and local write readiness. Keep a runtime sandbox boundary separate from local write readiness: if the agent cannot write because of its session boundary, say so and request scoped command access; do not imply the user must change storage or folder permissions unless an operating-system check shows that they are unavailable.
 5. Create or complete the standard `workspace/` and `Deliverables/` structure without overwriting existing files.
-6. Confirm relevant enterprise storage and messaging locations, then offer to save them in the project communications record.
-7. Initialize the workspace environment, trackers, Account and Opportunity basics, and search index.
-8. For a new Opportunity, pause and ask whether the user has starting documents to add to `workspace/inbox/` now, then wait for their response before re-checking the inbox. For an existing Opportunity, check `workspace/inbox/` once without prompting. If files are present—including files copied from a confirmed external source—report what is staged. Unless the user has already requested this work, use plain language rather than the internal term “ingestion”: explain that the next step will organize the documents into the project folders, pull out key facts, and prepare suggested tracker updates for the user to review. State that source documents stay intact and trackers will not change without the user’s approval, then ask whether to do that now. After the user consents, invoke `workspace-ingest-documents`.
-9. Report setup readiness and direct the user to `workspace-review-updates` when proposed tracker changes exist.
+6. Ask whether the user uses Codex for this Opportunity. If yes, invoke `project-setup` with the confirmed Account and Opportunity names and paths. After asking whether the Codex project was created, continue setup regardless of the answer.
+7. Confirm relevant enterprise storage and messaging locations, then offer to save them in the project communications record.
+8. Initialize the workspace environment, trackers, Account and Opportunity basics, and search index.
+9. For a new Opportunity, pause and ask whether the user has starting documents to add to `workspace/inbox/` now, then wait for their response before re-checking the inbox. For an existing Opportunity, check `workspace/inbox/` once without prompting. If files are present, including files copied from a confirmed external source, report what is staged. Unless the user has already requested this work, use plain language rather than the internal term "ingestion": explain that the next step will organize the documents into the project folders, pull out key facts, and prepare suggested tracker updates for the user to review. State that source documents stay intact and trackers will not change without the user’s approval, then ask whether to do that now. After the user consents, invoke `workspace-ingest-documents`.
+10. Report setup readiness and direct the user to `workspace-review-updates` when proposed tracker changes exist.
 
 ## Verify the local environment
 
@@ -149,6 +151,23 @@ The resulting structure is:
 
 Keep agent-created project files, working documents, trackers, indexes, and source records inside `workspace/`. Store generated output artifacts such as decks, documents, and sites in `workspace/deliverables/`. Do not write agent work into `Deliverables/`; that folder is reserved for human promotion of reviewed material into a delivery phase.
 
+## Offer Codex project setup
+
+After the Opportunity folder exists locally and the standard structure is
+ready, ask, **"Are you using Codex for this Opportunity?"** Use
+`request_user_input` when it is available, with short choices for **Yes, using
+Codex** and **No, continue setup**.
+
+- If the user says yes, invoke `project-setup` and pass the confirmed Account
+  name, Opportunity name, local Account path, and local Opportunity path. Let
+  that skill show the user-controlled project-creation steps.
+- When `project-setup` asks whether the project was created, record the answer
+  but continue this workflow whether the answer is yes, no, dismissed, or
+  otherwise unverified.
+- If the user says no, continue directly to messaging-source confirmation.
+- Do not create a Codex project through browser automation or by editing Codex
+  global state during initial setup.
+
 ## Confirm messaging sources
 
 - Ask whether Slack and Microsoft Teams contain relevant project conversations. Treat them as defaults only after the user confirms them.
@@ -181,8 +200,8 @@ End with a compact **Setup readiness** checklist in this order:
 
 ```text
 ✅ Completed automatically
-🔎 Verified — user action still needed
+🔎 Verified, user action still needed
 ⚠️ Blocked or limited by connector/runtime
 ```
 
-Cover Python, storage mode and local Opportunity path, workspace structure, applicable shared storage, messaging sources, project communications record, trackers, starting documents, and search index. Give one concise next step whenever anything remains incomplete.
+Cover Python, storage mode and local Opportunity path, workspace structure, applicable shared storage, applicable Codex project status, messaging sources, project communications record, trackers, starting documents, and search index. Give one concise next step whenever anything remains incomplete.
