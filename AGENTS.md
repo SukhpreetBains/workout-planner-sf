@@ -12,9 +12,9 @@
 
 ## Current implementation state
 
-The following skills are implemented: `initial-setup`, `investigate-project`,
-`workspace-ingest-documents`, `workspace-review-updates`, `workspace-summarize`,
-and `utilities-ui-generation`.
+The following skills are implemented: `initial-setup`, `project-setup`,
+`investigate-project`, `workspace-ingest-documents`, `workspace-review-updates`,
+`workspace-summarize`, and `utilities-ui-generation`.
 
 Do not treat `analyze-org`, `compose-deliverable`, `create-deliverables`,
 `design-skill-evals`, `download-teams-transcripts`, `interview-me`, or

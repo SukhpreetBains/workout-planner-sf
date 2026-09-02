@@ -90,5 +90,5 @@ python3 scripts/validate_collection.py
 python3 -m unittest discover -s tests -v
 ```
 
-The validation checks all 13 skills, all host manifests and marketplaces,
+The validation checks all 14 skills, all host manifests and marketplaces,
 plugin assets, local references, and the absence of symlinks and hooks.

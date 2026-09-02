@@ -23,7 +23,7 @@ class PluginStructureTests(unittest.TestCase):
     def test_repository_plugin_contract(self) -> None:
         validator = load_validator()
         self.assertEqual(validator.validate_repository(), [])
-        self.assertEqual(len(validator.EXPECTED_SKILLS), 13)
+        self.assertEqual(len(validator.EXPECTED_SKILLS), 14)
 
 
 if __name__ == "__main__":

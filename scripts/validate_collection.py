@@ -24,6 +24,7 @@ EXPECTED_SKILLS = {
     "initial-setup",
     "interview-me",
     "investigate-project",
+    "project-setup",
     "recursive-improvement",
     "utilities-ui-generation",
     "workspace-ingest-documents",
