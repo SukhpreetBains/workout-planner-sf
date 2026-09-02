@@ -1,2 +1,2 @@
 # Preserve approved branding-pack SVG assets byte-for-byte and avoid text normalization.
-skills/utilities-ui-generation/branding/packs/**/assets/**/*.svg -text -diff
+plugins/ascent/skills/utilities-ui-generation/branding/packs/**/assets/**/*.svg -text -diff

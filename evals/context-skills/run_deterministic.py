@@ -70,10 +70,11 @@ PROFILE_PATH = EVAL_DIR / "skill-profile.json"
 BASELINE_PATH = EVAL_DIR / "baseline" / "human-baseline.json"
 RECORD_CONTRACT_PATH = EVAL_DIR / "schemas" / "run-record.contract.json"
 
-DISCOVERY = ROOT / "skills" / "discover-project-context" / "scripts" / "project_context.py"
-RANK = ROOT / "skills" / "retrieve-project-context" / "scripts" / "rank_context.py"
-PERSIST = ROOT / "skills" / "retrieve-project-context" / "scripts" / "persist_context.py"
-CACHE = ROOT / "skills" / "retrieve-project-context" / "scripts" / "cache_context.py"
+SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
+DISCOVERY = SKILLS_ROOT / "investigate-project" / "scripts" / "project_context.py"
+RANK = SKILLS_ROOT / "investigate-project" / "scripts" / "rank_context.py"
+PERSIST = SKILLS_ROOT / "investigate-project" / "scripts" / "persist_context.py"
+CACHE = SKILLS_ROOT / "investigate-project" / "scripts" / "cache_context.py"
 
 TARGET_SCRIPTS = {
     "project_context.py": DISCOVERY,

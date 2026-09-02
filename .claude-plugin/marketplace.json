@@ -1,0 +1,15 @@
+{
+  "name": "ascent",
+  "owner": {"name": "Slalom"},
+  "metadata": {"description": "Governed agent plugins for accelerated Discovery and Opportunity delivery."},
+  "plugins": [
+    {
+      "name": "ascent",
+      "source": "./plugins/ascent",
+      "description": "Governed, evidence-backed skills for accelerated Discovery engagements and Opportunity delivery.",
+      "version": "0.1.0",
+      "author": {"name": "Slalom"},
+      "category": "Productivity"
+    }
+  ]
+}

@@ -12,8 +12,9 @@ from openpyxl import load_workbook
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PREPARE = ROOT / "skills" / "initial-setup" / "scripts" / "prepare-opportunity-folder.py"
-SOURCE_CONTEXT = ROOT / "skills" / "initial-setup" / "scripts" / "manage-source-context.py"
+SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
+PREPARE = SKILLS_ROOT / "initial-setup" / "scripts" / "prepare-opportunity-folder.py"
+SOURCE_CONTEXT = SKILLS_ROOT / "initial-setup" / "scripts" / "manage-source-context.py"
 
 
 def run(*args: str) -> str:
