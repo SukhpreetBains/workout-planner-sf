@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "team-and-responsibilities",
+  "title": "Team and responsibilities",
+  "description": "Identifies accountable leaders, delivery roles, decision authority, participation, and escalation paths.",
+  "questions": [
+    {"id":"team-and-responsibilities.sponsor","tier":"required","prompt":"Who is the accountable executive or project sponsor?","answer_type":"person","source_ref":"3.required.1"},
+    {"id":"team-and-responsibilities.delivery-owner","tier":"required","prompt":"Who owns day-to-day delivery?","answer_type":"person","source_ref":"3.required.2"},
+    {"id":"team-and-responsibilities.workstream-leads","tier":"required","prompt":"Who leads each major workstream?","answer_type":"table","source_ref":"3.required.3"},
+    {"id":"team-and-responsibilities.business-owners","tier":"required","prompt":"Who are the client or business owners?","answer_type":"people","source_ref":"3.required.4"},
+    {"id":"team-and-responsibilities.participants","tier":"required","prompt":"Which subject matter experts and end users must participate?","answer_type":"people","source_ref":"3.required.5"},
+    {"id":"team-and-responsibilities.primary-responsibilities","tier":"required","prompt":"What is each team member's primary responsibility?","answer_type":"table","source_ref":"3.required.6"},
+    {"id":"team-and-responsibilities.decision-rights","tier":"required","prompt":"Who can make decisions about scope, timing, priorities, design, and acceptance?","answer_type":"table","source_ref":"3.required.7"},
+    {"id":"team-and-responsibilities.escalation-path","tier":"required","prompt":"What is the escalation path?","answer_type":"text","source_ref":"3.required.8"},
+    {"id":"team-and-responsibilities.allocation","tier":"optional","prompt":"Which team members are full-time, part-time, or milestone-based?","answer_type":"table","source_ref":"3.optional.1"},
+    {"id":"team-and-responsibilities.locations","tier":"optional","prompt":"Where is each team member located?","answer_type":"table","source_ref":"3.optional.2"},
+    {"id":"team-and-responsibilities.time-zones","tier":"optional","prompt":"What time zone does each person work in?","answer_type":"table","source_ref":"3.optional.3"},
+    {"id":"team-and-responsibilities.experience","tier":"optional","prompt":"What relevant experience or expertise does each person bring?","answer_type":"table","source_ref":"3.optional.4"},
+    {"id":"team-and-responsibilities.contact-methods","tier":"optional","prompt":"What are the preferred contact methods?","answer_type":"table","source_ref":"3.optional.5"},
+    {"id":"team-and-responsibilities.profile-assets","tier":"optional","prompt":"Are headshots, titles, and short biographies available?","answer_type":"text","source_ref":"3.optional.6"},
+    {"id":"team-and-responsibilities.extended-stakeholders","tier":"optional","prompt":"Which extended stakeholders should receive updates without participating in delivery?","answer_type":"people","source_ref":"3.optional.7"}
+  ],
+  "default_output": [
+    {"id":"team","type":"table","renderer":"./html.mjs#team","uses":["team-and-responsibilities.sponsor","team-and-responsibilities.delivery-owner","team-and-responsibilities.workstream-leads","team-and-responsibilities.business-owners","team-and-responsibilities.participants","team-and-responsibilities.primary-responsibilities"]},
+    {"id":"decision-rights","type":"table","renderer":"./html.mjs#decision-rights","uses":["team-and-responsibilities.decision-rights","team-and-responsibilities.escalation-path"]}
+  ]
+}

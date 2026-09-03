@@ -127,7 +127,13 @@ export const SECTION_SCHEMA = {
   },
   agenda: {
     title: { type: 'string' },
-    items: { type: 'stringlist', required: true, min: 1 },
+    items: {
+      type: 'list', required: true, min: 1,
+      of: {
+        title: { type: 'string', required: true },
+        detail: { type: 'prose', required: true },
+      },
+    },
   },
   table: {
     title: { type: 'string', required: true },
@@ -305,7 +311,12 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
           problems.push(`${where}: the \`${archetype.name}\` archetype does not permit a \`${rawType}\` section (it allows: ${allowed.join(', ')})`);
         }
       }
-      checkFields(section, { type: { type: 'string', required: true }, ...schema }, where, problems, ctx);
+      checkFields(section, {
+        type: { type: 'string', required: true },
+        module: { type: 'string' },
+        view: { type: 'string' },
+        ...schema,
+      }, where, problems, ctx);
     });
 
     if (archetype?.required_sections?.length) {

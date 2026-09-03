@@ -53,14 +53,16 @@ The separation is deliberate: ingestion never writes to the trackers, and `works
 
 The planned `download-teams-transcripts` skill is not yet an executable workflow.
 
-### Planned deliverable capabilities
+### Deliverable capabilities
 
-The following skills are present as planned work but are not executable workflows or approved delivery guidance yet.
-
-| Skill | Intended use after implementation |
+| Skill | Call it when |
 | --- | --- |
 | `create-deliverables` | A discovery readout, findings summary, roadmap, or business case should be delivered as an interactive Slalom-branded web microsite. |
-| `compose-deliverable` | The same content should instead be a native, editable Slalom-branded PowerPoint deck. Uses the same approved content as the microsite. |
+| `update-deliverable-structure` | You need to create or revise a reusable content module or template, validate it in isolation and in context, and obtain visual approval. |
+
+The planned `compose-deliverable` skill is not yet an executable workflow. It
+will create a native, editable Slalom-branded PowerPoint deck from approved
+deliverable content.
 
 ### Planned situational utilities
 

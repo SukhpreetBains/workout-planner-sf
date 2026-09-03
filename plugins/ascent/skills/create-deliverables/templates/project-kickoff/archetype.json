@@ -2,6 +2,17 @@
   "name": "project-kickoff",
   "title": "Project kickoff",
   "description": "The first client-facing session of an engagement: who is on the team, what we are here to do, how we will work together, and what happens next. Establishes shared expectations, not findings.",
+  "schema_version": 1,
+  "modules": [
+    {"id": "kickoff-context"},
+    {"id": "objectives-and-scope"},
+    {"id": "team-and-responsibilities"},
+    {"id": "delivery-approach"},
+    {"id": "discovery-and-deliverables"},
+    {"id": "ways-of-working"},
+    {"id": "raid"},
+    {"id": "immediate-next-steps"}
+  ],
   "cover_surface": "blue",
   "footer_surface": "black",
   "allowed_sections": [
@@ -12,6 +23,7 @@
     "roadmap",
     "timeline",
     "theme-group",
+    "heatmap",
     "quote",
     "next-steps"
   ],
@@ -46,12 +58,12 @@
     "footer": "none"
   },
   "notes": [
-    "purpose states why the engagement exists and what is in scope before anything else — a kickoff opens by naming what it is for, not by summarizing findings that do not exist yet. It is not exec-summary reused: same shape (title + lead prose), but its own eyebrow and fallback title, because 'Summary' / 'In brief' would misdescribe an opening that has nothing yet to summarize.",
+    "purpose states why the engagement exists and what is in scope before anything else. A kickoff opens by naming what it is for, not by summarizing findings that do not exist yet. It is not exec-summary reused: same shape (title + lead prose), but its own eyebrow and fallback title, because 'Summary' / 'In brief' would misdescribe an opening that has nothing yet to summarize.",
     "agenda is required: an explicit agenda is the convention for the medium (a live session), separate from the progress rail's persistent nav.",
-    "table is required at least once, for team and roles — a kickoff that does not say who is on the team and what they own has not actually kicked off anything. table is reusable for deliverables, workshop plans, or key assumptions in the same deck.",
-    "roadmap is required for the approach and timeline. It is the phase-and-outcome view, not a date-scaled Gantt chart — see references/archetypes.md.",
+    "table is required at least once, for team and roles. A kickoff that does not say who is on the team and what they own has not actually kicked off anything. table is reusable for deliverables, workshop plans, or key assumptions in the same deck.",
+    "roadmap is required for the approach and timeline. It is the phase-and-outcome view, not a date-scaled Gantt chart. See references/archetypes.md.",
     "theme-group is allowed but optional, reframed for risks and assumptions rather than findings: theme is the risk, evidence is the description, implication is the response or mitigation.",
     "next-steps is required: a kickoff that ends without a concrete next action has not set expectations, only reviewed them.",
-    "Team member photos and a generated org chart are deliberately out of scope. Represent structure and reporting lines in the required team/roles table instead — see references/archetypes.md."
+    "Team member photos and a generated org chart are deliberately out of scope. Represent structure and reporting lines in the required team/roles table instead. See references/archetypes.md."
   ]
 }

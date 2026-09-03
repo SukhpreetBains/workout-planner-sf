@@ -1,41 +1,10 @@
 {
-  "meta": {
-    "archetype": "executive-readout",
-    "client": "Test Client",
-    "title": "A minimal readout",
-    "date": "2026-01-15",
-    "classification": "Confidential — prepared for Test Client",
-    "accent": "chartreuse"
-  },
+  "meta": {"archetype":"project-kickoff","client":"Test Client","title":"A minimal kickoff","date":"2026-01-15","classification":"Internal draft","accent":"chartreuse"},
   "sections": [
-    {
-      "type": "exec-summary",
-      "body": "One paragraph is enough to prove the pipeline end to end.\n"
-    },
-    {
-      "type": "theme-group",
-      "title": "What we heard",
-      "findings": [
-        {
-          "theme": "A single theme",
-          "evidence": "One observation, recorded once.",
-          "implication": "And the so-what that makes it a finding.",
-          "severity": "low"
-        }
-      ]
-    },
-    {
-      "type": "recommendations",
-      "items": [
-        {
-          "action": "Do the one thing",
-          "rationale": "Because the evidence points at it."
-        }
-      ]
-    },
-    {
-      "type": "next-steps",
-      "items": ["Confirm the scope"]
-    }
+    {"module":"objectives-and-scope","view":"purpose","body":"One paragraph is enough to prove the pipeline."},
+    {"module":"kickoff-context","view":"agenda","items":[{"title":"Align on the work","detail":"Review the purpose, participants, and immediate decisions."}]},
+    {"module":"team-and-responsibilities","view":"team","title":"Team","columns":["Name","Role"],"rows":[{"cells":["Taylor","Lead"]}]},
+    {"module":"delivery-approach","view":"timeline","phases":[{"name":"Learn","window":"Week 1","outcomes":["Shared understanding"]}]},
+    {"module":"immediate-next-steps","view":"actions","items":["Confirm the scope"]}
   ]
 }

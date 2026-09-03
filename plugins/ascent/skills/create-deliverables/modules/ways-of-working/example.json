@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "module": "ways-of-working",
+  "sections": [
+    {
+      "view": "logistics",
+      "title": "Working practices",
+      "columns": ["Practice", "Agreement", "Source of truth"],
+      "rows": [
+        {"cells":["Communication","Shared project channel for working questions","Collaboration workspace"]},
+        {"cells":["Decisions","Record decisions with owners and dates","Decision log"]},
+        {"cells":["Delivery status","Review progress and blockers weekly","Delivery tracker"]}
+      ]
+    },
+    {
+      "view": "cadence",
+      "title": "Meeting cadence",
+      "columns": ["Meeting", "Frequency", "Participants", "Purpose"],
+      "rows": [
+        {"cells":["Core team check-in","Daily","Delivery team","Coordinate work and blockers"]},
+        {"cells":["Sponsor update","Weekly","Leads and sponsor","Review progress and decisions"]}
+      ]
+    }
+  ]
+}

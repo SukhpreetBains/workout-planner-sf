@@ -25,7 +25,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { BRANDING, LOGO_FILES, SKILLS_DIR } from './lib/assets.mjs';
-import { COLOR_BAR_ORDER } from './lib/components.mjs';
+import { COLOR_BAR_ORDER } from '../modules/shared/primitives.mjs';
 import { Report, fatal } from './lib/report.mjs';
 
 /* ==========================================================================
@@ -74,6 +74,10 @@ const APPROVED_ON = {
   '#C7B9FF': ['#002FAF', '#000000'],
   '#DEFF4D': ['#002FAF', '#000000'],
   '#FF4D5F': ['#FFFFFF', '#000000'],
+  '#D1F9FC': ['#000000'],
+  '#FFDBDF': ['#000000'],
+  '#F4F1FF': ['#000000'],
+  '#F8FFDB': ['#000000'],
 };
 
 const SLALOM_BLUES = ['#0C62FB', '#002FAF'];
@@ -608,7 +612,7 @@ export function validateBuild(dir) {
     const m = name.match(/^--on-([a-z-]+?)-(body|display|muted|emphasis)$/);
     if (!m) continue;
     const [, surface, role] = m;
-    const accents = surface === 'accent' ? Object.keys(ACCENTS) : [accent ?? 'cyan'];
+    const accents = surface.startsWith('accent') ? Object.keys(ACCENTS) : [accent ?? 'cyan'];
     for (const a of accents) {
       const bg = resolveColor(tokens, `--surface-${surface}-bg`, a);
       const fg = resolveColor(tokens, name, a);

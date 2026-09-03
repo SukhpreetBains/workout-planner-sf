@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "raid",
+  "title": "Risks, assumptions, issues, and dependencies",
+  "description": "Captures known delivery uncertainty, ownership, mitigation, dependencies, assumptions, tracking, and escalation.",
+  "questions": [
+    {"id":"raid.known-items","tier":"required","prompt":"What risks or active issues are already known?","answer_type":"risks","source_ref":"7.required.1"},
+    {"id":"raid.impact","tier":"required","prompt":"What is the potential impact of each?","answer_type":"table","source_ref":"7.required.2"},
+    {"id":"raid.owners","tier":"required","prompt":"Who owns each risk or issue?","answer_type":"table","source_ref":"7.required.3"},
+    {"id":"raid.mitigation","tier":"required","prompt":"What mitigation or immediate response is planned?","answer_type":"table","source_ref":"7.required.4"},
+    {"id":"raid.dependencies","tier":"required","prompt":"Which external teams, systems, approvals, data sources, or decisions does delivery depend on?","answer_type":"list","source_ref":"7.required.5"},
+    {"id":"raid.assumptions","tier":"required","prompt":"What assumptions must be validated?","answer_type":"list","source_ref":"7.required.6"},
+    {"id":"raid.tracking-location","tier":"required","prompt":"Where will risks, assumptions, issues, and dependencies be tracked?","answer_type":"text","source_ref":"7.required.7"},
+    {"id":"raid.escalation","tier":"required","prompt":"When and how should an issue be escalated?","answer_type":"text","source_ref":"7.required.8"},
+    {"id":"raid.likelihood-and-severity","tier":"optional","prompt":"What is the likelihood and severity of each risk?","answer_type":"table","source_ref":"7.optional.1"},
+    {"id":"raid.contingency","tier":"optional","prompt":"What contingency plan applies if mitigation fails?","answer_type":"table","source_ref":"7.optional.2"},
+    {"id":"raid.triggers","tier":"optional","prompt":"What trigger indicates that contingency action is required?","answer_type":"table","source_ref":"7.optional.3"},
+    {"id":"raid.residual-risk","tier":"optional","prompt":"What is the expected residual risk after mitigation?","answer_type":"table","source_ref":"7.optional.4"},
+    {"id":"raid.review-frequency","tier":"optional","prompt":"How frequently will the risk register be reviewed?","answer_type":"text","source_ref":"7.optional.5"},
+    {"id":"raid.executive-visibility","tier":"optional","prompt":"Which risks require executive visibility?","answer_type":"list","source_ref":"7.optional.6"},
+    {"id":"raid.prior-occurrence","tier":"optional","prompt":"Have similar risks occurred on previous initiatives?","answer_type":"text","source_ref":"7.optional.7"},
+    {"id":"raid.visualization","tier":"optional","prompt":"Should the microsite include a risk heat map or scoring model?","answer_type":"decision","source_ref":"7.optional.8"}
+  ],
+  "default_output": [
+    {"id":"summary","type":"theme-group","renderer":"./html.mjs#summary","uses":["raid.known-items","raid.impact","raid.owners","raid.mitigation","raid.likelihood-and-severity"]},
+    {"id":"details","type":"table","renderer":"./html.mjs#details","uses":["raid.dependencies","raid.assumptions","raid.tracking-location","raid.escalation"]},
+    {"id":"risk-profile","type":"heatmap","renderer":"./html.mjs#risk-profile","uses":["raid.known-items","raid.likelihood-and-severity"]}
+  ]
+}

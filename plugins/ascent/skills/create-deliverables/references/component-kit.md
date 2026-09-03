@@ -3,8 +3,10 @@
 Brand-locked primitives. Archetypes are pre-composed arrangements of these, not
 a second layer of styling.
 
-Every component is a pure function `(section, ctx) => htmlString` in
-`../scripts/lib/components.mjs`, registered by section type. Every one:
+Every finished module view is a pure function `(section, ctx) => htmlString` in
+`../modules/<module-id>/html.mjs`. Its module definition references that local
+renderer explicitly. Low-level HTML utilities and primitives live in
+`../modules/shared/primitives.mjs`. Every renderer:
 
 - emits semantic HTML
 - declares motion with a `data-motion` attribute and contains no animation code
@@ -48,6 +50,7 @@ it. `tokens.css` declares four:
 | `surface-blue` | Slalom Blue | `--on-blue-body`, `--on-blue-display` (both white) |
 | `surface-black` | Black | `--on-black-body`, `--on-black-display` (both white) |
 | `surface-accent` | `var(--accent)` | `--on-accent-body`, `--on-accent-display` (both black) |
+| `surface-accent-light` | `var(--accent-light-3)` | `--on-accent-light-body` (black) |
 
 Two rules the validator enforces:
 
@@ -104,13 +107,17 @@ progress bar is worse than none.
 1. Add its schema to `SECTION_SCHEMA` in `scripts/lib/content.mjs`. Required
    fields are the place to encode editorial standards — `implication` is
    required for a reason.
-2. Add the render function to `COMPONENTS` in `scripts/lib/components.mjs`.
-   Semantic HTML, a `data-motion` attribute, no inline colour.
+2. Add the finished view to the module's local `html.mjs` and export it through
+   `RENDERERS`. Reuse low-level helpers from `modules/shared/primitives.mjs`.
+   Use semantic HTML, a `data-motion` attribute, and no inline colour.
 3. Add its styles to `components.css` using existing tokens. If you need a value
    that is not a token, add the token to `tokens.css` — that is the only file
    allowed to hold a literal.
-4. Add the type to the relevant `archetype.json` `allowed_sections`.
-5. Add a case to `scripts/test/run.mjs` and rebuild the worked example.
+4. Reference the renderer as `./html.mjs#<view-id>` in `module.json`.
+5. Add fictional source for the view to the module's `example.json` so it can
+   be reviewed directly and in every template that selects the module.
+6. Add the type to the relevant `archetype.json` `allowed_sections`.
+7. Add a case to `scripts/test/run.mjs` and rebuild the worked example.
 
 If a component needs a colour that is not in the palette, or a text pair that is
 not in the approved table, the answer is a different design — not a new token.

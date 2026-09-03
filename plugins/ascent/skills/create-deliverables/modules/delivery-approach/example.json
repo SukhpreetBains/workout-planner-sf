@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "module": "delivery-approach",
+  "sections": [
+    {
+      "view": "timeline",
+      "title": "Approach and timeline",
+      "phases": [
+        {"name":"Prepare","window":"Week 1","outcomes":["Team access confirmed","Workshop plan finalized"]},
+        {"name":"Learn","window":"Weeks 2 to 3","outcomes":["Current state understood","Priority needs documented"]},
+        {"name":"Plan","window":"Weeks 4 to 6","outcomes":["Future state aligned","Delivery roadmap approved"]}
+      ]
+    },
+    {
+      "view": "delivery-model",
+      "title": "Delivery model",
+      "columns": ["Practice", "Approach", "Review point"],
+      "rows": [
+        {"cells":["Discovery","Collaborative workshops and interviews","Weekly synthesis review"]},
+        {"cells":["Design","Iterative prototypes and decision records","Business owner approval"]},
+        {"cells":["Planning","Prioritized backlog and release sequencing","Steering team approval"]}
+      ]
+    }
+  ]
+}

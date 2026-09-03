@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "immediate-next-steps",
+  "title": "Immediate asks and next steps",
+  "description": "Defines actions, owners, due dates, decisions, participation, upcoming milestones, and immediate blockers.",
+  "questions": [
+    {"id":"immediate-next-steps.actions","tier":"required","prompt":"What must happen immediately after kickoff?","answer_type":"owned-actions","source_ref":"8.required.1"},
+    {"id":"immediate-next-steps.owners","tier":"required","prompt":"Who owns each action?","answer_type":"table","source_ref":"8.required.2"},
+    {"id":"immediate-next-steps.due-dates","tier":"required","prompt":"When is each action due?","answer_type":"schedule","source_ref":"8.required.3"},
+    {"id":"immediate-next-steps.decisions","tier":"required","prompt":"What decisions or confirmations are needed during kickoff?","answer_type":"list","source_ref":"8.required.4"},
+    {"id":"immediate-next-steps.participation","tier":"required","prompt":"What stakeholder or subject matter expert participation must be secured?","answer_type":"people","source_ref":"8.required.5"},
+    {"id":"immediate-next-steps.next-event","tier":"required","prompt":"What is the next meeting, workshop, or milestone?","answer_type":"milestones","source_ref":"8.required.6"},
+    {"id":"immediate-next-steps.blockers","tier":"required","prompt":"What unresolved blockers require immediate attention?","answer_type":"list","source_ref":"8.required.7"},
+    {"id":"immediate-next-steps.completed-actions","tier":"optional","prompt":"What actions have already been completed?","answer_type":"list","source_ref":"8.optional.1"},
+    {"id":"immediate-next-steps.upcoming-activities","tier":"optional","prompt":"What upcoming activities should participants anticipate?","answer_type":"list","source_ref":"8.optional.2"},
+    {"id":"immediate-next-steps.scheduling-lead-time","tier":"optional","prompt":"How much scheduling lead time is preferred?","answer_type":"text","source_ref":"8.optional.3"},
+    {"id":"immediate-next-steps.parking-lot","tier":"optional","prompt":"Which unresolved questions should be placed in a parking lot?","answer_type":"list","source_ref":"8.optional.4"},
+    {"id":"immediate-next-steps.action-distribution","tier":"optional","prompt":"How will actions be distributed and tracked after kickoff?","answer_type":"text","source_ref":"8.optional.5"},
+    {"id":"immediate-next-steps.material-delivery","tier":"optional","prompt":"When will the team receive the final kickoff materials?","answer_type":"date","source_ref":"8.optional.6"},
+    {"id":"immediate-next-steps.extended-communication","tier":"optional","prompt":"Who will communicate kickoff outcomes to extended stakeholders?","answer_type":"person","source_ref":"8.optional.7"}
+  ],
+  "default_output": [
+    {"id":"actions","type":"next-steps","renderer":"./html.mjs#actions","uses":["immediate-next-steps.actions","immediate-next-steps.owners","immediate-next-steps.due-dates","immediate-next-steps.next-event","immediate-next-steps.blockers"]}
+  ]
+}

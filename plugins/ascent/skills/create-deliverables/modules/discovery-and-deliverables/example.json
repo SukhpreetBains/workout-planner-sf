@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "module": "discovery-and-deliverables",
+  "sections": [
+    {
+      "view": "sessions",
+      "title": "Discovery sessions",
+      "columns": ["Session", "Purpose", "Participants", "Output"],
+      "rows": [
+        {"cells":["Service intake","Understand channels and routing","Operations and support leads","Current-state flow"]},
+        {"cells":["Agent workflow","Identify friction and decision points","Agents and supervisors","Needs and opportunities"]}
+      ]
+    },
+    {
+      "view": "deliverables",
+      "title": "Key deliverables",
+      "columns": ["Deliverable", "Description", "Owner", "Review"],
+      "rows": [
+        {"cells":["Current-state assessment","Evidence-backed view of process and pain points","Slalom","Business owners"]},
+        {"cells":["Delivery roadmap","Sequenced capabilities and next-phase plan","Joint team","Executive sponsor"]}
+      ]
+    }
+  ]
+}

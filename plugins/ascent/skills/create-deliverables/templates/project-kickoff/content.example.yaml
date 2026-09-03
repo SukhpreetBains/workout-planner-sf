@@ -3,7 +3,7 @@
 meta:
   archetype: project-kickoff
   client: Meridian Outfitters
-  title: Service Cloud Discovery — Core Team Kickoff
+  title: Service Cloud Discovery: Core Team Kickoff
   subtitle: Aligning on scope, team, and approach before Learn begins
   date: 2026-03-02
   authors:
@@ -11,11 +11,12 @@ meta:
       role: Engagement Lead
     - name: Priya Nair
       role: Delivery Solution Lead
-  classification: Confidential — prepared for Meridian Outfitters
+  classification: Internal draft
   accent: cyan
 
 sections:
-  - type: purpose
+  - module: objectives-and-scope
+    view: purpose
     title: Purpose & scope
     body: |
       This kickoff aligns the core discovery team on why we are here, how we
@@ -24,23 +25,47 @@ sections:
       Scope is Meridian's service and support experience: case management,
       the store-associate console, and the customer self-service portal. Order
       management and merchandising are explicitly out of scope for this
-      phase — they return in a later engagement.
+      phase. They return in a later engagement.
 
       Nothing decided today is final. Discovery is where we test assumptions
       together before committing to a design.
 
-  - type: agenda
+  - module: kickoff-context
+    view: agenda
     title: Today's agenda
     items:
-      - Introductions
-      - Purpose and scope
-      - Core team and roles
-      - Approach and timeline
-      - Key deliverables
-      - Risks and open questions
-      - Next steps
+      - title: Introductions
+        detail: Meet the people responsible for the engagement and understand the perspective each person brings.
+      - title: Purpose and scope
+        detail: Review why the work is starting, what outcomes matter, and which topics are inside or outside this phase.
+      - title: Core team and roles
+        detail: Clarify delivery responsibilities, client ownership, decision rights, and escalation paths.
+      - title: Approach and timeline
+        detail: Walk through the planned phases, major activities, milestones, and review points.
+      - title: Key deliverables
+        detail: Confirm what the team will produce, who will review each deliverable, and how acceptance will work.
+      - title: Risks and open questions
+        detail: Surface known risks, assumptions, issues, dependencies, and questions that need early resolution.
+      - title: Next steps
+        detail: Agree on immediate actions, owners, due dates, and the next working session.
 
-  - type: table
+  - module: objectives-and-scope
+    view: success-measures
+    title: Engagement at a glance
+    items:
+      - value: 6
+        unit: weeks
+        label: Discovery duration
+        source: Fictional engagement plan
+      - value: 3
+        label: In-scope service experiences
+        source: Fictional statement of work
+      - value: 1 in 5
+        label: Store associates represented in prototype review
+        source: Fictional workshop plan
+
+  - module: team-and-responsibilities
+    view: team
     title: Core team & roles
     columns: [Name, Role, Organization, Responsibility]
     rows:
@@ -51,7 +76,8 @@ sections:
       - cells: [Owen Fielder, Director of Store Operations, Meridian Outfitters, Store-associate console requirements and sign-off]
       - cells: [Aliyah Brandt, IT Program Manager, Meridian Outfitters, Internal coordination and system access]
 
-  - type: roadmap
+  - module: delivery-approach
+    view: timeline
     title: Approach & timeline
     phases:
       - name: Prepare & mobilize
@@ -78,7 +104,8 @@ sections:
           - Prioritized backlog and implementation roadmap approved
           - Design/deliver phase plan and staffing confirmed
 
-  - type: table
+  - module: discovery-and-deliverables
+    view: deliverables
     title: Key deliverables
     columns: [Deliverable, Description, Owner]
     rows:
@@ -87,19 +114,50 @@ sections:
       - cells: [Implementation roadmap, Sequenced phases and a prioritized backlog for the design/deliver phase, Slalom]
       - cells: [Workshop participation, Subject-matter experts available for scheduled Learn-phase sessions, Meridian Outfitters]
 
-  - type: theme-group
+  - module: raid
+    view: summary
     title: Risks & open questions
     findings:
       - theme: Store-associate console requirements are not yet documented
         evidence: No current requirements repository exists for the console; knowledge sits with individual store leads.
         implication: Learn-phase workshops need extra time with store operations to avoid gaps carried into design.
         severity: medium
+        icon: people
       - theme: Case data quality has not been assessed
         evidence: Meridian has not run a data quality audit on the current case management system.
         implication: A lightweight data audit should be scheduled early so migration planning is not built on an unverified assumption.
         severity: medium
+        icon: search
 
-  - type: next-steps
+  - module: ways-of-working
+    view: logistics
+    title: Ways of working
+    columns: [Practice, Working agreement, Source of truth]
+    rows:
+      - cells: [Delivery coordination, Daily core-team check-in and weekly sponsor update, Fictional project calendar]
+      - cells: [Project communication, Shared project channel for decisions and working questions, Fictional collaboration plan]
+      - cells: [Actions and RAID, One governed register reviewed in the weekly delivery meeting, Fictional delivery plan]
+
+  - module: raid
+    view: risk-profile
+    title: Initial risk profile
+    columns: [Likelihood, Impact]
+    rows:
+      - capability: Store-associate requirement coverage
+        values: [4, 3]
+        note: Directional kickoff view, pending discovery validation
+      - capability: Case data readiness
+        values: [3, 4]
+        note: Directional kickoff view, pending a data audit
+
+  - module: kickoff-context
+    view: working-agreement
+    quote: We need one shared picture of what success means before solution decisions begin.
+    name: Executive sponsor
+    attribution_title: Meridian Outfitters
+
+  - module: immediate-next-steps
+    view: actions
     title: Next steps
     items:
       - Confirm workshop attendee list by end of week

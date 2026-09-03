@@ -15,7 +15,7 @@ Two top-level keys, `meta` and `sections`. Anything else is an error.
 
 | Field | Required | Notes |
 |---|---|---|
-| `archetype` | yes | Selects `templates/<archetype>/`. Currently `executive-readout` or `project-kickoff`. |
+| `archetype` | yes | Selects `templates/<archetype>/`. Currently `project-kickoff`. |
 | `client` | yes | The client's name as they write it. |
 | `title` | yes | Sentence case. |
 | `subtitle` | no | One line of scope or timeframe. |
@@ -39,9 +39,14 @@ remaining job is confirming nothing hardcoded a second one.
 
 ## `sections`
 
-An ordered list. Each item has a `type` and that type's fields. `cover`,
-`progress-rail` and `footer` are injected by the archetype and are deliberately
-**not** authorable.
+An ordered list. In a guided template, every item has a `module`, a module-local
+`view`, and the fields required by that view's derived section type. The module
+definition owns the explicit renderer path and section type. Do not author
+`type` directly in guided content. `cover`, `progress-rail`, and `footer` are
+injected by the template and are deliberately **not** authorable.
+
+The type contracts below describe the data each module view accepts. Legacy
+content without modules may still select a type directly.
 
 ### `exec-summary`
 | Field | Required |
@@ -139,7 +144,12 @@ the 1–5 scale, so nothing depends on colour.
 | Field | Required |
 |---|---|
 | `title` | no |
-| `items` | yes — a list of short strings |
+| `items` | yes, at least one |
+
+Each item requires a short `title` and a `detail` explanation. Items render as
+keyboard-accessible disclosure cards. Opening one item closes the previously
+open item, keeping the agenda compact. The interaction uses native HTML and
+remains usable without JavaScript.
 
 ### `table`
 Generic column/row data — no rating or colour semantics. Reused across a

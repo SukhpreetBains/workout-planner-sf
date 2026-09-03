@@ -1,30 +1,32 @@
-# The smallest content file the executive-readout archetype accepts: one of
-# each required section, nothing optional. Used by the build tests.
+# The smallest content file the project-kickoff template accepts.
 meta:
-  archetype: executive-readout
+  archetype: project-kickoff
   client: Test Client
-  title: A minimal readout
+  title: A minimal kickoff
   date: 2026-01-15
-  classification: Confidential — prepared for Test Client
+  classification: Internal draft
   accent: chartreuse
-
 sections:
-  - type: exec-summary
-    body: |
-      One paragraph is enough to prove the pipeline end to end.
-
-  - type: theme-group
-    title: What we heard
-    findings:
-      - theme: A single theme
-        evidence: One observation, recorded once.
-        implication: And the so-what that makes it a finding.
-        severity: low
-
-  - type: recommendations
+  - module: objectives-and-scope
+    view: purpose
+    body: One paragraph is enough to prove the pipeline.
+  - module: kickoff-context
+    view: agenda
     items:
-      - action: Do the one thing
-        rationale: Because the evidence points at it.
-
-  - type: next-steps
+      - title: Align on the work
+        detail: Review the purpose, participants, and immediate decisions.
+  - module: team-and-responsibilities
+    view: team
+    title: Team
+    columns: [Name, Role]
+    rows:
+      - cells: [Taylor, Lead]
+  - module: delivery-approach
+    view: timeline
+    phases:
+      - name: Learn
+        window: Week 1
+        outcomes: [Shared understanding]
+  - module: immediate-next-steps
+    view: actions
     items: [Confirm the scope]
