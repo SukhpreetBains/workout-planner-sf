@@ -47,7 +47,7 @@ function normalizeModuleEntry(entry) {
 
 export function loadTemplateModules(archetype, skillRoot) {
   const problems = [];
-  const modulesRoot = path.join(skillRoot, 'templates', 'modules');
+  const modulesRoot = path.join(skillRoot, 'modules');
   const seenModules = new Set();
   const seenQuestions = new Set();
   const modules = [];
@@ -129,13 +129,12 @@ export function loadTemplateModules(archetype, skillRoot) {
         let rendererFile = null;
         let rendererExport = null;
         if (!rendererMatch) {
-          problems.push(`${where}.renderer must be a relative .mjs path plus a named view, such as ../shared/html.mjs#agenda`);
+          problems.push(`${where}.renderer must be ./html.mjs plus a named view, such as ./html.mjs#agenda`);
         } else {
           rendererFile = path.resolve(moduleDir, rendererMatch[1]);
           rendererExport = rendererMatch[2];
-          const relative = path.relative(modulesRoot, rendererFile);
-          if (path.isAbsolute(relative) || relative === '..' || relative.startsWith(`..${path.sep}`)) {
-            problems.push(`${where}.renderer must stay inside templates/modules`);
+          if (rendererFile !== path.join(moduleDir, 'html.mjs')) {
+            problems.push(`${where}.renderer must reference the module's own ./html.mjs`);
           } else if (!existsSync(rendererFile)) {
             problems.push(`${where}.renderer file does not exist: ${rendererFile}`);
           }

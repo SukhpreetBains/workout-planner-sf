@@ -25,7 +25,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { BRANDING, LOGO_FILES, SKILLS_DIR } from './lib/assets.mjs';
-import { COLOR_BAR_ORDER } from '../templates/modules/shared/html.mjs';
+import { COLOR_BAR_ORDER } from '../modules/shared/primitives.mjs';
 import { Report, fatal } from './lib/report.mjs';
 
 /* ==========================================================================

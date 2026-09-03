@@ -23,7 +23,7 @@
     {"id":"ways-of-working.workstream-channels","tier":"optional","prompt":"Should specialized chat channels be created for individual workstreams?","answer_type":"list","source_ref":"6.optional.8"}
   ],
   "default_output": [
-    {"id":"logistics","type":"table","renderer":"../shared/html.mjs#table","uses":["ways-of-working.hours-and-time-zones","ways-of-working.communication-platform","ways-of-working.document-location","ways-of-working.tracking-system","ways-of-working.status-source"]},
-    {"id":"cadence","type":"table","renderer":"../shared/html.mjs#table","uses":["ways-of-working.recurring-meetings","ways-of-working.meeting-details","ways-of-working.status-reporting"]}
+    {"id":"logistics","type":"table","renderer":"./html.mjs#logistics","uses":["ways-of-working.hours-and-time-zones","ways-of-working.communication-platform","ways-of-working.document-location","ways-of-working.tracking-system","ways-of-working.status-source"]},
+    {"id":"cadence","type":"table","renderer":"./html.mjs#cadence","uses":["ways-of-working.recurring-meetings","ways-of-working.meeting-details","ways-of-working.status-reporting"]}
   ]
 }

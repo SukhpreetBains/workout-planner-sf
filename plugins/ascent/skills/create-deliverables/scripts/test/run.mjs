@@ -371,11 +371,16 @@ test('modules: project-kickoff has eight reusable modules and the expected quest
   eq(MODULES.flatMap((module) => module.questions).filter((question) => question.tier === 'optional').length, 56);
 });
 
-test('modules: definitions and their explicit renderer references live under the module folder', () => {
+test('modules: sibling folders own their definitions and finished renderers', () => {
+  ok(!existsSync(path.join(SKILL_ROOT, 'templates', 'modules')), 'modules must be a sibling of templates');
+  const shared = readFileSync(path.join(SKILL_ROOT, 'modules', 'shared', 'primitives.mjs'), 'utf8');
+  ok(!shared.includes('RENDERERS'), 'shared primitives must not register finished module views');
   for (const module of MODULES) {
-    ok(existsSync(path.join(SKILL_ROOT, 'templates', 'modules', module.id, 'module.json')));
+    const moduleDir = path.join(SKILL_ROOT, 'modules', module.id);
+    ok(existsSync(path.join(moduleDir, 'module.json')));
+    ok(existsSync(path.join(moduleDir, 'html.mjs')));
     for (const output of module.output) {
-      includes(output.rendererFile, path.join('templates', 'modules'));
+      eq(output.rendererFile, path.join(moduleDir, 'html.mjs'));
       ok(existsSync(output.rendererFile), `missing renderer for ${module.id}.${output.id}`);
     }
   }

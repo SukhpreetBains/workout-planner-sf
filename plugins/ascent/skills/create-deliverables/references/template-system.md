@@ -7,23 +7,24 @@ implementation retains the internal `archetype` name for compatibility.
 
 ```text
 templates/
-  modules/
-    shared/
-      html.mjs
-    <module-id>/
-      module.json
-      html.mjs        # only when markup is specific to this module
   project-kickoff/
     archetype.json
     content.example.yaml
     intake.example.yaml
+modules/
+  shared/
+    primitives.mjs
+  <module-id>/
+    module.json
+    html.mjs
 ```
 
 An archetype owns module order, question selection or promotion, and optional
 output-mapping overrides. A module owns canonical question wording, stable IDs,
-answer types, default tiers, and explicit output mappings. Shared HTML lives
-once in `modules/shared/`. Markup unique to one module lives beside its
-`module.json`.
+answer types, default tiers, explicit output mappings, and the HTML for every
+module view. Each module's `html.mjs` lives beside its `module.json`. Shared
+escaping, prose, data-table, meter, and brand primitives live in
+`modules/shared/primitives.mjs`; shared code does not own finished module views.
 
 ## Module definition
 
@@ -39,12 +40,12 @@ Every output mapping contains:
 - `id`: the module-local view ID used by authored content
 - `type`: the section schema used to validate the view's data
 - `renderer`: a relative `.mjs` path and named renderer, such as
-  `../shared/html.mjs#agenda`
+  `./html.mjs#agenda`
 - `uses`: the question IDs that normally supply the view
 
-Renderer paths must stay inside `templates/modules/`. Shared renderers are
-imported by any module that uses them, so a shared HTML change reaches every
-dependent module. Module-specific renderers remain local to their module.
+Every renderer path must reference the `html.mjs` in the same module folder.
+Module renderers may import low-level primitives from `modules/shared/`, but
+one module never imports a finished view from another module.
 
 Every question contains:
 

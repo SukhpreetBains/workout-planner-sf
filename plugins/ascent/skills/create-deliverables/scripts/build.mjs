@@ -27,8 +27,9 @@ import {
   AssetError, SKILL_ROOT, copyAssets, copyOwnAssets, listIconNames, logoVariantFor,
 } from './lib/assets.mjs';
 import {
-  esc, railLabel, renderCover, renderFooter, renderRail, renderSection, sectionId,
-} from '../templates/modules/shared/html.mjs';
+  railLabel, renderFooter, renderRail, renderSection, sectionId,
+} from './lib/page.mjs';
+import { esc } from '../modules/shared/primitives.mjs';
 import { Report, fatal, style } from './lib/report.mjs';
 import { writeBundle } from './lib/bundle.mjs';
 import { validateBuild } from './validate-brand.mjs';
@@ -89,6 +90,9 @@ function longDate(iso) {
 }
 
 export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRenderer = null) {
+  if (typeof coverRenderer !== 'function') {
+    throw new Error('internal: no module-owned cover renderer registered');
+  }
   const { meta, sections } = doc;
   const railEntries = sections.map((section, i) => ({
     id: sectionId(section, i),
@@ -125,7 +129,7 @@ export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRende
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <div class="page">
-${(coverRenderer ?? renderCover)(meta, ctx)}
+${coverRenderer(meta, ctx)}
 ${renderRail(railEntries)}
     <main id="main">
 ${body}

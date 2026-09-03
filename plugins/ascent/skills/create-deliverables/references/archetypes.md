@@ -30,8 +30,8 @@ The reasoning behind the required set:
 
 - **`purpose` opens the deck**, stating why the engagement exists and what
   is in scope. It is not `exec-summary` reused: the shape is identical
-  (title + a lead prose block in the same emphasis box — `renderProseBox` in
-  `templates/modules/shared/html.mjs` backs both), but a kickoff has no findings yet to
+  (title + a lead prose block in the same emphasis box, implemented by the
+  objectives-and-scope module), but a kickoff has no findings yet to
   summarize. `exec-summary`'s eyebrow and fallback title ("Summary" / "In
   brief") would misdescribe that, so `purpose` carries its own ("Purpose" /
   "Purpose & scope") over the same rendering.

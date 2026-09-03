@@ -26,7 +26,7 @@ date, decision, or answer to fill a gap.
 ### 1. Load the template and evidence
 
 Load the ordered modules from `templates/project-kickoff/archetype.json` and
-their question definitions from `templates/modules/`.
+their question definitions and HTML renderers from `modules/`.
 
 Search both evidence stores when they exist:
 

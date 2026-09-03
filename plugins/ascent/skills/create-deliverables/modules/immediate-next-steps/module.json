@@ -20,6 +20,6 @@
     {"id":"immediate-next-steps.extended-communication","tier":"optional","prompt":"Who will communicate kickoff outcomes to extended stakeholders?","answer_type":"person","source_ref":"8.optional.7"}
   ],
   "default_output": [
-    {"id":"actions","type":"next-steps","renderer":"../shared/html.mjs#next-steps","uses":["immediate-next-steps.actions","immediate-next-steps.owners","immediate-next-steps.due-dates","immediate-next-steps.next-event","immediate-next-steps.blockers"]}
+    {"id":"actions","type":"next-steps","renderer":"./html.mjs#actions","uses":["immediate-next-steps.actions","immediate-next-steps.owners","immediate-next-steps.due-dates","immediate-next-steps.next-event","immediate-next-steps.blockers"]}
   ]
 }

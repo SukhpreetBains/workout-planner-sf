@@ -1,6 +1,6 @@
 ---
 name: update-deliverable-template
-description: "Create or modify reusable create-deliverables modules and templates with validated questions, mappings, tests, and iterative isolated and in-context visual review."
+description: "Create or modify reusable create-deliverables modules and templates with overlap analysis, module-owned renderers, shared primitives, UI-generation review, tests, and iterative isolated and in-context visual approval."
 ---
 
 # Update deliverable template
@@ -25,6 +25,13 @@ answer. Explore the codebase instead of asking questions it can answer.
 Reuse existing components first. Add a component only when the intended module
 cannot be expressed well with the current kit. Keep every structure generic and
 reusable. Do not encode client facts in shared definitions or examples.
+
+When creating a new module, invoke `utilities-ui-generation` before designing
+or implementing its rendered views. Use its branding guidance to align the
+module with the active brand pack, accessibility requirements, approved assets,
+interaction conventions, and functional behavior. Use its Anime.js guidance
+when the module adds or changes motion. This review is required for new modules,
+even when the proposed view initially appears similar to an existing one.
 
 Every new or changed structure must pass:
 

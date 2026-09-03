@@ -17,8 +17,8 @@
     {"id":"kickoff-context.supporting-materials","tier":"optional","prompt":"Are there supporting materials attendees should receive?","answer_type":"list","source_ref":"1.optional.5"}
   ],
   "default_output": [
-    {"id":"cover","type":"cover","renderer":"../shared/html.mjs#cover","uses":["kickoff-context.project-name","kickoff-context.date","kickoff-context.participants"]},
-    {"id":"agenda","type":"agenda","renderer":"../shared/html.mjs#agenda","uses":["kickoff-context.agenda-topics","kickoff-context.topic-timing","kickoff-context.presenters"]},
-    {"id":"working-agreement","type":"quote","renderer":"../shared/html.mjs#quote","uses":["kickoff-context.session-outcomes"]}
+    {"id":"cover","type":"cover","renderer":"./html.mjs#cover","uses":["kickoff-context.project-name","kickoff-context.date","kickoff-context.participants"]},
+    {"id":"agenda","type":"agenda","renderer":"./html.mjs#agenda","uses":["kickoff-context.agenda-topics","kickoff-context.topic-timing","kickoff-context.presenters"]},
+    {"id":"working-agreement","type":"quote","renderer":"./html.mjs#working-agreement","uses":["kickoff-context.session-outcomes"]}
   ]
 }

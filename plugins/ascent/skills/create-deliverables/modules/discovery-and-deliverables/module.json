@@ -23,7 +23,7 @@
     {"id":"discovery-and-deliverables.due-dates","tier":"optional","prompt":"When is each deliverable due?","answer_type":"schedule","source_ref":"5.optional.8"}
   ],
   "default_output": [
-    {"id":"sessions","type":"table","renderer":"../shared/html.mjs#table","uses":["discovery-and-deliverables.sessions","discovery-and-deliverables.session-purpose","discovery-and-deliverables.session-participants","discovery-and-deliverables.session-outputs"]},
-    {"id":"deliverables","type":"table","renderer":"../shared/html.mjs#table","uses":["discovery-and-deliverables.deliverables","discovery-and-deliverables.deliverable-content","discovery-and-deliverables.deliverable-roles","discovery-and-deliverables.due-dates"]}
+    {"id":"sessions","type":"table","renderer":"./html.mjs#sessions","uses":["discovery-and-deliverables.sessions","discovery-and-deliverables.session-purpose","discovery-and-deliverables.session-participants","discovery-and-deliverables.session-outputs"]},
+    {"id":"deliverables","type":"table","renderer":"./html.mjs#deliverables","uses":["discovery-and-deliverables.deliverables","discovery-and-deliverables.deliverable-content","discovery-and-deliverables.deliverable-roles","discovery-and-deliverables.due-dates"]}
   ]
 }
