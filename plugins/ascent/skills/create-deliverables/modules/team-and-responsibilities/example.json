@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "module": "team-and-responsibilities",
+  "sections": [
+    {
+      "view": "team",
+      "title": "Core team and roles",
+      "columns": ["Name", "Role", "Organization", "Responsibility"],
+      "rows": [
+        {"cells":["Avery Morgan","Engagement lead","Slalom","Delivery accountability and executive communication"]},
+        {"cells":["Jordan Lee","Program owner","Northstar Services","Business decisions and stakeholder coordination"]},
+        {"cells":["Morgan Patel","Solution architect","Slalom","Technical direction and solution integrity"]}
+      ]
+    },
+    {
+      "view": "decision-rights",
+      "title": "Decision rights",
+      "columns": ["Decision", "Owner", "Escalation path"],
+      "rows": [
+        {"cells":["Scope priorities","Program owner","Executive sponsor"]},
+        {"cells":["Solution direction","Solution architect","Architecture council"]},
+        {"cells":["Delivery sequencing","Engagement lead","Joint steering team"]}
+      ]
+    }
+  ]
+}

@@ -114,8 +114,10 @@ progress bar is worse than none.
    that is not a token, add the token to `tokens.css` — that is the only file
    allowed to hold a literal.
 4. Reference the renderer as `./html.mjs#<view-id>` in `module.json`.
-5. Add the type to the relevant `archetype.json` `allowed_sections`.
-6. Add a case to `scripts/test/run.mjs` and rebuild the worked example.
+5. Add fictional source for the view to the module's `example.json` so it can
+   be reviewed directly and in every template that selects the module.
+6. Add the type to the relevant `archetype.json` `allowed_sections`.
+7. Add a case to `scripts/test/run.mjs` and rebuild the worked example.
 
 If a component needs a colour that is not in the palette, or a text pair that is
 not in the approved table, the answer is a different design — not a new token.

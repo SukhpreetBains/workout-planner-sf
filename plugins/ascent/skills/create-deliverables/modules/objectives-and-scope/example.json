@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "module": "objectives-and-scope",
+  "sections": [
+    {
+      "view": "purpose",
+      "title": "Purpose and scope",
+      "body": "This engagement aligns the team on a simpler service experience and the capabilities needed to support it. The first phase covers intake, routing, and case resolution. Billing operations remain outside this phase."
+    },
+    {
+      "view": "success-measures",
+      "title": "Success measures",
+      "items": [
+        {"value":6,"unit":"weeks","label":"Discovery duration","source":"Fictional engagement plan"},
+        {"value":3,"label":"Service journeys in scope","source":"Fictional scope statement"},
+        {"value":12,"label":"Stakeholder interviews","source":"Fictional research plan"}
+      ]
+    },
+    {
+      "view": "scope-details",
+      "title": "Scope boundaries",
+      "columns": ["Area", "Included", "Expected outcome"],
+      "rows": [
+        {"cells":["Service intake","Yes","Clear entry points and routing rules"]},
+        {"cells":["Case resolution","Yes","Consistent agent workflow"]},
+        {"cells":["Billing operations","No","Retained for a later phase"]}
+      ]
+    }
+  ]
+}

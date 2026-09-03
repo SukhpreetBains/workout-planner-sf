@@ -21,7 +21,7 @@ import process from 'node:process';
 import { parseYaml, YamlError } from '../lib/yaml.mjs';
 import { ContentError, validateContent } from '../lib/content.mjs';
 import { SKILL_ROOT, listIconNames } from '../lib/assets.mjs';
-import { build, loadArchetype } from '../build.mjs';
+import { build, buildStructurePreview, loadArchetype } from '../build.mjs';
 import { evaluateIntake, loadTemplateModules, resolveGuidedContent } from '../lib/intake.mjs';
 import { detachBuild } from '../detach.mjs';
 import { rebuildDetached } from '../rebuild-detached.mjs';
@@ -383,6 +383,31 @@ test('modules: sibling folders own their definitions and finished renderers', ()
       eq(output.rendererFile, path.join(moduleDir, 'html.mjs'));
       ok(existsSync(output.rendererFile), `missing renderer for ${module.id}.${output.id}`);
     }
+  }
+});
+
+test('modules: every module has renderable example source', async () => {
+  for (const module of MODULES) {
+    ok(existsSync(path.join(SKILL_ROOT, 'modules', module.id, 'example.json')));
+  }
+  const result = await buildStructurePreview({
+    moduleId: 'objectives-and-scope',
+    out: path.join(TMP, 'objectives-and-scope-example'),
+  });
+  eq(result.renderedDoc.sections.map((section) => section.view), ['purpose', 'success-measures', 'scope-details']);
+  includes(result.html, 'data-preview-module="objectives-and-scope"');
+  includes(result.html, `Module: ${MODULES.find((module) => module.id === 'objectives-and-scope').title}`);
+});
+
+test('templates: the example preview renders every selected module with labels', async () => {
+  const result = await buildStructurePreview({
+    templateName: 'project-kickoff',
+    out: path.join(TMP, 'project-kickoff-module-examples'),
+  });
+  const renderedModules = new Set(result.renderedDoc.sections.map((section) => section.module));
+  eq([...renderedModules], MODULES.map((module) => module.id));
+  for (const module of MODULES) {
+    includes(result.html, `data-preview-module="${module.id}"`);
   }
 });
 

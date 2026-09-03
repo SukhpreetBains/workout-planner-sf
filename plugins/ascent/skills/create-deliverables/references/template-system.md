@@ -17,6 +17,7 @@ modules/
   <module-id>/
     module.json
     html.mjs
+    example.json
 ```
 
 An archetype owns module order, question selection or promotion, and optional
@@ -46,6 +47,35 @@ Every output mapping contains:
 Every renderer path must reference the `html.mjs` in the same module folder.
 Module renderers may import low-level primitives from `modules/shared/`, but
 one module never imports a finished view from another module.
+
+## Module examples
+
+Every module owns `example.json`, a fictional, renderable demonstration of all
+authorable views declared by that module. A module that owns the template cover
+also supplies the fictional cover metadata. Example source never contains real
+client information and is validated against the same content schemas and HTML
+renderers used for deliverables.
+
+Render one module directly:
+
+```bash
+node scripts/build.mjs --preview-module kickoff-context \
+  --out path/to/module-preview \
+  --bundle
+```
+
+Render every module selected by a template:
+
+```bash
+node scripts/build.mjs --preview-template project-kickoff \
+  --out path/to/template-preview \
+  --bundle
+```
+
+Template previews compose the module-owned examples in template order and add a
+visible module label to every section. Show this preview when a user selects a
+template, then explain that they may choose which modules to include in their
+output before intake begins.
 
 Every question contains:
 

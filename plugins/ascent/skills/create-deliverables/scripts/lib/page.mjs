@@ -127,10 +127,16 @@ export function renderSection(section, index, ctx, renderer = null) {
   const openQuestions = section._openQuestions?.length
     ? renderOpenQuestions(section._openQuestions)
     : '';
+  const previewLabel = ctx.structurePreview && section.module
+    ? `<p class="eyebrow">Module: ${typeset(ctx.moduleTitles.get(section.module) ?? section.module)}</p>`
+    : '';
+  const previewAttribute = ctx.structurePreview && section.module
+    ? ` data-preview-module="${esc(section.module)}"`
+    : '';
 
   return `
-  <section class="section surface-white" id="${esc(id)}" ${labelling}>
-    <div class="section__inner">${head}${component(section, ctx)}${openQuestions}
+  <section class="section surface-white" id="${esc(id)}" ${labelling}${previewAttribute}>
+    <div class="section__inner">${previewLabel}${head}${component(section, ctx)}${openQuestions}
     </div>
   </section>`;
 }

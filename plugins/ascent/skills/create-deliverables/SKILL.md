@@ -28,6 +28,19 @@ date, decision, or answer to fill a gap.
 Load the ordered modules from `templates/project-kickoff/archetype.json` and
 their question definitions and HTML renderers from `modules/`.
 
+Before starting evidence intake, render the selected template's module examples:
+
+```bash
+node scripts/build.mjs --preview-template project-kickoff \
+  --out path/to/template-preview \
+  --bundle
+```
+
+Give the user the preview link. Every module must be visibly labeled in the
+preview. Explain that the template is a starting composition and that they can
+choose which modules to include in their output. Confirm their module selection
+before asking module questions or drafting sections.
+
 Search both evidence stores when they exist:
 
 - extracted documents recorded in `workspace/.system/sources.yaml`

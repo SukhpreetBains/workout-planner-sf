@@ -38,13 +38,15 @@ Create or modify one reusable content-domain module.
    finished module views there. If composition is insufficient, explain why
    before adding a primitive, then update its schema, styles, motion, tests, and
    relevant template allowlists.
-7. Use fictional content to render the module in isolation. Give the user a
-   preview link and iterate until approved. Use the template's reviewed example
-   content and pass `--preview-module <module-id>` to `build.mjs`.
-8. Render the same module inside a representative template. Check neighboring
+7. Add `modules/<module-id>/example.json` with fictional example data for every
+   authorable view in `module.json`. If the module owns a cover view, include its
+   fictional cover metadata. Never use real client information.
+8. Render the module directly with `build.mjs --preview-module <module-id>`.
+   Give the user the bundled preview link and iterate until approved.
+9. Render the same module inside a representative template. Check neighboring
    sections, progress navigation, responsive behavior, reduced motion, print,
    JavaScript-disabled reading, and keyboard order. Obtain explicit approval.
-9. Run the complete test and brand-validation suite. Report warnings honestly.
+10. Run the complete test and brand-validation suite. Report warnings honestly.
    Confirm that both the new module and every existing module affected by a
    shared extraction still pass isolated and in-context review.
 

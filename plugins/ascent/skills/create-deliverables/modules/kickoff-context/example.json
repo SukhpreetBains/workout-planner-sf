@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "module": "kickoff-context",
+  "cover": {
+    "client": "Northstar Services",
+    "date": "2026-01-15",
+    "authors": [{"name":"Avery Morgan","role":"Engagement lead"}],
+    "classification": "Internal draft",
+    "accent": "cyan"
+  },
+  "sections": [
+    {
+      "view": "agenda",
+      "title": "Today's agenda",
+      "items": [
+        {"title":"Introductions","detail":"Meet the people responsible for the work and the perspective each person brings."},
+        {"title":"Purpose and scope","detail":"Align on the intended outcomes and the boundaries of this phase."},
+        {"title":"Ways of working","detail":"Confirm decision paths, collaboration practices, and immediate next steps."}
+      ]
+    },
+    {
+      "view": "working-agreement",
+      "quote": "We will make decisions with the people closest to the work and document what changes.",
+      "name": "Executive sponsor",
+      "attribution_title": "Northstar Services"
+    }
+  ]
+}
