@@ -127,7 +127,13 @@ export const SECTION_SCHEMA = {
   },
   agenda: {
     title: { type: 'string' },
-    items: { type: 'stringlist', required: true, min: 1 },
+    items: {
+      type: 'list', required: true, min: 1,
+      of: {
+        title: { type: 'string', required: true },
+        detail: { type: 'prose', required: true },
+      },
+    },
   },
   table: {
     title: { type: 'string', required: true },
@@ -308,6 +314,7 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
       checkFields(section, {
         type: { type: 'string', required: true },
         module: { type: 'string' },
+        view: { type: 'string' },
         ...schema,
       }, where, problems, ctx);
     });

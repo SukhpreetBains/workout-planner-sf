@@ -7,7 +7,12 @@ implementation retains the internal `archetype` name for compatibility.
 
 ```text
 templates/
-  modules/<module-id>.json
+  modules/
+    shared/
+      html.mjs
+    <module-id>/
+      module.json
+      html.mjs        # only when markup is specific to this module
   project-kickoff/
     archetype.json
     content.example.yaml
@@ -16,7 +21,9 @@ templates/
 
 An archetype owns module order, question selection or promotion, and optional
 output-mapping overrides. A module owns canonical question wording, stable IDs,
-answer types, default tiers, and default output mappings.
+answer types, default tiers, and explicit output mappings. Shared HTML lives
+once in `modules/shared/`. Markup unique to one module lives beside its
+`module.json`.
 
 ## Module definition
 
@@ -25,7 +32,19 @@ Every module JSON file contains:
 - `schema_version`: currently `1`
 - `id`, `title`, and `description`
 - `questions`: canonical question definitions
-- `default_output`: the normal answer-to-component mapping
+- `default_output`: the normal answer-to-view mapping
+
+Every output mapping contains:
+
+- `id`: the module-local view ID used by authored content
+- `type`: the section schema used to validate the view's data
+- `renderer`: a relative `.mjs` path and named renderer, such as
+  `../shared/html.mjs#agenda`
+- `uses`: the question IDs that normally supply the view
+
+Renderer paths must stay inside `templates/modules/`. Shared renderers are
+imported by any module that uses them, so a shared HTML change reaches every
+dependent module. Module-specific renderers remain local to their module.
 
 Every question contains:
 
@@ -37,6 +56,12 @@ Every question contains:
 
 Template module entries may use `include_questions`, `exclude_questions`,
 `promote_to_required`, and `output`. They do not rewrite canonical prompts.
+
+Initial guided content identifies every authored section with `module` and
+`view`. The build derives the section type and renderer from `module.json`.
+Authored `type` values are rejected in guided mode so the content cannot drift
+from its module contract. After detachment, the generated HTML can be changed
+without conforming to modules or templates.
 
 ## Intake states
 

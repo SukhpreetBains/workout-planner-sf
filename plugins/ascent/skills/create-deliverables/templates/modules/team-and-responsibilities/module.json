@@ -21,7 +21,7 @@
     {"id":"team-and-responsibilities.extended-stakeholders","tier":"optional","prompt":"Which extended stakeholders should receive updates without participating in delivery?","answer_type":"people","source_ref":"3.optional.7"}
   ],
   "default_output": [
-    {"component":"table","uses":["team-and-responsibilities.sponsor","team-and-responsibilities.delivery-owner","team-and-responsibilities.workstream-leads","team-and-responsibilities.business-owners","team-and-responsibilities.participants","team-and-responsibilities.primary-responsibilities"]},
-    {"component":"table","uses":["team-and-responsibilities.decision-rights","team-and-responsibilities.escalation-path"]}
+    {"id":"team","type":"table","renderer":"../shared/html.mjs#table","uses":["team-and-responsibilities.sponsor","team-and-responsibilities.delivery-owner","team-and-responsibilities.workstream-leads","team-and-responsibilities.business-owners","team-and-responsibilities.participants","team-and-responsibilities.primary-responsibilities"]},
+    {"id":"decision-rights","type":"table","renderer":"../shared/html.mjs#table","uses":["team-and-responsibilities.decision-rights","team-and-responsibilities.escalation-path"]}
   ]
 }

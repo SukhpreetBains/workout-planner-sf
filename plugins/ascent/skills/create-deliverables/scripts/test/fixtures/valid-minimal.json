@@ -1,10 +1,10 @@
 {
   "meta": {"archetype":"project-kickoff","client":"Test Client","title":"A minimal kickoff","date":"2026-01-15","classification":"Internal draft","accent":"chartreuse"},
   "sections": [
-    {"type":"purpose","module":"objectives-and-scope","body":"One paragraph is enough to prove the pipeline."},
-    {"type":"agenda","module":"kickoff-context","items":["Align on the work"]},
-    {"type":"table","module":"team-and-responsibilities","title":"Team","columns":["Name","Role"],"rows":[{"cells":["Taylor","Lead"]}]},
-    {"type":"roadmap","module":"delivery-approach","phases":[{"name":"Learn","window":"Week 1","outcomes":["Shared understanding"]}]},
-    {"type":"next-steps","module":"immediate-next-steps","items":["Confirm the scope"]}
+    {"module":"objectives-and-scope","view":"purpose","body":"One paragraph is enough to prove the pipeline."},
+    {"module":"kickoff-context","view":"agenda","items":[{"title":"Align on the work","detail":"Review the purpose, participants, and immediate decisions."}]},
+    {"module":"team-and-responsibilities","view":"team","title":"Team","columns":["Name","Role"],"rows":[{"cells":["Taylor","Lead"]}]},
+    {"module":"delivery-approach","view":"timeline","phases":[{"name":"Learn","window":"Week 1","outcomes":["Shared understanding"]}]},
+    {"module":"immediate-next-steps","view":"actions","items":["Confirm the scope"]}
   ]
 }

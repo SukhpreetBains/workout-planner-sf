@@ -22,8 +22,8 @@
     {"id":"objectives-and-scope.baselines","tier":"optional","prompt":"Are there baseline metrics against which improvement will be measured?","answer_type":"list","source_ref":"2.optional.6"}
   ],
   "default_output": [
-    {"component":"purpose","uses":["objectives-and-scope.business-context","objectives-and-scope.objectives","objectives-and-scope.in-scope","objectives-and-scope.out-of-scope"]},
-    {"component":"kpi-row","uses":["objectives-and-scope.success-measures","objectives-and-scope.baselines"]},
-    {"component":"table","uses":["objectives-and-scope.included-capabilities","objectives-and-scope.client-responsibilities","objectives-and-scope.acceptance-outcome"]}
+    {"id":"purpose","type":"purpose","renderer":"../shared/html.mjs#purpose","uses":["objectives-and-scope.business-context","objectives-and-scope.objectives","objectives-and-scope.in-scope","objectives-and-scope.out-of-scope"]},
+    {"id":"success-measures","type":"kpi-row","renderer":"../shared/html.mjs#kpi-row","uses":["objectives-and-scope.success-measures","objectives-and-scope.baselines"]},
+    {"id":"scope-details","type":"table","renderer":"../shared/html.mjs#table","uses":["objectives-and-scope.included-capabilities","objectives-and-scope.client-responsibilities","objectives-and-scope.acceptance-outcome"]}
   ]
 }

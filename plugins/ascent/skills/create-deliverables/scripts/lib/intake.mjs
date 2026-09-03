@@ -6,6 +6,7 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { ContentError, parseContentFile } from './content.mjs';
 
@@ -46,6 +47,7 @@ function normalizeModuleEntry(entry) {
 
 export function loadTemplateModules(archetype, skillRoot) {
   const problems = [];
+  const modulesRoot = path.join(skillRoot, 'templates', 'modules');
   const seenModules = new Set();
   const seenQuestions = new Set();
   const modules = [];
@@ -62,7 +64,8 @@ export function loadTemplateModules(archetype, skillRoot) {
     }
     seenModules.add(entry.id);
 
-    const file = path.join(skillRoot, 'templates', 'modules', `${entry.id}.json`);
+    const moduleDir = path.join(modulesRoot, entry.id);
+    const file = path.join(moduleDir, 'module.json');
     const module = readJson(file, problems);
     if (!module) continue;
     if (module.schema_version !== 1) problems.push(`${entry.id}: schema_version must be 1`);
@@ -101,25 +104,50 @@ export function loadTemplateModules(archetype, skillRoot) {
         problems.push(`archetype module \`${entry.id}\` references unknown question \`${id}\``);
       }
     }
-    const output = entry.output ?? module.default_output ?? [];
-    if (!Array.isArray(output)) {
+    const rawOutput = entry.output ?? module.default_output ?? [];
+    let output = [];
+    if (!Array.isArray(rawOutput)) {
       problems.push(`${entry.id}: output must be a list`);
     } else {
       const selectedIds = new Set(questions.map((question) => question.id));
-      const allowedComponents = new Set(['cover', ...(archetype.allowed_sections ?? [])]);
-      for (const [mappingIndex, mapping] of output.entries()) {
+      const allowedTypes = new Set(['cover', ...(archetype.allowed_sections ?? [])]);
+      const seenViews = new Set();
+      for (const [mappingIndex, mapping] of rawOutput.entries()) {
         const where = `${entry.id}.output[${mappingIndex}]`;
         if (!isObject(mapping)) { problems.push(`${where} must be a mapping`); continue; }
-        if (!allowedComponents.has(mapping.component)) {
-          problems.push(`${where}.component references unavailable component \`${mapping.component}\``);
+        if (typeof mapping.id !== 'string' || !/^[a-z0-9-]+$/.test(mapping.id)) {
+          problems.push(`${where}.id must be a lowercase view id`);
+        } else if (seenViews.has(mapping.id)) {
+          problems.push(`${where}.id repeats view \`${mapping.id}\``);
+        } else seenViews.add(mapping.id);
+        if (!allowedTypes.has(mapping.type)) {
+          problems.push(`${where}.type references unavailable section type \`${mapping.type}\``);
+        }
+        const rendererMatch = typeof mapping.renderer === 'string'
+          ? mapping.renderer.match(/^(.+\.mjs)#([a-z0-9-]+)$/)
+          : null;
+        let rendererFile = null;
+        let rendererExport = null;
+        if (!rendererMatch) {
+          problems.push(`${where}.renderer must be a relative .mjs path plus a named view, such as ../shared/html.mjs#agenda`);
+        } else {
+          rendererFile = path.resolve(moduleDir, rendererMatch[1]);
+          rendererExport = rendererMatch[2];
+          const relative = path.relative(modulesRoot, rendererFile);
+          if (path.isAbsolute(relative) || relative === '..' || relative.startsWith(`..${path.sep}`)) {
+            problems.push(`${where}.renderer must stay inside templates/modules`);
+          } else if (!existsSync(rendererFile)) {
+            problems.push(`${where}.renderer file does not exist: ${rendererFile}`);
+          }
         }
         if (!Array.isArray(mapping.uses) || mapping.uses.length === 0) {
           problems.push(`${where}.uses must be a non-empty list`);
-          continue;
+        } else {
+          for (const id of mapping.uses) {
+            if (!selectedIds.has(id)) problems.push(`${where}.uses references unselected question \`${id}\``);
+          }
         }
-        for (const id of mapping.uses) {
-          if (!selectedIds.has(id)) problems.push(`${where}.uses references unselected question \`${id}\``);
-        }
+        output.push({ ...mapping, rendererFile, rendererExport });
       }
     }
     modules.push({
@@ -132,6 +160,59 @@ export function loadTemplateModules(archetype, skillRoot) {
 
   if (problems.length) throw new ContentError(problems.map((problem) => `template modules: ${problem}`));
   return modules;
+}
+
+export function resolveGuidedContent(raw, modules) {
+  if (modules.length === 0) return raw;
+  const problems = [];
+  const byId = new Map(modules.map((module) => [module.id, module]));
+  const sections = Array.isArray(raw?.sections) ? raw.sections.map((section, index) => {
+    if (!isObject(section)) return section;
+    const where = `sections[${index}]`;
+    if (section.type !== undefined) {
+      problems.push(`${where}: guided content uses \`module\` and \`view\`; remove authored \`type\``);
+    }
+    const module = byId.get(section.module);
+    if (!module) {
+      problems.push(`${where}: module must name a module selected by this template`);
+      return section;
+    }
+    const output = module.output.find((candidate) => candidate.id === section.view);
+    if (!output) {
+      problems.push(`${where}: view must name one of ${module.output.map((candidate) => candidate.id).join(', ')}`);
+      return section;
+    }
+    return { ...section, type: output.type };
+  }) : raw?.sections;
+  if (problems.length) throw new ContentError(problems);
+  return { ...raw, sections };
+}
+
+export async function loadModuleRenderers(modules) {
+  const problems = [];
+  const loadedFiles = new Map();
+  const renderers = new Map();
+  for (const module of modules) {
+    for (const output of module.output) {
+      if (!output.rendererFile || !output.rendererExport) continue;
+      try {
+        if (!loadedFiles.has(output.rendererFile)) {
+          loadedFiles.set(output.rendererFile, await import(pathToFileURL(output.rendererFile).href));
+        }
+        const namespace = loadedFiles.get(output.rendererFile);
+        const renderer = namespace.RENDERERS?.[output.rendererExport] ?? namespace[output.rendererExport];
+        if (typeof renderer !== 'function') {
+          problems.push(`${module.id}.${output.id}: renderer export \`${output.rendererExport}\` is not a function`);
+          continue;
+        }
+        renderers.set(`${module.id}:${output.id}`, renderer);
+      } catch (err) {
+        problems.push(`${module.id}.${output.id}: cannot load renderer: ${err.message}`);
+      }
+    }
+  }
+  if (problems.length) throw new ContentError(problems.map((problem) => `module renderers: ${problem}`));
+  return renderers;
 }
 
 function answerMap(intake, problems) {

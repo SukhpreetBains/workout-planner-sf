@@ -94,6 +94,10 @@
   --on-accent-body: #000000;
   --on-accent-display: #000000;
 
+  /* Light accent surface for explanatory cards. */
+  --surface-accent-light-bg: var(--accent-light-3);
+  --on-accent-light-body: #000000;
+
   /* --- Structure (non-text: rules, dividers, borders) ------------------- */
   --rule-color: #E6E6E6;
   --focus-color: #002FAF;

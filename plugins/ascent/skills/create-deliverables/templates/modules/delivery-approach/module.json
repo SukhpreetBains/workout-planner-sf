@@ -23,7 +23,7 @@
     {"id":"delivery-approach.phase-allocation","tier":"optional","prompt":"What percentage of the timeline is allocated to discovery, execution, testing, and transition?","answer_type":"table","source_ref":"4.optional.7"}
   ],
   "default_output": [
-    {"component":"roadmap","uses":["delivery-approach.phases","delivery-approach.dates","delivery-approach.phase-outcomes","delivery-approach.milestones","delivery-approach.date-confidence"]},
-    {"component":"table","uses":["delivery-approach.methodology","delivery-approach.phase-activities","delivery-approach.review-and-acceptance","delivery-approach.transition-criteria"]}
+    {"id":"timeline","type":"roadmap","renderer":"../shared/html.mjs#roadmap","uses":["delivery-approach.phases","delivery-approach.dates","delivery-approach.phase-outcomes","delivery-approach.milestones","delivery-approach.date-confidence"]},
+    {"id":"delivery-model","type":"table","renderer":"../shared/html.mjs#table","uses":["delivery-approach.methodology","delivery-approach.phase-activities","delivery-approach.review-and-acceptance","delivery-approach.transition-criteria"]}
   ]
 }

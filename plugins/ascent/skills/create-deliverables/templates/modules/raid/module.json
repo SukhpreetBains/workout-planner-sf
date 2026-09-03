@@ -22,7 +22,8 @@
     {"id":"raid.visualization","tier":"optional","prompt":"Should the microsite include a risk heat map or scoring model?","answer_type":"decision","source_ref":"7.optional.8"}
   ],
   "default_output": [
-    {"component":"theme-group","uses":["raid.known-items","raid.impact","raid.owners","raid.mitigation","raid.likelihood-and-severity"]},
-    {"component":"table","uses":["raid.dependencies","raid.assumptions","raid.tracking-location","raid.escalation"]}
+    {"id":"summary","type":"theme-group","renderer":"../shared/html.mjs#theme-group","uses":["raid.known-items","raid.impact","raid.owners","raid.mitigation","raid.likelihood-and-severity"]},
+    {"id":"details","type":"table","renderer":"../shared/html.mjs#table","uses":["raid.dependencies","raid.assumptions","raid.tracking-location","raid.escalation"]},
+    {"id":"risk-profile","type":"heatmap","renderer":"../shared/html.mjs#heatmap","uses":["raid.known-items","raid.likelihood-and-severity"]}
   ]
 }

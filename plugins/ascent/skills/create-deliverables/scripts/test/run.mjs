@@ -22,7 +22,7 @@ import { parseYaml, YamlError } from '../lib/yaml.mjs';
 import { ContentError, validateContent } from '../lib/content.mjs';
 import { SKILL_ROOT, listIconNames } from '../lib/assets.mjs';
 import { build, loadArchetype } from '../build.mjs';
-import { evaluateIntake, loadTemplateModules } from '../lib/intake.mjs';
+import { evaluateIntake, loadTemplateModules, resolveGuidedContent } from '../lib/intake.mjs';
 import { detachBuild } from '../detach.mjs';
 import { rebuildDetached } from '../rebuild-detached.mjs';
 import { validateBuild } from '../validate-brand.mjs';
@@ -167,7 +167,7 @@ function content(overrides = {}) {
     },
     sections: [
       { type: 'purpose', module: 'objectives-and-scope', body: 'One paragraph.' },
-      { type: 'agenda', module: 'kickoff-context', items: ['One topic'] },
+      { type: 'agenda', module: 'kickoff-context', items: [{ title: 'One topic', detail: 'What the topic covers.' }] },
       { type: 'table', module: 'team-and-responsibilities', title: 'Team', columns: ['Name'], rows: [{ cells: ['One person'] }] },
       { type: 'roadmap', module: 'delivery-approach', phases: [{ name: 'Learn', window: 'Week 1', outcomes: ['One outcome'] }] },
       {
@@ -371,6 +371,26 @@ test('modules: project-kickoff has eight reusable modules and the expected quest
   eq(MODULES.flatMap((module) => module.questions).filter((question) => question.tier === 'optional').length, 56);
 });
 
+test('modules: definitions and their explicit renderer references live under the module folder', () => {
+  for (const module of MODULES) {
+    ok(existsSync(path.join(SKILL_ROOT, 'templates', 'modules', module.id, 'module.json')));
+    for (const output of module.output) {
+      includes(output.rendererFile, path.join('templates', 'modules'));
+      ok(existsSync(output.rendererFile), `missing renderer for ${module.id}.${output.id}`);
+    }
+  }
+});
+
+test('modules: guided content requires module plus view and derives section type', () => {
+  const raw = JSON.parse(readFileSync(path.join(FIXTURES, 'valid-minimal.json'), 'utf8'));
+  const resolved = resolveGuidedContent(raw, MODULES);
+  eq(resolved.sections[0].type, 'purpose');
+  const invalid = structuredClone(raw);
+  invalid.sections[0].type = 'purpose';
+  const err = throws(() => resolveGuidedContent(invalid, MODULES));
+  includes(err.message, 'remove authored `type`');
+});
+
 test('intake: only a user can mark a question not applicable', () => {
   const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
   raw.answers['kickoff-context.audience'] = { status: 'not_applicable', answered_by: 'source', reason: 'No audience.' };
@@ -399,8 +419,8 @@ test('intake: source-backed answers include a citation', () => {
   includes(err.message, 'source-backed answers require at least one source citation');
 });
 
-test('build: the worked project-kickoff example builds end to end', () => {
-  example = build(EXAMPLE, { out: path.join(TMP, 'example'), bundle: true, intake: COMPLETE_INTAKE });
+test('build: the worked project-kickoff example builds end to end', async () => {
+  example = await build(EXAMPLE, { out: path.join(TMP, 'example'), bundle: true, intake: COMPLETE_INTAKE });
   ok(existsSync(path.join(example.outDir, 'index.html')));
   eq(example.manifest.archetype, 'project-kickoff');
   eq(example.manifest.accent, 'cyan');
@@ -460,27 +480,44 @@ test('build: icons referenced by findings are copied, unreferenced ones are not'
   ok(!existsSync(path.join(example.outDir, 'assets/icon-coffee.svg')));
 });
 
-test('build: a JSON content file is a first-class input', () => {
-  const result = build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json'), intake: COMPLETE_INTAKE });
+test('build: a JSON content file is a first-class input', async () => {
+  const result = await build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json'), intake: COMPLETE_INTAKE });
   includes(result.html, 'A minimal kickoff');
   eq(result.manifest.accent, 'chartreuse');
 });
 
-test('build: the long-content layout stress fixture builds', () => {
-  const result = build(path.join(FIXTURES, 'layout-stress.json'), { out: path.join(TMP, 'layout-stress'), intake: COMPLETE_INTAKE });
+test('build: the long-content layout stress fixture builds', async () => {
+  const result = await build(path.join(FIXTURES, 'layout-stress.json'), { out: path.join(TMP, 'layout-stress'), intake: COMPLETE_INTAKE });
   includes(result.html, 'A deliberately long KPI value');
   includes(result.html, 'A deliberately long table value designed to exercise wrapping');
 });
 
-test('build: the project-kickoff worked example passes the gate', () => {
+test('build: the project-kickoff worked example passes the gate', async () => {
   const examplePath = path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'content.example.yaml');
-  const result = build(examplePath, { out: path.join(TMP, 'kickoff'), intake: COMPLETE_INTAKE });
+  const result = await build(examplePath, { out: path.join(TMP, 'kickoff'), intake: COMPLETE_INTAKE });
   eq(result.manifest.archetype, 'project-kickoff');
   ok(existsSync(path.join(result.outDir, 'index.html')));
   includes(result.html, 'class="agenda"');
   includes(result.html, 'class="data-table"');
   const report = validateBuild(result.outDir);
   eq(report.errors.length, 0, `unexpected errors: ${report.errors.map((e) => e.message).join('; ')}`);
+});
+
+test('build: one module can render in isolation with its normal renderer paths', async () => {
+  const result = await build(EXAMPLE, {
+    out: path.join(TMP, 'kickoff-context-isolated'),
+    intake: COMPLETE_INTAKE,
+    previewModule: 'kickoff-context',
+  });
+  eq(result.manifest.preview_module, 'kickoff-context');
+  eq(result.renderedDoc.sections.map((section) => section.view), ['agenda', 'working-agreement']);
+  includes(result.html, 'class="agenda"');
+  includes(result.html, '<details class="agenda-item__disclosure"');
+  includes(result.html, 'Meet the people responsible for the engagement');
+  const agendaGroups = [...result.html.matchAll(/name="(agenda-[^"]+)"/g)].map((match) => match[1]);
+  ok(agendaGroups.length > 1, 'expected multiple clickable agenda items');
+  ok(agendaGroups.every((name) => name === agendaGroups[0]), 'agenda items must share one exclusive disclosure group');
+  ok(!result.html.includes('Core team &amp; roles'), 'another module leaked into the isolated preview');
 });
 
 test('layout: components keep content visible and constrain data-driven columns', () => {
@@ -492,9 +529,9 @@ test('layout: components keep content visible and constrain data-driven columns'
   includes(componentsCss, 'overflow-wrap: anywhere;', 'long client-provided content must be able to wrap');
 });
 
-test('build: the minimal YAML fixture and its JSON twin render identically', () => {
-  const y = build(path.join(FIXTURES, 'valid-minimal.yaml'), { out: path.join(TMP, 'yaml'), intake: COMPLETE_INTAKE });
-  const j = build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json2'), intake: COMPLETE_INTAKE });
+test('build: the minimal YAML fixture and its JSON twin render identically', async () => {
+  const y = await build(path.join(FIXTURES, 'valid-minimal.yaml'), { out: path.join(TMP, 'yaml'), intake: COMPLETE_INTAKE });
+  const j = await build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json2'), intake: COMPLETE_INTAKE });
   eq(y.html, j.html, 'the YAML and JSON inputs produced different HTML');
 });
 
@@ -511,36 +548,36 @@ test('build: a non-numeric KPI value degrades to a plain render', () => {
   includes(example.html, 'data-count-to="6"');
 });
 
-test('build: content is escaped, not injected', () => {
-  const doc = content();
+test('build: content is escaped, not injected', async () => {
+  const doc = JSON.parse(readFileSync(path.join(FIXTURES, 'valid-minimal.json'), 'utf8'));
   doc.meta.client = '<script>alert(1)</script>';
   writeFileSync(path.join(TMP, 'xss.json'), JSON.stringify(doc));
-  const result = build(path.join(TMP, 'xss.json'), { out: path.join(TMP, 'xss'), intake: COMPLETE_INTAKE });
+  const result = await build(path.join(TMP, 'xss.json'), { out: path.join(TMP, 'xss'), intake: COMPLETE_INTAKE });
   ok(!result.html.includes('<script>alert(1)</script>'), 'unescaped content reached the output');
   includes(result.html, '&lt;script&gt;');
 });
 
-test('build: incomplete drafts show a summary and contextual missing question', () => {
-  const result = build(EXAMPLE, { out: path.join(TMP, 'incomplete'), intake: INCOMPLETE_INTAKE });
+test('build: incomplete drafts show a summary and contextual missing question', async () => {
+  const result = await build(EXAMPLE, { out: path.join(TMP, 'incomplete'), intake: INCOMPLETE_INTAKE });
   includes(result.html, 'Required information still open');
   includes(result.html, 'What is the authoritative source for project status?');
   includes(result.html, 'This section is incomplete');
   eq(result.manifest.unresolved_required_questions, ['ways-of-working.status-source']);
 });
 
-test('build: an explicitly confirmed final build may retain required gaps', () => {
+test('build: an explicitly confirmed final build may retain required gaps', async () => {
   const intake = writeIntake('confirmed-final-intake', {
     missing: ['ways-of-working.status-source'],
     buildStatus: 'final',
     confirmAt: '2026-09-02T12:00:00Z',
   });
-  const result = build(EXAMPLE, { out: path.join(TMP, 'confirmed-final'), intake });
+  const result = await build(EXAMPLE, { out: path.join(TMP, 'confirmed-final'), intake });
   eq(result.manifest.build_status, 'final');
   includes(result.html, 'What is the authoritative source for project status?');
 });
 
-test('detach: incomplete builds require confirmation and rebuild from local source', () => {
-  const built = build(EXAMPLE, { out: path.join(TMP, 'detach-source'), intake: INCOMPLETE_INTAKE });
+test('detach: incomplete builds require confirmation and rebuild from local source', async () => {
+  const built = await build(EXAMPLE, { out: path.join(TMP, 'detach-source'), intake: INCOMPLETE_INTAKE });
   const packageDir = path.join(TMP, 'detached-package');
   const err = throws(() => detachBuild(built.outDir, packageDir));
   includes(err.message, '--confirm-incomplete');
@@ -826,7 +863,7 @@ console.log('');
 for (const { name, fn } of tests) {
   if (only && !name.includes(only)) continue;
   try {
-    fn();
+    await fn();
     passed++;
     console.log(`  ${style.green('ok')}   ${name}`);
   } catch (err) {

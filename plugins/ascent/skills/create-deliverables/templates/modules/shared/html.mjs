@@ -1,5 +1,5 @@
 /**
- * components.mjs — the component registry.
+ * html.mjs: shared HTML renderers for reusable deliverable modules.
  *
  * Every component is a pure function `(section, ctx) => htmlString`, registered
  * by section type. Components emit semantic HTML, declare motion with a
@@ -9,7 +9,7 @@
  * than authored in `sections`, so they take the document meta instead.
  */
 
-import { resolveSectionType } from './content.mjs';
+import { resolveSectionType } from '../../../scripts/lib/content.mjs';
 
 /* ==========================================================================
    HTML helpers
@@ -161,7 +161,8 @@ function renderProseBox(section) {
       </div>`;
 }
 
-export const COMPONENTS = {
+export const RENDERERS = {
+  cover: renderCover,
   'exec-summary': renderProseBox,
   purpose: renderProseBox,
 
@@ -345,10 +346,19 @@ export const COMPONENTS = {
       </div>`,
 
   agenda: (section) => {
+    const groupName = `agenda-${slug(section.title ?? 'agenda')}`;
     const items = section.items.map((item, i) => `
           <li class="agenda-item" data-motion-item>
-            <span class="agenda-item__index" aria-hidden="true">${i + 1}</span>
-            <span>${typeset(item)}</span>
+            <details class="agenda-item__disclosure" name="${esc(groupName)}">
+              <summary class="agenda-item__summary">
+                <span class="agenda-item__index" aria-hidden="true">${i + 1}</span>
+                <span>${typeset(item.title)}</span>
+                <span class="agenda-item__indicator" aria-hidden="true"></span>
+              </summary>
+              <div class="agenda-item__card">
+                <div class="prose">${renderProse(item.detail)}</div>
+              </div>
+            </details>
           </li>`).join('');
     return `
       <ol class="agenda" data-motion="stagger-up">${items}
@@ -474,9 +484,9 @@ export function renderFooter(meta, ctx) {
 }
 
 /** Wrap an authored section in its chrome. */
-export function renderSection(section, index, ctx) {
+export function renderSection(section, index, ctx, renderer = null) {
   const type = resolveSectionType(section.type);
-  const component = COMPONENTS[type];
+  const component = renderer ?? RENDERERS[type];
   if (!component) throw new Error(`internal: no component registered for \`${type}\``);
 
   const id = sectionId(section, index);

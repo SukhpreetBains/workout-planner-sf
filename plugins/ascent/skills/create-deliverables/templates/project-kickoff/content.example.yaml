@@ -15,8 +15,8 @@ meta:
   accent: cyan
 
 sections:
-  - type: purpose
-    module: objectives-and-scope
+  - module: objectives-and-scope
+    view: purpose
     title: Purpose & scope
     body: |
       This kickoff aligns the core discovery team on why we are here, how we
@@ -30,20 +30,27 @@ sections:
       Nothing decided today is final. Discovery is where we test assumptions
       together before committing to a design.
 
-  - type: agenda
-    module: kickoff-context
+  - module: kickoff-context
+    view: agenda
     title: Today's agenda
     items:
-      - Introductions
-      - Purpose and scope
-      - Core team and roles
-      - Approach and timeline
-      - Key deliverables
-      - Risks and open questions
-      - Next steps
+      - title: Introductions
+        detail: Meet the people responsible for the engagement and understand the perspective each person brings.
+      - title: Purpose and scope
+        detail: Review why the work is starting, what outcomes matter, and which topics are inside or outside this phase.
+      - title: Core team and roles
+        detail: Clarify delivery responsibilities, client ownership, decision rights, and escalation paths.
+      - title: Approach and timeline
+        detail: Walk through the planned phases, major activities, milestones, and review points.
+      - title: Key deliverables
+        detail: Confirm what the team will produce, who will review each deliverable, and how acceptance will work.
+      - title: Risks and open questions
+        detail: Surface known risks, assumptions, issues, dependencies, and questions that need early resolution.
+      - title: Next steps
+        detail: Agree on immediate actions, owners, due dates, and the next working session.
 
-  - type: kpi-row
-    module: objectives-and-scope
+  - module: objectives-and-scope
+    view: success-measures
     title: Engagement at a glance
     items:
       - value: 6
@@ -57,8 +64,8 @@ sections:
         label: Store associates represented in prototype review
         source: Fictional workshop plan
 
-  - type: table
-    module: team-and-responsibilities
+  - module: team-and-responsibilities
+    view: team
     title: Core team & roles
     columns: [Name, Role, Organization, Responsibility]
     rows:
@@ -69,8 +76,8 @@ sections:
       - cells: [Owen Fielder, Director of Store Operations, Meridian Outfitters, Store-associate console requirements and sign-off]
       - cells: [Aliyah Brandt, IT Program Manager, Meridian Outfitters, Internal coordination and system access]
 
-  - type: roadmap
-    module: delivery-approach
+  - module: delivery-approach
+    view: timeline
     title: Approach & timeline
     phases:
       - name: Prepare & mobilize
@@ -97,8 +104,8 @@ sections:
           - Prioritized backlog and implementation roadmap approved
           - Design/deliver phase plan and staffing confirmed
 
-  - type: table
-    module: discovery-and-deliverables
+  - module: discovery-and-deliverables
+    view: deliverables
     title: Key deliverables
     columns: [Deliverable, Description, Owner]
     rows:
@@ -107,8 +114,8 @@ sections:
       - cells: [Implementation roadmap, Sequenced phases and a prioritized backlog for the design/deliver phase, Slalom]
       - cells: [Workshop participation, Subject-matter experts available for scheduled Learn-phase sessions, Meridian Outfitters]
 
-  - type: theme-group
-    module: raid
+  - module: raid
+    view: summary
     title: Risks & open questions
     findings:
       - theme: Store-associate console requirements are not yet documented
@@ -122,8 +129,8 @@ sections:
         severity: medium
         icon: search
 
-  - type: table
-    module: ways-of-working
+  - module: ways-of-working
+    view: logistics
     title: Ways of working
     columns: [Practice, Working agreement, Source of truth]
     rows:
@@ -131,8 +138,8 @@ sections:
       - cells: [Project communication, Shared project channel for decisions and working questions, Fictional collaboration plan]
       - cells: [Actions and RAID, One governed register reviewed in the weekly delivery meeting, Fictional delivery plan]
 
-  - type: heatmap
-    module: raid
+  - module: raid
+    view: risk-profile
     title: Initial risk profile
     columns: [Likelihood, Impact]
     rows:
@@ -143,14 +150,14 @@ sections:
         values: [3, 4]
         note: Directional kickoff view, pending a data audit
 
-  - type: quote
-    module: kickoff-context
+  - module: kickoff-context
+    view: working-agreement
     quote: We need one shared picture of what success means before solution decisions begin.
     name: Executive sponsor
     attribution_title: Meridian Outfitters
 
-  - type: next-steps
-    module: immediate-next-steps
+  - module: immediate-next-steps
+    view: actions
     title: Next steps
     items:
       - Confirm workshop attendee list by end of week

@@ -6,6 +6,7 @@
  *
  *   --out <dir>       output directory (default ./build/<client>-<archetype>)
  *   --intake <file>   question coverage and evidence record for modular templates
+ *   --preview-module  render only one module for isolated visual review
  *   --bundle          also emit bundle.html, everything inlined into one file
  *   --no-validate     skip the brand gate for iteration only
  *
@@ -19,14 +20,15 @@ import process from 'node:process';
 
 import { ContentError, parseContentFile, resolveSectionType, validateContent } from './lib/content.mjs';
 import {
-  INCOMPLETE_CONSEQUENCES, decorateContentWithGaps, loadAndEvaluateIntake, loadTemplateModules,
+  INCOMPLETE_CONSEQUENCES, decorateContentWithGaps, loadAndEvaluateIntake, loadModuleRenderers,
+  loadTemplateModules, resolveGuidedContent,
 } from './lib/intake.mjs';
 import {
   AssetError, SKILL_ROOT, copyAssets, copyOwnAssets, listIconNames, logoVariantFor,
 } from './lib/assets.mjs';
 import {
   esc, railLabel, renderCover, renderFooter, renderRail, renderSection, sectionId,
-} from './lib/components.mjs';
+} from '../templates/modules/shared/html.mjs';
 import { Report, fatal, style } from './lib/report.mjs';
 import { writeBundle } from './lib/bundle.mjs';
 import { validateBuild } from './validate-brand.mjs';
@@ -36,11 +38,12 @@ import { validateBuild } from './validate-brand.mjs';
    ========================================================================== */
 
 function parseArgs(argv) {
-  const opts = { content: null, out: null, intake: null, bundle: false, validate: true };
+  const opts = { content: null, out: null, intake: null, previewModule: null, bundle: false, validate: true };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--out') opts.out = argv[++i];
     else if (arg === '--intake') opts.intake = argv[++i];
+    else if (arg === '--preview-module') opts.previewModule = argv[++i];
     else if (arg === '--bundle') opts.bundle = true;
     else if (arg === '--no-validate') opts.validate = false;
     else if (arg === '-h' || arg === '--help') opts.help = true;
@@ -53,7 +56,7 @@ function parseArgs(argv) {
 }
 
 const USAGE = `
-  node scripts/build.mjs <content.yaml|.json> [--intake <file>] [--out <dir>] [--bundle] [--no-validate]
+  node scripts/build.mjs <content.yaml|.json> [--intake <file>] [--preview-module <id>] [--out <dir>] [--bundle] [--no-validate]
 `;
 
 /* ==========================================================================
@@ -85,14 +88,19 @@ function longDate(iso) {
     .format(new Date(y, m - 1, d));
 }
 
-export function renderDocument(doc, ctx) {
+export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRenderer = null) {
   const { meta, sections } = doc;
   const railEntries = sections.map((section, i) => ({
     id: sectionId(section, i),
     label: railLabel(section),
   }));
 
-  const body = sections.map((section, i) => renderSection(section, i, ctx)).join('\n');
+  const body = sections.map((section, i) => {
+    const renderer = section.module && section.view
+      ? moduleRenderers.get(`${section.module}:${section.view}`)
+      : null;
+    return renderSection(section, i, ctx, renderer);
+  }).join('\n');
   const description = meta.subtitle
     ? `${meta.title} — ${meta.subtitle}`
     : meta.title;
@@ -117,7 +125,7 @@ export function renderDocument(doc, ctx) {
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <div class="page">
-${renderCover(meta, ctx)}
+${(coverRenderer ?? renderCover)(meta, ctx)}
 ${renderRail(railEntries)}
     <main id="main">
 ${body}
@@ -134,7 +142,9 @@ ${renderFooter(meta, ctx)}
    Build
    ========================================================================== */
 
-export function build(contentPath, { out = null, intake: intakePath = null, bundle = false } = {}) {
+export async function build(contentPath, {
+  out = null, intake: intakePath = null, previewModule = null, bundle = false,
+} = {}) {
   const absContent = path.resolve(contentPath);
   const contentDir = path.dirname(absContent);
 
@@ -143,21 +153,25 @@ export function build(contentPath, { out = null, intake: intakePath = null, bund
   const raw = parseContentFile(absContent);
   const archetypeName = raw?.meta?.archetype;
   const archetype = loadArchetype(archetypeName);
-  const doc = validateContent(raw, { archetype, iconNames: listIconNames() });
-  const { meta, sections } = doc;
   const modules = loadTemplateModules(archetype, SKILL_ROOT);
+  const guidedRaw = resolveGuidedContent(raw, modules);
+  const doc = validateContent(guidedRaw, { archetype, iconNames: listIconNames() });
+  const { meta, sections } = doc;
+  const moduleRenderers = await loadModuleRenderers(modules);
   const intake = modules.length
     ? loadAndEvaluateIntake(intakePath, archetype, modules)
     : null;
-  if (modules.length) {
-    const moduleIds = new Set(modules.map((module) => module.id));
-    const unknown = sections.filter((section) => section.module && !moduleIds.has(section.module));
-    if (unknown.length) {
-      throw new ContentError(unknown.map((section) =>
-        `section \`${section.title ?? section.type}\` names unknown module \`${section.module}\``));
+  let renderedDoc = decorateContentWithGaps(doc, intake, modules);
+  if (previewModule) {
+    if (!modules.some((module) => module.id === previewModule)) {
+      throw new ContentError(`preview module \`${previewModule}\` is not selected by this template`);
     }
+    const previewSections = renderedDoc.sections.filter((section) => section.module === previewModule);
+    if (previewSections.length === 0) {
+      throw new ContentError(`content has no authored sections for preview module \`${previewModule}\``);
+    }
+    renderedDoc = { ...renderedDoc, sections: previewSections };
   }
-  const renderedDoc = decorateContentWithGaps(doc, intake, modules);
 
   // 2. Work out which brand assets this particular deliverable needs.
   const coverSurface = archetype.cover_surface ?? 'blue';
@@ -199,7 +213,16 @@ export function build(contentPath, { out = null, intake: intakePath = null, bund
     buildStatus: intake?.buildStatus ?? 'final',
   };
 
-  const html = renderDocument(renderedDoc, ctx);
+  const coverViews = modules.flatMap((module) => module.output
+    .filter((output) => output.type === 'cover')
+    .map((output) => ({ module, output })));
+  if (modules.length && coverViews.length !== 1) {
+    throw new ContentError(`a guided template must select exactly one cover view, found ${coverViews.length}`);
+  }
+  const coverRenderer = coverViews.length
+    ? moduleRenderers.get(`${coverViews[0].module.id}:${coverViews[0].output.id}`)
+    : null;
+  const html = renderDocument(renderedDoc, ctx, moduleRenderers, coverRenderer);
   writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');
 
   // 4. A machine-readable record of what the build intended, so the validator
@@ -224,6 +247,7 @@ export function build(contentPath, { out = null, intake: intakePath = null, bund
     unresolved_required_questions: intake?.requiredGaps.map((gap) => gap.id) ?? [],
     unresolved_optional_questions: intake?.optionalGaps.map((gap) => gap.id) ?? [],
     required_gaps_override_confirmed_at: intake?.overrideConfirmedAt ?? null,
+    preview_module: previewModule,
   };
   writeFileSync(path.join(outDir, 'brand-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
@@ -257,7 +281,7 @@ async function main() {
 
   let result;
   try {
-    result = build(opts.content, opts);
+    result = await build(opts.content, opts);
   } catch (err) {
     if (err instanceof ContentError || err instanceof AssetError) return fatal(err);
     throw err;
@@ -271,6 +295,7 @@ async function main() {
     report.note(`questions ${result.manifest.required_question_count} required · ${result.manifest.optional_question_count} optional`);
     report.note(`open      ${result.intake.requiredGaps.length} required · ${result.intake.optionalGaps.length} optional`);
   }
+  if (result.manifest.preview_module) report.note(`preview   isolated module ${result.manifest.preview_module}`);
   if (result.bundlePath) {
     report.note(`bundle   ${path.relative(process.cwd(), result.bundlePath)} (open this one directly)`);
   }

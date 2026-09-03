@@ -3,8 +3,10 @@
 Brand-locked primitives. Archetypes are pre-composed arrangements of these, not
 a second layer of styling.
 
-Every component is a pure function `(section, ctx) => htmlString` in
-`../scripts/lib/components.mjs`, registered by section type. Every one:
+Every shared component is a pure function `(section, ctx) => htmlString` in
+`../templates/modules/shared/html.mjs`. Module definitions reference these
+renderers explicitly. A renderer used by only one module lives in that module's
+folder instead. Every renderer:
 
 - emits semantic HTML
 - declares motion with a `data-motion` attribute and contains no animation code
@@ -48,6 +50,7 @@ it. `tokens.css` declares four:
 | `surface-blue` | Slalom Blue | `--on-blue-body`, `--on-blue-display` (both white) |
 | `surface-black` | Black | `--on-black-body`, `--on-black-display` (both white) |
 | `surface-accent` | `var(--accent)` | `--on-accent-body`, `--on-accent-display` (both black) |
+| `surface-accent-light` | `var(--accent-light-3)` | `--on-accent-light-body` (black) |
 
 Two rules the validator enforces:
 
@@ -104,13 +107,16 @@ progress bar is worse than none.
 1. Add its schema to `SECTION_SCHEMA` in `scripts/lib/content.mjs`. Required
    fields are the place to encode editorial standards — `implication` is
    required for a reason.
-2. Add the render function to `COMPONENTS` in `scripts/lib/components.mjs`.
-   Semantic HTML, a `data-motion` attribute, no inline colour.
+2. Add shared HTML to `templates/modules/shared/html.mjs`, or add a local
+   `html.mjs` beside `module.json` when the markup is module-specific. Export it
+   through `RENDERERS`. Use semantic HTML, a `data-motion` attribute, and no
+   inline colour.
 3. Add its styles to `components.css` using existing tokens. If you need a value
    that is not a token, add the token to `tokens.css` — that is the only file
    allowed to hold a literal.
-4. Add the type to the relevant `archetype.json` `allowed_sections`.
-5. Add a case to `scripts/test/run.mjs` and rebuild the worked example.
+4. Reference the renderer with an explicit relative path in `module.json`.
+5. Add the type to the relevant `archetype.json` `allowed_sections`.
+6. Add a case to `scripts/test/run.mjs` and rebuild the worked example.
 
 If a component needs a colour that is not in the palette, or a text pair that is
 not in the approved table, the answer is a different design — not a new token.
