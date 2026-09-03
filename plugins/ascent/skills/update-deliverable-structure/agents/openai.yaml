@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Deliverable Structure"
+  short_description: "Create reusable deliverable modules and templates"
+  default_prompt: "Use $update-deliverable-structure to create or modify a reusable deliverable module or template, render it in isolation and in context, and iterate with me until I approve it."

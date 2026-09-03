@@ -18,7 +18,7 @@ date, decision, or answer to fill a gap.
   [references/template-system.md](references/template-system.md).
 - For changes to a generated site, read the detachment section below.
 - To create or change reusable modules or templates, invoke
-  `update-deliverable-template`. Do not turn a one-off customization into a
+  `update-deliverable-structure`. Do not turn a one-off customization into a
   shared structure without the user's explicit request.
 
 ## Guided template workflow

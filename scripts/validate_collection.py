@@ -24,7 +24,7 @@ EXPECTED_SKILLS = {
     "initial-setup",
     "interview-me",
     "investigate-project",
-    "update-deliverable-template",
+    "update-deliverable-structure",
     "project-setup",
     "recursive-improvement",
     "utilities-ui-generation",

@@ -1,9 +1,9 @@
 ---
-name: update-deliverable-template
+name: update-deliverable-structure
 description: "Create or modify reusable create-deliverables modules and templates with overlap analysis, module-owned renderers, shared primitives, UI-generation review, tests, and iterative isolated and in-context visual approval."
 ---
 
-# Update deliverable template
+# Update deliverable structure
 
 Create reusable structure for `create-deliverables`. Use this skill only when
 the user wants a customization promoted into a shared module or template, or
