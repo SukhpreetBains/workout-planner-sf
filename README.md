@@ -58,7 +58,7 @@ The planned `download-teams-transcripts` skill is not yet an executable workflow
 | Skill | Call it when |
 | --- | --- |
 | `create-deliverables` | A discovery readout, findings summary, roadmap, or business case should be delivered as an interactive Slalom-branded web microsite. |
-| `modify-deliverable-structure` | You need to create or revise a reusable content module or template, validate it in isolation and in context, and obtain visual approval. |
+| `update-deliverable-template` | You need to create or revise a reusable content module or template, validate it in isolation and in context, and obtain visual approval. |
 
 The planned `compose-deliverable` skill is not yet an executable workflow. It
 will create a native, editable Slalom-branded PowerPoint deck from approved

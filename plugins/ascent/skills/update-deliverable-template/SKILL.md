@@ -1,9 +1,9 @@
 ---
-name: modify-deliverable-structure
+name: update-deliverable-template
 description: "Create or modify reusable create-deliverables modules and templates with validated questions, mappings, tests, and iterative isolated and in-context visual review."
 ---
 
-# Modify deliverable structure
+# Update deliverable template
 
 Create reusable structure for `create-deliverables`. Use this skill only when
 the user wants a customization promoted into a shared module or template, or
