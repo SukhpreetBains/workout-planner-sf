@@ -7,35 +7,6 @@ gets injected, and the default motion level. It adds no styling of its own.
 Manifests live at `templates/<name>/archetype.json`, with a complete worked
 example alongside at `content.example.yaml`.
 
-## `executive-readout`
-
-Discovery findings for an executive audience. Reads top to bottom in ten minutes
-and prints as a defensible record.
-
-| | |
-|---|---|
-| Cover surface | Slalom Blue (white logo, colour bar with the blue swatch at Dark 3) |
-| Footer surface | Black |
-| Required | `exec-summary`, `theme-group`, `recommendations`, `next-steps` |
-| Also allowed | `kpi-row`, `quote`, `heatmap`, `roadmap`/`timeline`, `methodology` |
-| Injected | `cover`, `progress-rail`, `footer` |
-
-Recommended order:
-
-`exec-summary` → `kpi-row` → `theme-group` → `quote` → `heatmap` →
-`recommendations` → `roadmap` → `next-steps` → `methodology`
-
-The reasoning behind the required set:
-
-- **`exec-summary` first.** An executive who reads one block reads that one.
-- **`theme-group` and `recommendations` are both required** because a readout
-  that observes without recommending is a status report, and one that recommends
-  without evidence is an opinion.
-- **`next-steps` is required** because a readout that ends without an ask
-  produces no decision.
-- **`methodology` sits last.** It is the defensibility appendix, not the
-  argument.
-
 ## `project-kickoff`
 
 The first client-facing session of an engagement: who is on the team, what
@@ -47,7 +18,7 @@ expectations rather than reporting findings.
 | Cover surface | Slalom Blue (white logo, colour bar with the blue swatch at Dark 3) |
 | Footer surface | Black |
 | Required | `purpose`, `agenda`, `table`, `roadmap`, `next-steps` |
-| Also allowed | `kpi-row`, `timeline`, `theme-group`, `quote` |
+| Also allowed | `kpi-row`, `timeline`, `theme-group`, `heatmap`, `quote` |
 | Injected | `cover`, `progress-rail`, `footer` |
 
 Recommended order:
@@ -73,7 +44,7 @@ The reasoning behind the required set:
   covers deliverables, a workshop plan, or key assumptions elsewhere in the
   same deck, each with its own columns.
 - **`roadmap` is required** for the approach and timeline, reusing
-  `executive-readout`'s phase-and-outcome component. This is deliberately
+  the shared phase-and-outcome component. This is deliberately
   *not* a date-scaled Gantt chart — the kit does not have one, and a named
   sequence of phases with outcomes is enough to set expectations at kickoff.
   `timeline` (the alias) is allowed if a second, later-stage view is needed.

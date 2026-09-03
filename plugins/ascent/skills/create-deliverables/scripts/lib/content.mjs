@@ -305,7 +305,11 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
           problems.push(`${where}: the \`${archetype.name}\` archetype does not permit a \`${rawType}\` section (it allows: ${allowed.join(', ')})`);
         }
       }
-      checkFields(section, { type: { type: 'string', required: true }, ...schema }, where, problems, ctx);
+      checkFields(section, {
+        type: { type: 'string', required: true },
+        module: { type: 'string' },
+        ...schema,
+      }, where, problems, ctx);
     });
 
     if (archetype?.required_sections?.length) {

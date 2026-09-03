@@ -4,9 +4,10 @@
  *
  *   node scripts/build.mjs <content.yaml|.json> [options]
  *
- *   --out <dir>     output directory (default ./build/<client>-<archetype>)
- *   --bundle        also emit bundle.html, everything inlined into one file
- *   --no-validate   skip the brand gate (for iterating only — never for handoff)
+ *   --out <dir>       output directory (default ./build/<client>-<archetype>)
+ *   --intake <file>   question coverage and evidence record for modular templates
+ *   --bundle          also emit bundle.html, everything inlined into one file
+ *   --no-validate     skip the brand gate for iteration only
  *
  * The microsite is a pure function of the content file. Nobody hand-edits the
  * output: change the content and rebuild.
@@ -17,6 +18,9 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { ContentError, parseContentFile, resolveSectionType, validateContent } from './lib/content.mjs';
+import {
+  INCOMPLETE_CONSEQUENCES, decorateContentWithGaps, loadAndEvaluateIntake, loadTemplateModules,
+} from './lib/intake.mjs';
 import {
   AssetError, SKILL_ROOT, copyAssets, copyOwnAssets, listIconNames, logoVariantFor,
 } from './lib/assets.mjs';
@@ -32,10 +36,11 @@ import { validateBuild } from './validate-brand.mjs';
    ========================================================================== */
 
 function parseArgs(argv) {
-  const opts = { content: null, out: null, bundle: false, validate: true };
+  const opts = { content: null, out: null, intake: null, bundle: false, validate: true };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--out') opts.out = argv[++i];
+    else if (arg === '--intake') opts.intake = argv[++i];
     else if (arg === '--bundle') opts.bundle = true;
     else if (arg === '--no-validate') opts.validate = false;
     else if (arg === '-h' || arg === '--help') opts.help = true;
@@ -48,7 +53,7 @@ function parseArgs(argv) {
 }
 
 const USAGE = `
-  node scripts/build.mjs <content.yaml|.json> [--out <dir>] [--bundle] [--no-validate]
+  node scripts/build.mjs <content.yaml|.json> [--intake <file>] [--out <dir>] [--bundle] [--no-validate]
 `;
 
 /* ==========================================================================
@@ -93,7 +98,7 @@ export function renderDocument(doc, ctx) {
     : meta.title;
 
   return `<!doctype html>
-<html lang="en" data-accent="${esc(meta.accent)}">
+<html lang="en" data-accent="${esc(meta.accent)}" data-deliverable-status="${esc(ctx.buildStatus ?? 'final')}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -129,7 +134,7 @@ ${renderFooter(meta, ctx)}
    Build
    ========================================================================== */
 
-export function build(contentPath, { out = null, bundle = false } = {}) {
+export function build(contentPath, { out = null, intake: intakePath = null, bundle = false } = {}) {
   const absContent = path.resolve(contentPath);
   const contentDir = path.dirname(absContent);
 
@@ -140,6 +145,19 @@ export function build(contentPath, { out = null, bundle = false } = {}) {
   const archetype = loadArchetype(archetypeName);
   const doc = validateContent(raw, { archetype, iconNames: listIconNames() });
   const { meta, sections } = doc;
+  const modules = loadTemplateModules(archetype, SKILL_ROOT);
+  const intake = modules.length
+    ? loadAndEvaluateIntake(intakePath, archetype, modules)
+    : null;
+  if (modules.length) {
+    const moduleIds = new Set(modules.map((module) => module.id));
+    const unknown = sections.filter((section) => section.module && !moduleIds.has(section.module));
+    if (unknown.length) {
+      throw new ContentError(unknown.map((section) =>
+        `section \`${section.title ?? section.type}\` names unknown module \`${section.module}\``));
+    }
+  }
+  const renderedDoc = decorateContentWithGaps(doc, intake, modules);
 
   // 2. Work out which brand assets this particular deliverable needs.
   const coverSurface = archetype.cover_surface ?? 'blue';
@@ -178,9 +196,10 @@ export function build(contentPath, { out = null, bundle = false } = {}) {
       return found;
     },
     dateLong: longDate(meta.date),
+    buildStatus: intake?.buildStatus ?? 'final',
   };
 
-  const html = renderDocument(doc, ctx);
+  const html = renderDocument(renderedDoc, ctx);
   writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');
 
   // 4. A machine-readable record of what the build intended, so the validator
@@ -198,13 +217,20 @@ export function build(contentPath, { out = null, bundle = false } = {}) {
     icons: Object.keys(assets.icons),
     fonts: assets.fonts,
     bundle: Boolean(bundle),
+    template_mode: modules.length ? 'guided' : 'legacy',
+    build_status: intake?.buildStatus ?? 'final',
+    required_question_count: intake?.answers.filter((answer) => answer.tier === 'required').length ?? 0,
+    optional_question_count: intake?.answers.filter((answer) => answer.tier === 'optional').length ?? 0,
+    unresolved_required_questions: intake?.requiredGaps.map((gap) => gap.id) ?? [],
+    unresolved_optional_questions: intake?.optionalGaps.map((gap) => gap.id) ?? [],
+    required_gaps_override_confirmed_at: intake?.overrideConfirmedAt ?? null,
   };
   writeFileSync(path.join(outDir, 'brand-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
   let bundlePath = null;
   if (bundle) bundlePath = writeBundle(outDir);
 
-  return { outDir, html, manifest, assets, bundlePath, doc, archetype };
+  return { outDir, html, manifest, assets, bundlePath, doc, renderedDoc, archetype, modules, intake };
 }
 
 function slugify(text) {
@@ -241,11 +267,28 @@ async function main() {
   report.note(`output   ${path.relative(process.cwd(), result.outDir) || '.'}`);
   report.note(`archetype ${result.manifest.archetype} · accent ${result.manifest.accent}`);
   report.note(`sections ${result.doc.sections.length}`);
+  if (result.intake) {
+    report.note(`questions ${result.manifest.required_question_count} required · ${result.manifest.optional_question_count} optional`);
+    report.note(`open      ${result.intake.requiredGaps.length} required · ${result.intake.optionalGaps.length} optional`);
+  }
   if (result.bundlePath) {
     report.note(`bundle   ${path.relative(process.cwd(), result.bundlePath)} (open this one directly)`);
   }
   report.note(`preview  cd ${path.relative(process.cwd(), result.outDir) || '.'} && python3 -m http.server 8000`);
   report.print();
+
+  if (result.intake?.requiredGaps.length) {
+    console.log(`  ${style.yellow('Required information warning')}  ${result.intake.requiredGaps.length} required answers remain unresolved.`);
+    for (const consequence of INCOMPLETE_CONSEQUENCES) console.log(`  ${style.yellow('WARN')} ${consequence}`);
+    if (result.intake.buildStatus === 'final') {
+      console.log(`  ${style.yellow('WARN')} The user explicitly confirmed a final build with required gaps at ${result.intake.overrideConfirmedAt}.`);
+    }
+    console.log('');
+  }
+  if (result.intake?.optionalGaps.length) {
+    console.log(`  ${style.yellow('Optional information warning')}  ${result.intake.optionalGaps.length} optional answers were not provided. They are not rendered.`);
+    console.log('');
+  }
 
   if (!opts.validate) {
     console.log(`  ${style.yellow('The brand gate was skipped. Nothing here is cleared for a client.')}\n`);

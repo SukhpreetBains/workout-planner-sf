@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "ways-of-working",
+  "title": "Ways of working and logistics",
+  "description": "Defines working hours, communication, storage, tracking, access, meetings, reporting, and operating conventions.",
+  "questions": [
+    {"id":"ways-of-working.hours-and-time-zones","tier":"required","prompt":"What are the team's normal working hours and time zones?","answer_type":"table","source_ref":"6.required.1"},
+    {"id":"ways-of-working.communication-platform","tier":"required","prompt":"What communication platform will be used?","answer_type":"text","source_ref":"6.required.2"},
+    {"id":"ways-of-working.document-location","tier":"required","prompt":"Where will project documents and decisions be stored?","answer_type":"text","source_ref":"6.required.3"},
+    {"id":"ways-of-working.tracking-system","tier":"required","prompt":"What system will track work, actions, risks, and issues?","answer_type":"text","source_ref":"6.required.4"},
+    {"id":"ways-of-working.access-needs","tier":"required","prompt":"What hardware, accounts, environments, licenses, or permissions are required?","answer_type":"list","source_ref":"6.required.5"},
+    {"id":"ways-of-working.status-source","tier":"required","prompt":"What is the authoritative source for project status?","answer_type":"text","source_ref":"6.required.6"},
+    {"id":"ways-of-working.recurring-meetings","tier":"required","prompt":"Which recurring meetings are required?","answer_type":"list","source_ref":"6.required.7"},
+    {"id":"ways-of-working.meeting-details","tier":"required","prompt":"What are the purpose, owner, attendees, and frequency of each essential meeting?","answer_type":"table","source_ref":"6.required.8"},
+    {"id":"ways-of-working.status-reporting","tier":"required","prompt":"How and how often will project status be reported?","answer_type":"text","source_ref":"6.required.9"},
+    {"id":"ways-of-working.response-times","tier":"optional","prompt":"What response-time expectations apply to messages and decisions?","answer_type":"text","source_ref":"6.optional.1"},
+    {"id":"ways-of-working.async-topics","tier":"optional","prompt":"Which discussions should occur asynchronously?","answer_type":"list","source_ref":"6.optional.2"},
+    {"id":"ways-of-working.conventions","tier":"optional","prompt":"What naming, filing, or documentation conventions should the team follow?","answer_type":"list","source_ref":"6.optional.3"},
+    {"id":"ways-of-working.templates","tier":"optional","prompt":"What templates should be used for status reports, decisions, or meeting notes?","answer_type":"list","source_ref":"6.optional.4"},
+    {"id":"ways-of-working.scheduling-process","tier":"optional","prompt":"What is the preferred process for scheduling workshops?","answer_type":"text","source_ref":"6.optional.5"},
+    {"id":"ways-of-working.advance-notice","tier":"optional","prompt":"How much advance notice do stakeholders require?","answer_type":"text","source_ref":"6.optional.6"},
+    {"id":"ways-of-working.meeting-preferences","tier":"optional","prompt":"Are there preferred meeting days or no-meeting periods?","answer_type":"schedule","source_ref":"6.optional.7"},
+    {"id":"ways-of-working.workstream-channels","tier":"optional","prompt":"Should specialized chat channels be created for individual workstreams?","answer_type":"list","source_ref":"6.optional.8"}
+  ],
+  "default_output": [
+    {"component":"table","uses":["ways-of-working.hours-and-time-zones","ways-of-working.communication-platform","ways-of-working.document-location","ways-of-working.tracking-system","ways-of-working.status-source"]},
+    {"component":"table","uses":["ways-of-working.recurring-meetings","ways-of-working.meeting-details","ways-of-working.status-reporting"]}
+  ]
+}

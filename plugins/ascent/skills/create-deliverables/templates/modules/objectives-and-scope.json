@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "objectives-and-scope",
+  "title": "Business context, objectives, and scope",
+  "description": "Establishes why the project exists, whom it serves, what it includes, and how success and completion are understood.",
+  "questions": [
+    {"id":"objectives-and-scope.business-context","tier":"required","prompt":"What business problem or opportunity prompted the project?","answer_type":"text","source_ref":"2.required.1"},
+    {"id":"objectives-and-scope.objectives","tier":"required","prompt":"What are the primary objectives?","answer_type":"list","source_ref":"2.required.2"},
+    {"id":"objectives-and-scope.beneficiaries","tier":"required","prompt":"Who are the intended users, customers, or beneficiaries?","answer_type":"people","source_ref":"2.required.3"},
+    {"id":"objectives-and-scope.affected-workflows","tier":"required","prompt":"Which workflows, experiences, or processes will be affected?","answer_type":"list","source_ref":"2.required.4"},
+    {"id":"objectives-and-scope.included-capabilities","tier":"required","prompt":"What use cases or capabilities are included?","answer_type":"list","source_ref":"2.required.5"},
+    {"id":"objectives-and-scope.success-measures","tier":"required","prompt":"What measurable outcomes will indicate success?","answer_type":"list","source_ref":"2.required.6"},
+    {"id":"objectives-and-scope.in-scope","tier":"required","prompt":"What is explicitly in scope?","answer_type":"list","source_ref":"2.required.7"},
+    {"id":"objectives-and-scope.out-of-scope","tier":"required","prompt":"What is explicitly out of scope?","answer_type":"list","source_ref":"2.required.8"},
+    {"id":"objectives-and-scope.acceptance-outcome","tier":"required","prompt":"What constitutes a completed or acceptable outcome?","answer_type":"text","source_ref":"2.required.9"},
+    {"id":"objectives-and-scope.client-responsibilities","tier":"required","prompt":"What responsibilities remain with the client or receiving organization?","answer_type":"list","source_ref":"2.required.10"},
+    {"id":"objectives-and-scope.strategy-alignment","tier":"optional","prompt":"How does the project support a broader strategy or roadmap?","answer_type":"text","source_ref":"2.optional.1"},
+    {"id":"objectives-and-scope.prioritization","tier":"optional","prompt":"How were the use cases prioritized?","answer_type":"text","source_ref":"2.optional.2"},
+    {"id":"objectives-and-scope.personas","tier":"optional","prompt":"What user personas or example scenarios illustrate the need?","answer_type":"list","source_ref":"2.optional.3"},
+    {"id":"objectives-and-scope.future-phases","tier":"optional","prompt":"What future phases or extensions are anticipated?","answer_type":"list","source_ref":"2.optional.4"},
+    {"id":"objectives-and-scope.additional-benefits","tier":"optional","prompt":"What benefits are expected beyond the immediate project?","answer_type":"list","source_ref":"2.optional.5"},
+    {"id":"objectives-and-scope.baselines","tier":"optional","prompt":"Are there baseline metrics against which improvement will be measured?","answer_type":"list","source_ref":"2.optional.6"}
+  ],
+  "default_output": [
+    {"component":"purpose","uses":["objectives-and-scope.business-context","objectives-and-scope.objectives","objectives-and-scope.in-scope","objectives-and-scope.out-of-scope"]},
+    {"component":"kpi-row","uses":["objectives-and-scope.success-measures","objectives-and-scope.baselines"]},
+    {"component":"table","uses":["objectives-and-scope.included-capabilities","objectives-and-scope.client-responsibilities","objectives-and-scope.acceptance-outcome"]}
+  ]
+}

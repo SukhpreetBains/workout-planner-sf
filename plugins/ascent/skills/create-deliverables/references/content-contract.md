@@ -15,7 +15,7 @@ Two top-level keys, `meta` and `sections`. Anything else is an error.
 
 | Field | Required | Notes |
 |---|---|---|
-| `archetype` | yes | Selects `templates/<archetype>/`. Currently `executive-readout` or `project-kickoff`. |
+| `archetype` | yes | Selects `templates/<archetype>/`. Currently `project-kickoff`. |
 | `client` | yes | The client's name as they write it. |
 | `title` | yes | Sentence case. |
 | `subtitle` | no | One line of scope or timeframe. |
@@ -39,7 +39,7 @@ remaining job is confirming nothing hardcoded a second one.
 
 ## `sections`
 
-An ordered list. Each item has a `type` and that type's fields. `cover`,
+An ordered list. Each item has a `type`, an optional `module`, and that type's fields. `module` links visible content to the reusable information domain that supplied it. `cover`,
 `progress-rail` and `footer` are injected by the archetype and are deliberately
 **not** authorable.
 

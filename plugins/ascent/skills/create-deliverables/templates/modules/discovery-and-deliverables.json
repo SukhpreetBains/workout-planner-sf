@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "discovery-and-deliverables",
+  "title": "Discovery and deliverables",
+  "description": "Defines discovery questions, sessions, participants, outputs, deliverables, approvals, and readiness for execution.",
+  "questions": [
+    {"id":"discovery-and-deliverables.discovery-questions","tier":"required","prompt":"What questions must discovery answer?","answer_type":"list","source_ref":"5.required.1"},
+    {"id":"discovery-and-deliverables.sessions","tier":"required","prompt":"What discovery sessions or workshops are required?","answer_type":"list","source_ref":"5.required.2"},
+    {"id":"discovery-and-deliverables.session-purpose","tier":"required","prompt":"What is the purpose of each session?","answer_type":"table","source_ref":"5.required.3"},
+    {"id":"discovery-and-deliverables.session-participants","tier":"required","prompt":"Who must participate?","answer_type":"table","source_ref":"5.required.4"},
+    {"id":"discovery-and-deliverables.session-outputs","tier":"required","prompt":"What output should each session produce?","answer_type":"table","source_ref":"5.required.5"},
+    {"id":"discovery-and-deliverables.deliverables","tier":"required","prompt":"What project deliverables are expected?","answer_type":"list","source_ref":"5.required.6"},
+    {"id":"discovery-and-deliverables.deliverable-content","tier":"required","prompt":"What should each deliverable contain?","answer_type":"table","source_ref":"5.required.7"},
+    {"id":"discovery-and-deliverables.deliverable-roles","tier":"required","prompt":"Who creates, reviews, and approves each deliverable?","answer_type":"table","source_ref":"5.required.8"},
+    {"id":"discovery-and-deliverables.execution-readiness","tier":"required","prompt":"What conditions must be met before execution begins?","answer_type":"list","source_ref":"5.required.9"},
+    {"id":"discovery-and-deliverables.session-schedule","tier":"optional","prompt":"What are the proposed dates and durations for each session?","answer_type":"schedule","source_ref":"5.optional.1"},
+    {"id":"discovery-and-deliverables.session-topics","tier":"optional","prompt":"What detailed topics should each session cover?","answer_type":"table","source_ref":"5.optional.2"},
+    {"id":"discovery-and-deliverables.prework","tier":"optional","prompt":"What prework, data, or documentation should attendees provide?","answer_type":"list","source_ref":"5.optional.3"},
+    {"id":"discovery-and-deliverables.formats","tier":"optional","prompt":"What format and tool should be used for each deliverable?","answer_type":"table","source_ref":"5.optional.4"},
+    {"id":"discovery-and-deliverables.follow-up-sessions","tier":"optional","prompt":"Are optional or follow-up discovery sessions anticipated?","answer_type":"list","source_ref":"5.optional.5"},
+    {"id":"discovery-and-deliverables.facilitators","tier":"optional","prompt":"Who facilitates and documents each session?","answer_type":"table","source_ref":"5.optional.6"},
+    {"id":"discovery-and-deliverables.open-question-tracking","tier":"optional","prompt":"How will unresolved discovery questions be tracked?","answer_type":"text","source_ref":"5.optional.7"},
+    {"id":"discovery-and-deliverables.due-dates","tier":"optional","prompt":"When is each deliverable due?","answer_type":"schedule","source_ref":"5.optional.8"}
+  ],
+  "default_output": [
+    {"component":"table","uses":["discovery-and-deliverables.sessions","discovery-and-deliverables.session-purpose","discovery-and-deliverables.session-participants","discovery-and-deliverables.session-outputs"]},
+    {"component":"table","uses":["discovery-and-deliverables.deliverables","discovery-and-deliverables.deliverable-content","discovery-and-deliverables.deliverable-roles","discovery-and-deliverables.due-dates"]}
+  ]
+}

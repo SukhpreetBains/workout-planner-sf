@@ -14,12 +14,13 @@
 
 The following skills are implemented: `initial-setup`, `project-setup`,
 `investigate-project`, `workspace-ingest-documents`, `workspace-review-updates`,
-`workspace-summarize`, and `utilities-ui-generation`.
+`workspace-summarize`, `create-deliverables`, `modify-deliverable-structure`, and
+`utilities-ui-generation`.
 
-Do not treat `analyze-org`, `compose-deliverable`, `create-deliverables`,
-`design-skill-evals`, `download-teams-transcripts`, `interview-me`, or
-`recursive-improvement`, including their TODO-marked references or templates,
-as executable workflows or approved delivery guidance.
+Do not treat `analyze-org`, `compose-deliverable`, `design-skill-evals`,
+`download-teams-transcripts`, `interview-me`, or `recursive-improvement`,
+including their TODO-marked references or templates, as executable workflows
+or approved delivery guidance.
 
 ## Change safety
 

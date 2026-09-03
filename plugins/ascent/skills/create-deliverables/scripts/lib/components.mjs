@@ -112,6 +112,8 @@ const EYEBROW = {
   'next-steps': 'Next steps',
   methodology: 'Method',
   agenda: 'Agenda',
+  'gap-summary': 'Incomplete draft',
+  'open-questions': 'Open questions',
 };
 
 const FALLBACK_TITLE = {
@@ -127,6 +129,8 @@ const FALLBACK_TITLE = {
   methodology: 'How we got here',
   agenda: 'Agenda',
   table: 'Details',
+  'gap-summary': 'Required information still open',
+  'open-questions': 'Open questions',
 };
 
 /** The label a section contributes to the progress rail. */
@@ -160,6 +164,27 @@ function renderProseBox(section) {
 export const COMPONENTS = {
   'exec-summary': renderProseBox,
   purpose: renderProseBox,
+
+  'gap-summary': (section) => {
+    const byModule = new Map();
+    for (const item of section.items) {
+      if (!byModule.has(item.module)) byModule.set(item.module, []);
+      byModule.get(item.module).push(item);
+    }
+    const groups = [...byModule.entries()].map(([module, items]) => `
+          <li class="gap-summary__group">
+            <h3 class="subhead">${typeset(module)}</h3>
+            <p>${items.length} required answer${items.length === 1 ? '' : 's'} still open</p>
+          </li>`).join('');
+    return `
+      <div class="gap-summary" role="status">
+        <p class="gap-summary__lead">This microsite was generated with required information still unresolved. Empty sections are intentional and must not be treated as confirmed project facts.</p>
+        <ul class="gap-summary__groups">${groups}
+        </ul>
+      </div>`;
+  },
+
+  'open-questions': (section) => renderOpenQuestions(section.items),
 
   'kpi-row': (section) => {
     const tiles = section.items.map((item) => {
@@ -469,9 +494,28 @@ export function renderSection(section, index, ctx) {
     ? `aria-labelledby="${esc(id)}-title"`
     : `aria-label="${esc(title)}"`;
 
+  const openQuestions = section._openQuestions?.length
+    ? renderOpenQuestions(section._openQuestions)
+    : '';
+
   return `
     <section class="section surface-white" id="${esc(id)}" ${labelling}>
-      <div class="section__inner">${head}${component(section, ctx)}
+      <div class="section__inner">${head}${component(section, ctx)}${openQuestions}
       </div>
     </section>`;
+}
+
+function renderOpenQuestions(items) {
+  const questions = items.map((item) => `
+          <li class="open-question">
+            <p class="eyebrow">Required answer missing</p>
+            <p class="open-question__prompt">${typeset(item.prompt)}</p>
+            <p class="open-question__id">${typeset(item.id)}</p>
+          </li>`).join('');
+  return `
+      <aside class="open-questions" aria-label="Required information still open">
+        <h3 class="subhead">This section is incomplete</h3>
+        <ul>${questions}
+        </ul>
+      </aside>`;
 }

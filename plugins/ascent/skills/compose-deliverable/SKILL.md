@@ -17,7 +17,7 @@ npm test
 npm run demo
 
 # Build approved content using the shared create-deliverables contract.
-node scripts/build.mjs ../create-deliverables/templates/executive-readout/content.example.yaml \
+node scripts/build.mjs examples/demo-content.yaml \
   --out build/executive-readout.pptx
 python3 scripts/validate_pptx.py build/executive-readout.pptx \
   --manifest build/executive-readout.manifest.json

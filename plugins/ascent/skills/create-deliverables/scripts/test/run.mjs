@@ -22,6 +22,9 @@ import { parseYaml, YamlError } from '../lib/yaml.mjs';
 import { ContentError, validateContent } from '../lib/content.mjs';
 import { SKILL_ROOT, listIconNames } from '../lib/assets.mjs';
 import { build, loadArchetype } from '../build.mjs';
+import { evaluateIntake, loadTemplateModules } from '../lib/intake.mjs';
+import { detachBuild } from '../detach.mjs';
+import { rebuildDetached } from '../rebuild-detached.mjs';
 import { validateBuild } from '../validate-brand.mjs';
 import { writeBundle } from '../lib/bundle.mjs';
 import { style } from '../lib/report.mjs';
@@ -149,28 +152,31 @@ for (const [label, source] of Object.entries(REFUSALS)) {
    2. Content validation
    ========================================================================== */
 
-const ARCHETYPE = loadArchetype('executive-readout');
+const ARCHETYPE = loadArchetype('project-kickoff');
 const ICONS = listIconNames();
 
 function content(overrides = {}) {
   const base = {
     meta: {
-      archetype: 'executive-readout',
+      archetype: 'project-kickoff',
       client: 'Test Client',
-      title: 'A minimal readout',
+      title: 'A minimal kickoff',
       date: '2026-01-15',
-      classification: 'Confidential — prepared for Test Client',
+      classification: 'Internal draft',
       accent: 'cyan',
     },
     sections: [
-      { type: 'exec-summary', body: 'One paragraph.' },
+      { type: 'purpose', module: 'objectives-and-scope', body: 'One paragraph.' },
+      { type: 'agenda', module: 'kickoff-context', items: ['One topic'] },
+      { type: 'table', module: 'team-and-responsibilities', title: 'Team', columns: ['Name'], rows: [{ cells: ['One person'] }] },
+      { type: 'roadmap', module: 'delivery-approach', phases: [{ name: 'Learn', window: 'Week 1', outcomes: ['One outcome'] }] },
       {
         type: 'theme-group',
+        module: 'raid',
         title: 'What we heard',
         findings: [{ theme: 'T', evidence: 'E', implication: 'I' }],
       },
-      { type: 'recommendations', items: [{ action: 'A', rationale: 'R' }] },
-      { type: 'next-steps', items: ['One'] },
+      { type: 'next-steps', module: 'immediate-next-steps', items: ['One'] },
     ],
   };
   return { ...structuredClone(base), ...overrides };
@@ -227,9 +233,9 @@ test('content: an unknown section type lists the valid types', () => {
 });
 
 test('content: a section the archetype forbids is an error', () => {
-  const narrow = { ...ARCHETYPE, allowed_sections: ['exec-summary'] };
+  const narrow = { ...ARCHETYPE, allowed_sections: ['purpose'] };
   const err = throws(() => validateContent(content(), { archetype: narrow, iconNames: ICONS }));
-  includes(err.message, 'does not permit a `theme-group` section');
+  includes(err.message, 'does not permit a `agenda` section');
 });
 
 test('content: a required section the archetype demands is an error when absent', () => {
@@ -264,19 +270,19 @@ test('content: an unsourced KPI is an error', () => {
 
 test('content: a finding without an implication is an error', () => {
   const doc = content();
-  delete doc.sections[1].findings[0].implication;
+  delete doc.sections[4].findings[0].implication;
   contentError(doc, 'missing required field `implication`');
 });
 
 test('content: an unapproved icon is an error', () => {
   const doc = content();
-  doc.sections[1].findings[0].icon = 'sparkle-magic';
+  doc.sections[4].findings[0].icon = 'sparkle-magic';
   contentError(doc, 'is not an approved icon');
 });
 
 test('content: a severity outside high/medium/low is an error', () => {
   const doc = content();
-  doc.sections[1].findings[0].severity = 'critical';
+  doc.sections[4].findings[0].severity = 'critical';
   contentError(doc, '`critical` is not one of high, medium, low');
 });
 
@@ -318,16 +324,87 @@ const TMP = path.join(os.tmpdir(), 'create-deliverables-tests');
 rmSync(TMP, { recursive: true, force: true });
 mkdirSync(TMP, { recursive: true });
 
-const EXAMPLE = path.join(SKILL_ROOT, 'templates', 'executive-readout', 'content.example.yaml');
+const EXAMPLE = path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'content.example.yaml');
 const FIXTURES = path.join(SKILL_ROOT, 'scripts', 'test', 'fixtures');
+const MODULES = loadTemplateModules(ARCHETYPE, SKILL_ROOT);
+
+function writeIntake(name, { missing = [], buildStatus = 'draft', confirmAt = null } = {}) {
+  const missingIds = new Set(missing);
+  const answers = {};
+  for (const module of MODULES) {
+    for (const question of module.questions) {
+      answers[question.id] = question.tier === 'optional' || missingIds.has(question.id)
+        ? { status: 'missing' }
+        : {
+          status: 'answered',
+          answer: question.answer_type === 'date'
+            ? '2026-03-02'
+            : ['text', 'person', 'decision'].includes(question.answer_type)
+              ? 'Covered by the fictional project-kickoff example.'
+              : ['Covered by the fictional project-kickoff example.'],
+          answered_by: 'source',
+          disposition: 'rendered',
+          sources: [{ source_id: 'fictional-example', locator: 'templates/project-kickoff/content.example.yaml' }],
+        };
+    }
+  }
+  const file = path.join(TMP, `${name}.json`);
+  writeFileSync(file, JSON.stringify({
+    schema_version: 1,
+    template: 'project-kickoff',
+    build_status: buildStatus,
+    optional_review: 'skipped',
+    answers,
+    ...(confirmAt ? { override: { required_gaps_confirmed_at: confirmAt } } : {}),
+  }));
+  return file;
+}
+
+const COMPLETE_INTAKE = writeIntake('complete-intake');
+const INCOMPLETE_INTAKE = writeIntake('incomplete-intake', { missing: ['ways-of-working.status-source'] });
 
 let example = null;   // the reference build, shared by the validator tests
 
-test('build: the worked example builds end to end', () => {
-  example = build(EXAMPLE, { out: path.join(TMP, 'example'), bundle: true });
+test('modules: project-kickoff has eight reusable modules and the expected question tiers', () => {
+  eq(MODULES.length, 8);
+  eq(MODULES.flatMap((module) => module.questions).filter((question) => question.tier === 'required').length, 67);
+  eq(MODULES.flatMap((module) => module.questions).filter((question) => question.tier === 'optional').length, 56);
+});
+
+test('intake: only a user can mark a question not applicable', () => {
+  const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
+  raw.answers['kickoff-context.audience'] = { status: 'not_applicable', answered_by: 'source', reason: 'No audience.' };
+  const err = throws(() => evaluateIntake(raw, ARCHETYPE, MODULES));
+  includes(err.message, 'only the user may mark a question not applicable');
+});
+
+test('intake: a final build with gaps requires explicit confirmation', () => {
+  const raw = JSON.parse(readFileSync(INCOMPLETE_INTAKE, 'utf8'));
+  raw.build_status = 'final';
+  const err = throws(() => evaluateIntake(raw, ARCHETYPE, MODULES));
+  includes(err.message, 'needs override.required_gaps_confirmed_at');
+});
+
+test('intake: every answered item records its content disposition', () => {
+  const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
+  delete raw.answers['kickoff-context.audience'].disposition;
+  const err = throws(() => evaluateIntake(raw, ARCHETYPE, MODULES));
+  includes(err.message, 'requires disposition to be rendered, summarized, or supporting');
+});
+
+test('intake: source-backed answers include a citation', () => {
+  const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
+  delete raw.answers['kickoff-context.audience'].sources;
+  const err = throws(() => evaluateIntake(raw, ARCHETYPE, MODULES));
+  includes(err.message, 'source-backed answers require at least one source citation');
+});
+
+test('build: the worked project-kickoff example builds end to end', () => {
+  example = build(EXAMPLE, { out: path.join(TMP, 'example'), bundle: true, intake: COMPLETE_INTAKE });
   ok(existsSync(path.join(example.outDir, 'index.html')));
-  eq(example.manifest.archetype, 'executive-readout');
+  eq(example.manifest.archetype, 'project-kickoff');
   eq(example.manifest.accent, 'cyan');
+  eq(example.manifest.required_question_count, 67);
 });
 
 test('build: the output folder has the expected structure', () => {
@@ -342,7 +419,7 @@ test('build: the output folder has the expected structure', () => {
 });
 
 test('build: data-accent is set on <html> from meta.accent', () => {
-  includes(example.html, '<html lang="en" data-accent="cyan">');
+  includes(example.html, 'data-accent="cyan" data-deliverable-status="draft"');
 });
 
 test('build: every data-motion value has a recipe in motion.js', () => {
@@ -379,25 +456,25 @@ test('build: no .otf is ever shipped', () => {
 });
 
 test('build: icons referenced by findings are copied, unreferenced ones are not', () => {
-  eq(example.manifest.icons.sort(), ['line-graph', 'network', 'people', 'search']);
+  eq(example.manifest.icons.sort(), ['people', 'search']);
   ok(!existsSync(path.join(example.outDir, 'assets/icon-coffee.svg')));
 });
 
 test('build: a JSON content file is a first-class input', () => {
-  const result = build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json') });
-  includes(result.html, 'A minimal readout');
+  const result = build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json'), intake: COMPLETE_INTAKE });
+  includes(result.html, 'A minimal kickoff');
   eq(result.manifest.accent, 'chartreuse');
 });
 
 test('build: the long-content layout stress fixture builds', () => {
-  const result = build(path.join(FIXTURES, 'layout-stress.json'), { out: path.join(TMP, 'layout-stress') });
+  const result = build(path.join(FIXTURES, 'layout-stress.json'), { out: path.join(TMP, 'layout-stress'), intake: COMPLETE_INTAKE });
   includes(result.html, 'A deliberately long KPI value');
-  includes(result.html, 'A recommendation title designed to exercise wrapping');
+  includes(result.html, 'A deliberately long table value designed to exercise wrapping');
 });
 
-test('build: the project-kickoff worked example builds end to end and passes the gate', () => {
-  const example = path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'content.example.yaml');
-  const result = build(example, { out: path.join(TMP, 'kickoff') });
+test('build: the project-kickoff worked example passes the gate', () => {
+  const examplePath = path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'content.example.yaml');
+  const result = build(examplePath, { out: path.join(TMP, 'kickoff'), intake: COMPLETE_INTAKE });
   eq(result.manifest.archetype, 'project-kickoff');
   ok(existsSync(path.join(result.outDir, 'index.html')));
   includes(result.html, 'class="agenda"');
@@ -416,8 +493,8 @@ test('layout: components keep content visible and constrain data-driven columns'
 });
 
 test('build: the minimal YAML fixture and its JSON twin render identically', () => {
-  const y = build(path.join(FIXTURES, 'valid-minimal.yaml'), { out: path.join(TMP, 'yaml') });
-  const j = build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json2') });
+  const y = build(path.join(FIXTURES, 'valid-minimal.yaml'), { out: path.join(TMP, 'yaml'), intake: COMPLETE_INTAKE });
+  const j = build(path.join(FIXTURES, 'valid-minimal.json'), { out: path.join(TMP, 'json2'), intake: COMPLETE_INTAKE });
   eq(y.html, j.html, 'the YAML and JSON inputs produced different HTML');
 });
 
@@ -431,16 +508,47 @@ test('build: a non-numeric KPI value degrades to a plain render', () => {
   includes(example.html, '1 in 5');
   const tile = example.html.slice(example.html.indexOf('1 in 5') - 400, example.html.indexOf('1 in 5'));
   ok(!/data-count-to/.test(tile.slice(-120)), 'a non-numeric KPI was given a count-up target');
-  includes(example.html, 'data-count-to="34"');
+  includes(example.html, 'data-count-to="6"');
 });
 
 test('build: content is escaped, not injected', () => {
   const doc = content();
   doc.meta.client = '<script>alert(1)</script>';
   writeFileSync(path.join(TMP, 'xss.json'), JSON.stringify(doc));
-  const result = build(path.join(TMP, 'xss.json'), { out: path.join(TMP, 'xss') });
+  const result = build(path.join(TMP, 'xss.json'), { out: path.join(TMP, 'xss'), intake: COMPLETE_INTAKE });
   ok(!result.html.includes('<script>alert(1)</script>'), 'unescaped content reached the output');
   includes(result.html, '&lt;script&gt;');
+});
+
+test('build: incomplete drafts show a summary and contextual missing question', () => {
+  const result = build(EXAMPLE, { out: path.join(TMP, 'incomplete'), intake: INCOMPLETE_INTAKE });
+  includes(result.html, 'Required information still open');
+  includes(result.html, 'What is the authoritative source for project status?');
+  includes(result.html, 'This section is incomplete');
+  eq(result.manifest.unresolved_required_questions, ['ways-of-working.status-source']);
+});
+
+test('build: an explicitly confirmed final build may retain required gaps', () => {
+  const intake = writeIntake('confirmed-final-intake', {
+    missing: ['ways-of-working.status-source'],
+    buildStatus: 'final',
+    confirmAt: '2026-09-02T12:00:00Z',
+  });
+  const result = build(EXAMPLE, { out: path.join(TMP, 'confirmed-final'), intake });
+  eq(result.manifest.build_status, 'final');
+  includes(result.html, 'What is the authoritative source for project status?');
+});
+
+test('detach: incomplete builds require confirmation and rebuild from local source', () => {
+  const built = build(EXAMPLE, { out: path.join(TMP, 'detach-source'), intake: INCOMPLETE_INTAKE });
+  const packageDir = path.join(TMP, 'detached-package');
+  const err = throws(() => detachBuild(built.outDir, packageDir));
+  includes(err.message, '--confirm-incomplete');
+  const detached = detachBuild(built.outDir, packageDir, { confirmIncomplete: true });
+  ok(existsSync(path.join(detached.sourceDir, 'index.html')));
+  eq(detached.manifest.mode, 'detached');
+  const rebuilt = rebuildDetached(packageDir);
+  eq(rebuilt.gate.errors.length, 0);
 });
 
 /* ==========================================================================
@@ -588,7 +696,7 @@ brokenFixture('Avenir leaking into web output', 'rule 9', (dir) =>
   append(dir, 'css/components.css', '\n.display { font-family: "Avenir Next LT Pro", sans-serif; }\n'));
 
 brokenFixture('a headline set in capitals', 'rule 10', (dir) =>
-  replace(dir, 'index.html', '>What we heard</h2>', '>WHAT WE HEARD</h2>'));
+  replace(dir, 'index.html', '>Risks &amp; open questions</h2>', '>RISKS &amp; OPEN QUESTIONS</h2>'));
 
 brokenFixture('all caps outside an eyebrow label', 'rule 10', (dir) =>
   append(dir, 'css/components.css', '\n.rec__action { text-transform: uppercase; }\n'));
@@ -614,13 +722,13 @@ brokenFixture('clear space narrower than an "o"', 'rule 14', (dir) =>
   replace(dir, 'css/tokens.css', 'calc(var(--logo-height) * 0.45)', 'calc(var(--logo-height) * 0.1)'));
 
 brokenFixture('an icon that is not from the approved library', 'rule 15', (dir) =>
-  writeFileSync(path.join(dir, 'assets/icon-network.svg'),
+  writeFileSync(path.join(dir, 'assets/icon-people.svg'),
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10"/></svg>'));
 
 brokenFixture('an icon reversed onto a dark surface', 'rule 16', (dir) =>
   replace(dir, 'index.html',
-    '<section class="section surface-white" id="s3-what-we-heard"',
-    '<section class="section surface-black" id="s3-what-we-heard"'));
+    '<section class="section surface-white" id="s7-risks-open-questions"',
+    '<section class="section surface-black" id="s7-risks-open-questions"'));
 
 brokenFixture('an icon on a Slalom Blue circle', 'rule 16', (dir) => {
   append(dir, 'css/components.css', '\n.blue-disc { border-radius: 50%; background: var(--slalom-blue); } /* no-text */\n');
@@ -654,8 +762,8 @@ brokenFixture('an image with no alt attribute', 'rule 20', (dir) =>
     '<img src="assets/logo-slalom-white.svg">'));
 
 brokenFixture('a skipped heading level', 'rule 20', (dir) =>
-  replace(dir, 'index.html', '<h2 class="headline" id="s1-in-brief-title">',
-    '<h4 class="headline" id="s1-in-brief-title">'));
+  replace(dir, 'index.html', '<h2 class="headline" id="s1-purpose-scope-title">',
+    '<h4 class="headline" id="s1-purpose-scope-title">'));
 
 brokenFixture('a suppressed focus outline', 'rule 20', (dir) =>
   replace(dir, 'css/base.css', 'outline: 3px solid var(--focus-color);', 'outline: none;'));
@@ -688,7 +796,7 @@ brokenFixture('an absolute asset path', 'rule 23', (dir) =>
 
 brokenFixture('a missing classification on the cover', 'rule 24', (dir) =>
   patch(dir, 'index.html', (html) =>
-    html.replace('<p class="classification">Confidential — prepared for Northwind Health</p>', '')));
+    html.replace('<p class="classification">Internal draft</p>', '')));
 
 brokenFixture('an unlinked print stylesheet', 'rule 25', (dir) =>
   patch(dir, 'index.html', (html) =>

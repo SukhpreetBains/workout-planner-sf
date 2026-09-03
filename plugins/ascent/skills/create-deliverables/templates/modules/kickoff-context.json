@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "kickoff-context",
+  "title": "Kickoff context",
+  "description": "Defines the session, participating organizations, audience, intended alignment, and agenda.",
+  "questions": [
+    {"id":"kickoff-context.project-name","tier":"required","prompt":"What is the project or initiative name?","answer_type":"text","source_ref":"1.required.1"},
+    {"id":"kickoff-context.participants","tier":"required","prompt":"Which organizations or teams are participating?","answer_type":"list","source_ref":"1.required.2"},
+    {"id":"kickoff-context.date","tier":"required","prompt":"What is the kickoff date?","answer_type":"date","source_ref":"1.required.3"},
+    {"id":"kickoff-context.audience","tier":"required","prompt":"Who is the audience?","answer_type":"people","source_ref":"1.required.4"},
+    {"id":"kickoff-context.session-outcomes","tier":"required","prompt":"What should participants understand, decide, or commit to during the kickoff?","answer_type":"list","source_ref":"1.required.5"},
+    {"id":"kickoff-context.agenda-topics","tier":"required","prompt":"What topics must the agenda cover?","answer_type":"list","source_ref":"1.required.6"},
+    {"id":"kickoff-context.presenters","tier":"optional","prompt":"Who will present each section?","answer_type":"table","source_ref":"1.optional.1"},
+    {"id":"kickoff-context.topic-timing","tier":"optional","prompt":"How much time is allocated to each topic?","answer_type":"schedule","source_ref":"1.optional.2"},
+    {"id":"kickoff-context.document-status","tier":"optional","prompt":"What version, confidentiality label, or document status should appear?","answer_type":"text","source_ref":"1.optional.3"},
+    {"id":"kickoff-context.format","tier":"optional","prompt":"Is the kickoff virtual, in person, or hybrid?","answer_type":"text","source_ref":"1.optional.4"},
+    {"id":"kickoff-context.supporting-materials","tier":"optional","prompt":"Are there supporting materials attendees should receive?","answer_type":"list","source_ref":"1.optional.5"}
+  ],
+  "default_output": [
+    {"component":"cover","uses":["kickoff-context.project-name","kickoff-context.date","kickoff-context.participants"]},
+    {"component":"agenda","uses":["kickoff-context.agenda-topics","kickoff-context.topic-timing","kickoff-context.presenters"]}
+  ]
+}
