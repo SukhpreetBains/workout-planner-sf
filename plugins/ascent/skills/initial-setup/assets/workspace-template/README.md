@@ -15,7 +15,7 @@ cites the document it came from.
 | Folder | What goes here | Who writes it |
 | --- | --- | --- |
 | `inbox/` | New, unprocessed documents — the only folder you need to remember | You |
-| `deliverables/` | Agent-created decks, documents, and generated outputs awaiting human review or promotion | Agent |
+| `draft-deliverables/` | Agent-created decks, documents, and generated outputs awaiting human review or promotion | Agent |
 | `project/` | Project overview, timeline, phase context | You + agent |
 | `meetings/` | Session notes and transcripts, named `YYYY-MM-DD - Title` | Agent through `workspace-ingest-documents` |
 | `current-state/` | How things work today — summaries, landscape docs | You + agent |

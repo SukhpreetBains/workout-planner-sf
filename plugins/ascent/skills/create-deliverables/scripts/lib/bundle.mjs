@@ -1,7 +1,7 @@
 /**
  * bundle.mjs — the `--bundle` single-file inliner.
  *
- * Produces `bundle.html`: one file, no external references, nothing left to
+ * Produces a deliverable-named HTML file: one file, no external references, nothing left to
  * lose in transit. This is the artefact that survives being forwarded through
  * three inboxes, and it is also the only build output that can be opened
  * straight off disk — browsers refuse to fetch ES modules over `file://`, so
@@ -32,9 +32,10 @@ function dataUrl(file) {
  * Inline every stylesheet, script, font and image referenced by index.html.
  *
  * @param {string} outDir a built deliverable directory
- * @returns {string} the path to bundle.html
+ * @param {string} filename name of the standalone HTML file
+ * @returns {string} the path to the standalone HTML file
  */
-export function writeBundle(outDir) {
+export function writeBundle(outDir, filename = 'bundle.html') {
   const read = (rel) => readFileSync(path.join(outDir, rel), 'utf8');
   let html = read('index.html');
 
@@ -69,7 +70,7 @@ export function writeBundle(outDir) {
   html = html.replace(/(\ssrc=")(assets\/[^"]+)(")/g, (_, before, rel, after) =>
     `${before}${dataUrl(path.join(outDir, rel))}${after}`);
 
-  const bundlePath = path.join(outDir, 'bundle.html');
+  const bundlePath = path.join(outDir, filename);
   writeFileSync(bundlePath, html, 'utf8');
   return bundlePath;
 }

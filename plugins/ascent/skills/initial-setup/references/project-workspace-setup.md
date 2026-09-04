@@ -2,7 +2,7 @@
 
 Initialize the standard workspace after the Opportunity path is confirmed and writable. The workflow is resumable: create missing state and preserve existing files and tracker rows.
 
-Generated output artifacts, including decks, documents, and sites, belong in `workspace/deliverables/`. `Deliverables/` is reserved for a human to promote reviewed material into the appropriate delivery phase.
+Generated output artifacts, including decks, documents, and sites, belong in `workspace/draft-deliverables/`. `Deliverables/` is reserved for a human to promote reviewed material into the appropriate delivery phase.
 
 ## 1. Locate the workspace engine
 
