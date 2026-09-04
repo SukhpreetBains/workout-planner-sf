@@ -521,7 +521,7 @@ test('build: the worked project-kickoff example builds end to end', async () => 
 
 test('build: the output folder has the expected structure', () => {
   for (const rel of [
-    'index.html', 'bundle.html', 'brand-manifest.json',
+    'index.html', 'service-cloud-discovery-core-team-kickoff.html', 'brand-manifest.json',
     'css/tokens.css', 'css/base.css', 'css/components.css', 'css/print.css',
     'js/motion.js', 'js/anime.esm.min.js', 'js/LICENSE.md',
     'assets/logo-slalom-white.svg',
@@ -685,11 +685,13 @@ test('detach: incomplete builds require confirmation and rebuild from local sour
    ========================================================================== */
 
 test('bundle: the single file has no external reference and stands alone', () => {
-  const bundle = readFileSync(path.join(example.outDir, 'bundle.html'), 'utf8');
-  ok(!/<link\b[^>]*stylesheet/i.test(bundle), 'bundle.html still links a stylesheet');
-  ok(!/<script\b[^>]*\ssrc=/i.test(bundle), 'bundle.html still loads a script by src');
-  ok(!/\ssrc="assets\//.test(bundle), 'bundle.html still references an image file');
-  ok(!/(?:src|href)="\s*(?:https?:)?\/\//i.test(bundle), 'bundle.html makes an external reference');
+  eq(example.manifest.bundle_filename, 'service-cloud-discovery-core-team-kickoff.html');
+  const bundle = readFileSync(path.join(example.outDir, example.manifest.bundle_filename), 'utf8');
+  ok(!existsSync(path.join(example.outDir, 'bundle.html')), 'legacy bundle.html should not be emitted');
+  ok(!/<link\b[^>]*stylesheet/i.test(bundle), 'standalone HTML still links a stylesheet');
+  ok(!/<script\b[^>]*\ssrc=/i.test(bundle), 'standalone HTML still loads a script by src');
+  ok(!/\ssrc="assets\//.test(bundle), 'standalone HTML still references an image file');
+  ok(!/(?:src|href)="\s*(?:https?:)?\/\//i.test(bundle), 'standalone HTML makes an external reference');
   includes(bundle, '"animejs":"data:text/javascript;base64,');
   includes(bundle, 'url("data:font/woff2;base64,');
   ok(!/format\("woff"\)/.test(bundle), 'the bundle should carry woff2 only');

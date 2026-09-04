@@ -89,7 +89,7 @@ source, and the next version starts from it rather than from the HTML.
 | Route | Send | Notes |
 |---|---|---|
 | SharePoint / intranet hosting | the folder | Upload the whole directory. Every path is relative. |
-| Email | `bundle.html` | One self-contained file, ~380 KB. Also the only output that opens correctly straight off disk, because browsers refuse to fetch ES modules over `file://`. |
+| Email | `<deliverable-name>.html` | One self-contained file, ~380 KB. Its filename is a safe, lowercase form of `meta.title`. It is also the only output that opens correctly straight off disk, because browsers refuse to fetch ES modules over `file://`. |
 | Formal record, or a client who wants paper | the PDF | Print from the microsite. Check it first — see below. |
 
 Build the bundle with `--bundle`. It inlines the stylesheets, the motion layer,

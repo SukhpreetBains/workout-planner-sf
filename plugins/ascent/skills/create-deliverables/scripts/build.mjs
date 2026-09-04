@@ -8,7 +8,7 @@
  *   --intake <file>   question coverage and evidence record for modular templates
  *   --preview-module  render a module-owned example for isolated visual review
  *   --preview-template render every module example in template order
- *   --bundle          also emit bundle.html, everything inlined into one file
+ *   --bundle          also emit <deliverable-name>.html, everything inlined into one file
  *   --no-validate     skip the brand gate for iteration only
  *
  * The microsite is a pure function of the content file. Nobody hand-edits the
@@ -255,6 +255,7 @@ export async function build(contentPath, {
     icons: Object.keys(assets.icons),
     fonts: assets.fonts,
     bundle: Boolean(bundle),
+    bundle_filename: bundle ? `${slugify(meta.title)}.html` : null,
     template_mode: modules.length ? 'guided' : 'legacy',
     build_status: intake?.buildStatus ?? 'final',
     required_question_count: intake?.answers.filter((answer) => answer.tier === 'required').length ?? 0,
@@ -268,7 +269,7 @@ export async function build(contentPath, {
   writeFileSync(path.join(outDir, 'brand-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
   let bundlePath = null;
-  if (bundle) bundlePath = writeBundle(outDir);
+  if (bundle) bundlePath = writeBundle(outDir, manifest.bundle_filename);
 
   return { outDir, html, manifest, assets, bundlePath, doc, renderedDoc, archetype, modules, intake };
 }

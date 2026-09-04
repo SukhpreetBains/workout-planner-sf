@@ -825,16 +825,17 @@ export function validateBuild(dir) {
 
   /* --- The bundle ------------------------------------------------------- */
 
-  const bundlePath = path.join(abs, 'bundle.html');
+  const bundleFilename = manifest?.bundle_filename ?? 'bundle.html';
+  const bundlePath = path.join(abs, bundleFilename);
   if (existsSync(bundlePath)) {
     const bundle = readFileSync(bundlePath, 'utf8');
     const hits = externalReferences(bundle);
     report.check(hits.length === 0, 'rule 22',
-      `bundle.html makes an external reference: ${hits.slice(0, 3).join(', ')}`);
+      `${bundleFilename} makes an external reference: ${hits.slice(0, 3).join(', ')}`);
     report.check(!/<link\b[^>]*stylesheet/i.test(bundle), 'bundle',
-      'bundle.html still links an external stylesheet, so it is not standalone');
+      `${bundleFilename} still links an external stylesheet, so it is not standalone`);
     report.check(!/<script\b[^>]*\ssrc=/i.test(bundle), 'bundle',
-      'bundle.html still loads a script by src, so it is not standalone');
+      `${bundleFilename} still loads a script by src, so it is not standalone`);
   }
 
   return report;
