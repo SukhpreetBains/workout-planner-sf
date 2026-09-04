@@ -24,7 +24,7 @@ const isObject = (value) => value !== null && typeof value === 'object' && !Arra
 const hasValue = (value) => value !== null && value !== undefined && value !== ''
   && (!Array.isArray(value) || value.length > 0);
 
-function answerMatchesType(value, answerType) {
+export function answerMatchesType(value, answerType) {
   if (['text', 'person', 'decision'].includes(answerType)) return typeof value === 'string';
   if (answerType === 'date') return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
   return Array.isArray(value) && value.length > 0
@@ -241,6 +241,18 @@ export function evaluateIntake(intake, archetype, modules) {
     module.questions.map((question) => [question.id, { ...question, module_id: module.id, module_title: module.title }])));
   for (const id of Object.keys(answers)) {
     if (!known.has(id)) problems.push(`intake.answers contains unknown question \`${id}\``);
+  }
+  if (intake.display_question_numbers !== undefined) {
+    if (!isObject(intake.display_question_numbers)) {
+      problems.push('intake.display_question_numbers must map stable question IDs to display numbers');
+    } else {
+      for (const [id, number] of Object.entries(intake.display_question_numbers)) {
+        if (!known.has(id)) problems.push(`intake.display_question_numbers contains unknown question \`${id}\``);
+        if (typeof number !== 'string' || !/^\d+[a-z]?$/.test(number)) {
+          problems.push(`intake.display_question_numbers.${id} must be a number such as 7 or 7a`);
+        }
+      }
+    }
   }
 
   const evaluated = [];

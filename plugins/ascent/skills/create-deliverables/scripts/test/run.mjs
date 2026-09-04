@@ -23,6 +23,10 @@ import { ContentError, validateContent } from '../lib/content.mjs';
 import { SKILL_ROOT, listIconNames } from '../lib/assets.mjs';
 import { build, buildStructurePreview, loadArchetype } from '../build.mjs';
 import { evaluateIntake, loadTemplateModules, resolveGuidedContent } from '../lib/intake.mjs';
+import {
+  addQuestionFollowUp, collectEvidenceCandidates, createEvidenceDelegationPlan,
+  createQuestionLedger, formatNumberedQuestion, questionNumberMapping, validateEvidenceExtractionResult,
+} from '../lib/intake-orchestration.mjs';
 import { detachBuild } from '../detach.mjs';
 import { rebuildDetached } from '../rebuild-detached.mjs';
 import { validateBuild } from '../validate-brand.mjs';
@@ -447,6 +451,64 @@ test('intake: source-backed answers include a citation', () => {
   delete raw.answers['kickoff-context.audience'].sources;
   const err = throws(() => evaluateIntake(raw, ARCHETYPE, MODULES));
   includes(err.message, 'source-backed answers require at least one source citation');
+});
+
+test('intake orchestration: five modules with multiple evidence files delegate in parallel', () => {
+  const fixture = JSON.parse(readFileSync(path.join(FIXTURES, 'five-module-evidence.json'), 'utf8'));
+  const selected = MODULES.filter((module) => fixture.selected_module_ids.includes(module.id));
+  const plan = createEvidenceDelegationPlan({ selectedModules: selected, approvedEvidenceFiles: fixture.evidence_files });
+  ok(plan.delegate);
+  eq(plan.assignments.length, 5);
+  eq(plan.model, 'gpt-5.6-luna');
+  eq(plan.reasoning, 'high');
+  eq(plan.assignments[0].selected_module_ids, ['kickoff-context']);
+  ok(plan.assignments[0].canonical_questions.every((question) => question.id.startsWith('kickoff-context.')));
+});
+
+test('intake orchestration: structured extraction rejects unsupported sources and preserves conflicts for reconciliation', () => {
+  const module = MODULES.find((item) => item.id === 'kickoff-context');
+  const plan = createEvidenceDelegationPlan({ selectedModules: [module, MODULES[1], MODULES[2]], approvedEvidenceFiles: [{ source_id: 'charter', path: 'charter.md' }] });
+  const assignment = plan.assignments[0];
+  const valid = validateEvidenceExtractionResult(assignment, { findings: [{
+    question_id: 'kickoff-context.project-name', status: 'conflicting', citations: [{ source_id: 'charter', locator: 'line 4' }], explanation: 'The charter and agenda use different names.',
+  }] });
+  eq(valid[0].status, 'conflicting');
+  const candidates = collectEvidenceCandidates([valid, [{ ...valid[0], explanation: 'A second reviewer found the same conflict.' }]]);
+  eq(candidates.get('kickoff-context.project-name').length, 2);
+  const err = throws(() => validateEvidenceExtractionResult(assignment, { findings: [{
+    question_id: 'kickoff-context.project-name', status: 'answered', answer: 'Northwind', citations: [{ source_id: 'unknown', locator: 'line 4' }],
+  }] }));
+  includes(err.message, 'citation source is not approved');
+});
+
+test('intake orchestration: unavailable subagents fall back to the primary agent', () => {
+  const plan = createEvidenceDelegationPlan({ selectedModules: MODULES.slice(0, 3), approvedEvidenceFiles: [{ source_id: 'a', path: 'a.md' }], subagentsAvailable: false });
+  ok(!plan.delegate);
+  eq(plan.fallback, 'primary-agent sequential evidence pass');
+});
+
+test('intake questions: numbering is sequential, multipart, and stable through follow-ups', () => {
+  const decisionRights = MODULES.find((module) => module.id === 'team-and-responsibilities')
+    .questions.find((question) => question.id.endsWith('.decision-rights'));
+  const ledger = createQuestionLedger([
+    { id: 'kickoff-context.project-name', prompt: 'What is the project name?' },
+    decisionRights,
+    { id: 'delivery-approach.methodology', prompt: 'What approach will be used?' },
+  ]);
+  const displayed = formatNumberedQuestion(decisionRights, ledger, 3);
+  includes(displayed, 'Question 2 of 3\n\n2. Who has final decision authority for each area?\n2.1 Scope');
+  includes(displayed, '2.5 Acceptance');
+  eq(addQuestionFollowUp(ledger, decisionRights.id), '2a');
+  includes(formatNumberedQuestion(decisionRights, ledger, 3, '2a'), 'Question 2a of 3');
+  eq(ledger.numbers.get('delivery-approach.methodology'), '3');
+  eq(questionNumberMapping(ledger), {
+    'kickoff-context.project-name': '1',
+    'team-and-responsibilities.decision-rights': '2',
+    'delivery-approach.methodology': '3',
+  });
+  const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
+  raw.display_question_numbers = questionNumberMapping(ledger);
+  ok(evaluateIntake(raw, ARCHETYPE, MODULES));
 });
 
 test('build: the worked project-kickoff example builds end to end', async () => {
