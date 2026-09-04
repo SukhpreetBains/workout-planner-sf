@@ -10,7 +10,7 @@
     {"id":"team-and-responsibilities.business-owners","tier":"required","prompt":"Who are the client or business owners?","answer_type":"people","source_ref":"3.required.4"},
     {"id":"team-and-responsibilities.participants","tier":"required","prompt":"Which subject matter experts and end users must participate?","answer_type":"people","source_ref":"3.required.5"},
     {"id":"team-and-responsibilities.primary-responsibilities","tier":"required","prompt":"What is each team member's primary responsibility?","answer_type":"table","source_ref":"3.required.6"},
-    {"id":"team-and-responsibilities.decision-rights","tier":"required","prompt":"Who can make decisions about scope, timing, priorities, design, and acceptance?","answer_type":"table","source_ref":"3.required.7"},
+    {"id":"team-and-responsibilities.decision-rights","tier":"required","prompt":"Who has final decision authority for each area?","response_fields":["Scope","Timing","Priorities","Solution design","Acceptance"],"answer_type":"table","source_ref":"3.required.7"},
     {"id":"team-and-responsibilities.escalation-path","tier":"required","prompt":"What is the escalation path?","answer_type":"text","source_ref":"3.required.8"},
     {"id":"team-and-responsibilities.allocation","tier":"optional","prompt":"Which team members are full-time, part-time, or milestone-based?","answer_type":"table","source_ref":"3.optional.1"},
     {"id":"team-and-responsibilities.locations","tier":"optional","prompt":"Where is each team member located?","answer_type":"table","source_ref":"3.optional.2"},

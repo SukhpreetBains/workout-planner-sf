@@ -21,6 +21,8 @@
   --cyan-light: #d1f9fc;
   --coral: #ff4d5f;
   --coral-light: #ffdbdf;
+  --purple: #c7b9ff;
+  --purple-light: #f4f1ff;
   --chartreuse: #deff4d;
   --chartreuse-light: #f8ffdb;
   --black: #000;
@@ -126,6 +128,12 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .category-risk { --category-accent: var(--coral); --category-tint: var(--coral-light); }
 .category-decision { --category-accent: var(--cyan); --category-tint: var(--cyan-light); }
 .category-issue { --category-accent: var(--chartreuse); --category-tint: var(--chartreuse-light); }
+.category-pain_point,
+.category-open_question,
+.category-constraint { --category-accent: var(--coral); --category-tint: var(--coral-light); }
+.category-dependency,
+.category-stakeholder,
+.category-system { --category-accent: var(--purple); --category-tint: var(--purple-light); }
 
 .progress-shell { margin-bottom: 1.5rem; }
 .progress-copy { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; font-weight: 700; }

@@ -28,6 +28,7 @@ let saveTimer = null;
 let scope = null;
 
 const label = value => String(value || "").replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
+const longTextField = name => /description|statement|question|why it matters|answer|mitigation|rationale|notes|actions|resolution|impact if|contingency|plan/i.test(name);
 
 async function api(path, options = {}) {
   const headers = { Accept: "application/json", ...(options.headers || {}) };
@@ -64,6 +65,14 @@ function showToast(message) {
   showToast.timer = setTimeout(() => { toast.hidden = true; }, 4500);
 }
 
+function acceptedItemTitle(item) {
+  const fields = item.fields || {};
+  const title = item.field_schema?.find(definition => definition.name.endsWith(" Title"));
+  const candidates = [fields[title?.name], fields.Name, fields.Question, fields.Statement,
+    fields[item.category_label], fields.Description, item.title];
+  return candidates.map(value => String(value || "").trim()).find(Boolean) || "Untitled";
+}
+
 function renderAcceptedPage(items) {
   const content = el("div", { class: "accepted-values-content" });
   let activeCategory = items[0]?.category || "";
@@ -81,7 +90,7 @@ function renderAcceptedPage(items) {
     const list = el("aside", { class: "proposal-list", "aria-label": "Accepted values" });
     groups[activeCategory].forEach(item => {
       const row = el("article", { class: `proposal-list-item category-${item.category}${item === selected ? " is-selected" : ""}` });
-      row.append(el("button", { class: "proposal-list-title", type: "button", onclick: () => { selected = item; render(); } }, item.title));
+      row.append(el("button", { class: "proposal-list-title", type: "button", onclick: () => { selected = item; render(); } }, acceptedItemTitle(item)));
       list.append(row);
     });
     const form = el("form", { class: `accepted-editor expanded-card-content category-${selected.category}` });
@@ -96,9 +105,9 @@ function renderAcceptedPage(items) {
     orderedSchema.forEach(definition => {
       if (definition.computed) return;
       const value = selected.fields[definition.name] ?? "";
-      const input = definition.name === "Statement" ? el("textarea", { name: definition.name }, value) : definition.enum ? el("select", { name: definition.name }) : el("input", { name: definition.name, type: definition.type === "date" ? "date" : definition.type === "number" ? "number" : "text", value });
+      const input = longTextField(definition.name) ? el("textarea", { name: definition.name }, value) : definition.enum ? el("select", { name: definition.name }) : el("input", { name: definition.name, type: definition.type === "date" ? "date" : definition.type === "number" ? "number" : "text", value });
       if (definition.enum) { input.append(el("option", { value: "" }, "Select an option")); definition.enum.forEach(option => input.append(el("option", { value: option }, label(option)))); input.value = value; }
-      form.append(el("div", { class: `field${definition.name === "Statement" ? " field-wide" : ""}` }, [el("label", { for: definition.name }, definition.name), input]));
+      form.append(el("div", { class: `field${longTextField(definition.name) ? " field-wide" : ""}` }, [el("label", { for: definition.name }, definition.name), input]));
     });
     const status = el("span", { class: "save-state", role: "status" }, "");
     form.append(el("div", { class: "modal-actions" }, [el("button", { class: "primary", type: "submit" }, "Save"), status]));
@@ -193,7 +202,7 @@ function fieldControl(card, definition) {
   } else if (definition.type === "number") {
     input = el("input", { id, name, type: "number", value, step: "0.1",
       min: definition.minimum, max: definition.maximum, inputmode: "decimal" });
-  } else if (/description|statement|mitigation|rationale|notes|actions|resolution|impact if|contingency|plan/i.test(name)) {
+  } else if (longTextField(name)) {
     input = el("textarea", { id, name }, value);
   } else {
     input = el("input", { id, name, type: "text", value });
@@ -386,6 +395,9 @@ function quickDefinitions(card) {
 }
 
 function cardTitle(card) {
+  if (["stakeholder", "system"].includes(card.category)) {
+    return String(card.fields.Name || "").trim() || "No name found";
+  }
   const title = titleDefinition(card);
   return card.fields[title?.name] || card.fields.Statement || `${card.category_label} proposal`;
 }
@@ -428,8 +440,8 @@ function expandedCardContent(card) {
       if (value !== undefined && value !== "") preview.append(el("dt", {}, definition.name), el("dd", {}, String(value)));
     });
     form.append(el("div", { class: "advanced-section" }, [
-      el("details", { class: "advanced-fields" }, [
-        el("summary", {}, `Edit all fields (${advanced.length} more)`), advancedFields,
+      el("details", { class: "advanced-fields", open: "" }, [
+        el("summary", {}, `Additional fields (${advanced.length} more)`), advancedFields,
       ]),
       preview,
     ]));

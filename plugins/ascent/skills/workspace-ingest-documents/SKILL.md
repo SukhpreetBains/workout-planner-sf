@@ -26,6 +26,28 @@ List `workspace/inbox/`. For each file:
 
 Only ask the user when a file is genuinely ambiguous — including whether something is meeting material or an ordinary document.
 
+### Parallel extraction for multi-document batches
+
+When the inbox contains two or more independent source documents, group them by
+their lifecycle relationship or subject matter, then delegate each group to one
+subagent. On a host that supports subagent model selection, use
+`gpt-5.6-luna` with `high` reasoning effort for every such subagent. On other
+hosts, use the closest available subagent configuration without claiming that a
+specific model or reasoning setting was applied.
+
+Give each subagent only its assigned files and the tracker schema. It may read
+or convert those files, classify each as meeting material or ordinary
+reference/current-state/future-state material, and return candidate findings
+with short verbatim evidence. It must not move files, write session notes or
+the source ledger, create or edit proposal YAML, run sync or the review server,
+or write to trackers.
+
+The parent agent keeps control of filing, source-ledger updates, duplicate
+resolution against tracker copies, proposal creation and validation, sync, and
+the approval-gated tracker workflow. Consolidate every subagent result before
+creating a batch proposal so related documents produce one coherent, deduped
+set of proposed facts.
+
 ## Step 2 — File it
 
 ### Meeting or workshop material (transcripts, raw notes)
