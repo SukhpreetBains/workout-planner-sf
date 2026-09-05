@@ -1,6 +1,6 @@
 ---
 name: initial-setup
-description: Bootstrap or resume an accelerated-delivery Opportunity workspace for a non-technical business user. Use when starting a new project or joining an existing project; choosing shared or local-only storage; resolving an enterprise storage location and its local sync; verifying Python 3.10+; guiding Codex project creation; confirming Slack or Microsoft Teams sources; creating the standard workspace and trackers; recording account and opportunity context; or processing the first project documents.
+description: Bootstrap or resume an accelerated-delivery Opportunity workspace for a non-technical business user. Use when starting a new project or joining an existing project; choosing shared or local-only storage; resolving an enterprise storage location and its local sync; verifying Python 3.10+; guiding Codex project creation; confirming Slack or Microsoft Teams sources; creating the standard workspace and trackers; or recording Account and Opportunity identity.
 ---
 
 # Initial Setup
@@ -12,7 +12,8 @@ Prepare one resumable Opportunity workspace. Preserve existing files, ask before
 - Run `scripts/bootstrap-environment.py --install-missing` to verify Python 3.10+. Add `--include-node` only when a selected workflow requires Node.js and npm.
 - Run `scripts/prepare-opportunity-folder.py` after the user chooses a new or existing Opportunity.
 - Use `scripts/manage-source-context.py` to manage the project communications record. Read [the source-context contract](references/source-context.md) before its first write.
-- Read [project workspace setup](references/project-workspace-setup.md) before initializing trackers, project basics, starting documents, or the search index.
+- Read [project workspace setup](references/project-workspace-setup.md) before initializing trackers, identity metadata, or the search index.
+- Use the plugin [workflow overview](../../README.md) as the shared source for workflow handoffs.
 - Read [Slack](references/slack.md) or [Microsoft Teams](references/microsoft-teams.md) only when the user confirms that platform is relevant.
 - Invoke `project-setup` only after the local Opportunity folder and its exact Account and Opportunity names are confirmed and the user says they use Codex.
 
@@ -27,9 +28,8 @@ Explain a script's effect before running it. Obtain approval before package-mana
 5. Create or complete the standard `workspace/` and `Deliverables/` structure without overwriting existing files.
 6. Ask whether the user uses Codex for this Opportunity. If yes, invoke `project-setup` with the confirmed Account and Opportunity names and paths. After asking whether the Codex project was created, continue setup regardless of the answer.
 7. Confirm relevant enterprise storage and messaging locations, then offer to save them in the project communications record.
-8. Initialize the workspace environment, trackers, Account and Opportunity basics, and search index.
-9. For a new Opportunity, pause and ask whether the user has starting documents to add to `workspace/inbox/` now, then wait for their response before re-checking the inbox. For an existing Opportunity, check `workspace/inbox/` once without prompting. If files are present, including files copied from a confirmed external source, report what is staged. Unless the user has already requested this work, use plain language rather than the internal term "ingestion": explain that the next step will organize the documents into the project folders, pull out key facts, and prepare suggested tracker updates for the user to review. State that source documents stay intact and trackers will not change without the user’s approval, then ask whether to do that now. After the user consents, invoke `workspace-ingest-documents`.
-10. Report setup readiness and direct the user to `workspace-review-updates` when proposed tracker changes exist.
+8. Initialize the workspace environment, trackers, Account and Opportunity identity, and search index.
+9. Report setup readiness and hand off document work to a fresh agent chat scoped to the Opportunity. Do not inspect `workspace/inbox/`, ask about documents, or process documents during setup.
 
 ## Verify the local environment
 
@@ -194,6 +194,18 @@ Follow [project workspace setup](references/project-workspace-setup.md). Use `ac
 
 Never apply proposed tracker updates during setup. `workspace-review-updates` remains the only workflow that writes approved changes into trackers.
 
+## Hand off document work
+
+Initial setup does not solicit, inspect, organize, extract, or process source documents, even when files are already present in `workspace/inbox/`. Leave all existing documents untouched.
+
+If the user has documents, tell them to open a fresh agent chat scoped to the Opportunity and request document ingestion there. Explain that fresh context gives the agent maximum room to inspect, organize, extract, and reason over the source material. Include this copyable starter prompt:
+
+```text
+Use workspace-ingest-documents to process the documents in this Opportunity workspace inbox.
+```
+
+Use the plugin [workflow overview](../../README.md) to explain what follows ingestion. If proposed tracker updates already exist from earlier work, mention `workspace-review-updates` as a separate next action without invoking it during setup.
+
 ## Output
 
 End with a compact **Setup readiness** checklist in this order:
@@ -204,4 +216,17 @@ End with a compact **Setup readiness** checklist in this order:
 ⚠️ Blocked or limited by connector/runtime
 ```
 
-Cover Python, storage mode and local Opportunity path, workspace structure, applicable shared storage, applicable Codex project status, messaging sources, project communications record, trackers, starting documents, and search index. Give one concise next step whenever anything remains incomplete.
+Always cover these items, in this order:
+
+1. Environment, including Python and workspace runtime readiness.
+2. Storage, including storage mode, applicable shared storage, and the confirmed local Opportunity path.
+3. Workspace structure.
+4. Codex project status.
+5. Communications, including messaging sources and the project communications record.
+6. Trackers.
+7. Identity metadata for the confirmed Account and Opportunity.
+8. Search index.
+9. Workflow guidance, linked to the plugin [workflow overview](../../README.md).
+10. Fresh-chat document next step, framed conditionally for users with documents and including the copyable starter prompt without asking whether documents are present.
+
+Place every item under one of the three existing status groups, even if some items are not applicable. Give one concise next step whenever anything remains incomplete.
