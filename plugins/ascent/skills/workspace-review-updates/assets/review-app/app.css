@@ -155,8 +155,11 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .proposal-list-item.is-selected .proposal-list-title { background: var(--category-tint, var(--gray-100)); color: var(--dark-blue); }
 .category-review { min-width: 0; }
 .category-toolbar { display: flex; justify-content: space-between; gap: 1.5rem; align-items: start; margin-bottom: 1rem; }
-.toolbar-actions { display: grid; justify-items: end; gap: .75rem; }
-.category-actions { display: flex; flex-wrap: wrap; justify-content: end; gap: .6rem; }
+.toolbar-actions { display: grid; width: 100%; justify-items: stretch; gap: .75rem; }
+.category-actions { display: flex; flex-wrap: wrap; width: 100%; justify-content: end; gap: .6rem; }
+.create-proposal { min-width: 46px; margin-left: auto; font-size: 1.4rem; line-height: 1; }
+.empty-category-review { grid-column: 1 / -1; }
+.empty-category-state { margin-top: 0; }
 .expanded-card-content {
   margin-top: 1.25rem;
   padding: clamp(1rem, 3vw, 2rem);

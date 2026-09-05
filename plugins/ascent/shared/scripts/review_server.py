@@ -28,7 +28,10 @@ from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve()
-APP_DIR = SCRIPT.parents[2] / "workspace-review-updates" / "assets" / "review-app"
+PLUGIN_ROOT = SCRIPT.parents[2]
+SOURCE_APP_DIR = PLUGIN_ROOT / "skills" / "workspace-review-updates" / "assets" / "review-app"
+INSTALLED_APP_DIR = PLUGIN_ROOT / "workspace-review-updates" / "assets" / "review-app"
+APP_DIR = SOURCE_APP_DIR if SOURCE_APP_DIR.is_dir() else INSTALLED_APP_DIR
 STARTED_PROCESSES: dict[str, subprocess.Popen] = {}
 CONFIGURED_ROOT: Path | None = None
 
@@ -284,6 +287,8 @@ class ReviewHandler(BaseHTTPRequestHandler):
                 body.get("proposal_id", ""), body.get("revision"), str(body.get("reason", ""))),
             "/api/flag": lambda body: review_store.flag(
                 body.get("proposal_id", ""), body.get("revision"), str(body.get("note", ""))),
+            "/api/create": lambda body: review_store.create(
+                str(body.get("category", "")), str(body.get("source_ref", ""))),
         }
         if path == "/api/stop":
             self.json(200, {"stopping": True})

@@ -81,6 +81,16 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(stored["proposal_id"], first["proposal_id"])
         self.assertIn("review", stored)
 
+    def test_manual_proposal_is_pending_and_categories_include_empty_tabs(self):
+        created = self.store.create("decision", "User Submitted")
+        inbox = self.store.list_cards()
+        card = next(card for card in inbox["cards"] if card["proposal_id"] == created["proposal_id"])
+        self.assertEqual(card["category"], "decision")
+        self.assertEqual(card["review"]["state"], "pending")
+        self.assertEqual(card["source_refs"], ["User Submitted"])
+        self.assertIn("risk", [category["id"] for category in inbox["categories"]])
+        self.assertEqual(inbox["counts"].get("risk", 0), 0)
+
     def test_typed_validation_and_path_containment(self):
         update = self.risk(fields={"Statement": "Risk", "Probability": 1.2,
                                            "Impact": "Very High", "Date Raised": "not-a-date"})

@@ -33,6 +33,8 @@ from paths import (
 from trackers import id_column, read_rows, upsert_row
 from validate_updates import validate
 
+USER_SUBMITTED_SOURCE = "User Submitted"
+
 
 class ReviewError(RuntimeError):
     status = 400
@@ -182,7 +184,54 @@ def list_cards() -> dict:
         counts[card["category"]] = counts.get(card["category"], 0) + 1
     cards.sort(key=lambda card: (card.get("review", {}).get("state") != "flagged",
                                  card["category_label"], card["proposal_id"]))
-    return {"cards": cards, "counts": counts, "remaining": len(cards)}
+    return {
+        "cards": cards,
+        "counts": counts,
+        "categories": [
+            {
+                "id": category,
+                "label": category.replace("_", " ").title(),
+                "field_schema": definition.get("columns", []),
+            }
+            for category, definition in schema["categories"].items()
+        ],
+        "remaining": len(cards),
+    }
+
+
+def create(category: str, source_ref: str) -> dict:
+    """Create a human-authored pending proposal without writing a tracker row."""
+    schema = load_schema()
+    if category not in schema["categories"]:
+        raise ReviewError("unknown tracker category")
+    source_ref = str(source_ref).strip()
+    if not source_ref:
+        raise ReviewError("a workspace source reference is required")
+    if source_ref != USER_SUBMITTED_SOURCE:
+        try:
+            source_path = (REPO_ROOT / source_ref).resolve()
+            source_path.relative_to(REPO_ROOT / "workspace")
+        except ValueError as exc:
+            raise ReviewError("source reference must be inside the workspace") from exc
+        if not source_path.is_file():
+            raise ReviewError("source reference must identify an existing workspace file")
+
+    proposal_id = str(uuid.uuid4())
+    update = {
+        "proposal_id": proposal_id,
+        "revision": 1,
+        "category": category,
+        "action": "add",
+        "fields": {},
+        "source_refs": [source_ref],
+        "evidence": [{"source_ref": source_ref, "excerpt": "Manually created in review inbox."}],
+        "review": {"state": "pending"},
+    }
+    with review_lock():
+        path = PROPOSED_UPDATES_DIR / f"manual-{proposal_id}.yaml"
+        atomic_yaml(path, {"source_refs": [source_ref], "updates": [update]})
+        append_history("create", update, {"source_ref": source_ref})
+    return {"proposal_id": proposal_id}
 
 
 def check_revision(update: dict, revision: object) -> None:
