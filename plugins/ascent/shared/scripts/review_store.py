@@ -132,6 +132,21 @@ def proposal_files() -> list[Path]:
     return sorted(path for path in PROPOSED_UPDATES_DIR.glob("*.y*ml") if path.is_file())
 
 
+def pending_link_ids() -> dict[str, set[str]]:
+    """Return the proposal IDs that may temporarily occupy relationship fields."""
+    values: dict[str, set[str]] = {}
+    for path in proposal_files():
+        document = load_yaml(path)
+        if upgrade_document(path, document):
+            atomic_yaml(path, document)
+        for update in document["updates"]:
+            category = str(update.get("category", ""))
+            proposal_id = str(update.get("proposal_id", ""))
+            if category and proposal_id:
+                values.setdefault(category, set()).add(proposal_id)
+    return values
+
+
 def find_item(proposal_id: str) -> tuple[Path, dict, int, dict]:
     for path in proposal_files():
         document = load_yaml(path)
@@ -325,7 +340,7 @@ def autosave(proposal_id: str, revision: object, fields: dict) -> dict:
         candidate = dict(update)
         candidate["fields"] = fields
         problems = validate({"source_refs": document.get("source_refs") or [], "updates": [candidate]},
-                            load_schema())
+                            load_schema(), pending_link_ids())
         update["fields"] = candidate["fields"]
         update["revision"] += 1
         atomic_yaml(path, document)
@@ -351,6 +366,57 @@ def remove_and_archive(path: Path, document: dict, index: int, update: dict,
         path.unlink()
 
 
+def replace_link_value(value: object, old: str, new: str) -> str:
+    values = [part.strip() for part in str(value or "").split(";") if part.strip() and part.strip() != old]
+    if new and old in [part.strip() for part in str(value or "").split(";") if part.strip()]:
+        values.append(new)
+    return "; ".join(dict.fromkeys(values))
+
+
+def resolve_links(old: str, new: str, schema: dict) -> list[str]:
+    """Replace a proposal ID in every relationship field, or remove it on rejection."""
+    affected_accepted: list[str] = []
+    for path in proposal_files():
+        document = load_yaml(path)
+        changed = False
+        for update in document["updates"]:
+            update_changed = False
+            definition = schema["categories"].get(update.get("category"), {})
+            fields = update.get("fields") or {}
+            for column in definition.get("columns", []):
+                if "links_to" not in column and "links_to_any" not in column:
+                    continue
+                name = column["name"]
+                if old in [part.strip() for part in str(fields.get(name, "")).split(";")]:
+                    fields[name] = replace_link_value(fields.get(name), old, new)
+                    changed = True
+                    update_changed = True
+            update["fields"] = fields
+            if update_changed:
+                update["revision"] += 1
+        if changed:
+            atomic_yaml(path, document)
+
+    for category, definition in schema["categories"].items():
+        for row in read_rows(category, schema):
+            changed = False
+            for column in definition.get("columns", []):
+                if "links_to" not in column and "links_to_any" not in column:
+                    continue
+                name = column["name"]
+                if old in [part.strip() for part in str(row.get(name, "")).split(";")]:
+                    row[name] = replace_link_value(row.get(name), old, new)
+                    changed = True
+            if changed:
+                row[id_column(category, schema)] = row.get(id_column(category, schema), "")
+                title = (row.get(f"{category.replace('_', ' ').title()} Title")
+                         or row.get("Name") or row.get("Statement") or row.get("Question")
+                         or row.get(id_column(category, schema), "Untitled"))
+                affected_accepted.append(str(title))
+                upsert_row(category, row, schema)
+    return affected_accepted
+
+
 def idempotency_records() -> dict:
     if not REVIEW_IDEMPOTENCY.exists():
         return {}
@@ -371,7 +437,7 @@ def accept(proposal_id: str, revision: object, idempotency_key: str) -> dict:
         path, document, index, update = find_item(proposal_id)
         check_revision(update, revision)
         single = {"source_refs": document.get("source_refs") or [], "updates": [update]}
-        problems = validate(single, load_schema())
+        problems = validate(single, load_schema(), pending_link_ids())
         if problems:
             raise ValidationFailure(problems)
 
@@ -391,6 +457,8 @@ def accept(proposal_id: str, revision: object, idempotency_key: str) -> dict:
         fields["Source Refs"] = schema["list_delimiter"].join(refs)
         try:
             row_id = upsert_row(category, fields, schema)
+            resolve_links(proposal_id, row_id, schema)
+            path, document, index, update = find_item(proposal_id)
             sync = subprocess.run(
                 [sys.executable, str(Path(__file__).with_name("sync.py"))],
                 capture_output=True, text=True, cwd=REPO_ROOT,
@@ -417,9 +485,16 @@ def reject(proposal_id: str, revision: object, reason: str = "") -> dict:
     with review_lock():
         path, document, index, update = find_item(proposal_id)
         check_revision(update, revision)
+        affected_accepted = resolve_links(proposal_id, "", load_schema())
+        path, document, index, update = find_item(proposal_id)
         remove_and_archive(path, document, index, update, REJECTED_UPDATES_DIR, "rejected", reason)
         append_history("reject", update, {"reason": reason})
-        return {"proposal_id": proposal_id, "decision": "rejected"}
+        result = {"proposal_id": proposal_id, "decision": "rejected"}
+        if affected_accepted:
+            result["warning"] = ("Rejected. Removed links from accepted item"
+                                 f"{'s' if len(affected_accepted) != 1 else ''}: "
+                                 f"{', '.join(affected_accepted)}.")
+        return result
 
 
 def load_queue() -> dict:

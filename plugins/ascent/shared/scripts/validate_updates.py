@@ -50,16 +50,20 @@ def load_updates(path: Path) -> dict:
     return doc
 
 
-def validate(doc: dict, schema: dict) -> list[str]:
+def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = None) -> list[str]:
     problems: list[str] = []
     default_refs = doc.get("source_refs") or []
     existing_ids: dict[str, set[str]] = {}
+    pending_ids = pending_ids or {}
 
     def ids_for(category: str) -> set[str]:
         if category not in existing_ids:
             col = id_column(category, schema)
             existing_ids[category] = {r.get(col, "") for r in read_rows(category, schema)}
         return existing_ids[category]
+
+    def linkable_ids_for(category: str) -> set[str]:
+        return ids_for(category) | pending_ids.get(category, set())
 
     for i, upd in enumerate(doc["updates"], 1):
         where = f"update {i}"
@@ -127,13 +131,13 @@ def validate(doc: dict, schema: dict) -> list[str]:
                     problems.append(f"{where}: '{name}' must be an ISO date")
             if "links_to" in col:
                 for linked in [v.strip() for v in value.split(";") if v.strip()]:
-                    if linked not in ids_for(col["links_to"]):
+                    if linked not in linkable_ids_for(col["links_to"]):
                         problems.append(f"{where}: '{name}' points at '{linked}' "
                                         f"which is not an existing {col['links_to']} ID")
             if "links_to_any" in col:
                 valid_ids = set()
                 for linked_category in col["links_to_any"]:
-                    valid_ids.update(ids_for(linked_category))
+                    valid_ids.update(linkable_ids_for(linked_category))
                 for linked in [v.strip() for v in value.split(";") if v.strip()]:
                     if linked not in valid_ids:
                         problems.append(f"{where}: '{name}' points at '{linked}' which is not "
