@@ -153,6 +153,59 @@ def current_row(update: dict, schema: dict) -> dict | None:
                  if row.get(identifier) == update["id"]), None)
 
 
+def archived_counts(directory: Path) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    if not directory.exists():
+        return counts
+    for path in sorted(directory.glob("*.y*ml")):
+        try:
+            document = load_yaml(path)
+        except (OSError, ReviewError, yaml.YAMLError):
+            continue
+        for update in document["updates"]:
+            category = str(update.get("category", ""))
+            if category:
+                counts[category] = counts.get(category, 0) + 1
+    return counts
+
+
+def progress_summary(cards: list[dict], schema: dict) -> dict:
+    accepted_by_category = archived_counts(APPLIED_UPDATES_DIR)
+    rejected_by_category = archived_counts(REJECTED_UPDATES_DIR)
+    categories = {}
+    for category in schema["categories"]:
+        category_cards = [card for card in cards if card["category"] == category]
+        pending = len(category_cards)
+        accepted = accepted_by_category.get(category, 0)
+        rejected = rejected_by_category.get(category, 0)
+        completed = accepted + rejected
+        categories[category] = {
+            "pending": pending,
+            "accepted": accepted,
+            "rejected": rejected,
+            "flagged": sum(
+                card.get("review", {}).get("state") == "flagged"
+                for card in category_cards
+            ),
+            "completed": completed,
+            "total": pending + completed,
+        }
+    accepted = sum(accepted_by_category.values())
+    rejected = sum(rejected_by_category.values())
+    pending = len(cards)
+    return {
+        "pending": pending,
+        "accepted": accepted,
+        "rejected": rejected,
+        "flagged": sum(
+            card.get("review", {}).get("state") == "flagged" for card in cards
+        ),
+        "completed": accepted + rejected,
+        "total": pending + accepted + rejected,
+        "categories": categories,
+    }
+
+
 def list_cards() -> dict:
     schema = load_schema()
     cards = []
@@ -196,6 +249,7 @@ def list_cards() -> dict:
             for category, definition in schema["categories"].items()
         ],
         "remaining": len(cards),
+        "progress": progress_summary(cards, schema),
     }
 
 

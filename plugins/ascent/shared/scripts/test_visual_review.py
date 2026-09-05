@@ -206,6 +206,30 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(remaining[0]["review"]["state"], "flagged")
         self.assertEqual(self.store.queue_after(0)["items"][0]["note"], "Confirm impact")
 
+        progress = self.store.list_cards()["progress"]
+        self.assertEqual(progress["pending"], 1)
+        self.assertEqual(progress["accepted"], 0)
+        self.assertEqual(progress["rejected"], 1)
+        self.assertEqual(progress["flagged"], 1)
+        self.assertEqual(progress["completed"], 1)
+        self.assertEqual(progress["total"], 2)
+        self.assertEqual(progress["categories"]["risk"]["pending"], 1)
+        self.assertEqual(progress["categories"]["risk"]["rejected"], 1)
+
+    def test_progress_summary_counts_archived_accepts_by_category(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        self.store.accept(card["proposal_id"], card["revision"], "progress-accept")
+
+        progress = self.store.list_cards()["progress"]
+        self.assertEqual(progress["pending"], 0)
+        self.assertEqual(progress["accepted"], 1)
+        self.assertEqual(progress["rejected"], 0)
+        self.assertEqual(progress["completed"], 1)
+        self.assertEqual(progress["total"], 1)
+        self.assertEqual(progress["categories"]["risk"]["accepted"], 1)
+        self.assertEqual(progress["categories"]["risk"]["total"], 1)
+
     def test_concurrent_revision_allows_only_one_edit(self):
         self.proposal([self.risk()])
         card = self.store.list_cards()["cards"][0]
