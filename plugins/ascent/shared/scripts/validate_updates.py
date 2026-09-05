@@ -30,6 +30,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from paths import REPO_ROOT, load_schema
 from trackers import id_column, normalize_enum, read_rows
 
+USER_SUBMITTED_SOURCE = "User Submitted"
+
 
 def contained_source(ref: str) -> Path | None:
     try:
@@ -142,6 +144,8 @@ def validate(doc: dict, schema: dict) -> list[str]:
             problems.append(f"{where}: no source_refs (each update must cite "
                             "the document it came from)")
         for ref in refs:
+            if ref == USER_SUBMITTED_SOURCE:
+                continue
             source_path = contained_source(str(ref))
             if source_path is None:
                 problems.append(f"{where}: source ref '{ref}' escapes the workspace root")

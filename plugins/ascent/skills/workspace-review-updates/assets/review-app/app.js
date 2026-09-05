@@ -13,6 +13,7 @@ if (tokenFromUrl) {
 }
 const token = sessionStorage.getItem("review-session") || "";
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const userSubmittedSource = "User Submitted";
 const flow = document.querySelector("#review-flow");
 const loading = document.querySelector("#loading");
 const errorState = document.querySelector("#error-state");
@@ -21,6 +22,7 @@ const acceptedButton = document.querySelector("#view-accepted");
 const headerTitle = document.querySelector("#header-title");
 const acceptedPage = location.pathname === "/accepted";
 let cards = [];
+let categories = [];
 let initialTotal = 0;
 let currentIndex = 0;
 let activeCategory = "";
@@ -138,10 +140,11 @@ function animateIn(target) {
 }
 
 function groupedCards() {
+  const groups = Object.fromEntries(categories.map(category => [category.id, []]));
   return cards.reduce((groups, card) => {
     (groups[card.category] ||= []).push(card);
     return groups;
-  }, {});
+  }, groups);
 }
 
 function progress() {
@@ -321,9 +324,12 @@ function evidence(card) {
   const entries = card.evidence.length ? card.evidence : card.source_refs.map(source_ref => ({ source_ref, excerpt: "" }));
   entries.forEach(entry => {
     const lines = entry.line_start ? `, lines ${entry.line_start}${entry.line_end ? `–${entry.line_end}` : ""}` : "";
+    const source = entry.source_ref === userSubmittedSource
+      ? el("strong", { class: "source-ref" }, userSubmittedSource)
+      : el("button", { class: "source-ref", type: "button", onclick: () => revealSource(entry.source_ref || "") },
+        `${entry.source_ref || "Unknown source"}${lines}`);
     list.append(el("article", { class: "evidence-item" }, [
-      el("button", { class: "source-ref", type: "button", onclick: () => revealSource(entry.source_ref || "") },
-        `${entry.source_ref || "Unknown source"}${lines}`),
+      source,
       el("p", { class: "excerpt" }, entry.excerpt || "No excerpt was captured for this older proposal."),
     ]));
   });
@@ -493,49 +499,93 @@ function openDecisionModal(card, decision) {
 }
 
 function categoryToolbar(card) {
-  return el("section", { class: "category-toolbar", "aria-label": `${card.category_label} review actions` }, [
+  return el("section", { class: "category-toolbar", "aria-label": `${label(activeCategory)} review actions` }, [
     el("div", { class: "toolbar-actions" }, [
       el("div", { class: "category-actions", "aria-label": "Review decision" }, [
+        ...(card ? [
         el("button", { class: "primary", type: "button", onclick: () => decide(card, "accept") }, "Accept"),
         el("button", { class: "danger", type: "button", onclick: () => openDecisionModal(card, "reject") }, "Reject"),
         el("button", { class: "secondary", type: "button", onclick: () => openDecisionModal(card, "flag") }, "Flag for AI review"),
+        ] : []),
+        el("button", { class: "quiet create-proposal", type: "button", title: `Create ${label(activeCategory)} proposal`, "aria-label": `Create ${label(activeCategory)} proposal`, onclick: () => openCreateProposalModal(activeCategory) }, "+"),
       ]),
     ]),
   ]);
 }
 
 function renderCategory() {
-  if (!cards.length) { renderEmptyReview(); return; }
   clearTimeout(saveTimer);
-  const card = cards[currentIndex];
-  activeCategory = card.category;
-  flow.replaceChildren(progress());
+  if (!activeCategory) activeCategory = categories[0]?.id || "";
   const categoryCards = cards.filter(item => item.category === activeCategory);
+  const card = categoryCards.includes(cards[currentIndex]) ? cards[currentIndex] : categoryCards[0] || null;
+  if (card) activeCategory = card.category;
+  flow.replaceChildren(progress());
   const list = el("aside", { class: "proposal-list", "aria-label": `${label(activeCategory)} proposals` });
   categoryCards.forEach(item => list.append(renderProposalListItem(item, item === card)));
-  flow.append(categoryNavigation(), el("div", { class: "review-layout" }, [
-    list, el("div", { class: "category-review" }, [categoryToolbar(card), expandedCardContent(card)]),
+  const review = el("div", { class: `category-review${card ? "" : " empty-category-review"}` }, [categoryToolbar(card)]);
+  if (card) review.append(expandedCardContent(card));
+  else review.append(el("section", { class: "state-panel empty-category-state" }, [
+    el("p", { class: "eyebrow" }, `${label(activeCategory)} inbox`),
+    el("h2", {}, `No ${label(activeCategory).toLowerCase()} proposals are pending.`),
+    el("p", {}, "Create a pending proposal from a workspace source to begin review."),
   ]));
+  flow.append(categoryNavigation(), el("div", { class: "review-layout" }, card ? [list, review] : [review]));
+  if (!card) return;
   riskDerived(card, card.fields);
   animateStack(flow.querySelector(".expanded-card-content"));
   flow.querySelector("input, select, textarea")?.focus({ preventScroll: true });
 }
 
 function renderEmptyReview() {
-  flow.hidden = false;
-  flow.replaceChildren(progress(), el("section", { class: "state-panel" }, [
-    el("p", { class: "eyebrow" }, "Inbox clear"),
-    el("h1", {}, "You are all caught up."),
-    el("p", {}, "New validated ingestion proposals will appear here."),
-  ]));
+  renderCategory();
 }
 
 function openFlow(category) {
-  if (!cards.length) return;
-  currentIndex = cards.findIndex(card => card.category === category);
-  if (currentIndex < 0) currentIndex = 0;
+  activeCategory = category;
+  const categoryIndex = cards.findIndex(card => card.category === category);
+  if (categoryIndex >= 0) currentIndex = categoryIndex;
   flow.hidden = false;
   renderCategory();
+}
+
+function openCreateProposalModal(category) {
+  const modal = el("div", { class: "review-note-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "create-proposal-title" });
+  const form = el("form", {});
+  const sourceRef = el("input", { id: "proposal-source-ref", type: "text", required: "", value: userSubmittedSource, placeholder: "workspace/meetings/2026-09-04 - Workshop.md" });
+  const status = el("p", { class: "save-state", role: "status" }, "");
+  form.append(
+    el("p", { class: "eyebrow" }, `New ${label(category)} proposal`),
+    el("h2", { id: "create-proposal-title" }, "Create a pending proposal"),
+    el("p", {}, "This defaults to reviewer-provided evidence. Replace it with a workspace source when one is available, then complete the fields before accepting it."),
+    el("label", { for: "proposal-source-ref" }, "Workspace source reference"),
+    sourceRef,
+    status,
+    el("div", { class: "modal-actions" }, [
+      el("button", { class: "quiet", type: "button", onclick: () => modal.remove() }, "Cancel"),
+      el("button", { class: "primary", type: "submit" }, "Create proposal"),
+    ]),
+  );
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    status.textContent = "Creating";
+    try {
+      await api("/api/create", { method: "POST", body: JSON.stringify({ category, source_ref: sourceRef.value.trim() }) });
+      const result = await api("/api/inbox");
+      cards = result.cards || [];
+      categories = result.categories || [];
+      initialTotal = Math.max(initialTotal, cards.length);
+      activeCategory = category;
+      currentIndex = cards.findIndex(card => card.category === category);
+      modal.remove();
+      renderCategory();
+      showToast("Pending proposal created.");
+    } catch (error) {
+      status.textContent = error.message || "Could not create the proposal";
+    }
+  });
+  modal.append(form);
+  document.body.append(modal);
+  sourceRef.focus();
 }
 
 async function loadInbox() {
@@ -547,7 +597,8 @@ async function loadInbox() {
       return;
     }
     const result = await api("/api/inbox");
-    cards = result.cards;
+    cards = result.cards || [];
+    categories = result.categories || [];
     initialTotal = cards.length;
     loading.hidden = true;
     flow.hidden = false;

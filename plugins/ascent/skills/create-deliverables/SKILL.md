@@ -28,6 +28,28 @@ date, decision, or answer to fill a gap.
 Load the ordered modules from `templates/project-kickoff/archetype.json` and
 their question definitions and HTML renderers from `modules/`.
 
+When an HXL-capable host is available, you may generate an experimental
+template-and-module selector from the current registry:
+
+```bash
+node scripts/generate-hxl-selector.mjs template-picker \
+  --out path/to/template-picker.mosaic.json
+```
+
+First render the template picker. Validate the returned template ID, render its
+existing labeled full-template preview, and then generate the module picker:
+
+```bash
+node scripts/generate-hxl-selector.mjs module-picker project-kickoff \
+  --out path/to/module-picker.mosaic.json
+```
+
+The HXL selectors are agent-facing, never generated client-site features. They
+return selection messages that must be validated against the current template
+registry and confirmed in the normal conversation before intake begins. Keep
+the standard conversational flow as the fallback because HXL Select and
+Checkbox host support is experimental. See [hxl/README.md](hxl/README.md).
+
 Before starting evidence intake, render the selected template's module examples:
 
 ```bash

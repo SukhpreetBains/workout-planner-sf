@@ -22,7 +22,7 @@ Explain a script's effect before running it. Obtain approval before package-mana
 
 1. Verify Python 3.10+ and any workflow-specific dependencies.
 2. Ask, **"Is there a shared workspace for this opportunity?"** and follow the storage decision flow below.
-3. Ask whether the user is starting a new Opportunity or joining an existing one.
+3. Ask whether the user is starting a new Opportunity or joining an existing one, unless they just created a missing Account folder during the SharePoint flow. A newly created Account folder has no existing Opportunity folder, so continue with a new Opportunity without asking.
 4. Confirm the local working Account path, Account name, Opportunity name, applicable user-reported storage access, and local write readiness. Keep a runtime sandbox boundary separate from local write readiness: if the agent cannot write because of its session boundary, say so and request scoped command access; do not imply the user must change storage or folder permissions unless an operating-system check shows that they are unavailable.
 5. Create or complete the standard `workspace/` and `Deliverables/` structure without overwriting existing files.
 6. Ask whether the user uses Codex for this Opportunity. If yes, invoke `project-setup` with the confirmed Account and Opportunity names and paths. After asking whether the Codex project was created, continue setup regardless of the answer.
@@ -79,7 +79,7 @@ Ask, **"In order to work in that space we need to get it synced locally on your 
   2. [The Folder option example](assets/sharepoint-select-folder.png), with alt text identifying the highlighted **Folder** option.
   3. [The Create a folder example](assets/sharepoint-create-account-folder.png), with alt text identifying the **Name** field and highlighted **Create** button.
 
-  Resolve all three assets to their absolute filesystem paths in the rendered response. After showing the folder-creation guidance, continue directly to the shortcut steps below.
+  Resolve all three assets to their absolute filesystem paths in the rendered response. Mark the Opportunity mode as **new** for this setup, because the Account folder was just created. After showing the folder-creation guidance, continue directly to the shortcut steps below.
 - If the Account folder exists, or after showing how to create it, send these shortcut steps:
 
   > 1. Navigate to the Account folder by clicking on it.
@@ -116,7 +116,7 @@ Ask, **"What enterprise storage solution are you using?"** Then:
 
 ## Prepare the Opportunity folder
 
-Ask whether the user is starting a new Opportunity or joining an existing one. Confirm the local Account path, storage mode, and Opportunity name before writing.
+Unless the user created a missing Account folder during the SharePoint flow, ask whether they are starting a new Opportunity or joining an existing one. If they created the Account folder during this setup, use **new** mode without prompting about an existing Opportunity folder. Confirm the local Account path, storage mode, and Opportunity name before writing.
 
 Run a read-only preflight first:
 

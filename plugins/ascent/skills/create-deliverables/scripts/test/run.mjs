@@ -32,6 +32,7 @@ import { rebuildDetached } from '../rebuild-detached.mjs';
 import { validateBuild } from '../validate-brand.mjs';
 import { writeBundle } from '../lib/bundle.mjs';
 import { style } from '../lib/report.mjs';
+import { createHxlModulePicker, createHxlTemplatePicker } from '../generate-hxl-selector.mjs';
 
 /* ==========================================================================
    Runner
@@ -413,6 +414,21 @@ test('templates: the example preview renders every selected module with labels',
   for (const module of MODULES) {
     includes(result.html, `data-preview-module="${module.id}"`);
   }
+});
+
+test('hxl: the picker uses the current template and module registry', () => {
+  const templatePicker = createHxlTemplatePicker();
+  const template = templatePicker.children.find((item) => item.definition === 'tile/select');
+  eq(template.attributes.options, [{ label: 'Project kickoff', value: 'project-kickoff' }]);
+  const continueButton = templatePicker.children.find((item) => item.attributes?.label === 'Continue to modules');
+  includes(continueButton.attributes.actions.click[0].attributes.content, '{!$selection.template}');
+  const modulePicker = createHxlModulePicker('project-kickoff');
+  const checkboxes = modulePicker.children.flatMap((item) => item.children ?? []).filter((item) => item.definition === 'tile/checkbox');
+  eq(checkboxes.map((item) => item.attributes.id), MODULES.map((module) => `module-${module.id}`));
+  const submit = modulePicker.children.find((item) => item.attributes?.label === 'Submit');
+  eq(submit.attributes.actions.click[0].definition, 'action/sendMessage');
+  includes(submit.attributes.actions.click[0].attributes.content, '{!$selection.template}');
+  includes(submit.attributes.actions.click[0].attributes.content, '{!$selection.modules}');
 });
 
 test('modules: guided content requires module plus view and derives section type', () => {
