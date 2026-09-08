@@ -93,3 +93,23 @@
 
   .footer { break-inside: avoid; }
 }
+
+@media print {
+  details::details-content { display: block !important; content-visibility: visible !important; }
+  details > :not(summary) { display: block !important; }
+  .agenda-item__indicator { display: none !important; }
+  .schedule-chart { display: none !important; }
+  .schedule-chronology { display: block !important; }
+  .profile-grid, .workflow, .operating-roles, .phase-progression { display: block; }
+  .profile, .workflow-stage, .progression-phase { margin-bottom: 1.5rem; break-inside: avoid; }
+  .operating-tier { display: block; }
+  .workflow-chevron { clip-path: none; background: none; color: var(--on-white-display); border-bottom: 2px solid var(--on-white-emphasis); }
+  .workflow-chevron h3 { color: var(--on-white-display); }
+  .schedule-events { display: block; }
+}
+@media print { .progression-line { display: none; } }
+@media print {
+  .schedule-workstreams { display: block !important; }
+  .schedule-axis, .schedule-task-timeline { display: none !important; }
+  .schedule-task-row { display: block; }
+}

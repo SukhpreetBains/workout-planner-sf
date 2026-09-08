@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseYaml, YamlError } from './yaml.mjs';
+import { DELIVERY_SCHEMA, validateDelivery } from './delivery-schema.mjs';
 
 export class ContentError extends Error {
   constructor(problems) {
@@ -39,6 +40,7 @@ const META_FIELDS = {
  * injected by the archetype and are deliberately not authorable.
  */
 export const SECTION_SCHEMA = {
+  ...DELIVERY_SCHEMA,
   'exec-summary': {
     title: { type: 'string' },
     body: { type: 'prose', required: true },
@@ -311,12 +313,14 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
           problems.push(`${where}: the \`${archetype.name}\` archetype does not permit a \`${rawType}\` section (it allows: ${allowed.join(', ')})`);
         }
       }
+      const previousProblems = problems.length;
       checkFields(section, {
         type: { type: 'string', required: true },
         module: { type: 'string' },
         view: { type: 'string' },
         ...schema,
       }, where, problems, ctx);
+      if (problems.length === previousProblems) validateDelivery(section, where, problems);
     });
 
     if (archetype?.required_sections?.length) {

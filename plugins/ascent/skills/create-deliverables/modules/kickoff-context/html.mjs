@@ -1,6 +1,6 @@
 /** HTML views owned by the kickoff-context module. */
 
-import { colorBar, esc, renderProse, slalomLine, slug, typeset } from '../shared/primitives.mjs';
+import { colorBar, disclosure, esc, renderProse, slalomLine, slug, typeset } from '../shared/primitives.mjs';
 
 function cover(meta, ctx) {
   const surface = ctx.coverSurface;
@@ -15,8 +15,8 @@ function cover(meta, ctx) {
         `<dd>${typeset(author.name)}${author.role ? `, ${typeset(author.role)}` : ''}</dd>`).join('')}</div>`
     : '';
   return `
-  <header class="cover surface-${esc(surface)}" data-bar-bg="${esc(surface)}">
-    ${slalomLine()}
+  <header class="cover surface-${esc(surface)}${ctx.coverBackground ? ' cover--image' : ''}" data-bar-bg="${esc(surface)}">
+    ${ctx.coverBackground ? `<img class="cover__background" src="${esc(ctx.coverBackground)}" alt="">` : slalomLine()}
     <div class="cover__masthead">
       <div class="logo"><img src="${esc(ctx.logoPath)}" alt="Slalom"></div>
       ${lockup}
@@ -41,16 +41,11 @@ function agenda(section) {
   const groupName = `agenda-${slug(section.title ?? 'agenda')}`;
   const items = section.items.map((item, index) => `
         <li class="agenda-item" data-motion-item>
-          <details class="agenda-item__disclosure" name="${esc(groupName)}">
-            <summary class="agenda-item__summary">
-              <span class="agenda-item__index" aria-hidden="true">${index + 1}</span>
-              <span>${typeset(item.title)}</span>
-              <span class="agenda-item__indicator" aria-hidden="true"></span>
-            </summary>
-            <div class="agenda-item__card">
-              <div class="prose">${renderProse(item.detail)}</div>
-            </div>
-          </details>
+          ${disclosure(typeset(item.title), `<div class="prose">${renderProse(item.detail)}</div>`, {
+            className: 'agenda-item__disclosure', group: groupName,
+            prefix: `<span class="agenda-item__index" aria-hidden="true">${index + 1}</span>`,
+            bodyClass: 'agenda-item__card',
+          })}
         </li>`).join('');
   return `
     <ol class="agenda" data-motion="stagger-up">${items}

@@ -103,3 +103,18 @@ export function slalomLine() {
     '</svg>',
   ].join('');
 }
+
+/** Trusted renderer markup only. Escape authored strings before passing them. */
+export function disclosure(summary, body, { className = 'disclosure', group = null, prefix = '', bodyClass = 'disclosure__body' } = {}) {
+  return `<details class="${esc(className)}"${group ? ` name="${esc(group)}"` : ''}>
+    <summary class="${esc(className === 'agenda-item__disclosure' ? 'agenda-item__summary' : 'disclosure__summary')}">${prefix}<span class="disclosure__label">${summary}</span><span class="agenda-item__indicator" aria-hidden="true"></span></summary>
+    <div class="${esc(bodyClass)}">${body}</div>
+  </details>`;
+}
+
+export function renderDisclosures(section) {
+  return `<div class="disclosure-list">${section.items.map((item) => disclosure(
+    `<strong>${typeset(item.title)}</strong><span class="detail-summary">${typeset(item.summary)}</span>`,
+    `<div class="prose">${renderProse(item.detail)}</div>`,
+  )).join('')}</div>`;
+}

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { loadTemplateOptions, copyTemplateOptions } from './lib/template-options.mjs';
 /**
  * build.mjs — content in, static microsite out.
  *
@@ -20,13 +21,13 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 
-import { ContentError, parseContentFile, resolveSectionType, validateContent } from './lib/content.mjs';
+import { ContentError, parseContentFile, resolveSectionType, validSectionTypes, validateContent } from './lib/content.mjs';
 import {
   INCOMPLETE_CONSEQUENCES, decorateContentWithGaps, loadAndEvaluateIntake, loadModuleRenderers,
   loadTemplateModules, resolveGuidedContent,
 } from './lib/intake.mjs';
 import {
-  AssetError, SKILL_ROOT, copyAssets, copyOwnAssets, listIconNames, logoVariantFor,
+  AssetError, SKILL_ROOT, copyAssets, copyOwnAssets, copyProfileAssets, listIconNames, logoVariantFor,
 } from './lib/assets.mjs';
 import {
   railLabel, renderFooter, renderRail, renderSection, sectionId,
@@ -84,7 +85,7 @@ export function loadArchetype(name) {
   }
   const manifest = JSON.parse(readFileSync(file, 'utf8'));
   manifest.name ??= name;
-  return manifest;
+  return loadTemplateOptions(manifest, path.dirname(file));
 }
 
 /* ==========================================================================
@@ -172,7 +173,9 @@ export async function build(contentPath, {
   //    against both the schema and that archetype's manifest.
   const raw = parseContentFile(absContent);
   const archetypeName = raw?.meta?.archetype;
-  const archetype = loadArchetype(archetypeName);
+  const archetype = previewModule && structurePreview
+    ? isolatedArchetype(loadArchetype(archetypeName), previewModule)
+    : loadArchetype(archetypeName);
   const modules = loadTemplateModules(archetype, SKILL_ROOT);
   const guidedRaw = resolveGuidedContent(raw, modules);
   const doc = validateContent(guidedRaw, { archetype, iconNames: listIconNames() });
@@ -211,17 +214,21 @@ export async function build(contentPath, {
   mkdirSync(outDir, { recursive: true });
 
   const assets = copyAssets(outDir, {
-    logoVariants: [coverLogo, footerLogo],
+    logoVariants: [coverLogo, footerLogo, ...(archetype.cover_background_question ? ['blue'] : [])],
     icons,
     clientLogo,
   });
   copyOwnAssets(outDir);
+  const templateAssets = copyTemplateOptions(archetype, intake, outDir);
+  const profiles = copyProfileAssets(renderedDoc.sections, contentDir, outDir);
 
   // 3. Render.
   const ctx = {
     meta,
+    ...templateAssets,
+    profilePath: (name) => profiles[name],
     coverSurface,
-    logoPath: assets.logos[coverLogo],
+    logoPath: assets.logos[templateAssets.coverBackground ? 'blue' : coverLogo],
     footerLogoPath: assets.logos[footerLogo],
     clientLogoPath: assets.clientLogo,
     iconPath: (name) => {
@@ -258,7 +265,7 @@ export async function build(contentPath, {
     date: meta.date,
     classification: meta.classification,
     cover_surface: coverSurface,
-    logo_variants: { cover: coverLogo, footer: footerLogo },
+    logo_variants: { cover: templateAssets.coverBackground ? 'blue' : coverLogo, footer: footerLogo },
     icons: Object.keys(assets.icons),
     fonts: assets.fonts,
     bundle: Boolean(bundle),
@@ -294,6 +301,13 @@ function templatesContainingModule(moduleId) {
     });
 }
 
+/** Isolated review includes every owned view, regardless of template selection. */
+function isolatedArchetype(archetype, moduleId) {
+  return { ...archetype, allowed_sections: validSectionTypes(), required_sections: [],
+    modules: archetype.modules.map((entry) => (typeof entry === 'string' ? entry : entry.id) === moduleId ? { id: moduleId } : entry),
+  };
+}
+
 export async function buildStructurePreview({
   moduleId = null, templateName = null, out = null, bundle = false,
 } = {}) {
@@ -301,12 +315,9 @@ export async function buildStructurePreview({
   if (!resolvedTemplate && moduleId) {
     const candidates = templatesContainingModule(moduleId);
     if (candidates.length === 0) throw new ContentError(`no template selects module \`${moduleId}\``);
-    if (candidates.length > 1) {
-      throw new ContentError(`module \`${moduleId}\` belongs to multiple templates (${candidates.join(', ')}); add --preview-template`);
-    }
-    [resolvedTemplate] = candidates;
+    resolvedTemplate = candidates.includes('project-kickoff') ? 'project-kickoff' : candidates[0];
   }
-  const archetype = loadArchetype(resolvedTemplate);
+  const archetype = moduleId ? isolatedArchetype(loadArchetype(resolvedTemplate), moduleId) : loadArchetype(resolvedTemplate);
   const modules = loadTemplateModules(archetype, SKILL_ROOT);
   const raw = composeStructurePreview(archetype, modules, SKILL_ROOT, { previewModule: moduleId });
   const tempDir = mkdtempSync(path.join(os.tmpdir(), 'create-deliverables-preview-'));
@@ -377,6 +388,8 @@ async function main() {
   }
   report.note(`preview  cd ${path.relative(process.cwd(), result.outDir) || '.'} && python3 -m http.server 8000`);
   report.print();
+  if (result.archetype.instructionsText && opts.previewTemplate) console.log(`\nTemplate custom instructions:\n${result.archetype.instructionsText}`);
+  if (result.archetype.template_questions?.length) console.log(`Visual choices: ${path.join(result.outDir, 'template-choices.html')}`);
 
   if (result.intake?.requiredGaps.length) {
     console.log(`  ${style.yellow('Required information warning')}  ${result.intake.requiredGaps.length} required answers remain unresolved.`);

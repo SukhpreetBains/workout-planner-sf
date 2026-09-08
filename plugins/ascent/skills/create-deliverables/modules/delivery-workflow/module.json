@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "id": "delivery-workflow",
+  "title": "Delivery workflow",
+  "description": "Work-item stages, role participation, transitions, and readiness criteria.",
+  "questions": [
+    {
+      "id": "delivery-workflow.stages",
+      "tier": "optional",
+      "prompt": "Which ordered stages does a work item pass through, and what happens in each?",
+      "answer_type": "table",
+      "source_ref": "Reusable delivery structure: stages"
+    },
+    {
+      "id": "delivery-workflow.roles",
+      "tier": "optional",
+      "prompt": "Which roles participate in this workflow?",
+      "answer_type": "table",
+      "source_ref": "Reusable delivery structure: roles"
+    },
+    {
+      "id": "delivery-workflow.transitions",
+      "tier": "optional",
+      "prompt": "Which transitions, including rework, are permitted between stages?",
+      "answer_type": "table",
+      "source_ref": "Reusable delivery structure: transitions"
+    },
+    {
+      "id": "delivery-workflow.ready-criteria",
+      "tier": "optional",
+      "prompt": "What agreed criteria make a work item ready for development?",
+      "answer_type": "list",
+      "source_ref": "Reusable delivery structure: ready-criteria"
+    },
+    {
+      "id": "delivery-workflow.done-criteria",
+      "tier": "optional",
+      "prompt": "What agreed criteria make a work item done at the stated delivery level?",
+      "answer_type": "list",
+      "source_ref": "Reusable delivery structure: done-criteria"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "pipeline",
+      "type": "workflow",
+      "renderer": "./html.mjs#pipeline",
+      "uses": [
+        "delivery-workflow.stages",
+        "delivery-workflow.roles",
+        "delivery-workflow.transitions"
+      ]
+    },
+    {
+      "id": "readiness",
+      "type": "disclosures",
+      "renderer": "./html.mjs#readiness",
+      "uses": [
+        "delivery-workflow.ready-criteria",
+        "delivery-workflow.done-criteria"
+      ]
+    }
+  ]
+}

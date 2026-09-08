@@ -519,7 +519,13 @@ export function validateBuild(dir) {
     const align = declarations(rule).decls.get('text-align')?.trim();
     if (!align) continue;
     report.check(align !== 'justify', 'rule 11', `\`${rule.selector}\` sets text-align: justify. Type is flush left, ragged right.`);
-    report.check(align !== 'center', 'rule 11', `\`${rule.selector}\` centres text. Type is flush left, ragged right.`);
+    // Explicit visual-review decision: center only the workflow stage titles.
+    const centeredWorkflowTitle = rule.selector.trim() === '.workflow-chevron h3';
+    report.check(align !== 'center', 'rule 11',
+      centeredWorkflowTitle
+        ? 'Workflow stage titles are centered by explicit user request; other type remains flush left.'
+        : `\`${rule.selector}\` centres text. Type is flush left, ragged right.`,
+      { warn: centeredWorkflowTitle });
   }
 
   // 12. At most three type sizes per composition (warn).
@@ -877,12 +883,12 @@ function decodeEntities(text) {
 let brandAssetCache = null;
 function collectBrandAssets() {
   if (brandAssetCache) return brandAssetCache;
-  const dirs = ['iconography', 'illustrations', 'logos', 'color-bars'].map((d) => path.join(BRANDING, d));
+  const dirs = ['iconography', 'illustrations', 'logos', 'color-bars', 'photography'].map((d) => path.join(BRANDING, d));
   const bytes = [];
   for (const dir of dirs) {
     if (!existsSync(dir)) continue;
     for (const file of walk(dir)) {
-      if (/\.(svg|png|jpg|jpeg)$/i.test(file)) bytes.push(readFileSync(file));
+      if (/\.(svg|png|jpg|jpeg|webp)$/i.test(file)) bytes.push(readFileSync(file));
     }
   }
   brandAssetCache = bytes;

@@ -200,3 +200,18 @@ export function copyOwnAssets(outDir) {
 }
 
 export { ensureDir, readFileSync, writeFileSync, statSync, existsSync, require_ as requireFile };
+
+/** Optional profile portraits are copied locally, never requested at runtime. */
+export function copyProfileAssets(sections, contentDir, outDir) {
+  const result = {};
+  const paths = [...new Set(sections.flatMap((s) => (s.roles ?? []).map((r) => r.photo).filter(Boolean)))];
+  for (const [index, photo] of paths.entries()) {
+    const file = path.resolve(contentDir, photo);
+    if (!existsSync(file) || !statSync(file).isFile()) throw new AssetError(`profile photo ${photo} does not exist; omit photo when unavailable`);
+    const relative = `assets/profiles/portrait-${index}${path.extname(photo).toLowerCase()}`;
+    mkdirSync(path.join(outDir, 'assets', 'profiles'), { recursive: true });
+    copyFileSync(file, path.join(outDir, relative));
+    result[photo] = relative;
+  }
+  return result;
+}
