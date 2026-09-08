@@ -32,6 +32,7 @@ import { rebuildDetached } from '../rebuild-detached.mjs';
 import { validateBuild } from '../validate-brand.mjs';
 import { writeBundle } from '../lib/bundle.mjs';
 import { style } from '../lib/report.mjs';
+import { registerDeliveryTests } from './delivery.mjs';
 
 /* ==========================================================================
    Runner
@@ -1000,6 +1001,8 @@ brokenFixture('an @font-face with no woff fallback', 'rule 27', (dir) =>
 /* ==========================================================================
    Run
    ========================================================================== */
+
+registerDeliveryTests(test, TMP);
 
 let passed = 0;
 const failures = [];

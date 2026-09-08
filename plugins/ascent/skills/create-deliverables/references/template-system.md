@@ -159,3 +159,30 @@ The machine-readable content file remains the source, but the branded draft is
 the review surface. Do not ask a user to approve raw YAML. After the first
 render, offer customizations. A confirmed customization request detaches the
 site into local editable source and stops enforcing module and template shape.
+
+## Custom template instructions and visual preferences
+
+An optional `instructions` field in `archetype.json` names a Markdown file inside
+the template directory. The loader validates and reads it as `instructionsText`;
+the guided workflow reads it on selection and resume. Templates without the field
+retain their existing behavior. Missing files, empty instructions, and paths
+outside the template (including symlinks) fail validation.
+
+Optional `template_questions` hold presentation preferences, separate from module
+content questions. Each has a template-prefixed `id`, `prompt`, `tier`,
+`answer_type: decision`, and at least two `choices`. Each choice has a unique
+`value`, `label`, and local `image` path. A `brand:` prefix resolves inside the active branding pack’s
+assets directory, avoiding duplicate assets across templates. Answer them through the normal intake
+with explicit user provenance. Required gaps, not-applicable reasons, draft
+builds, and final overrides use the same rules as module questions.
+
+`cover_background_question` references one of these questions. An answered choice
+provides the cover image; unresolved or explicitly not-applicable answers leave
+the existing solid cover. The builder writes `template-choices.html` with every
+choice shown, and copies the assets locally for offline use. No background is
+automatically chosen for structure previews.
+
+Optional `illustrations` entries target a selected `module` and `view`, using a
+local `image` as a decorative section-heading accent. Only authored sections
+render their accents. Keep approved asset provenance in the template assets
+README. The HLS kickoff template demonstrates all of these fields.

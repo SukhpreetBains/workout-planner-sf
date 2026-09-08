@@ -1,0 +1,403 @@
+{
+  "name": "hls-project-kickoff",
+  "title": "HLS project kickoff",
+  "description": "Client-facing Salesforce Health and Life Sciences Cloud implementation kickoff with expandable delivery detail.",
+  "schema_version": 1,
+  "modules": [
+    {
+      "id": "kickoff-context",
+      "include_questions": [
+        "kickoff-context.project-name",
+        "kickoff-context.date",
+        "kickoff-context.participants",
+        "kickoff-context.agenda-topics",
+        "kickoff-context.topic-timing",
+        "kickoff-context.presenters"
+      ],
+      "promote_to_required": [
+        "kickoff-context.project-name",
+        "kickoff-context.date",
+        "kickoff-context.participants",
+        "kickoff-context.agenda-topics"
+      ],
+      "output": [
+        {
+          "id": "cover",
+          "type": "cover",
+          "renderer": "./html.mjs#cover",
+          "uses": [
+            "kickoff-context.project-name",
+            "kickoff-context.date",
+            "kickoff-context.participants"
+          ]
+        },
+        {
+          "id": "agenda",
+          "type": "agenda",
+          "renderer": "./html.mjs#agenda",
+          "uses": [
+            "kickoff-context.agenda-topics",
+            "kickoff-context.topic-timing",
+            "kickoff-context.presenters"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "objectives-and-scope",
+      "include_questions": [
+        "objectives-and-scope.business-context",
+        "objectives-and-scope.objectives",
+        "objectives-and-scope.in-scope",
+        "objectives-and-scope.out-of-scope"
+      ],
+      "promote_to_required": [
+        "objectives-and-scope.business-context",
+        "objectives-and-scope.objectives",
+        "objectives-and-scope.in-scope",
+        "objectives-and-scope.out-of-scope"
+      ],
+      "output": [
+        {
+          "id": "purpose",
+          "type": "purpose",
+          "renderer": "./html.mjs#purpose",
+          "uses": [
+            "objectives-and-scope.business-context",
+            "objectives-and-scope.objectives",
+            "objectives-and-scope.in-scope",
+            "objectives-and-scope.out-of-scope"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "team-and-responsibilities",
+      "include_questions": [
+        "team-and-responsibilities.role-directory",
+        "team-and-responsibilities.profile-assets",
+        "team-and-responsibilities.locations",
+        "team-and-responsibilities.raci-assignments",
+        "team-and-responsibilities.operating-groups"
+      ],
+      "promote_to_required": [
+        "team-and-responsibilities.role-directory",
+        "team-and-responsibilities.raci-assignments",
+        "team-and-responsibilities.operating-groups"
+      ],
+      "output": [
+        {
+          "id": "profiles",
+          "type": "profiles",
+          "renderer": "./html.mjs#profiles",
+          "uses": [
+            "team-and-responsibilities.role-directory",
+            "team-and-responsibilities.profile-assets",
+            "team-and-responsibilities.locations"
+          ]
+        },
+        {
+          "id": "responsibilities",
+          "type": "role-details",
+          "renderer": "./html.mjs#responsibilities",
+          "uses": [
+            "team-and-responsibilities.role-directory"
+          ]
+        },
+        {
+          "id": "raci",
+          "type": "raci",
+          "renderer": "./html.mjs#raci",
+          "uses": [
+            "team-and-responsibilities.role-directory",
+            "team-and-responsibilities.raci-assignments"
+          ]
+        },
+        {
+          "id": "operating-model",
+          "type": "operating-model",
+          "renderer": "./html.mjs#operating-model",
+          "uses": [
+            "team-and-responsibilities.role-directory",
+            "team-and-responsibilities.operating-groups"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "delivery-approach",
+      "include_questions": [
+        "delivery-approach.phases",
+        "delivery-approach.dates",
+        "delivery-approach.phase-outcomes",
+        "delivery-approach.milestones",
+        "delivery-approach.detailed-tasks",
+        "delivery-approach.iteration-dates",
+        "delivery-approach.blackout-periods"
+      ],
+      "promote_to_required": [
+        "delivery-approach.phases",
+        "delivery-approach.dates",
+        "delivery-approach.phase-outcomes",
+        "delivery-approach.milestones",
+        "delivery-approach.detailed-tasks",
+        "delivery-approach.iteration-dates"
+      ],
+      "output": [
+        {
+          "id": "phase-progression",
+          "type": "phase-progression",
+          "renderer": "./html.mjs#phase-progression",
+          "uses": [
+            "delivery-approach.phases",
+            "delivery-approach.dates",
+            "delivery-approach.phase-outcomes",
+            "delivery-approach.milestones"
+          ]
+        },
+        {
+          "id": "workstream-schedule",
+          "type": "workstream-schedule",
+          "renderer": "./html.mjs#workstream-schedule",
+          "uses": [
+            "delivery-approach.detailed-tasks",
+            "delivery-approach.iteration-dates",
+            "delivery-approach.milestones",
+            "delivery-approach.blackout-periods"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ways-of-working",
+      "include_questions": [
+        "ways-of-working.recurring-meetings",
+        "ways-of-working.meeting-details",
+        "ways-of-working.team-norms",
+        "ways-of-working.response-times"
+      ],
+      "promote_to_required": [
+        "ways-of-working.recurring-meetings",
+        "ways-of-working.meeting-details",
+        "ways-of-working.team-norms"
+      ],
+      "output": [
+        {
+          "id": "meeting-cadence",
+          "type": "meeting-cadence",
+          "renderer": "./html.mjs#meeting-cadence",
+          "uses": [
+            "ways-of-working.recurring-meetings",
+            "ways-of-working.meeting-details"
+          ]
+        },
+        {
+          "id": "team-norms",
+          "type": "disclosures",
+          "renderer": "./html.mjs#team-norms",
+          "uses": [
+            "ways-of-working.team-norms",
+            "ways-of-working.response-times"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "delivery-workflow",
+      "include_questions": [
+        "delivery-workflow.stages",
+        "delivery-workflow.roles",
+        "delivery-workflow.transitions",
+        "delivery-workflow.ready-criteria",
+        "delivery-workflow.done-criteria"
+      ],
+      "promote_to_required": [
+        "delivery-workflow.stages",
+        "delivery-workflow.roles",
+        "delivery-workflow.transitions",
+        "delivery-workflow.ready-criteria",
+        "delivery-workflow.done-criteria"
+      ],
+      "output": [
+        {
+          "id": "pipeline",
+          "type": "workflow",
+          "renderer": "./html.mjs#pipeline",
+          "uses": [
+            "delivery-workflow.stages",
+            "delivery-workflow.roles",
+            "delivery-workflow.transitions"
+          ]
+        },
+        {
+          "id": "readiness",
+          "type": "disclosures",
+          "renderer": "./html.mjs#readiness",
+          "uses": [
+            "delivery-workflow.ready-criteria",
+            "delivery-workflow.done-criteria"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "raid",
+      "include_questions": [
+        "raid.known-items",
+        "raid.impact",
+        "raid.owners",
+        "raid.mitigation",
+        "raid.likelihood-and-severity"
+      ],
+      "promote_to_required": [
+        "raid.known-items",
+        "raid.impact",
+        "raid.owners",
+        "raid.mitigation"
+      ],
+      "output": [
+        {
+          "id": "summary",
+          "type": "theme-group",
+          "renderer": "./html.mjs#summary",
+          "uses": [
+            "raid.known-items",
+            "raid.impact",
+            "raid.owners",
+            "raid.mitigation",
+            "raid.likelihood-and-severity"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "immediate-next-steps",
+      "include_questions": [
+        "immediate-next-steps.actions",
+        "immediate-next-steps.owners",
+        "immediate-next-steps.due-dates",
+        "immediate-next-steps.next-event",
+        "immediate-next-steps.blockers"
+      ],
+      "promote_to_required": [
+        "immediate-next-steps.actions",
+        "immediate-next-steps.owners",
+        "immediate-next-steps.due-dates",
+        "immediate-next-steps.next-event",
+        "immediate-next-steps.blockers"
+      ],
+      "output": [
+        {
+          "id": "actions",
+          "type": "next-steps",
+          "renderer": "./html.mjs#actions",
+          "uses": [
+            "immediate-next-steps.actions",
+            "immediate-next-steps.owners",
+            "immediate-next-steps.due-dates",
+            "immediate-next-steps.next-event",
+            "immediate-next-steps.blockers"
+          ]
+        }
+      ]
+    }
+  ],
+  "cover_surface": "blue",
+  "footer_surface": "black",
+  "allowed_sections": [
+    "agenda",
+    "purpose",
+    "profiles",
+    "role-details",
+    "raci",
+    "operating-model",
+    "phase-progression",
+    "workstream-schedule",
+    "meeting-cadence",
+    "disclosures",
+    "workflow",
+    "theme-group",
+    "next-steps"
+  ],
+  "required_sections": [],
+  "recommended_order": [
+    "agenda",
+    "purpose",
+    "profiles",
+    "role-details",
+    "raci",
+    "operating-model",
+    "phase-progression",
+    "workstream-schedule",
+    "meeting-cadence",
+    "disclosures",
+    "workflow",
+    "disclosures",
+    "theme-group",
+    "next-steps"
+  ],
+  "injects": [
+    "cover",
+    "progress-rail",
+    "footer"
+  ],
+  "default_motion": {
+    "cover": [
+      "color-bar-draw",
+      "line-draw"
+    ],
+    "progress-rail": "scroll-sync",
+    "footer": "none"
+  },
+  "notes": [
+    "Template and module composition visually approved by the user on September 8, 2026.",
+    "Includes all delivery topics by default; authors may select modules during intake.",
+    "Required intake questions govern completeness. Unsupported views are omitted from drafts.",
+    "Workflow stages and readiness criteria are authored project agreements, not universal HLS requirements."
+  ],
+  "instructions": "instructions.md",
+  "template_questions": [
+    {
+      "id": "hls-project-kickoff.cover-background",
+      "tier": "required",
+      "prompt": "Which image would you like as the background at the top of the microsite?",
+      "answer_type": "decision",
+      "source_ref": "Explicit user preference",
+      "choices": [
+        {
+          "value": "molecules",
+          "label": "A \u00b7 Cyan molecules",
+          "image": "brand:photography/molecules.png"
+        },
+        {
+          "value": "horizon",
+          "label": "B \u00b7 Open horizon",
+          "image": "brand:photography/horizon.jpg"
+        },
+        {
+          "value": "winding-road",
+          "label": "C \u00b7 Winding road",
+          "image": "brand:photography/winding-road.png"
+        }
+      ]
+    }
+  ],
+  "cover_background_question": "hls-project-kickoff.cover-background",
+  "illustrations": [
+    {
+      "module": "objectives-and-scope",
+      "view": "purpose",
+      "image": "brand:illustrations/medical-worker/medical-worker-skin-tone-medium.svg"
+    },
+    {
+      "module": "ways-of-working",
+      "view": "team-norms",
+      "image": "brand:illustrations/whiteboard/whiteboard-skin-tone-dark.svg"
+    },
+    {
+      "module": "immediate-next-steps",
+      "view": "actions",
+      "image": "brand:illustrations/high-five/high-five-black-no-fill.svg"
+    }
+  ]
+}

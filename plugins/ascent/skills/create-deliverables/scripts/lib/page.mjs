@@ -121,9 +121,11 @@ export function renderSection(section, index, ctx, renderer = null) {
   const title = section.title ?? FALLBACK_TITLE[type];
   const eyebrow = EYEBROW[type];
   const titled = type !== 'quote';
+  const illustration = ctx.illustrations?.get(`${section.module}:${section.view}`);
   const head = titled
     ? `
-      <div class="section__head">
+      <div class="section__head${illustration ? ' section__head--illustrated' : ''}">
+        ${illustration ? `<img class="section__illustration" src="${esc(illustration)}" alt="">` : ''}
         ${eyebrow ? `<p class="eyebrow">${typeset(eyebrow)}</p>` : ''}
         <h2 class="headline" id="${esc(id)}-title">${typeset(title)}</h2>
       </div>`

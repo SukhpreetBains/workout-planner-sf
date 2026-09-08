@@ -33,7 +33,7 @@ function main() {
     report.note(`${result.intake.optionalGaps.length} optional gaps`);
     report.print();
 
-    for (const module of result.modules) {
+    for (const module of [...result.modules, {id: result.archetype.name, title: `${result.archetype.title} preferences`}]) {
       const gaps = result.intake.requiredGaps.filter((gap) => gap.module_id === module.id);
       if (!gaps.length) continue;
       console.log(`  ${module.title} (${gaps.length})`);

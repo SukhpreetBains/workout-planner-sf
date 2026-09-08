@@ -5,21 +5,518 @@
     {
       "view": "team",
       "title": "Core team and roles",
-      "columns": ["Name", "Role", "Organization", "Responsibility"],
+      "columns": [
+        "Name",
+        "Role",
+        "Organization",
+        "Responsibility"
+      ],
       "rows": [
-        {"cells":["Avery Morgan","Engagement lead","Slalom","Delivery accountability and executive communication"]},
-        {"cells":["Jordan Lee","Program owner","Northstar Services","Business decisions and stakeholder coordination"]},
-        {"cells":["Morgan Patel","Solution architect","Slalom","Technical direction and solution integrity"]}
+        {
+          "cells": [
+            "Avery Morgan",
+            "Engagement lead",
+            "Slalom",
+            "Delivery accountability and executive communication"
+          ]
+        },
+        {
+          "cells": [
+            "Jordan Lee",
+            "Program owner",
+            "Northstar Services",
+            "Business decisions and stakeholder coordination"
+          ]
+        },
+        {
+          "cells": [
+            "Morgan Patel",
+            "Solution architect",
+            "Slalom",
+            "Technical direction and solution integrity"
+          ]
+        }
       ]
     },
     {
       "view": "decision-rights",
       "title": "Decision rights",
-      "columns": ["Decision", "Owner", "Escalation path"],
+      "columns": [
+        "Decision",
+        "Owner",
+        "Escalation path"
+      ],
       "rows": [
-        {"cells":["Scope priorities","Program owner","Executive sponsor"]},
-        {"cells":["Solution direction","Solution architect","Architecture council"]},
-        {"cells":["Delivery sequencing","Engagement lead","Joint steering team"]}
+        {
+          "cells": [
+            "Scope priorities",
+            "Program owner",
+            "Executive sponsor"
+          ]
+        },
+        {
+          "cells": [
+            "Solution direction",
+            "Solution architect",
+            "Architecture council"
+          ]
+        },
+        {
+          "cells": [
+            "Delivery sequencing",
+            "Engagement lead",
+            "Joint steering team"
+          ]
+        }
+      ]
+    },
+    {
+      "view": "profiles",
+      "title": "Meet the team",
+      "roles": [
+        {
+          "id": "sponsor",
+          "name": "Executive sponsor",
+          "organization": "Northstar Life Sciences",
+          "person": "Robin Chen",
+          "location": "Boston",
+          "summary": "Owns executive alignment and funding.",
+          "detail": "Resolves escalated scope and investment decisions; sponsors organizational adoption."
+        },
+        {
+          "id": "lead",
+          "name": "Engagement lead",
+          "organization": "Slalom",
+          "person": "Avery Morgan",
+          "location": "Chicago",
+          "summary": "Accountable for delivery quality.",
+          "detail": "Coordinates delivery leadership and reviews major commitments with the client sponsor."
+        },
+        {
+          "id": "po",
+          "name": "Product owner",
+          "organization": "Northstar Life Sciences",
+          "person": "Jordan Lee",
+          "location": "Denver",
+          "summary": "Prioritizes the product backlog.",
+          "detail": "Confirms business priorities and acceptance criteria; coordinates feedback from territory and marketing teams."
+        },
+        {
+          "id": "pm",
+          "name": "Program manager",
+          "organization": "Slalom",
+          "person": "Taylor Brooks",
+          "location": "Seattle",
+          "summary": "Coordinates the delivery plan.",
+          "detail": "Maintains dependencies, risks, budget, meeting cadence, and decisions with the client program owner."
+        },
+        {
+          "id": "sa",
+          "name": "Solution architect",
+          "organization": "Slalom",
+          "person": "Morgan Patel",
+          "location": "Chicago",
+          "summary": "Owns the functional solution.",
+          "detail": "Connects persona needs to Salesforce capabilities and defines cross-workstream solution decisions."
+        },
+        {
+          "id": "dev",
+          "name": "Salesforce engineer",
+          "organization": "Slalom",
+          "person": "Alex Rivera",
+          "location": "Austin",
+          "summary": "Builds and tests functionality.",
+          "detail": "Configures Life Sciences Cloud, implements approved extensions, and documents unit-test evidence."
+        },
+        {
+          "id": "qa",
+          "name": "Quality lead",
+          "organization": "Slalom",
+          "person": "Casey Kim",
+          "location": "Atlanta",
+          "summary": "Coordinates test evidence and defects.",
+          "detail": "Plans functional testing, validates acceptance criteria, and supports business testers during UAT."
+        },
+        {
+          "id": "change",
+          "name": "Change and adoption lead",
+          "organization": "Northstar Life Sciences",
+          "person": "Sam Ellis",
+          "location": "Boston",
+          "summary": "Coordinates user readiness.",
+          "detail": "Works with change champions to prepare training, communications, and adoption feedback."
+        },
+        {
+          "id": "it",
+          "name": "Enterprise architect",
+          "organization": "Northstar Life Sciences",
+          "person": "Jamie Park",
+          "location": "Denver",
+          "summary": "Owns enterprise dependencies.",
+          "detail": "Reviews integration, migration, environment, and identity decisions with system owners."
+        }
+      ]
+    },
+    {
+      "view": "responsibilities",
+      "title": "Roles and responsibilities",
+      "roles": [
+        {
+          "id": "sponsor",
+          "name": "Executive sponsor",
+          "organization": "Northstar Life Sciences",
+          "person": "Robin Chen",
+          "location": "Boston",
+          "summary": "Owns executive alignment and funding.",
+          "detail": "Resolves escalated scope and investment decisions; sponsors organizational adoption."
+        },
+        {
+          "id": "lead",
+          "name": "Engagement lead",
+          "organization": "Slalom",
+          "person": "Avery Morgan",
+          "location": "Chicago",
+          "summary": "Accountable for delivery quality.",
+          "detail": "Coordinates delivery leadership and reviews major commitments with the client sponsor."
+        },
+        {
+          "id": "po",
+          "name": "Product owner",
+          "organization": "Northstar Life Sciences",
+          "person": "Jordan Lee",
+          "location": "Denver",
+          "summary": "Prioritizes the product backlog.",
+          "detail": "Confirms business priorities and acceptance criteria; coordinates feedback from territory and marketing teams."
+        },
+        {
+          "id": "pm",
+          "name": "Program manager",
+          "organization": "Slalom",
+          "person": "Taylor Brooks",
+          "location": "Seattle",
+          "summary": "Coordinates the delivery plan.",
+          "detail": "Maintains dependencies, risks, budget, meeting cadence, and decisions with the client program owner."
+        },
+        {
+          "id": "sa",
+          "name": "Solution architect",
+          "organization": "Slalom",
+          "person": "Morgan Patel",
+          "location": "Chicago",
+          "summary": "Owns the functional solution.",
+          "detail": "Connects persona needs to Salesforce capabilities and defines cross-workstream solution decisions."
+        },
+        {
+          "id": "dev",
+          "name": "Salesforce engineer",
+          "organization": "Slalom",
+          "person": "Alex Rivera",
+          "location": "Austin",
+          "summary": "Builds and tests functionality.",
+          "detail": "Configures Life Sciences Cloud, implements approved extensions, and documents unit-test evidence."
+        },
+        {
+          "id": "qa",
+          "name": "Quality lead",
+          "organization": "Slalom",
+          "person": "Casey Kim",
+          "location": "Atlanta",
+          "summary": "Coordinates test evidence and defects.",
+          "detail": "Plans functional testing, validates acceptance criteria, and supports business testers during UAT."
+        },
+        {
+          "id": "change",
+          "name": "Change and adoption lead",
+          "organization": "Northstar Life Sciences",
+          "person": "Sam Ellis",
+          "location": "Boston",
+          "summary": "Coordinates user readiness.",
+          "detail": "Works with change champions to prepare training, communications, and adoption feedback."
+        },
+        {
+          "id": "it",
+          "name": "Enterprise architect",
+          "organization": "Northstar Life Sciences",
+          "person": "Jamie Park",
+          "location": "Denver",
+          "summary": "Owns enterprise dependencies.",
+          "detail": "Reviews integration, migration, environment, and identity decisions with system owners."
+        }
+      ]
+    },
+    {
+      "view": "raci",
+      "title": "Delivery accountability",
+      "roles": [
+        {
+          "id": "sponsor",
+          "name": "Executive sponsor",
+          "organization": "Northstar Life Sciences",
+          "person": "Robin Chen",
+          "location": "Boston",
+          "summary": "Owns executive alignment and funding.",
+          "detail": "Resolves escalated scope and investment decisions; sponsors organizational adoption."
+        },
+        {
+          "id": "lead",
+          "name": "Engagement lead",
+          "organization": "Slalom",
+          "person": "Avery Morgan",
+          "location": "Chicago",
+          "summary": "Accountable for delivery quality.",
+          "detail": "Coordinates delivery leadership and reviews major commitments with the client sponsor."
+        },
+        {
+          "id": "po",
+          "name": "Product owner",
+          "organization": "Northstar Life Sciences",
+          "person": "Jordan Lee",
+          "location": "Denver",
+          "summary": "Prioritizes the product backlog.",
+          "detail": "Confirms business priorities and acceptance criteria; coordinates feedback from territory and marketing teams."
+        },
+        {
+          "id": "pm",
+          "name": "Program manager",
+          "organization": "Slalom",
+          "person": "Taylor Brooks",
+          "location": "Seattle",
+          "summary": "Coordinates the delivery plan.",
+          "detail": "Maintains dependencies, risks, budget, meeting cadence, and decisions with the client program owner."
+        },
+        {
+          "id": "sa",
+          "name": "Solution architect",
+          "organization": "Slalom",
+          "person": "Morgan Patel",
+          "location": "Chicago",
+          "summary": "Owns the functional solution.",
+          "detail": "Connects persona needs to Salesforce capabilities and defines cross-workstream solution decisions."
+        },
+        {
+          "id": "dev",
+          "name": "Salesforce engineer",
+          "organization": "Slalom",
+          "person": "Alex Rivera",
+          "location": "Austin",
+          "summary": "Builds and tests functionality.",
+          "detail": "Configures Life Sciences Cloud, implements approved extensions, and documents unit-test evidence."
+        },
+        {
+          "id": "qa",
+          "name": "Quality lead",
+          "organization": "Slalom",
+          "person": "Casey Kim",
+          "location": "Atlanta",
+          "summary": "Coordinates test evidence and defects.",
+          "detail": "Plans functional testing, validates acceptance criteria, and supports business testers during UAT."
+        },
+        {
+          "id": "change",
+          "name": "Change and adoption lead",
+          "organization": "Northstar Life Sciences",
+          "person": "Sam Ellis",
+          "location": "Boston",
+          "summary": "Coordinates user readiness.",
+          "detail": "Works with change champions to prepare training, communications, and adoption feedback."
+        },
+        {
+          "id": "it",
+          "name": "Enterprise architect",
+          "organization": "Northstar Life Sciences",
+          "person": "Jamie Park",
+          "location": "Denver",
+          "summary": "Owns enterprise dependencies.",
+          "detail": "Reviews integration, migration, environment, and identity decisions with system owners."
+        }
+      ],
+      "activities": [
+        {
+          "name": "Prioritize the release",
+          "summary": "Agree the next release scope.",
+          "assignments": [
+            {
+              "role": "po",
+              "responsibility": "A"
+            },
+            {
+              "role": "sa",
+              "responsibility": "R"
+            },
+            {
+              "role": "pm",
+              "responsibility": "C"
+            },
+            {
+              "role": "sponsor",
+              "responsibility": "I"
+            }
+          ]
+        },
+        {
+          "name": "Approve solution design",
+          "summary": "Confirm cross-workstream design decisions.",
+          "assignments": [
+            {
+              "role": "sa",
+              "responsibility": "A"
+            },
+            {
+              "role": "dev",
+              "responsibility": "R"
+            },
+            {
+              "role": "it",
+              "responsibility": "C"
+            },
+            {
+              "role": "po",
+              "responsibility": "C"
+            }
+          ]
+        },
+        {
+          "name": "Confirm go-live readiness",
+          "summary": "Review test evidence and business readiness.",
+          "assignments": [
+            {
+              "role": "sponsor",
+              "responsibility": "A"
+            },
+            {
+              "role": "pm",
+              "responsibility": "R"
+            },
+            {
+              "role": "qa",
+              "responsibility": "C"
+            },
+            {
+              "role": "change",
+              "responsibility": "C"
+            },
+            {
+              "role": "it",
+              "responsibility": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "view": "operating-model",
+      "title": "Operating model",
+      "roles": [
+        {
+          "id": "sponsor",
+          "name": "Executive sponsor",
+          "organization": "Northstar Life Sciences",
+          "person": "Robin Chen",
+          "location": "Boston",
+          "summary": "Owns executive alignment and funding.",
+          "detail": "Resolves escalated scope and investment decisions; sponsors organizational adoption."
+        },
+        {
+          "id": "lead",
+          "name": "Engagement lead",
+          "organization": "Slalom",
+          "person": "Avery Morgan",
+          "location": "Chicago",
+          "summary": "Accountable for delivery quality.",
+          "detail": "Coordinates delivery leadership and reviews major commitments with the client sponsor."
+        },
+        {
+          "id": "po",
+          "name": "Product owner",
+          "organization": "Northstar Life Sciences",
+          "person": "Jordan Lee",
+          "location": "Denver",
+          "summary": "Prioritizes the product backlog.",
+          "detail": "Confirms business priorities and acceptance criteria; coordinates feedback from territory and marketing teams."
+        },
+        {
+          "id": "pm",
+          "name": "Program manager",
+          "organization": "Slalom",
+          "person": "Taylor Brooks",
+          "location": "Seattle",
+          "summary": "Coordinates the delivery plan.",
+          "detail": "Maintains dependencies, risks, budget, meeting cadence, and decisions with the client program owner."
+        },
+        {
+          "id": "sa",
+          "name": "Solution architect",
+          "organization": "Slalom",
+          "person": "Morgan Patel",
+          "location": "Chicago",
+          "summary": "Owns the functional solution.",
+          "detail": "Connects persona needs to Salesforce capabilities and defines cross-workstream solution decisions."
+        },
+        {
+          "id": "dev",
+          "name": "Salesforce engineer",
+          "organization": "Slalom",
+          "person": "Alex Rivera",
+          "location": "Austin",
+          "summary": "Builds and tests functionality.",
+          "detail": "Configures Life Sciences Cloud, implements approved extensions, and documents unit-test evidence."
+        },
+        {
+          "id": "qa",
+          "name": "Quality lead",
+          "organization": "Slalom",
+          "person": "Casey Kim",
+          "location": "Atlanta",
+          "summary": "Coordinates test evidence and defects.",
+          "detail": "Plans functional testing, validates acceptance criteria, and supports business testers during UAT."
+        },
+        {
+          "id": "change",
+          "name": "Change and adoption lead",
+          "organization": "Northstar Life Sciences",
+          "person": "Sam Ellis",
+          "location": "Boston",
+          "summary": "Coordinates user readiness.",
+          "detail": "Works with change champions to prepare training, communications, and adoption feedback."
+        },
+        {
+          "id": "it",
+          "name": "Enterprise architect",
+          "organization": "Northstar Life Sciences",
+          "person": "Jamie Park",
+          "location": "Denver",
+          "summary": "Owns enterprise dependencies.",
+          "detail": "Reviews integration, migration, environment, and identity decisions with system owners."
+        }
+      ],
+      "groups": [
+        {
+          "name": "Executive leadership",
+          "summary": "Direction and escalation",
+          "roles": [
+            "lead",
+            "sponsor"
+          ]
+        },
+        {
+          "name": "Governance and adoption",
+          "summary": "Program coordination and user readiness",
+          "roles": [
+            "pm",
+            "it",
+            "change"
+          ]
+        },
+        {
+          "name": "Core delivery team",
+          "summary": "Solution, build, and validation",
+          "roles": [
+            "sa",
+            "po",
+            "dev",
+            "qa"
+          ]
+        }
       ]
     }
   ]

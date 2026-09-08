@@ -1,0 +1,7 @@
+schema_version: 1
+template: hls-project-kickoff
+build_status: draft
+optional_review: pending
+answers:
+  hls-project-kickoff.cover-background:
+    status: missing

@@ -4,6 +4,7 @@
  * content.yaml, which remains the presentation contract.
  */
 
+import { templateQuestions } from './template-options.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -239,6 +240,10 @@ export function evaluateIntake(intake, archetype, modules) {
   const answers = answerMap(intake, problems);
   const known = new Map(modules.flatMap((module) =>
     module.questions.map((question) => [question.id, { ...question, module_id: module.id, module_title: module.title }])));
+  for (const question of templateQuestions(archetype)) {
+    if (known.has(question.id)) problems.push(`duplicate question id ${question.id}`);
+    known.set(question.id, question);
+  }
   for (const id of Object.keys(answers)) {
     if (!known.has(id)) problems.push(`intake.answers contains unknown question \`${id}\``);
   }
@@ -267,6 +272,10 @@ export function evaluateIntake(intake, archetype, modules) {
     if (status === 'answered' && !hasValue(raw.answer)) problems.push(`${question.id}: answered status requires an answer`);
     else if (status === 'answered' && !answerMatchesType(raw.answer, question.answer_type)) {
       problems.push(`${question.id}: answer does not match declared type \`${question.answer_type}\``);
+    }
+    if (status === 'answered' && question.choices) {
+      if (!question.choices.some(choice => choice.value === raw.answer)) problems.push(`${question.id}: answer must name an available choice`);
+      if (raw.answered_by !== 'user') problems.push(`${question.id}: template choices require an explicit user answer`);
     }
     if (status === 'answered') {
       if (!['source', 'user', 'mixed'].includes(raw.answered_by)) {

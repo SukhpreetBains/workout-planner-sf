@@ -31,7 +31,7 @@ function readExample(module, skillRoot, problems) {
     return example;
   }
 
-  const authorableViews = module.output.filter((output) => output.type !== 'cover');
+  const authorableViews = (module.default_output ?? module.output).filter((output) => output.type !== 'cover');
   const knownViews = new Set(authorableViews.map((output) => output.id));
   const seenViews = new Set();
   for (const [index, section] of example.sections.entries()) {
@@ -83,6 +83,6 @@ export function composeStructurePreview(archetype, modules, skillRoot, { preview
       accent: cover.accent ?? 'cyan',
     },
     sections: examples.flatMap(({ module, example }) =>
-      example.sections.map((section) => ({ ...section, module: module.id }))),
+      module.output.filter((output) => output.type !== 'cover').map((output) => ({ ...example.sections.find((section) => section.view === output.id), module: module.id }))),
   };
 }

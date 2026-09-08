@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "module": "delivery-workflow",
+  "sections": [
+    {
+      "view": "pipeline",
+      "title": "User story workflow",
+      "roles": [
+        {
+          "id": "po",
+          "name": "Product owner"
+        },
+        {
+          "id": "sa",
+          "name": "Solution architect"
+        },
+        {
+          "id": "dev",
+          "name": "Salesforce engineer"
+        },
+        {
+          "id": "qa",
+          "name": "Quality lead"
+        }
+      ],
+      "stages": [
+        {
+          "id": "todo",
+          "name": "To do",
+          "summary": "Awaiting refinement and prioritization.",
+          "detail": "Capture the user need and the intended outcome.",
+          "roles": [
+            "po"
+          ]
+        },
+        {
+          "id": "refine",
+          "name": "In refinement",
+          "summary": "Clarify requirements and design.",
+          "detail": "Document acceptance criteria, dependencies, estimates, and open questions.",
+          "roles": [
+            "po",
+            "sa"
+          ]
+        },
+        {
+          "id": "ready",
+          "name": "Ready for development",
+          "summary": "Meets the agreed readiness criteria.",
+          "detail": "Confirm prerequisites before assigning implementation work.",
+          "roles": [
+            "sa",
+            "dev"
+          ]
+        },
+        {
+          "id": "dev",
+          "name": "In development",
+          "summary": "Build and unit testing underway.",
+          "detail": "Complete implementation, unit evidence, and peer review.",
+          "roles": [
+            "dev"
+          ]
+        },
+        {
+          "id": "readyqa",
+          "name": "Ready for QA",
+          "summary": "Ready to test in the QA environment.",
+          "detail": "Provide deployment notes and testable acceptance criteria.",
+          "roles": [
+            "dev",
+            "qa"
+          ]
+        },
+        {
+          "id": "qa",
+          "name": "In QA",
+          "summary": "Validate functionality and evidence.",
+          "detail": "Run planned scenarios and record results.",
+          "roles": [
+            "qa"
+          ]
+        },
+        {
+          "id": "failed",
+          "name": "QA rework",
+          "summary": "Resolve issues identified in testing.",
+          "detail": "Return defects to the developer with reproduction steps; retest the fix.",
+          "roles": [
+            "dev",
+            "qa"
+          ]
+        },
+        {
+          "id": "uat",
+          "name": "Ready for UAT",
+          "summary": "Ready for business validation.",
+          "detail": "Provide passing QA evidence and confirm the agreed sprint Definition of Done.",
+          "roles": [
+            "qa",
+            "po"
+          ]
+        }
+      ],
+      "transitions": [
+        {
+          "to": "refine",
+          "label": "Prioritized",
+          "from": "todo"
+        },
+        {
+          "to": "ready",
+          "label": "Ready criteria met",
+          "from": "refine"
+        },
+        {
+          "to": "dev",
+          "label": "Assigned",
+          "from": "ready"
+        },
+        {
+          "to": "readyqa",
+          "label": "Review complete",
+          "from": "dev"
+        },
+        {
+          "to": "qa",
+          "label": "Testing started",
+          "from": "readyqa"
+        },
+        {
+          "to": "failed",
+          "label": "Test failed",
+          "from": "qa"
+        },
+        {
+          "to": "readyqa",
+          "label": "Fix ready for retest",
+          "from": "failed"
+        },
+        {
+          "to": "uat",
+          "label": "Tests passed",
+          "from": "qa"
+        }
+      ]
+    },
+    {
+      "view": "readiness",
+      "title": "Ready and done",
+      "items": [
+        {
+          "title": "Definition of Ready",
+          "summary": "Agreed prerequisites for development.",
+          "detail": "- Requirements and acceptance criteria are documented.\n- The product owner has reviewed the story.\n- Solution notes, dependencies, and estimates are available."
+        },
+        {
+          "title": "Definition of Done: sprint level",
+          "summary": "Agreed conditions before business validation.",
+          "detail": "- Implementation and peer review are complete.\n- Acceptance criteria have passed QA with recorded evidence.\n- Changes are available in the UAT environment."
+        }
+      ]
+    }
+  ]
+}
