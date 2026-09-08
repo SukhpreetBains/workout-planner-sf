@@ -28,24 +28,7 @@ date, decision, or answer to fill a gap.
 Load the ordered modules from `templates/project-kickoff/archetype.json` and
 their question definitions and HTML renderers from `modules/`.
 
-Generate a template-and-module selector from the current registry:
-
-```bash
-node scripts/generate-hxl-selector.mjs template-picker \
-  --out path/to/template-picker.mosaic.json
-```
-
-First render the template picker. Validate the returned template ID, render its
-existing labeled full-template preview, and then generate the module picker:
-
-```bash
-node scripts/generate-hxl-selector.mjs module-picker project-kickoff \
-  --out path/to/module-picker.mosaic.json
-```
-
-Stop here and present the hxl output to the user and wait for their selection
-
-Before starting evidence intake, render the selected template's module examples:
+Render the selected template's module examples before starting evidence intake:
 
 ```bash
 node scripts/build.mjs --preview-template project-kickoff \
@@ -54,9 +37,9 @@ node scripts/build.mjs --preview-template project-kickoff \
 ```
 
 Give the user the preview link. Every module must be visibly labeled in the
-preview. Explain that the template is a starting composition and that they can
-choose which modules to include in their output. Confirm their module selection
-before asking module questions or drafting sections.
+preview. Explain that the template is a starting composition and ask the user
+which modules to include in their output. Confirm their module selection before
+asking module questions or drafting sections.
 
 Use `workspace/.system/tracker-copies/<category>.yaml` as the default factual
 input. Accept in `workspace-review-updates` writes the reviewed values to the
