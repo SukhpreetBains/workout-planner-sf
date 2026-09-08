@@ -145,7 +145,12 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .triage-search { min-width: 0; }
 .triage-selects { display: flex; flex-wrap: wrap; gap: .6rem; }
 .triage-selects select { width: auto; min-width: 160px; }
+.triage-selects .field-picker { min-width: 160px; }
 .filter-reset { min-height: 46px; }
+.filter-toggle { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 46px; }
+.filter-toggle svg { width: 18px; height: 18px; }
+.triage-filter-panel { grid-column: 1 / -1; padding-top: .75rem; border-top: 1px solid var(--gray-200); }
+.triage-filter-panel[hidden] { display: none; }
 .filter-count { grid-column: 1 / -1; margin: 0; font-size: .86rem; }
 
 .category-tabs { display: flex; flex-wrap: nowrap; gap: .6rem; margin-bottom: 1.5rem; overflow-x: auto; padding: .2rem .2rem .55rem; scrollbar-width: thin; }
@@ -217,10 +222,22 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .comparison dd { margin: 0; color: var(--gray-700); overflow-wrap: anywhere; }
 
 .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.field { display: grid; align-content: start; gap: .4rem; }
+.field { position: relative; display: grid; align-content: start; gap: .4rem; }
 .field-wide { grid-column: 1 / -1; }
 .field label { font-weight: 700; }
 .field small { color: var(--gray-500); }
+.text-suggestions { position: absolute; z-index: 10; top: 100%; right: 0; left: 0; display: grid; max-height: 180px; margin-top: .2rem; overflow-y: auto; border: 1px solid var(--gray-200); background: var(--white); box-shadow: 0 8px 18px rgb(0 47 175 / 16%); }
+.text-suggestions[hidden] { display: none; }
+.text-suggestions button { width: 100%; min-height: 38px; padding: .55rem .7rem; border: 0; border-bottom: 1px solid var(--gray-200); background: var(--white); color: var(--black); font: inherit; text-align: left; }
+.text-suggestions button:last-child { border-bottom: 0; }
+.text-suggestions button:hover, .text-suggestions button:focus-visible { background: var(--purple-light); color: var(--dark-blue); outline: none; }
+.field-picker { position: relative; }
+.field-picker-button { width: 100%; min-height: 46px; padding: .7rem .75rem; border: 1px solid var(--gray-500); background: var(--white); color: var(--black); font: inherit; text-align: left; }
+.field-options { position: absolute; z-index: 10; top: calc(100% + .2rem); right: 0; left: 0; display: grid; max-height: 180px; overflow-y: auto; border: 1px solid var(--gray-200); background: var(--white); box-shadow: 0 8px 18px rgb(0 47 175 / 16%); }
+.field-options[hidden] { display: none; }
+.field-options button { width: 100%; min-height: 38px; padding: .55rem .7rem; border: 0; border-bottom: 1px solid var(--gray-200); background: var(--white); color: var(--black); font: inherit; text-align: left; }
+.field-options button:last-child { border-bottom: 0; }
+.field-options button:hover, .field-options button:focus-visible { background: var(--purple-light); color: var(--dark-blue); outline: none; }
 .link-picker-button { min-height: 42px; padding: .7rem .85rem; border: 1px solid var(--gray-400); background: var(--white); color: var(--dark-blue); text-align: left; font: inherit; cursor: pointer; }
 .link-picker-list { display: grid; gap: .5rem; max-height: min(55vh, 540px); margin-top: 1rem; overflow: auto; }
 .link-picker-category { margin: 1rem 0 .15rem; padding-bottom: .35rem; border-bottom: 2px solid var(--purple); color: var(--dark-blue); font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; }
@@ -274,7 +291,7 @@ button.source-ref { padding: 0; border: 0; background: transparent; cursor: poin
 .accepted-fields { display: grid; grid-template-columns: minmax(130px, .35fr) 1fr; gap: .4rem .85rem; margin: 0; padding: 1rem; background: var(--gray-100); }
 .accepted-fields dt { font-weight: 700; }
 .accepted-fields dd { margin: 0; overflow-wrap: anywhere; }
-.accepted-editor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.accepted-editor { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1.25rem; }
 .accepted-editor .field:first-child { grid-column: 1 / -1; }
 .accepted-editor .modal-actions { grid-column: 1 / -1; align-items: center; }
 

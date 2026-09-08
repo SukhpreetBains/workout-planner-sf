@@ -33,9 +33,12 @@ let sortMode = "queue";
 let saveTimer = null;
 let filterTimer = null;
 let scope = null;
+let acceptedOrganizations = [];
+let acceptedOwners = [];
+let filtersExpanded = false;
 
 const label = value => String(value || "").replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
-const longTextField = name => /description|statement|question|why it matters|answer|mitigation|rationale|notes|actions|resolution|impact if|contingency|plan/i.test(name);
+const longTextField = name => /description|statement|question|why it matters|answer|mitigation|rationale|notes|actions|resolution|impact if|quantified impact|contingency|plan/i.test(name);
 const pickerFields = {
   stakeholder: ["Name", "Role", "Organization"], pain_point: ["Statement", "Severity", "Status"],
   system: ["Name", "System Type", "Description"], objective: ["Statement", "Success Measure"],
@@ -71,6 +74,20 @@ function el(tag, attrs = {}, children = []) {
     node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
   return node;
+}
+
+function filterIcon() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", "M4 6h16M7 12h10M10 18h4");
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", "currentColor");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-width", "2");
+  svg.append(path);
+  return svg;
 }
 
 function showToast(message) {
@@ -120,9 +137,23 @@ function renderAcceptedPage(items) {
     orderedSchema.forEach(definition => {
       if (definition.computed) return;
       const value = selected.fields[definition.name] ?? "";
-      const input = isLinkField(definition) ? linkPickerControl(selected, definition, value) : longTextField(definition.name) ? el("textarea", { name: definition.name }, value) : definition.enum ? el("select", { name: definition.name }) : el("input", { name: definition.name, type: definition.type === "date" ? "date" : definition.type === "number" ? "number" : "text", value });
-      if (definition.enum) { input.append(el("option", { value: "" }, "Select an option")); definition.enum.forEach(option => input.append(el("option", { value: option }, label(option)))); input.value = value; }
-      form.append(el("div", { class: `field${longTextField(definition.name) ? " field-wide" : ""}` }, [el("label", { for: definition.name }, isLinkField(definition) ? linkFieldName(definition.name) : definition.name), input]));
+      let input;
+      let control;
+      let labelFor = definition.name;
+      if (isLinkField(definition)) {
+        input = linkPickerControl(selected, definition, value);
+        control = input;
+      } else if (definition.enum) {
+        const picker = enumPicker(`accepted-${definition.name.replace(/[^a-z0-9]/gi, "-")}`, definition.name, definition.enum, value);
+        input = picker.input;
+        control = picker.control;
+        labelFor = picker.labelFor;
+      } else {
+        input = definition.name === "Organization" || definition.name === "Owner" ? suggestionInput({ name: definition.name }, value) : longTextField(definition.name) ? el("textarea", { name: definition.name }, value) : el("input", { name: definition.name, type: definition.type === "date" ? "date" : definition.type === "number" ? "number" : "text", value });
+        control = input;
+      }
+      const suggestions = definition.name === "Organization" ? acceptedOrganizations : definition.name === "Owner" ? acceptedOwners : null;
+      form.append(el("div", { class: `field${longTextField(definition.name) ? " field-wide" : ""}` }, [el("label", { for: labelFor }, isLinkField(definition) ? linkFieldName(definition.name) : definition.name), control, ...(suggestions ? [textSuggestions(input, suggestions)] : [])]));
     });
     const status = el("span", { class: "save-state", role: "status" }, "");
     form.append(el("div", { class: "modal-actions" }, [el("button", { class: "primary", type: "submit" }, "Save"), status]));
@@ -209,10 +240,6 @@ function visibleCards() {
   return filtered;
 }
 
-function selectOption(value, text, selected) {
-  return el("option", { value, selected: selected ? "" : undefined }, text);
-}
-
 function scheduleFilterRender(options = {}) {
   clearTimeout(filterTimer);
   filterTimer = setTimeout(() => renderCategory(options), 140);
@@ -225,24 +252,18 @@ function triageControls(matchCount) {
     searchQuery = search.value;
     scheduleFilterRender({ focusSearch: true });
   });
-  const review = el("select", { "aria-label": "Filter by review state" }, [
-    selectOption("all", "All review states", reviewFilter === "all"),
-    selectOption("pending", "Pending only", reviewFilter === "pending"),
-    selectOption("flagged", "Flagged only", reviewFilter === "flagged"),
-  ]);
-  review.addEventListener("change", () => { reviewFilter = review.value; scheduleFilterRender(); });
-  const completeness = el("select", { "aria-label": "Filter by completeness" }, [
-    selectOption("all", "Any completeness", completenessFilter === "all"),
-    selectOption("incomplete", "Needs required fields", completenessFilter === "incomplete"),
-    selectOption("complete", "Required fields complete", completenessFilter === "complete"),
-  ]);
-  completeness.addEventListener("change", () => { completenessFilter = completeness.value; scheduleFilterRender(); });
-  const sort = el("select", { "aria-label": "Sort proposals" }, [
-    selectOption("queue", "Queue order", sortMode === "queue"),
-    selectOption("attention", "Needs attention first", sortMode === "attention"),
-    selectOption("title", "Title A to Z", sortMode === "title"),
-  ]);
-  sort.addEventListener("change", () => { sortMode = sort.value; scheduleFilterRender(); });
+  const review = enumPicker("filter-review-state", "review-filter", [
+    { value: "all", text: "All review states" }, { value: "pending", text: "Pending only" }, { value: "flagged", text: "Flagged only" },
+  ], reviewFilter, { ariaLabel: "Filter by review state", includeEmpty: false });
+  review.input.addEventListener("input", () => { reviewFilter = review.input.value; scheduleFilterRender(); });
+  const completeness = enumPicker("filter-completeness", "completeness-filter", [
+    { value: "all", text: "Any completeness" }, { value: "incomplete", text: "Needs required fields" }, { value: "complete", text: "Required fields complete" },
+  ], completenessFilter, { ariaLabel: "Filter by completeness", includeEmpty: false });
+  completeness.input.addEventListener("input", () => { completenessFilter = completeness.input.value; scheduleFilterRender(); });
+  const sort = enumPicker("filter-sort", "sort-filter", [
+    { value: "queue", text: "Queue order" }, { value: "attention", text: "Needs attention first" }, { value: "title", text: "Title A to Z" },
+  ], sortMode, { ariaLabel: "Sort proposals", includeEmpty: false });
+  sort.input.addEventListener("input", () => { sortMode = sort.input.value; scheduleFilterRender(); });
   const reset = el("button", { class: "quiet filter-reset", type: "button", onclick: () => {
     searchQuery = "";
     reviewFilter = "all";
@@ -250,9 +271,17 @@ function triageControls(matchCount) {
     sortMode = "queue";
     renderCategory({ focusSearch: true });
   } }, "Reset");
+  const filterButton = el("button", {
+    class: "quiet filter-toggle", type: "button", "aria-expanded": String(filtersExpanded),
+    onclick: () => { filtersExpanded = !filtersExpanded; renderCategory(); },
+  }, [filterIcon(), "Filters"]);
+  const filterPanel = el("div", { class: "triage-filter-panel", hidden: filtersExpanded ? undefined : "" }, [
+    el("div", { class: "triage-selects" }, [review.control, completeness.control, sort.control, reset]),
+  ]);
   const controls = el("section", { class: "triage-controls", "aria-label": "Find and organize proposals" }, [
     search,
-    el("div", { class: "triage-selects" }, [review, completeness, sort, reset]),
+    filterButton,
+    filterPanel,
     el("p", { class: "filter-count", role: "status" }, `${matchCount} of ${cards.length} pending proposals match`),
   ]);
   return controls;
@@ -308,6 +337,73 @@ function linkFieldName(name) { return linkFieldLabels[name] || name.replace(/ ID
 function linkSelectorName(name) { return linkSelectorLabels[name] || linkFieldName(name); }
 function pickerSummary(value, name) { const values = linkValues(value); return values.length ? `${values.length} selected` : `Select ${linkSelectorName(name)}`; }
 
+function setAcceptedOrganizations(items) {
+  const uniqueValues = field => {
+    const seen = new Set();
+    return (items || []).map(item => String(item.fields?.[field] || "").trim())
+      .filter(value => value && !seen.has(value.toLocaleLowerCase()) && seen.add(value.toLocaleLowerCase()));
+  };
+  acceptedOrganizations = uniqueValues("Organization");
+  acceptedOwners = uniqueValues("Owner");
+}
+
+function suggestionInput(attrs, value) {
+  return el("input", { ...attrs, type: "text", value, autocomplete: "off" });
+}
+
+function textSuggestions(input, values) {
+  const list = el("div", { class: "text-suggestions", role: "listbox", hidden: "" });
+  const render = () => {
+    const query = input.value.trim().toLocaleLowerCase();
+    const matches = values.filter(value => !query || value.toLocaleLowerCase().includes(query));
+    list.replaceChildren();
+    if (!matches.length) {
+      list.hidden = true;
+      return;
+    }
+    matches.forEach(value => list.append(el("button", {
+      type: "button", role: "option", onclick: () => {
+        input.value = value;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        list.hidden = true;
+        input.focus();
+      }, onmousedown: event => event.preventDefault(),
+    }, value)));
+    list.hidden = false;
+  };
+  input.addEventListener("focus", render);
+  input.addEventListener("input", render);
+  input.addEventListener("blur", () => setTimeout(() => { list.hidden = true; }, 120));
+  return list;
+}
+
+function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true } = {}) {
+  const input = el("input", { id, name, type: "hidden", value });
+  const button = el("button", {
+    id: `${id}-button`, class: "field-picker-button", type: "button",
+    "aria-haspopup": "listbox", "aria-expanded": "false", "aria-label": ariaLabel,
+  });
+  const list = el("div", { class: "field-options", role: "listbox", hidden: "" });
+  const close = () => { list.hidden = true; button.setAttribute("aria-expanded", "false"); };
+  const open = () => { list.hidden = false; button.setAttribute("aria-expanded", "true"); };
+  const choices = options.map(option => typeof option === "string" ? { value: option, text: label(option) } : option);
+  if (includeEmpty) choices.unshift({ value: "", text: "Select an option" });
+  button.textContent = choices.find(option => option.value === value)?.text || "Select an option";
+  choices
+    .forEach(option => list.append(el("button", {
+      type: "button", role: "option", "aria-selected": String(option.value === value), onclick: () => {
+        input.value = option.value;
+        button.textContent = option.text;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        close();
+        button.focus();
+      }, onmousedown: event => event.preventDefault(),
+    }, option.text)));
+  button.addEventListener("click", () => list.hidden ? open() : close());
+  button.addEventListener("blur", () => setTimeout(close, 120));
+  return { input, control: el("div", { class: "field-picker" }, [input, button, list]), labelFor: button.id };
+}
+
 function openLinkPicker(card, definition, control) {
   const modal = el("div", { class: "review-note-modal link-picker-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "link-picker-title" });
   const search = el("input", { type: "search", placeholder: "Search linked items", "aria-label": "Search linked items" });
@@ -352,24 +448,35 @@ function fieldControl(card, definition) {
   const id = `field-${card.proposal_id}-${name.replace(/[^a-z0-9]/gi, "-")}`;
   const value = card.fields[name] ?? "";
   let input;
+  let control;
+  let labelFor = id;
   if (isLinkField(definition)) {
     input = linkPickerControl(card, definition, value);
+    control = input;
   } else if (definition.enum) {
-    input = el("select", { id, name });
-    input.append(el("option", { value: "" }, "Select an option"));
-    definition.enum.forEach(option => input.append(el("option", { value: option }, label(option))));
-    input.value = value;
+    const picker = enumPicker(id, name, definition.enum, value);
+    input = picker.input;
+    control = picker.control;
+    labelFor = picker.labelFor;
   } else if (definition.computed) {
     input = el("input", { id, name, value, readonly: "", "aria-describedby": `${id}-hint` });
+    control = input;
   } else if (definition.type === "date") {
     input = el("input", { id, name, type: "date", value: normalizeDate(value) });
+    control = input;
   } else if (definition.type === "number") {
     input = el("input", { id, name, type: "number", value, step: "0.1",
       min: definition.minimum, max: definition.maximum, inputmode: "decimal" });
+    control = input;
+  } else if (name === "Organization" || name === "Owner") {
+    input = suggestionInput({ id, name }, value);
+    control = input;
   } else if (longTextField(name)) {
     input = el("textarea", { id, name }, value);
+    control = input;
   } else {
     input = el("input", { id, name, type: "text", value });
+    control = input;
   }
   if (definition.required) input.required = true;
   if (!definition.computed) input.addEventListener("input", () => {
@@ -385,9 +492,10 @@ function fieldControl(card, definition) {
   }
   const fieldName = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const quickClass = name.endsWith(" Title") ? "field-quick-title" : name === "Status" ? "field-quick-status" : name === "Statement" ? "field-quick-statement" : "";
-  const wrapper = el("div", { class: `field field-${fieldName} ${quickClass} ${input.tagName === "TEXTAREA" ? "field-wide" : ""}`,
+  const wrapper = el("div", { class: `field field-${fieldName} ${quickClass} ${control.tagName === "TEXTAREA" ? "field-wide" : ""}`,
     "data-required": definition.required ? "true" : "false" }, [
-    el("label", { for: id }, labelChildren), input,
+    el("label", { for: labelFor }, labelChildren), control,
+    ...(name === "Organization" ? [textSuggestions(input, acceptedOrganizations)] : name === "Owner" ? [textSuggestions(input, acceptedOwners)] : []),
   ]);
   if (definition.computed) wrapper.append(el("small", { id: `${id}-hint` }, "Calculated from the proposal inputs."));
   return wrapper;
@@ -651,8 +759,7 @@ function expandedCardContent(card, position, categoryTotal) {
   const content = el("section", { class: `expanded-card-content category-${card.category}`, "aria-label": `${card.category_label} details` });
   const stickyHeader = el("header", { class: "review-sticky-header" }, [
     el("div", { class: "review-heading" }, [
-      el("p", { class: "eyebrow" }, `${card.category_label} ${position} of ${categoryTotal}`),
-      el("h2", {}, cardTitle(card)),
+      el("h2", { title: cardTitle(card) }, cardTitle(card)),
     ]),
     el("div", { class: "review-sticky-actions" }, [
       el("span", { class: "save-state", id: "save-state", role: "status" }, "All changes saved"),
@@ -877,18 +984,21 @@ function applyInboxResult(result) {
 }
 
 async function refreshInbox() {
-  applyInboxResult(await api("/api/inbox"));
+  const [inbox, accepted] = await Promise.all([api("/api/inbox"), api("/api/accepted")]);
+  applyInboxResult(inbox);
+  setAcceptedOrganizations(accepted.items);
 }
 
 async function loadInbox() {
   try {
     if (acceptedPage) {
       const result = await api("/api/accepted");
+      setAcceptedOrganizations(result.items);
       loading.hidden = true;
       renderAcceptedPage(result.items || []);
       return;
     }
-    applyInboxResult(await api("/api/inbox"));
+    await refreshInbox();
     loading.hidden = true;
     flow.hidden = false;
     renderCategory();
