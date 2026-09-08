@@ -177,6 +177,16 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
         self.assertEqual(len(self.store.list_cards()["cards"]), 1)
 
+    def test_accept_explains_onedrive_file_timeout_and_preserves_proposal(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        timeout = OSError(self.store.errno.ETIMEDOUT, "Operation timed out")
+        with mock.patch.object(self.store, "upsert_row", side_effect=timeout):
+            with self.assertRaisesRegex(self.store.ReviewError, "OneDrive"):
+                self.store.accept(card["proposal_id"], card["revision"], "onedrive-timeout")
+        self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
+        self.assertEqual(len(self.store.list_cards()["cards"]), 1)
+
     def test_cross_category_raidd_links(self):
         schema = self.paths.load_schema()
         issue_id = self.trackers.upsert_row("issue", {

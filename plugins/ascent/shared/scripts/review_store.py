@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import fcntl
 import json
 import os
@@ -38,6 +39,21 @@ USER_SUBMITTED_SOURCE = "User Submitted"
 
 class ReviewError(RuntimeError):
     status = 400
+
+
+ONEDRIVE_RETRY_MESSAGE = (
+    "OneDrive is temporarily delaying access to a workspace file. "
+    "Wait for OneDrive to finish syncing, then retry this review action."
+)
+
+
+def is_workspace_timeout(error: BaseException) -> bool:
+    """Identify the macOS timeout OneDrive raises for delayed file access."""
+    return isinstance(error, OSError) and error.errno == errno.ETIMEDOUT
+
+
+def workspace_timeout_error(error: BaseException) -> ReviewError:
+    return ReviewError(ONEDRIVE_RETRY_MESSAGE)
 
 
 class NotFound(ReviewError):
@@ -444,7 +460,12 @@ def accept(proposal_id: str, revision: object, idempotency_key: str) -> dict:
         schema = load_schema()
         category = update["category"]
         tracker_path = REPO_ROOT / schema["categories"][category]["tracker_file"]
-        backup = tracker_path.read_bytes() if tracker_path.exists() else None
+        try:
+            backup = tracker_path.read_bytes() if tracker_path.exists() else None
+        except OSError as error:
+            if is_workspace_timeout(error):
+                raise workspace_timeout_error(error) from error
+            raise
         fields = dict(update.get("fields") or {})
         if update.get("action", "add") == "update":
             fields[id_column(category, schema)] = update["id"]
@@ -465,11 +486,18 @@ def accept(proposal_id: str, revision: object, idempotency_key: str) -> dict:
             )
             if sync.returncode:
                 raise ReviewError(sync.stderr.strip() or sync.stdout.strip() or "sync failed")
-        except Exception:
-            if backup is None:
-                tracker_path.unlink(missing_ok=True)
-            else:
-                tracker_path.write_bytes(backup)
+        except Exception as error:
+            try:
+                if backup is None:
+                    tracker_path.unlink(missing_ok=True)
+                else:
+                    tracker_path.write_bytes(backup)
+            except OSError as rollback_error:
+                if is_workspace_timeout(rollback_error):
+                    raise workspace_timeout_error(rollback_error) from rollback_error
+                raise
+            if is_workspace_timeout(error):
+                raise workspace_timeout_error(error) from error
             raise
 
         result = {"proposal_id": proposal_id, "tracker_id": row_id,
