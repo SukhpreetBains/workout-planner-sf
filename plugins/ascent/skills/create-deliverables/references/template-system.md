@@ -3,6 +3,18 @@
 Templates are user-facing compositions of reusable content-domain modules. The
 implementation retains the internal `archetype` name for compatibility.
 
+## Selection workflow
+
+For every new guided deliverable, enumerate every `templates/*/archetype.json`
+manifest and show the user the complete catalog with each template's ID, title,
+and description. The user must explicitly choose a template. Do not default to
+`project-kickoff` or infer a template from the request.
+
+After a template is selected, load its manifest and show the full ordered list
+of associated modules, including each module's ID, title, and description. Let
+the user select the modules to include, preserve template order for the selected
+subset, and confirm the module selection before evidence intake or questions.
+
 ## Files
 
 ```text
@@ -64,18 +76,18 @@ node scripts/build.mjs --preview-module kickoff-context \
   --bundle
 ```
 
-Render every module selected by a template:
+Render every module associated with a selected template:
 
 ```bash
-node scripts/build.mjs --preview-template project-kickoff \
+node scripts/build.mjs --preview-template <selected-template> \
   --out path/to/template-preview \
   --bundle
 ```
 
 Template previews compose the module-owned examples in template order and add a
 visible module label to every section. Show this preview when a user selects a
-template, then explain that they may choose which modules to include in their
-output before intake begins.
+template. The template's complete module list and the user's confirmed module
+selection must already be recorded before intake begins.
 
 Every question contains:
 
