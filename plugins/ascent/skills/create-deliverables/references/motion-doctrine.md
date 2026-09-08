@@ -20,7 +20,7 @@ contain animation code.
 | `count-up` | staggers the tiles, then interpolates each numeral, `outExpo`, 900 ms |
 | `cell-sweep` | grid stagger across heatmap cells, `outQuad`, 400 ms |
 | `path-draw` | timeline: the roadmap path draws, then the phase cards stagger up |
-| `scroll-sync` | `onScroll({ sync: true })` bound to the progress rail |
+| `scroll-sync` | `onScroll({ sync: true })` bound to the progress rail; section context updates right to left over 300 ms |
 
 ## Restraint rules
 
