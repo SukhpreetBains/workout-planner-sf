@@ -3,6 +3,7 @@
 
 Usage:
     py sync.py            # rebuild tracker copies + search index, save state
+    py sync.py --trackers-only  # refresh current rows without scanning documents
     py sync.py --status   # report what is new/changed since the last sync
                           # and which documents have not been extracted yet
 
@@ -143,12 +144,19 @@ def status() -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--status", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--status", action="store_true")
+    mode.add_argument("--trackers-only", action="store_true")
     args = parser.parse_args()
     if args.status:
         return status()
 
     schema = load_schema()
+    if args.trackers_only:
+        rows = export_tracker_copies(schema)
+        print(f"synced: {rows} tracker rows copied; document index and sync state unchanged")
+        return 0
+
     files = workspace_files()
     rows = export_tracker_copies(schema)
     indexed = build_search_index(schema, files)

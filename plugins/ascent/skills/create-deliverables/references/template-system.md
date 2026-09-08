@@ -122,19 +122,35 @@ plus a `disposition` of `rendered`, `summarized`, or `supporting`. Source-backed
 answers include at least one source citation. This makes answer coverage a
 machine-enforced gate instead of a drafting convention.
 
+For live workspace intake, source-backed values come from current reviewed
+tracker rows in `workspace/.system/tracker-copies/`, not the source documents.
+Refresh them once with `shared/scripts/sync.py --trackers-only`, using the
+installed plugin's Python wrapper and the Opportunity's `EAD_REPO_ROOT`.
+In each answer's `sources` list, use `source_id` for the tracker-copy path and
+`locator` for the stable row ID and field names. Preserve the row's original
+source references for provenance without reopening the documents. Explicit
+user answers remain `answered_by: user`; a missing reviewed value remains a
+gap until review acceptance or a direct user answer resolves it.
+
 ## Gap behavior
 
-Required gaps do not disappear. A generated site contains:
+Required gaps remain recorded in the intake and generated manifest. A draft
+shows one compact notice above the cover with the unanswered required-question
+count. It does not inject missing questions, gap-only sections, or placeholders
+into the page. Author only supported fields, rows, and views; omit a view when
+there is not enough supported content to satisfy its schema. Keep the supported
+parts of partially answered modules.
 
-- one opening summary grouped by module
-- the unanswered question inside the section it would have populated
-- a generated manifest list of unresolved IDs
+An explicit draft request does not require a gap interview or separate
+incomplete-build confirmation before rendering. Show the draft first and offer
+gap resolution afterward. An explicitly confirmed final build retains the
+opening summary grouped by module and contextual unanswered questions.
 
 Optional gaps are warned about before building and retained in intake, but are
 not rendered.
 
 The user may explicitly override required gaps and may mark the result final.
-The system records the confirmation and keeps the gap indicators. It never
+The system records the confirmation and keeps the final gap indicators. It never
 invents substitute content.
 
 ## Human review

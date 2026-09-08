@@ -315,6 +315,9 @@ export function loadAndEvaluateIntake(intakePath, archetype, modules) {
 
 export function decorateContentWithGaps(doc, intake, modules) {
   if (!intake || intake.requiredGaps.length === 0) return doc;
+  if (intake.buildStatus === 'draft') {
+    return { ...doc, _unansweredRequiredCount: intake.requiredGaps.length };
+  }
   const sections = doc.sections.map((section) => ({ ...section }));
   const allItems = intake.requiredGaps.map((gap) => ({
     id: gap.id,

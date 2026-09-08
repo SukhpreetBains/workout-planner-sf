@@ -116,6 +116,13 @@ export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRende
   const description = meta.subtitle
     ? `${meta.title} — ${meta.subtitle}`
     : meta.title;
+  const unansweredCount = doc._unansweredRequiredCount ?? 0;
+  const draftNotice = unansweredCount > 0
+    ? `
+    <aside class="draft-notice surface-white" role="status" aria-label="Incomplete draft">
+      <div class="section__inner"><p>Draft: ${unansweredCount} required question${unansweredCount === 1 ? ' is' : 's are'} unanswered.</p></div>
+    </aside>`
+    : '';
 
   return `<!doctype html>
 <html lang="en" data-accent="${esc(meta.accent)}" data-deliverable-status="${esc(ctx.buildStatus ?? 'final')}">
@@ -136,7 +143,7 @@ export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRende
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="page">
+  <div class="page">${draftNotice}
 ${coverRenderer(meta, ctx)}
 ${renderRail(railEntries)}
     <main id="main">
