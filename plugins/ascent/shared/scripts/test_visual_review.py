@@ -71,6 +71,28 @@ class VisualReviewTest(unittest.TestCase):
         value.update(overrides)
         return value
 
+    def test_trackers_only_sync_exports_accepted_values_without_document_scan(self):
+        self.proposal([self.risk(), self.risk(fields={"Statement": "Still pending."})])
+        card = self.store.list_cards()["cards"][0]
+        self.store.accept(card["proposal_id"], card["revision"], "snapshot-accept")
+        sync_module = importlib.import_module("sync")
+        index_before = self.paths.SEARCH_DB.read_bytes()
+        state_before = self.paths.SYNC_STATE.read_bytes()
+        copy_path = self.paths.TRACKER_COPIES_DIR / "risk.yaml"
+        copy_path.unlink()
+        with mock.patch.object(sys, "argv", ["sync.py", "--trackers-only"]), \
+                mock.patch.object(sync_module, "workspace_files", side_effect=AssertionError("document scan")), \
+                mock.patch.object(sync_module, "build_search_index", side_effect=AssertionError("index rebuild")):
+            self.assertEqual(sync_module.main(), 0)
+        snapshot = yaml.safe_load(copy_path.read_text(encoding="utf-8"))
+        self.assertEqual(snapshot["count"], 1)
+        self.assertEqual(snapshot["rows"][0]["Statement"], card["fields"]["Statement"])
+        self.assertTrue(snapshot["rows"][0]["Risk ID"])
+        self.assertIn("Source Refs", snapshot["rows"][0])
+        self.assertEqual(self.paths.SEARCH_DB.read_bytes(), index_before)
+        self.assertEqual(self.paths.SYNC_STATE.read_bytes(), state_before)
+        self.assertEqual(len(self.store.list_cards()["cards"]), 1)
+
     def test_legacy_proposals_upgrade_with_stable_identity(self):
         path = self.proposal([self.risk()])
         first = self.store.list_cards()["cards"][0]

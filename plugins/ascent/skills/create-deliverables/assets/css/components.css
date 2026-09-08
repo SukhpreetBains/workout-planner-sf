@@ -215,6 +215,11 @@
    Required gaps remain visible in drafts and explicit final overrides.
    ========================================================================== */
 
+.draft-notice {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--rule-color);
+}
+
 .gap-summary {
   display: grid;
   gap: var(--space-4);

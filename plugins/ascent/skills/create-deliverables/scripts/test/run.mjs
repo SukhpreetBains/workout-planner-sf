@@ -441,6 +441,25 @@ test('modules: guided content requires module plus view and derives section type
   includes(err.message, 'remove authored `type`');
 });
 
+test('review-backed intake: skill uses current rows and closes document bypasses', () => {
+  const skill = readFileSync(path.join(SKILL_ROOT, 'SKILL.md'), 'utf8');
+  includes(skill, 'workspace/.system/tracker-copies/<category>.yaml');
+  includes(skill, 'stable row ID');
+  includes(skill, 'Do not search `sources.yaml`');
+  includes(skill, 'deliverable-only document bypass');
+  includes(skill, 'Module or question count alone is');
+  ok(!skill.includes('Search both evidence stores'));
+  ok(!skill.includes('or use them only for this'));
+});
+
+test('draft intake: requested drafts render before the gap interview', () => {
+  const skill = readFileSync(path.join(SKILL_ROOT, 'SKILL.md'), 'utf8');
+  includes(skill, 'Do not block on a gap');
+  includes(skill, 'Omit unsupported fields, rows, and views');
+  includes(skill, 'Show the resulting draft to the user before offering to resolve the gaps.');
+  includes(skill, 'Final builds retain');
+});
+
 test('intake: only a user can mark a question not applicable', () => {
   const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
   raw.answers['kickoff-context.audience'] = { status: 'not_applicable', answered_by: 'source', reason: 'No audience.' };
@@ -469,21 +488,31 @@ test('intake: source-backed answers include a citation', () => {
   includes(err.message, 'source-backed answers require at least one source citation');
 });
 
-test('intake orchestration: five modules with multiple evidence files delegate in parallel', () => {
+test('intake orchestration: module and source counts do not trigger delegation', () => {
   const fixture = JSON.parse(readFileSync(path.join(FIXTURES, 'five-module-evidence.json'), 'utf8'));
   const selected = MODULES.filter((module) => fixture.selected_module_ids.includes(module.id));
   const plan = createEvidenceDelegationPlan({ selectedModules: selected, approvedEvidenceFiles: fixture.evidence_files });
+  ok(!plan.delegate);
+  ok(plan.questionCount >= 20);
+  eq(plan.assignments, []);
+});
+
+test('intake orchestration: explicitly substantial mapping can delegate in parallel', () => {
+  const fixture = JSON.parse(readFileSync(path.join(FIXTURES, 'five-module-evidence.json'), 'utf8'));
+  const selected = MODULES.filter((module) => fixture.selected_module_ids.includes(module.id));
+  const plan = createEvidenceDelegationPlan({ selectedModules: selected, approvedEvidenceFiles: fixture.evidence_files, manuallyAssembledIntake: true });
   ok(plan.delegate);
   eq(plan.assignments.length, 5);
   eq(plan.model, 'gpt-5.6-luna');
   eq(plan.reasoning, 'high');
   eq(plan.assignments[0].selected_module_ids, ['kickoff-context']);
   ok(plan.assignments[0].canonical_questions.every((question) => question.id.startsWith('kickoff-context.')));
+  includes(plan.assignments[0].safety, 'Use only the supplied current tracker rows');
 });
 
 test('intake orchestration: structured extraction rejects unsupported sources and preserves conflicts for reconciliation', () => {
   const module = MODULES.find((item) => item.id === 'kickoff-context');
-  const plan = createEvidenceDelegationPlan({ selectedModules: [module, MODULES[1], MODULES[2]], approvedEvidenceFiles: [{ source_id: 'charter', path: 'charter.md' }] });
+  const plan = createEvidenceDelegationPlan({ selectedModules: [module, MODULES[1], MODULES[2]], approvedEvidenceFiles: [{ source_id: 'charter', path: 'charter.md' }], manuallyAssembledIntake: true });
   const assignment = plan.assignments[0];
   const valid = validateEvidenceExtractionResult(assignment, { findings: [{
     question_id: 'kickoff-context.project-name', status: 'conflicting', citations: [{ source_id: 'charter', locator: 'line 4' }], explanation: 'The charter and agenda use different names.',
@@ -498,7 +527,7 @@ test('intake orchestration: structured extraction rejects unsupported sources an
 });
 
 test('intake orchestration: unavailable subagents fall back to the primary agent', () => {
-  const plan = createEvidenceDelegationPlan({ selectedModules: MODULES.slice(0, 3), approvedEvidenceFiles: [{ source_id: 'a', path: 'a.md' }], subagentsAvailable: false });
+  const plan = createEvidenceDelegationPlan({ selectedModules: MODULES.slice(0, 3), approvedEvidenceFiles: [{ source_id: 'a', path: 'a.md' }], manuallyAssembledIntake: true, subagentsAvailable: false });
   ok(!plan.delegate);
   eq(plan.fallback, 'primary-agent sequential evidence pass');
 });
@@ -665,12 +694,33 @@ test('build: content is escaped, not injected', async () => {
   includes(result.html, '&lt;script&gt;');
 });
 
-test('build: incomplete drafts show a summary and contextual missing question', async () => {
+test('build: incomplete drafts show only a compact notice above the content', async () => {
   const result = await build(EXAMPLE, { out: path.join(TMP, 'incomplete'), intake: INCOMPLETE_INTAKE });
-  includes(result.html, 'Required information still open');
-  includes(result.html, 'What is the authoritative source for project status?');
-  includes(result.html, 'This section is incomplete');
+  includes(result.html, 'Draft: 1 required question is unanswered.');
+  eq((result.html.match(/class="draft-notice /g) ?? []).length, 1);
+  ok(result.html.indexOf('class="draft-notice ') < result.html.indexOf('<main'));
+  ok(!result.html.includes('What is the authoritative source for project status?'));
+  ok(!result.html.includes('This section is incomplete'));
+  ok(!result.html.includes('class="gap-summary"'));
+  ok(!result.html.includes('class="open-questions"'));
   eq(result.manifest.unresolved_required_questions, ['ways-of-working.status-source']);
+});
+
+test('build: incomplete drafts do not create sections for missing module content', async () => {
+  const intake = writeIntake('sparse-draft-intake', {
+    missing: ['ways-of-working.status-source', 'kickoff-context.project-name'],
+  });
+  const result = await build(path.join(FIXTURES, 'valid-minimal.json'), {
+    out: path.join(TMP, 'sparse-draft'), intake,
+  });
+  const complete = await build(path.join(FIXTURES, 'valid-minimal.json'), {
+    out: path.join(TMP, 'sparse-complete'), intake: COMPLETE_INTAKE,
+  });
+  includes(result.html, 'Draft: 2 required questions are unanswered.');
+  eq(result.html.match(/<main id="main">([\s\S]*?)<\/main>/)[1],
+    complete.html.match(/<main id="main">([\s\S]*?)<\/main>/)[1]);
+  ok(!complete.html.includes('class="draft-notice '));
+  eq(result.manifest.unresolved_required_questions.length, 2);
 });
 
 test('build: an explicitly confirmed final build may retain required gaps', async () => {
@@ -682,6 +732,7 @@ test('build: an explicitly confirmed final build may retain required gaps', asyn
   const result = await build(EXAMPLE, { out: path.join(TMP, 'confirmed-final'), intake });
   eq(result.manifest.build_status, 'final');
   includes(result.html, 'What is the authoritative source for project status?');
+  ok(!result.html.includes('class="draft-notice '));
 });
 
 test('detach: incomplete builds require confirmation and rebuild from local source', async () => {
