@@ -191,17 +191,28 @@
 .rail__nav {
   max-width: var(--page-max);
   margin-inline: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
   padding: var(--space-2) var(--page-gutter);
   font-size: var(--size-small);
   font-weight: var(--weight-body-tight);
 }
 
-.rail__link { color: var(--on-white-muted); text-decoration: none; padding: var(--space-1) 0; }
+.rail__link {
+  min-width: 0;
+  padding: var(--space-1) 0;
+  overflow: hidden;
+  color: var(--on-white-muted);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rail__link--current { justify-self: center; }
+.rail__link--next { justify-self: end; }
 .rail__link:hover { color: var(--on-white-emphasis); text-decoration: underline; }
-.rail__link[aria-current="true"] { color: var(--on-white-emphasis); font-weight: var(--weight-subhead); }
+.rail__link[aria-current="location"] { color: var(--on-white-emphasis); font-weight: var(--weight-subhead); }
 
 /* ==========================================================================
    SECTION HEADINGS
@@ -703,6 +714,7 @@
 
   .cover { padding-top: var(--space-4); gap: var(--space-5); }
   .cover__body { padding-block: var(--space-6); }
+  .rail { display: none; }
   .rec { grid-template-columns: 1fr; }
   .rec__index { grid-row: auto; }
   .slalom-line { display: none; }

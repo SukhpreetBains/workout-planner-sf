@@ -42,13 +42,21 @@ export function sectionId(section, index) {
 
 export function renderRail(entries) {
   if (!entries.length) return '';
-  const links = entries
-    .map((entry) => `<a class="rail__link" href="#${esc(entry.id)}">${typeset(entry.label)}</a>`)
-    .join('');
+  const link = (entry, position, current = false) => entry
+    ? `<a class="rail__link rail__link--${position}" href="#${esc(entry.id)}"${current ? ' aria-current="location"' : ''}>${typeset(entry.label)}</a>`
+    : `<span class="rail__link rail__link--${position}" hidden></span>`;
+  // The document owns the complete section list while the visual rail keeps
+  // only the previous, current, and next sections in view.
+  const serializedEntries = JSON.stringify(entries).replace(/</g, '\\u003c');
   return `
-    <nav class="rail" data-motion="scroll-sync" aria-label="Contents">
+    <nav class="rail" data-motion="scroll-sync" aria-label="Section navigation">
       <div class="rail__track"><div class="rail__fill"></div></div>
-      <div class="rail__nav">${links}</div>
+      <div class="rail__nav">
+        ${link(null, 'previous')}
+        ${link(entries[0], 'current', true)}
+        ${link(entries[1], 'next')}
+      </div>
+      <script class="rail__entries" type="application/json">${serializedEntries}</script>
     </nav>`;
 }
 

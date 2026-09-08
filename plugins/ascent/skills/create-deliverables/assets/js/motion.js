@@ -245,16 +245,62 @@ export function initMotion(root = document) {
   return { reduced: false, applied };
 }
 
-/** Mark the rail link for the section currently on screen. */
+/**
+ * Keep the compact rail focused on the previous, current, and next sections.
+ * Each update enters from the right, so the reader sees the context advance
+ * left as they move through a long document.
+ */
 export function initRail(root = document) {
-  const links = $(root, '.rail__link');
-  if (!links.length || typeof IntersectionObserver !== 'function') return;
-  const byId = new Map(links.map((l) => [l.getAttribute('href')?.slice(1), l]));
+  const rail = root.querySelector('.rail');
+  const source = rail?.querySelector('.rail__entries');
+  if (!rail || !source || typeof IntersectionObserver !== 'function') return;
+  let entries;
+  try {
+    entries = JSON.parse(source.textContent);
+  } catch {
+    return;
+  }
+  if (!Array.isArray(entries) || !entries.length) return;
+
+  const slots = {
+    previous: rail.querySelector('.rail__link--previous'),
+    current: rail.querySelector('.rail__link--current'),
+    next: rail.querySelector('.rail__link--next'),
+  };
+  const setSlot = (slot, entry, current = false) => {
+    if (!slot) return;
+    if (!entry) {
+      slot.hidden = true;
+      slot.removeAttribute('href');
+      slot.removeAttribute('aria-current');
+      slot.textContent = '';
+      return;
+    }
+    slot.hidden = false;
+    slot.href = `#${entry.id}`;
+    slot.textContent = entry.label;
+    if (current) slot.setAttribute('aria-current', 'location');
+    else slot.removeAttribute('aria-current');
+  };
+  let activeIndex = 0;
+  const update = (index, { animate: shouldAnimate = false } = {}) => {
+    if (index === activeIndex && !shouldAnimate) return;
+    activeIndex = index;
+    setSlot(slots.previous, entries[index - 1]);
+    setSlot(slots.current, entries[index], true);
+    setSlot(slots.next, entries[index + 1]);
+    if (shouldAnimate && !prefersReduced()) {
+      const visible = Object.values(slots).filter((slot) => slot && !slot.hidden);
+      animate(visible, { x: [24, 0], opacity: [0, 1], ease: 'outQuad', duration: 300 });
+    }
+  };
+
+  const byId = new Map(entries.map((entry, index) => [entry.id, index]));
   const observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
-      for (const l of links) l.removeAttribute('aria-current');
-      byId.get(entry.target.id)?.setAttribute('aria-current', 'true');
+      const index = byId.get(entry.target.id);
+      if (index !== undefined) update(index, { animate: index !== activeIndex });
     }
   }, { rootMargin: '-45% 0px -50% 0px' });
   for (const id of byId.keys()) {
