@@ -23,17 +23,27 @@ date, decision, or answer to fill a gap.
 
 ## Guided template workflow
 
-### 1. Load the template and accepted review values
+### 1. Choose a template and its modules
 
-Load the selected template from `templates/<name>/archetype.json` (use
-`project-kickoff` when no other template is selected), then load its ordered
-modules, question definitions, and HTML renderers. If the manifest declares
+Before loading any template-specific content, discover every directory under
+`templates/` that contains an `archetype.json`. Read each manifest and present
+the complete template catalog to the user, including each template's ID, title,
+and description. Ask the user to explicitly select one template. Never default
+to `project-kickoff`, infer a selection from the request, or omit an available
+template from the catalog.
+
+Load the selected template from `templates/<selected-template>/archetype.json`,
+then load its ordered modules, question definitions, and HTML renderers. Present
+the complete ordered list of modules associated with that template, including
+each module's ID, title, and description. Ask which modules to include, retain
+the template order for the selected subset, and confirm that selection before
+evidence intake, module questions, or drafting. If the manifest declares
 `instructions`, read that template-owned Markdown file and follow it whenever
 the template is selected or resumed. These instructions supplement this workflow;
 explicit user decisions take precedence. Do not treat factual content or intake
 answers as custom instructions.
 
-Before evidence intake, present any `template_questions` with their image choices.
+Before evidence intake, present any selected template's `template_questions` with their image choices.
 The preview build emits `template-choices.html` alongside `index.html`. Show all
 choices visually and ask for an explicit selection; record the selected value
 under its stable question ID in the normal intake. Preserve it on resume. A
@@ -42,15 +52,14 @@ missing preference remains a gap and must never be filled from example content.
 Render the selected template's module examples before starting evidence intake:
 
 ```bash
-node scripts/build.mjs --preview-template project-kickoff \
+node scripts/build.mjs --preview-template <selected-template> \
   --out path/to/template-preview \
   --bundle
 ```
 
 Give the user the preview link. Every module must be visibly labeled in the
-preview. Explain that the template is a starting composition and ask the user
-which modules to include in their output. Confirm their module selection before
-asking module questions or drafting sections.
+preview. Explain that the template is a starting composition. Do not ask the
+user to select a template or modules only after beginning evidence intake.
 
 Use `workspace/.system/tracker-copies/<category>.yaml` as the default factual
 input. Accept in `workspace-review-updates` writes the reviewed values to the
@@ -179,7 +188,7 @@ status, typed value, provenance, disposition, and user decisions there. Keep
 Validate before drafting presentation content:
 
 ```bash
-node scripts/validate-intake.mjs project-kickoff path/to/intake.yaml
+node scripts/validate-intake.mjs <selected-template> path/to/intake.yaml
 ```
 
 ### 5. Draft and render for review

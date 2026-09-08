@@ -437,6 +437,16 @@ test('review-backed intake: skill uses current rows and closes document bypasses
   ok(!skill.includes('or use them only for this'));
 });
 
+test('guided workflow: template and module selections are explicit', () => {
+  const skill = readFileSync(path.join(SKILL_ROOT, 'SKILL.md'), 'utf8');
+  includes(skill, 'complete template catalog');
+  includes(skill, 'Ask the user to explicitly select one template');
+  includes(skill, 'Never default\nto `project-kickoff`');
+  includes(skill, 'complete ordered list of modules associated with that template');
+  includes(skill, 'confirm that selection before\nevidence intake');
+  ok(!skill.includes('`project-kickoff` when no other template is selected'));
+});
+
 test('draft intake: requested drafts render before the gap interview', () => {
   const skill = readFileSync(path.join(SKILL_ROOT, 'SKILL.md'), 'utf8');
   includes(skill, 'Do not block on a gap');
