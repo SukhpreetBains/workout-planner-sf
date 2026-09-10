@@ -11,11 +11,14 @@ and description. The user must explicitly choose a template. Do not default to
 `project-kickoff` or infer a template from the request.
 
 After a template is selected, load its manifest and show the full ordered list
-of associated modules, including each module's ID, title, and description. Let
-the user select the modules to include, preserve template order for the selected
-subset, and confirm the module selection before evidence intake or questions.
-Open the selected template's current preview in Codex when that workspace action
-is available and say: “Open the updated preview in Codex.”
+of available modules, including each module's ID, title, and description. Show
+the template's recommended modules separately, using the template-owned
+instructions. Before the user selects a final subset, ask whether they would
+like one or more modules rendered with fictional example data. Render and show
+only the modules they request, never the full template or all available modules
+by default. Then let the user select the modules to include, preserve template
+order for the selected subset, and confirm the module selection before evidence
+intake or questions.
 
 ## Files
 
@@ -78,7 +81,8 @@ node scripts/build.mjs --preview-module kickoff-context \
   --bundle
 ```
 
-Render every module associated with a selected template:
+Render every module associated with a selected template only when the user
+explicitly requests a full-template preview:
 
 ```bash
 node scripts/build.mjs --preview-template <selected-template> \
@@ -88,12 +92,11 @@ node scripts/build.mjs --preview-template <selected-template> \
 
 Template previews render the template-owned static example in template order
 and add a visible module label to every section. Isolated module previews select
-the matching section from that same static example. Show the full preview when
-a user selects a template. The template's complete module list and the user's
-confirmed module selection must already be recorded before intake begins.
-After content has been added and rendered, open the updated preview in Codex
-when that workspace action is available and tell the user: “Open the updated
-preview in Codex.”
+the matching section from that same static example. After a template is
+selected, show only the isolated previews the user requested. The template's
+complete module list and the user's confirmed module selection must already be
+recorded before intake begins. After content has been added and rendered, give
+the user the updated preview link when that workspace action is available.
 
 Every question contains:
 
