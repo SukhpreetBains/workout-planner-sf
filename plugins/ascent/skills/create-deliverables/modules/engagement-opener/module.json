@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "engagement-opener",
+  "title": "Title / engagement opener",
+  "description": "The opening slide that establishes the engagement identity, audience, and meeting context.",
+  "questions": [
+    {
+      "id": "engagement-opener.identity",
+      "tier": "required",
+      "prompt": "What exact customer and engagement names should appear?",
+      "answer_type": "text",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Title and engagement opener/clarification-1"
+    },
+    {
+      "id": "engagement-opener.session",
+      "tier": "required",
+      "prompt": "Who is attending, and what is the kickoff date?",
+      "answer_type": "text",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Title and engagement opener/clarification-2"
+    },
+    {
+      "id": "engagement-opener.brand",
+      "tier": "optional",
+      "prompt": "Which branding and confidentiality requirements apply?",
+      "answer_type": "text",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Title and engagement opener/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "renderer": "./html.mjs#cover",
+      "uses": [
+        "engagement-opener.identity",
+        "engagement-opener.session",
+        "engagement-opener.brand"
+      ]
+    }
+  ]
+}

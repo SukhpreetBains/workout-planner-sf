@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "decision-rights",
+  "title": "Ownership and decision rights",
+  "description": "Clarifies responsibility boundaries, retained client decisions, and approval or go/no-go authority.",
+  "questions": [
+    {
+      "id": "decision-rights.authority",
+      "tier": "required",
+      "prompt": "Who has final authority over scope, budget, schedule, design, and release?",
+      "answer_type": "table",
+      "response_fields": [
+        "Scope",
+        "Budget",
+        "Schedule",
+        "Design",
+        "Acceptance"
+      ],
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Ownership and decision rights/clarification-1"
+    },
+    {
+      "id": "decision-rights.approvals",
+      "tier": "required",
+      "prompt": "Which approvals are contractually required?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Ownership and decision rights/clarification-2"
+    },
+    {
+      "id": "decision-rights.boundaries",
+      "tier": "optional",
+      "prompt": "Where are customer, partner, or vendor responsibilities unclear?",
+      "answer_type": "risks",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Ownership and decision rights/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "decision-rights",
+      "type": "table",
+      "renderer": "./html.mjs#decision-rights",
+      "uses": [
+        "decision-rights.authority",
+        "decision-rights.approvals",
+        "decision-rights.boundaries"
+      ]
+    }
+  ]
+}

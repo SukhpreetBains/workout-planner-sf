@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "architecture",
+  "title": "High Level Architecture Diagram",
+  "description": "Major solution components, system boundaries, integrations, and information flows.",
+  "questions": [
+    {
+      "id": "architecture.state",
+      "tier": "required",
+      "prompt": "Should the diagram show the current state, target state, or both?",
+      "answer_type": "decision",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/High-level architecture diagram/clarification-1"
+    },
+    {
+      "id": "architecture.systems",
+      "tier": "required",
+      "prompt": "Which systems, integrations, and data flows must appear?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/High-level architecture diagram/clarification-2"
+    },
+    {
+      "id": "architecture.constraints",
+      "tier": "optional",
+      "prompt": "Which architecture decisions or constraints remain unconfirmed?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/High-level architecture diagram/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "architecture",
+      "type": "roadmap",
+      "renderer": "./html.mjs#architecture",
+      "uses": [
+        "architecture.state",
+        "architecture.systems",
+        "architecture.constraints"
+      ]
+    }
+  ]
+}

@@ -1,438 +1,57 @@
 {
   "name": "project-kickoff",
   "title": "Project kickoff",
-  "description": "The first client-facing session of an engagement: who is on the team, what we are here to do, how we will work together, and what happens next. Establishes shared expectations, not findings.",
-  "schema_version": 1,
-  "modules": [
-    {
-      "id": "kickoff-context",
-      "output": [
-        {
-          "id": "cover",
-          "type": "cover",
-          "renderer": "./html.mjs#cover",
-          "uses": [
-            "kickoff-context.project-name",
-            "kickoff-context.date",
-            "kickoff-context.participants"
-          ]
-        },
-        {
-          "id": "agenda",
-          "type": "agenda",
-          "renderer": "./html.mjs#agenda",
-          "uses": [
-            "kickoff-context.agenda-topics",
-            "kickoff-context.topic-timing",
-            "kickoff-context.presenters"
-          ]
-        },
-        {
-          "id": "working-agreement",
-          "type": "quote",
-          "renderer": "./html.mjs#working-agreement",
-          "uses": [
-            "kickoff-context.session-outcomes"
-          ]
-        }
-      ],
-      "include_questions": [
-        "kickoff-context.project-name",
-        "kickoff-context.participants",
-        "kickoff-context.date",
-        "kickoff-context.audience",
-        "kickoff-context.session-outcomes",
-        "kickoff-context.agenda-topics",
-        "kickoff-context.presenters",
-        "kickoff-context.topic-timing",
-        "kickoff-context.document-status",
-        "kickoff-context.format",
-        "kickoff-context.supporting-materials"
-      ]
-    },
-    {
-      "id": "objectives-and-scope",
-      "output": [
-        {
-          "id": "purpose",
-          "type": "purpose",
-          "renderer": "./html.mjs#purpose",
-          "uses": [
-            "objectives-and-scope.business-context",
-            "objectives-and-scope.objectives",
-            "objectives-and-scope.in-scope",
-            "objectives-and-scope.out-of-scope"
-          ]
-        },
-        {
-          "id": "success-measures",
-          "type": "kpi-row",
-          "renderer": "./html.mjs#success-measures",
-          "uses": [
-            "objectives-and-scope.success-measures",
-            "objectives-and-scope.baselines"
-          ]
-        },
-        {
-          "id": "scope-details",
-          "type": "table",
-          "renderer": "./html.mjs#scope-details",
-          "uses": [
-            "objectives-and-scope.included-capabilities",
-            "objectives-and-scope.client-responsibilities",
-            "objectives-and-scope.acceptance-outcome"
-          ]
-        }
-      ],
-      "include_questions": [
-        "objectives-and-scope.business-context",
-        "objectives-and-scope.objectives",
-        "objectives-and-scope.beneficiaries",
-        "objectives-and-scope.affected-workflows",
-        "objectives-and-scope.included-capabilities",
-        "objectives-and-scope.success-measures",
-        "objectives-and-scope.in-scope",
-        "objectives-and-scope.out-of-scope",
-        "objectives-and-scope.acceptance-outcome",
-        "objectives-and-scope.client-responsibilities",
-        "objectives-and-scope.strategy-alignment",
-        "objectives-and-scope.prioritization",
-        "objectives-and-scope.personas",
-        "objectives-and-scope.future-phases",
-        "objectives-and-scope.additional-benefits",
-        "objectives-and-scope.baselines"
-      ]
-    },
-    {
-      "id": "team-and-responsibilities",
-      "output": [
-        {
-          "id": "team",
-          "type": "table",
-          "renderer": "./html.mjs#team",
-          "uses": [
-            "team-and-responsibilities.sponsor",
-            "team-and-responsibilities.delivery-owner",
-            "team-and-responsibilities.workstream-leads",
-            "team-and-responsibilities.business-owners",
-            "team-and-responsibilities.participants",
-            "team-and-responsibilities.primary-responsibilities"
-          ]
-        },
-        {
-          "id": "decision-rights",
-          "type": "table",
-          "renderer": "./html.mjs#decision-rights",
-          "uses": [
-            "team-and-responsibilities.decision-rights",
-            "team-and-responsibilities.escalation-path"
-          ]
-        }
-      ],
-      "include_questions": [
-        "team-and-responsibilities.sponsor",
-        "team-and-responsibilities.delivery-owner",
-        "team-and-responsibilities.workstream-leads",
-        "team-and-responsibilities.business-owners",
-        "team-and-responsibilities.participants",
-        "team-and-responsibilities.primary-responsibilities",
-        "team-and-responsibilities.decision-rights",
-        "team-and-responsibilities.escalation-path",
-        "team-and-responsibilities.allocation",
-        "team-and-responsibilities.locations",
-        "team-and-responsibilities.time-zones",
-        "team-and-responsibilities.experience",
-        "team-and-responsibilities.contact-methods",
-        "team-and-responsibilities.profile-assets",
-        "team-and-responsibilities.extended-stakeholders"
-      ]
-    },
-    {
-      "id": "delivery-approach",
-      "output": [
-        {
-          "id": "timeline",
-          "type": "roadmap",
-          "renderer": "./html.mjs#timeline",
-          "uses": [
-            "delivery-approach.phases",
-            "delivery-approach.dates",
-            "delivery-approach.phase-outcomes",
-            "delivery-approach.milestones",
-            "delivery-approach.date-confidence"
-          ]
-        },
-        {
-          "id": "delivery-model",
-          "type": "table",
-          "renderer": "./html.mjs#delivery-model",
-          "uses": [
-            "delivery-approach.methodology",
-            "delivery-approach.phase-activities",
-            "delivery-approach.review-and-acceptance",
-            "delivery-approach.transition-criteria"
-          ]
-        }
-      ],
-      "include_questions": [
-        "delivery-approach.methodology",
-        "delivery-approach.phases",
-        "delivery-approach.phase-activities",
-        "delivery-approach.dates",
-        "delivery-approach.phase-outcomes",
-        "delivery-approach.milestones",
-        "delivery-approach.date-confidence",
-        "delivery-approach.schedule-dependencies",
-        "delivery-approach.review-and-acceptance",
-        "delivery-approach.transition-criteria",
-        "delivery-approach.iteration-dates",
-        "delivery-approach.detailed-tasks",
-        "delivery-approach.demo-dates",
-        "delivery-approach.schedule-scenarios",
-        "delivery-approach.blackout-periods",
-        "delivery-approach.executive-milestones",
-        "delivery-approach.phase-allocation"
-      ]
-    },
-    {
-      "id": "discovery-and-deliverables",
-      "output": [
-        {
-          "id": "sessions",
-          "type": "table",
-          "renderer": "./html.mjs#sessions",
-          "uses": [
-            "discovery-and-deliverables.sessions",
-            "discovery-and-deliverables.session-purpose",
-            "discovery-and-deliverables.session-participants",
-            "discovery-and-deliverables.session-outputs"
-          ]
-        },
-        {
-          "id": "deliverables",
-          "type": "table",
-          "renderer": "./html.mjs#deliverables",
-          "uses": [
-            "discovery-and-deliverables.deliverables",
-            "discovery-and-deliverables.deliverable-content",
-            "discovery-and-deliverables.deliverable-roles",
-            "discovery-and-deliverables.due-dates"
-          ]
-        }
-      ],
-      "include_questions": [
-        "discovery-and-deliverables.discovery-questions",
-        "discovery-and-deliverables.sessions",
-        "discovery-and-deliverables.session-purpose",
-        "discovery-and-deliverables.session-participants",
-        "discovery-and-deliverables.session-outputs",
-        "discovery-and-deliverables.deliverables",
-        "discovery-and-deliverables.deliverable-content",
-        "discovery-and-deliverables.deliverable-roles",
-        "discovery-and-deliverables.execution-readiness",
-        "discovery-and-deliverables.session-schedule",
-        "discovery-and-deliverables.session-topics",
-        "discovery-and-deliverables.prework",
-        "discovery-and-deliverables.formats",
-        "discovery-and-deliverables.follow-up-sessions",
-        "discovery-and-deliverables.facilitators",
-        "discovery-and-deliverables.open-question-tracking",
-        "discovery-and-deliverables.due-dates"
-      ]
-    },
-    {
-      "id": "ways-of-working",
-      "output": [
-        {
-          "id": "logistics",
-          "type": "table",
-          "renderer": "./html.mjs#logistics",
-          "uses": [
-            "ways-of-working.hours-and-time-zones",
-            "ways-of-working.communication-platform",
-            "ways-of-working.document-location",
-            "ways-of-working.tracking-system",
-            "ways-of-working.status-source"
-          ]
-        },
-        {
-          "id": "cadence",
-          "type": "table",
-          "renderer": "./html.mjs#cadence",
-          "uses": [
-            "ways-of-working.recurring-meetings",
-            "ways-of-working.meeting-details",
-            "ways-of-working.status-reporting"
-          ]
-        }
-      ],
-      "include_questions": [
-        "ways-of-working.hours-and-time-zones",
-        "ways-of-working.communication-platform",
-        "ways-of-working.document-location",
-        "ways-of-working.tracking-system",
-        "ways-of-working.access-needs",
-        "ways-of-working.status-source",
-        "ways-of-working.recurring-meetings",
-        "ways-of-working.meeting-details",
-        "ways-of-working.status-reporting",
-        "ways-of-working.response-times",
-        "ways-of-working.async-topics",
-        "ways-of-working.conventions",
-        "ways-of-working.templates",
-        "ways-of-working.scheduling-process",
-        "ways-of-working.advance-notice",
-        "ways-of-working.meeting-preferences",
-        "ways-of-working.workstream-channels"
-      ]
-    },
-    {
-      "id": "raid",
-      "output": [
-        {
-          "id": "summary",
-          "type": "theme-group",
-          "renderer": "./html.mjs#summary",
-          "uses": [
-            "raid.known-items",
-            "raid.impact",
-            "raid.owners",
-            "raid.mitigation",
-            "raid.likelihood-and-severity"
-          ]
-        },
-        {
-          "id": "details",
-          "type": "table",
-          "renderer": "./html.mjs#details",
-          "uses": [
-            "raid.dependencies",
-            "raid.assumptions",
-            "raid.tracking-location",
-            "raid.escalation"
-          ]
-        },
-        {
-          "id": "risk-profile",
-          "type": "heatmap",
-          "renderer": "./html.mjs#risk-profile",
-          "uses": [
-            "raid.known-items",
-            "raid.likelihood-and-severity"
-          ]
-        }
-      ],
-      "include_questions": [
-        "raid.known-items",
-        "raid.impact",
-        "raid.owners",
-        "raid.mitigation",
-        "raid.dependencies",
-        "raid.assumptions",
-        "raid.tracking-location",
-        "raid.escalation",
-        "raid.likelihood-and-severity",
-        "raid.contingency",
-        "raid.triggers",
-        "raid.residual-risk",
-        "raid.review-frequency",
-        "raid.executive-visibility",
-        "raid.prior-occurrence",
-        "raid.visualization"
-      ]
-    },
-    {
-      "id": "immediate-next-steps",
-      "output": [
-        {
-          "id": "actions",
-          "type": "next-steps",
-          "renderer": "./html.mjs#actions",
-          "uses": [
-            "immediate-next-steps.actions",
-            "immediate-next-steps.owners",
-            "immediate-next-steps.due-dates",
-            "immediate-next-steps.next-event",
-            "immediate-next-steps.blockers"
-          ]
-        }
-      ],
-      "include_questions": [
-        "immediate-next-steps.actions",
-        "immediate-next-steps.owners",
-        "immediate-next-steps.due-dates",
-        "immediate-next-steps.decisions",
-        "immediate-next-steps.participation",
-        "immediate-next-steps.next-event",
-        "immediate-next-steps.blockers",
-        "immediate-next-steps.completed-actions",
-        "immediate-next-steps.upcoming-activities",
-        "immediate-next-steps.scheduling-lead-time",
-        "immediate-next-steps.parking-lot",
-        "immediate-next-steps.action-distribution",
-        "immediate-next-steps.material-delivery",
-        "immediate-next-steps.extended-communication"
-      ]
-    }
-  ],
+  "description": "A modular, interactive kickoff microsite that aligns the team on purpose, outcomes, scope, delivery, governance, operating practices, and immediate action.",
   "cover_surface": "blue",
   "footer_surface": "black",
   "allowed_sections": [
     "purpose",
-    "agenda",
-    "table",
+    "exec-summary",
     "kpi-row",
+    "theme-group",
+    "recommendations",
     "roadmap",
     "timeline",
-    "theme-group",
-    "heatmap",
     "quote",
-    "next-steps"
+    "heatmap",
+    "next-steps",
+    "methodology",
+    "agenda",
+    "table"
   ],
   "required_sections": [
-    "purpose",
-    "agenda",
-    "table",
-    "roadmap",
     "next-steps"
   ],
-  "recommended_order": [
-    "purpose",
+  "static_example": "static-example.yaml",
+  "modules": [
+    "engagement-opener",
     "agenda",
-    "table",
-    "roadmap",
-    "table",
-    "theme-group",
-    "next-steps"
+    "team-roster",
+    "business-context",
+    "objectives-and-success",
+    "scope-review",
+    "guiding-principles",
+    "architecture",
+    "epic-overview",
+    "delivery-approach",
+    "timeline-roadmap",
+    "project-schedule",
+    "deliverables",
+    "team-structure",
+    "stakeholder-register",
+    "governance-structure",
+    "decision-rights",
+    "meeting-cadence",
+    "ways-of-working",
+    "service-principles",
+    "project-logistics",
+    "delivery-conditions",
+    "raid-log",
+    "dependency-list",
+    "action-log",
+    "decision-log",
+    "immediate-next-steps",
+    "closing-discussion"
   ],
-  "injects": [
-    "cover",
-    "progress-rail",
-    "footer"
-  ],
-  "default_motion": {
-    "cover": [
-      "color-bar-draw",
-      "line-draw"
-    ],
-    "progress-rail": "scroll-sync",
-    "purpose": "fade-up",
-    "agenda": "stagger-up",
-    "table": "fade-up",
-    "kpi-row": "count-up",
-    "roadmap": "path-draw",
-    "theme-group": "stagger-up",
-    "quote": "fade-up",
-    "next-steps": "stagger-up",
-    "footer": "none"
-  },
-  "notes": [
-    "purpose states why the engagement exists and what is in scope before anything else. A kickoff opens by naming what it is for, not by summarizing findings that do not exist yet. It is not exec-summary reused: same shape (title + lead prose), but its own eyebrow and fallback title, because 'Summary' / 'In brief' would misdescribe an opening that has nothing yet to summarize.",
-    "agenda is required: an explicit agenda is the convention for the medium (a live session), separate from the progress rail's persistent nav.",
-    "table is required at least once, for team and roles. A kickoff that does not say who is on the team and what they own has not actually kicked off anything. table is reusable for deliverables, workshop plans, or key assumptions in the same deck.",
-    "roadmap is required for the approach and timeline. It is the phase-and-outcome view, not a date-scaled Gantt chart. See references/archetypes.md.",
-    "theme-group is allowed but optional, reframed for risks and assumptions rather than findings: theme is the risk, evidence is the description, implication is the response or mitigation.",
-    "next-steps is required: a kickoff that ends without a concrete next action has not set expectations, only reviewed them.",
-    "Team member photos and a generated org chart are deliberately out of scope. Represent structure and reporting lines in the required team/roles table instead. See references/archetypes.md."
-  ]
+  "instructions": "instructions.md"
 }

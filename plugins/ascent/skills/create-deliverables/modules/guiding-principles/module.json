@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "guiding-principles",
+  "title": "Guiding Principles",
+  "description": "Shared principles for product, design, architecture, and delivery tradeoffs.",
+  "questions": [
+    {
+      "id": "guiding-principles.principles",
+      "tier": "required",
+      "prompt": "Which principles should guide product, design, and technical decisions?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Guiding principles/clarification-1"
+    },
+    {
+      "id": "guiding-principles.constraints",
+      "tier": "required",
+      "prompt": "Which principles or constraints are non-negotiable?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Guiding principles/clarification-2"
+    },
+    {
+      "id": "guiding-principles.exceptions",
+      "tier": "optional",
+      "prompt": "Who resolves conflicts between principles or approves exceptions?",
+      "answer_type": "decision",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Guiding principles/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "principles",
+      "type": "agenda",
+      "renderer": "./html.mjs#principles",
+      "uses": [
+        "guiding-principles.principles",
+        "guiding-principles.constraints",
+        "guiding-principles.exceptions"
+      ]
+    }
+  ]
+}

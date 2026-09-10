@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "service-principles",
+  "title": "Customer experience / service principles",
+  "description": "Captures engagement principles that guide how the team partners with the client and serves end users.",
+  "questions": [
+    {
+      "id": "service-principles.experience",
+      "tier": "required",
+      "prompt": "What experience should customers and end users have during the engagement?",
+      "answer_type": "text",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Customer experience and service principles/clarification-1"
+    },
+    {
+      "id": "service-principles.commitments",
+      "tier": "required",
+      "prompt": "Which service principles or commitments are non-negotiable?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Customer experience and service principles/clarification-2"
+    },
+    {
+      "id": "service-principles.feedback",
+      "tier": "optional",
+      "prompt": "How will feedback be gathered and acted on?",
+      "answer_type": "text",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Customer experience and service principles/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "service-principles",
+      "type": "agenda",
+      "renderer": "./html.mjs#service-principles",
+      "uses": [
+        "service-principles.experience",
+        "service-principles.commitments",
+        "service-principles.feedback"
+      ]
+    }
+  ]
+}

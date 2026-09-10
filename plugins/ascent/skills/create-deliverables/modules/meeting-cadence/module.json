@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "meeting-cadence",
+  "title": "Meeting cadence / rhythm of business",
+  "description": "Defines the recurring forums that manage execution, decisions, status, and escalation.",
+  "questions": [
+    {
+      "id": "meeting-cadence.forums",
+      "tier": "required",
+      "prompt": "Which recurring forums are needed, and what should each produce?",
+      "answer_type": "table",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Meeting cadence and rhythm of business/clarification-1"
+    },
+    {
+      "id": "meeting-cadence.participants",
+      "tier": "required",
+      "prompt": "Who attends and facilitates each forum?",
+      "answer_type": "table",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Meeting cadence and rhythm of business/clarification-2"
+    },
+    {
+      "id": "meeting-cadence.frequency",
+      "tier": "optional",
+      "prompt": "How often should forums meet, including changes by phase?",
+      "answer_type": "schedule",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Meeting cadence and rhythm of business/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "cadence",
+      "type": "table",
+      "renderer": "./html.mjs#cadence",
+      "uses": [
+        "meeting-cadence.forums",
+        "meeting-cadence.participants",
+        "meeting-cadence.frequency"
+      ]
+    }
+  ]
+}

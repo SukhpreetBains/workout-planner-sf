@@ -116,8 +116,8 @@ than frozen at zero, because an empty progress bar is worse than none.
    that is not a token, add the token to `tokens.css` — that is the only file
    allowed to hold a literal.
 4. Reference the renderer as `./html.mjs#<view-id>` in `module.json`.
-5. Add fictional source for the view to the module's `example.json` so it can
-   be reviewed directly and in every template that selects the module.
+5. Add fictional source for the view to each selecting template's declared
+   `static_example` so the view can be reviewed directly and in context.
 6. Add the type to the relevant `archetype.json` `allowed_sections`.
 7. Add a case to `scripts/test/run.mjs` and rebuild the worked example.
 

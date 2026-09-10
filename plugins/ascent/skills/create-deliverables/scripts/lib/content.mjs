@@ -23,6 +23,14 @@ export class ContentError extends Error {
 export const ACCENTS = ['cyan', 'coral-red', 'purple', 'chartreuse'];
 export const SEVERITIES = ['high', 'medium', 'low'];
 
+const MICROSITE_FIELDS = {
+  layout: { type: 'string', required: true, enum: ['microsite'] },
+  copy: { type: 'list', required: true, min: 1, of: {
+    key: { type: 'string', required: true, pattern: /^[a-z0-9-]+$/ },
+    text: { type: 'string', required: true },
+  } },
+};
+
 const META_FIELDS = {
   archetype: { type: 'string', required: true },
   client: { type: 'string', required: true },
@@ -33,6 +41,8 @@ const META_FIELDS = {
   classification: { type: 'string', required: true },
   accent: { type: 'string', required: true, enum: ACCENTS },
   client_logo: { type: 'string' },
+  layout: { ...MICROSITE_FIELDS.layout, required: false },
+  copy: MICROSITE_FIELDS.copy,
 };
 
 /**
@@ -284,7 +294,10 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
   }
 
   if (!('meta' in doc)) problems.push('missing required key `meta`');
-  else checkFields(doc.meta, META_FIELDS, 'meta', problems, ctx);
+  else {
+    checkFields(doc.meta, { ...META_FIELDS, copy: { ...MICROSITE_FIELDS.copy, required: doc.meta?.layout === 'microsite' } }, 'meta', problems, ctx);
+    if (doc.meta.copy && doc.meta.layout !== 'microsite') problems.push('meta.copy requires layout: microsite');
+  }
 
   if (!('sections' in doc) || !Array.isArray(doc.sections)) {
     problems.push('missing required key `sections` (a list of sections)');
@@ -318,9 +331,9 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
         type: { type: 'string', required: true },
         module: { type: 'string' },
         view: { type: 'string' },
-        ...schema,
+        ...(section.layout === 'microsite' ? { title: { type: 'string', required: true }, ...MICROSITE_FIELDS } : schema),
       }, where, problems, ctx);
-      if (problems.length === previousProblems) validateDelivery(section, where, problems);
+      if (section.layout !== 'microsite' && problems.length === previousProblems) validateDelivery(section, where, problems);
     });
 
     if (archetype?.required_sections?.length) {

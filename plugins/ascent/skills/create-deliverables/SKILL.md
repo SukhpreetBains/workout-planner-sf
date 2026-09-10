@@ -34,14 +34,20 @@ template from the catalog.
 
 Load the selected template from `templates/<selected-template>/archetype.json`,
 then load its ordered modules, question definitions, and HTML renderers. Present
-the complete ordered list of modules associated with that template, including
-each module's ID, title, and description. Ask which modules to include, retain
-the template order for the selected subset, and confirm that selection before
-evidence intake, module questions, or drafting. If the manifest declares
-`instructions`, read that template-owned Markdown file and follow it whenever
-the template is selected or resumed. These instructions supplement this workflow;
-explicit user decisions take precedence. Do not treat factual content or intake
-answers as custom instructions.
+the complete ordered list of available modules, including each module's ID,
+title, and description. Also present the template's recommended modules, as
+defined by its template-owned instructions, separately from the full catalog.
+Before asking the user to choose a final subset, ask whether they would like to
+see one or more available modules rendered with fictional example data. Render
+only the modules they request, using isolated module previews, and give the user
+a preview link for each. Do not automatically render the full template or every
+available module. Then ask which modules to include, retain the template order
+for the selected subset, and confirm that selection before evidence intake,
+module questions, or drafting. If the manifest declares `instructions`, read
+that template-owned Markdown file and follow it whenever the template is
+selected or resumed. These instructions supplement this workflow; explicit user
+decisions take precedence. Do not treat factual content or intake answers as
+custom instructions.
 
 Before evidence intake, present any selected template's `template_questions` with their image choices.
 The preview build emits `template-choices.html` alongside `index.html`. Show all
@@ -49,17 +55,18 @@ choices visually and ask for an explicit selection; record the selected value
 under its stable question ID in the normal intake. Preserve it on resume. A
 missing preference remains a gap and must never be filled from example content.
 
-Render the selected template's module examples before starting evidence intake:
+For each module the user asks to preview, render its static example in isolation:
 
 ```bash
-node scripts/build.mjs --preview-template <selected-template> \
-  --out path/to/template-preview \
+node scripts/build.mjs --preview-module <module-id> \
+  --out path/to/module-preview \
   --bundle
 ```
 
-Give the user the preview link. Every module must be visibly labeled in the
-preview. Explain that the template is a starting composition. Do not ask the
-user to select a template or modules only after beginning evidence intake.
+Open each requested rendered preview in Codex when that workspace action is
+available, and give the user its preview link. Explain that it is a fictional
+starting composition. Do not ask the user to select a template or modules only
+after beginning evidence intake.
 
 Use `workspace/.system/tracker-copies/<category>.yaml` as the default factual
 input. Accept in `workspace-review-updates` writes the reviewed values to the

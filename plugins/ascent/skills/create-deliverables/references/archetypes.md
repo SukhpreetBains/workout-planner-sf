@@ -5,8 +5,8 @@ are allowed, which are required, the order they read best in, the chrome that
 gets injected, and the default motion level. Templates may also declare custom instructions
 and approved visual preferences.
 
-Manifests live at `templates/<name>/archetype.json`, with a complete worked
-example alongside at `content.example.yaml`.
+Manifests live at `templates/<name>/archetype.json`. Each manifest declares a
+complete worked `static_example` alongside it.
 
 ## `project-kickoff`
 
@@ -89,6 +89,7 @@ validation, and rendering commands.
   "name": "business-case",
   "title": "Business case",
   "description": "One paragraph on the audience and the decision it serves.",
+  "static_example": "static-example.yaml",
   "cover_surface": "blue",
   "footer_surface": "black",
   "allowed_sections": ["exec-summary", "kpi-row", "recommendations", "roadmap", "next-steps"],
@@ -100,7 +101,7 @@ validation, and rendering commands.
 }
 ```
 
-2. Write a complete, realistic `content.example.yaml`. Realistic matters: a
+2. Write a complete, realistic `static-example.yaml`. Realistic matters: a
    worked example with placeholder text teaches nothing about whether the
    archetype actually holds a real argument. Use a fictional client and say so.
 3. Add a build test to `scripts/test/run.mjs`.

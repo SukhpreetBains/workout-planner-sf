@@ -11,9 +11,14 @@ and description. The user must explicitly choose a template. Do not default to
 `project-kickoff` or infer a template from the request.
 
 After a template is selected, load its manifest and show the full ordered list
-of associated modules, including each module's ID, title, and description. Let
-the user select the modules to include, preserve template order for the selected
-subset, and confirm the module selection before evidence intake or questions.
+of available modules, including each module's ID, title, and description. Show
+the template's recommended modules separately, using the template-owned
+instructions. Before the user selects a final subset, ask whether they would
+like one or more modules rendered with fictional example data. Render and show
+only the modules they request, never the full template or all available modules
+by default. Then let the user select the modules to include, preserve template
+order for the selected subset, and confirm the module selection before evidence
+intake or questions.
 
 ## Files
 
@@ -21,15 +26,14 @@ subset, and confirm the module selection before evidence intake or questions.
 templates/
   project-kickoff/
     archetype.json
-    content.example.yaml
-    intake.example.yaml
+    static-example.yaml
+    intake.example.json
 modules/
   shared/
     primitives.mjs
   <module-id>/
     module.json
     html.mjs
-    example.json
 ```
 
 An archetype owns module order, question selection or promotion, and optional
@@ -60,13 +64,14 @@ Every renderer path must reference the `html.mjs` in the same module folder.
 Module renderers may import low-level primitives from `modules/shared/`, but
 one module never imports a finished view from another module.
 
-## Module examples
+## Static template examples
 
-Every module owns `example.json`, a fictional, renderable demonstration of all
-authorable views declared by that module. A module that owns the template cover
-also supplies the fictional cover metadata. Example source never contains real
-client information and is validated against the same content schemas and HTML
-renderers used for deliverables.
+Every template declares one `static_example` file in `archetype.json`. The file
+contains fictional, renderable content for every authorable view selected by
+that template, including the cover metadata. Modules remain reusable structural
+definitions and do not carry fictional content. Static examples never contain
+real client information and are validated against the same content schemas and
+HTML renderers used for deliverables.
 
 Render one module directly:
 
@@ -76,7 +81,8 @@ node scripts/build.mjs --preview-module kickoff-context \
   --bundle
 ```
 
-Render every module associated with a selected template:
+Render every module associated with a selected template only when the user
+explicitly requests a full-template preview:
 
 ```bash
 node scripts/build.mjs --preview-template <selected-template> \
@@ -84,10 +90,13 @@ node scripts/build.mjs --preview-template <selected-template> \
   --bundle
 ```
 
-Template previews compose the module-owned examples in template order and add a
-visible module label to every section. Show this preview when a user selects a
-template. The template's complete module list and the user's confirmed module
-selection must already be recorded before intake begins.
+Template previews render the template-owned static example in template order
+and add a visible module label to every section. Isolated module previews select
+the matching section from that same static example. After a template is
+selected, show only the isolated previews the user requested. The template's
+complete module list and the user's confirmed module selection must already be
+recorded before intake begins. After content has been added and rendered, give
+the user the updated preview link when that workspace action is available.
 
 Every question contains:
 
@@ -198,3 +207,44 @@ Optional `illustrations` entries target a selected `module` and `view`, using a
 local `image` as a decorative section-heading accent. Only authored sections
 render their accents. Keep approved asset provenance in the template assets
 README. The HLS kickoff template demonstrates all of these fields.
+
+## Reference microsite compositions
+
+The project-kickoff static example reproduces the user-supplied Northstar Health
+sample from `Ascent Mocrosite Modules.html`. It is sample content, never project
+evidence. Module titles, descriptions, order, and all 28 composition bodies match
+that reference.
+
+Each module keeps its reference composition in its own `html.mjs`. Set
+`layout: microsite` on a section (or cover metadata) and provide `copy`, a list of
+`key` and `text` pairs. Keys correspond to named placeholders in the module's
+composition. Missing, duplicate, and unknown keys fail rendering; values are
+escaped even when used in attributes. The template owns all example wording.
+Reference layouts have a fixed composition and card count. Use the standard
+structured fields without `layout` when the content needs a different item count.
+Do not combine the two content forms in a section.
+
+Reference styling is restored from the supplied microsite in
+`assets/css/reference-layout.css`. Its declaration values, cascade order, colors,
+and geometry are preserved. The rendering boundary prefixes every class and
+inline custom property with `ref-`; the stylesheet uses the same prefix. A scoped
+browser-default reset prevents the standard kit's element resets and components
+from changing these layouts. The section wrapper does not add another content
+width or another set of gutters. Load this stylesheet only when a reference
+layout is used.
+
+Keep source fidelity distinct from token compliance. The source contains literal
+colors, gradients, and centered diagram labels that the existing token-only
+brand gate rejects. Do not rewrite those declarations merely to obtain a passing
+report, and do not suppress the gate's findings. The standard layouts retain
+normal brand validation. Desktop visual review of the supplied-reference layouts
+is still required before claiming a visual match.
+
+Flow selection, design notes, and epic filters are scoped to each rendered
+module. Metric rings and other numeric graphics include their final state in
+static output. The existing standard renderers remain available for previously
+authored content.
+
+The standard-renderer regression fixture under `scripts/test/fixtures/` preserves
+validator mutation coverage independently of the evolving template example. It
+is test data, not an authoring example.
