@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "dependency-list",
+  "title": "Dependency List",
+  "description": "A focused inventory of external prerequisites that can affect sequencing, readiness, or delivery outcomes.",
+  "questions": [
+    {
+      "id": "dependency-list.prerequisites",
+      "tier": "required",
+      "prompt": "Which external prerequisites or vendor commitments could block delivery?",
+      "answer_type": "risks",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Dependency list/clarification-1"
+    },
+    {
+      "id": "dependency-list.ownership",
+      "tier": "required",
+      "prompt": "Who owns each dependency, and when is it needed?",
+      "answer_type": "table",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Dependency list/clarification-2"
+    },
+    {
+      "id": "dependency-list.fallback",
+      "tier": "optional",
+      "prompt": "What is the fallback if a dependency is delayed?",
+      "answer_type": "table",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Dependency list/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "dependencies",
+      "type": "table",
+      "renderer": "./html.mjs#dependencies",
+      "uses": [
+        "dependency-list.prerequisites",
+        "dependency-list.ownership",
+        "dependency-list.fallback"
+      ]
+    }
+  ]
+}

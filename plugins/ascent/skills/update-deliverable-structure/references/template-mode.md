@@ -12,8 +12,10 @@ Create or modify one reusable microsite template.
 4. Select module questions, promote optional questions only when the template
    truly cannot succeed without them, and define explicit output-mapping
    overrides only where the module default is not suitable.
-5. Create a realistic fictional content example and a resumable intake example.
-   Never embed real client facts in shared template assets.
+5. Declare one `static_example` in the template manifest. Create realistic
+   fictional content for every selected module in that file, plus a resumable
+   intake example. Modules do not own fictional examples. Never embed real
+   client facts in shared template assets.
 6. Test complete, partial, conflicting, missing, not-applicable, optional-skip,
    incomplete-override, and final-override intake behavior.
 7. Render the complete fictional template and every visible gap state. Give the

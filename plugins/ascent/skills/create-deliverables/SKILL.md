@@ -43,13 +43,18 @@ the template is selected or resumed. These instructions supplement this workflow
 explicit user decisions take precedence. Do not treat factual content or intake
 answers as custom instructions.
 
+When module options are shown after a template is selected, open the selected
+template's current preview in Codex when that workspace action is available.
+Tell the user: “Open the updated preview in Codex.” This gives them the built-in
+preview action while they choose modules.
+
 Before evidence intake, present any selected template's `template_questions` with their image choices.
 The preview build emits `template-choices.html` alongside `index.html`. Show all
 choices visually and ask for an explicit selection; record the selected value
 under its stable question ID in the normal intake. Preserve it on resume. A
 missing preference remains a gap and must never be filled from example content.
 
-Render the selected template's module examples before starting evidence intake:
+Render the selected template's static example before starting evidence intake:
 
 ```bash
 node scripts/build.mjs --preview-template <selected-template> \
@@ -57,8 +62,10 @@ node scripts/build.mjs --preview-template <selected-template> \
   --bundle
 ```
 
-Give the user the preview link. Every module must be visibly labeled in the
-preview. Explain that the template is a starting composition. Do not ask the
+Open the rendered preview in Codex when that workspace action is available, and
+tell the user: “Open the updated preview in Codex.” Also give the user the
+preview link. The static example must include and visibly label every selected
+module. Explain that the template is a starting composition. Do not ask the
 user to select a template or modules only after beginning evidence intake.
 
 Use `workspace/.system/tracker-copies/<category>.yaml` as the default factual

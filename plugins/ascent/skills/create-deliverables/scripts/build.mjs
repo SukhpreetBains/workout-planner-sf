@@ -7,8 +7,8 @@ import { loadTemplateOptions, copyTemplateOptions } from './lib/template-options
  *
  *   --out <dir>       output directory (default ./build/<client>-<archetype>)
  *   --intake <file>   question coverage and evidence record for modular templates
- *   --preview-module  render a module-owned example for isolated visual review
- *   --preview-template render every module example in template order
+ *   --preview-module  isolate one module from its template's static example
+ *   --preview-template render a template-owned static example with every module
  *   --bundle          also emit <deliverable-name>.html, everything inlined into one file
  *   --no-validate     skip the brand gate for iteration only
  *
@@ -139,6 +139,7 @@ export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRende
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
+  ${meta.layout === 'microsite' || sections.some((section) => section.layout === 'microsite') ? '<link rel="stylesheet" href="css/reference-layout.css">' : ''}
   <link rel="stylesheet" href="css/print.css">
   <script type="importmap">{"imports":{"animejs":"./js/anime.esm.min.js"}}</script>
 </head>
@@ -186,11 +187,13 @@ export async function build(contentPath, {
     : null;
   let renderedDoc = decorateContentWithGaps(doc, intake, modules);
   if (previewModule) {
-    if (!modules.some((module) => module.id === previewModule)) {
+    const previewDefinition = modules.find((module) => module.id === previewModule);
+    if (!previewDefinition) {
       throw new ContentError(`preview module \`${previewModule}\` is not selected by this template`);
     }
     const previewSections = renderedDoc.sections.filter((section) => section.module === previewModule);
-    if (previewSections.length === 0) {
+    const ownsBodyView = previewDefinition.output.some((output) => output.type !== 'cover');
+    if (previewSections.length === 0 && ownsBodyView) {
       throw new ContentError(`content has no authored sections for preview module \`${previewModule}\``);
     }
     renderedDoc = { ...renderedDoc, sections: previewSections };
@@ -202,7 +205,7 @@ export async function build(contentPath, {
   const footerLogo = logoVariantFor(archetype.footer_surface ?? 'black');
   const icons = renderedDoc.sections.flatMap((s) =>
     resolveSectionType(s.type) === 'theme-group'
-      ? s.findings.map((f) => f.icon).filter(Boolean)
+      ? (s.findings ?? []).map((f) => f.icon).filter(Boolean)
       : []);
   const clientLogo = meta.client_logo ? path.resolve(contentDir, meta.client_logo) : null;
 
@@ -218,7 +221,9 @@ export async function build(contentPath, {
     icons,
     clientLogo,
   });
-  copyOwnAssets(outDir);
+  copyOwnAssets(outDir, {
+    referenceLayouts: meta.layout === 'microsite' || renderedDoc.sections.some((section) => section.layout === 'microsite'),
+  });
   const templateAssets = copyTemplateOptions(archetype, intake, outDir);
   const profiles = copyProfileAssets(renderedDoc.sections, contentDir, outDir);
 

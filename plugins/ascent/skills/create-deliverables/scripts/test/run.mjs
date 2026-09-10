@@ -19,7 +19,7 @@ import os from 'node:os';
 import process from 'node:process';
 
 import { parseYaml, YamlError } from '../lib/yaml.mjs';
-import { ContentError, validateContent } from '../lib/content.mjs';
+import { ContentError, parseContentFile, validateContent } from '../lib/content.mjs';
 import { SKILL_ROOT, listIconNames } from '../lib/assets.mjs';
 import { build, buildStructurePreview, loadArchetype } from '../build.mjs';
 import { evaluateIntake, loadTemplateModules, resolveGuidedContent } from '../lib/intake.mjs';
@@ -32,7 +32,6 @@ import { rebuildDetached } from '../rebuild-detached.mjs';
 import { validateBuild } from '../validate-brand.mjs';
 import { writeBundle } from '../lib/bundle.mjs';
 import { style } from '../lib/report.mjs';
-import { registerDeliveryTests } from './delivery.mjs';
 
 /* ==========================================================================
    Runner
@@ -171,13 +170,13 @@ function content(overrides = {}) {
       accent: 'cyan',
     },
     sections: [
-      { type: 'purpose', module: 'objectives-and-scope', body: 'One paragraph.' },
-      { type: 'agenda', module: 'kickoff-context', items: [{ title: 'One topic', detail: 'What the topic covers.' }] },
-      { type: 'table', module: 'team-and-responsibilities', title: 'Team', columns: ['Name'], rows: [{ cells: ['One person'] }] },
+      { type: 'purpose', module: 'business-context', body: 'One paragraph.' },
+      { type: 'agenda', module: 'agenda', items: [{ title: 'One topic', detail: 'What the topic covers.' }] },
+      { type: 'table', module: 'team-roster', title: 'Team', columns: ['Name'], rows: [{ cells: ['One person'] }] },
       { type: 'roadmap', module: 'delivery-approach', phases: [{ name: 'Learn', window: 'Week 1', outcomes: ['One outcome'] }] },
       {
         type: 'theme-group',
-        module: 'raid',
+        module: 'delivery-conditions',
         title: 'What we heard',
         findings: [{ theme: 'T', evidence: 'E', implication: 'I' }],
       },
@@ -329,7 +328,8 @@ const TMP = path.join(os.tmpdir(), 'create-deliverables-tests');
 rmSync(TMP, { recursive: true, force: true });
 mkdirSync(TMP, { recursive: true });
 
-const EXAMPLE = path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'content.example.yaml');
+// Freeze the standard renderer fixture so reference-copy changes do not weaken validator mutation tests.
+const EXAMPLE = path.join(SKILL_ROOT, 'scripts', 'test', 'fixtures', 'standard-kickoff-regression.json');
 const FIXTURES = path.join(SKILL_ROOT, 'scripts', 'test', 'fixtures');
 const MODULES = loadTemplateModules(ARCHETYPE, SKILL_ROOT);
 
@@ -349,7 +349,7 @@ function writeIntake(name, { missing = [], buildStatus = 'draft', confirmAt = nu
               : ['Covered by the fictional project-kickoff example.'],
           answered_by: 'source',
           disposition: 'rendered',
-          sources: [{ source_id: 'fictional-example', locator: 'templates/project-kickoff/content.example.yaml' }],
+          sources: [{ source_id: 'fictional-example', locator: 'templates/project-kickoff/static-example.yaml' }],
         };
     }
   }
@@ -366,14 +366,14 @@ function writeIntake(name, { missing = [], buildStatus = 'draft', confirmAt = nu
 }
 
 const COMPLETE_INTAKE = writeIntake('complete-intake');
-const INCOMPLETE_INTAKE = writeIntake('incomplete-intake', { missing: ['ways-of-working.status-source'] });
+const INCOMPLETE_INTAKE = writeIntake('incomplete-intake', { missing: ['ways-of-working.channels'] });
 
 let example = null;   // the reference build, shared by the validator tests
 
-test('modules: project-kickoff has eight reusable modules and the expected question tiers', () => {
-  eq(MODULES.length, 8);
-  eq(MODULES.flatMap((module) => module.questions).filter((question) => question.tier === 'required').length, 67);
-  eq(MODULES.flatMap((module) => module.questions).filter((question) => question.tier === 'optional').length, 56);
+test('modules: project-kickoff has 28 reusable modules and the expected question tiers', () => {
+  eq(MODULES.length, 28);
+  eq(MODULES.flatMap((module) => module.questions).filter((question) => question.tier === 'required').length, 56);
+  eq(MODULES.flatMap((module) => module.questions).filter((question) => question.tier === 'optional').length, 28);
 });
 
 test('modules: sibling folders own their definitions and finished renderers', () => {
@@ -391,27 +391,39 @@ test('modules: sibling folders own their definitions and finished renderers', ()
   }
 });
 
-test('modules: every module has renderable example source', async () => {
+test('templates: the static example is the only fictional module source', async () => {
   for (const module of MODULES) {
-    ok(existsSync(path.join(SKILL_ROOT, 'modules', module.id, 'example.json')));
+    ok(!existsSync(path.join(SKILL_ROOT, 'modules', module.id, 'example.json')));
   }
+  ok(existsSync(path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'static-example.yaml')));
   const result = await buildStructurePreview({
-    moduleId: 'objectives-and-scope',
-    out: path.join(TMP, 'objectives-and-scope-example'),
+    moduleId: 'objectives-and-success',
+    out: path.join(TMP, 'objectives-and-success-static-example'),
   });
-  eq(result.renderedDoc.sections.map((section) => section.view), ['purpose', 'success-measures', 'scope-details']);
-  includes(result.html, 'data-preview-module="objectives-and-scope"');
-  includes(result.html, `Module: ${MODULES.find((module) => module.id === 'objectives-and-scope').title}`);
+  eq(result.renderedDoc.sections.map((section) => section.view), ['outcomes']);
+  includes(result.html, 'data-preview-module="objectives-and-success"');
+  includes(result.html, `Module: ${MODULES.find((module) => module.id === 'objectives-and-success').title}`);
 });
 
-test('templates: the example preview renders every selected module with labels', async () => {
+test('modules: a cover-only module renders in isolation without a placeholder section', async () => {
+  const result = await buildStructurePreview({
+    moduleId: 'engagement-opener',
+    out: path.join(TMP, 'engagement-opener-example'),
+  });
+  eq(result.renderedDoc.sections, []);
+  includes(result.html, 'class="reference-kickoff cover"');
+  includes(result.html, 'Kickoff the work.');
+});
+
+test('templates: the static example renders every selected module with labels', async () => {
   const result = await buildStructurePreview({
     templateName: 'project-kickoff',
-    out: path.join(TMP, 'project-kickoff-module-examples'),
+    out: path.join(TMP, 'project-kickoff-static-example'),
   });
   const renderedModules = new Set(result.renderedDoc.sections.map((section) => section.module));
-  eq([...renderedModules], MODULES.map((module) => module.id));
-  for (const module of MODULES) {
+  const authorableModules = MODULES.filter((module) => module.output.some((view) => view.type !== 'cover'));
+  eq([...renderedModules], authorableModules.map((module) => module.id));
+  for (const module of authorableModules) {
     includes(result.html, `data-preview-module="${module.id}"`);
   }
 });
@@ -419,9 +431,9 @@ test('templates: the example preview renders every selected module with labels',
 test('modules: guided content requires module plus view and derives section type', () => {
   const raw = JSON.parse(readFileSync(path.join(FIXTURES, 'valid-minimal.json'), 'utf8'));
   const resolved = resolveGuidedContent(raw, MODULES);
-  eq(resolved.sections[0].type, 'purpose');
+  eq(resolved.sections[0].type, 'theme-group');
   const invalid = structuredClone(raw);
-  invalid.sections[0].type = 'purpose';
+  invalid.sections[0].type = 'theme-group';
   const err = throws(() => resolveGuidedContent(invalid, MODULES));
   includes(err.message, 'remove authored `type`');
 });
@@ -457,7 +469,7 @@ test('draft intake: requested drafts render before the gap interview', () => {
 
 test('intake: only a user can mark a question not applicable', () => {
   const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
-  raw.answers['kickoff-context.audience'] = { status: 'not_applicable', answered_by: 'source', reason: 'No audience.' };
+  raw.answers['engagement-opener.identity'] = { status: 'not_applicable', answered_by: 'source', reason: 'No audience.' };
   const err = throws(() => evaluateIntake(raw, ARCHETYPE, MODULES));
   includes(err.message, 'only the user may mark a question not applicable');
 });
@@ -471,14 +483,14 @@ test('intake: a final build with gaps requires explicit confirmation', () => {
 
 test('intake: every answered item records its content disposition', () => {
   const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
-  delete raw.answers['kickoff-context.audience'].disposition;
+  delete raw.answers['engagement-opener.identity'].disposition;
   const err = throws(() => evaluateIntake(raw, ARCHETYPE, MODULES));
   includes(err.message, 'requires disposition to be rendered, summarized, or supporting');
 });
 
 test('intake: source-backed answers include a citation', () => {
   const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
-  delete raw.answers['kickoff-context.audience'].sources;
+  delete raw.answers['engagement-opener.identity'].sources;
   const err = throws(() => evaluateIntake(raw, ARCHETYPE, MODULES));
   includes(err.message, 'source-backed answers require at least one source citation');
 });
@@ -488,7 +500,7 @@ test('intake orchestration: module and source counts do not trigger delegation',
   const selected = MODULES.filter((module) => fixture.selected_module_ids.includes(module.id));
   const plan = createEvidenceDelegationPlan({ selectedModules: selected, approvedEvidenceFiles: fixture.evidence_files });
   ok(!plan.delegate);
-  ok(plan.questionCount >= 20);
+  ok(plan.questionCount >= 15);
   eq(plan.assignments, []);
 });
 
@@ -500,23 +512,23 @@ test('intake orchestration: explicitly substantial mapping can delegate in paral
   eq(plan.assignments.length, 5);
   eq(plan.model, 'gpt-5.6-luna');
   eq(plan.reasoning, 'high');
-  eq(plan.assignments[0].selected_module_ids, ['kickoff-context']);
-  ok(plan.assignments[0].canonical_questions.every((question) => question.id.startsWith('kickoff-context.')));
+  eq(plan.assignments[0].selected_module_ids, ['engagement-opener']);
+  ok(plan.assignments[0].canonical_questions.every((question) => question.id.startsWith('engagement-opener.')));
   includes(plan.assignments[0].safety, 'Use only the supplied current tracker rows');
 });
 
 test('intake orchestration: structured extraction rejects unsupported sources and preserves conflicts for reconciliation', () => {
-  const module = MODULES.find((item) => item.id === 'kickoff-context');
+  const module = MODULES.find((item) => item.id === 'engagement-opener');
   const plan = createEvidenceDelegationPlan({ selectedModules: [module, MODULES[1], MODULES[2]], approvedEvidenceFiles: [{ source_id: 'charter', path: 'charter.md' }], manuallyAssembledIntake: true });
   const assignment = plan.assignments[0];
   const valid = validateEvidenceExtractionResult(assignment, { findings: [{
-    question_id: 'kickoff-context.project-name', status: 'conflicting', citations: [{ source_id: 'charter', locator: 'line 4' }], explanation: 'The charter and agenda use different names.',
+    question_id: 'engagement-opener.identity', status: 'conflicting', citations: [{ source_id: 'charter', locator: 'line 4' }], explanation: 'The charter and agenda use different names.',
   }] });
   eq(valid[0].status, 'conflicting');
   const candidates = collectEvidenceCandidates([valid, [{ ...valid[0], explanation: 'A second reviewer found the same conflict.' }]]);
-  eq(candidates.get('kickoff-context.project-name').length, 2);
+  eq(candidates.get('engagement-opener.identity').length, 2);
   const err = throws(() => validateEvidenceExtractionResult(assignment, { findings: [{
-    question_id: 'kickoff-context.project-name', status: 'answered', answer: 'Northwind', citations: [{ source_id: 'unknown', locator: 'line 4' }],
+    question_id: 'engagement-opener.identity', status: 'answered', answer: 'Northwind', citations: [{ source_id: 'unknown', locator: 'line 4' }],
   }] }));
   includes(err.message, 'citation source is not approved');
 });
@@ -528,23 +540,23 @@ test('intake orchestration: unavailable subagents fall back to the primary agent
 });
 
 test('intake questions: numbering is sequential, multipart, and stable through follow-ups', () => {
-  const decisionRights = MODULES.find((module) => module.id === 'team-and-responsibilities')
-    .questions.find((question) => question.id.endsWith('.decision-rights'));
+  const decisionRights = MODULES.find((module) => module.id === 'decision-rights')
+    .questions.find((question) => question.id.endsWith('.authority'));
   const ledger = createQuestionLedger([
-    { id: 'kickoff-context.project-name', prompt: 'What is the project name?' },
+    { id: 'engagement-opener.identity', prompt: 'What is the project name?' },
     decisionRights,
-    { id: 'delivery-approach.methodology', prompt: 'What approach will be used?' },
+    { id: 'delivery-approach.method', prompt: 'What approach will be used?' },
   ]);
   const displayed = formatNumberedQuestion(decisionRights, ledger, 3);
-  includes(displayed, 'Question 2 of 3\n\n2. Who has final decision authority for each area?\n2.1 Scope');
+  includes(displayed, 'Question 2 of 3\n\n2. Who has final authority over scope, budget, schedule, design, and release?\n2.1 Scope');
   includes(displayed, '2.5 Acceptance');
   eq(addQuestionFollowUp(ledger, decisionRights.id), '2a');
   includes(formatNumberedQuestion(decisionRights, ledger, 3, '2a'), 'Question 2a of 3');
-  eq(ledger.numbers.get('delivery-approach.methodology'), '3');
+  eq(ledger.numbers.get('delivery-approach.method'), '3');
   eq(questionNumberMapping(ledger), {
-    'kickoff-context.project-name': '1',
-    'team-and-responsibilities.decision-rights': '2',
-    'delivery-approach.methodology': '3',
+    'engagement-opener.identity': '1',
+    'decision-rights.authority': '2',
+    'delivery-approach.method': '3',
   });
   const raw = JSON.parse(readFileSync(COMPLETE_INTAKE, 'utf8'));
   raw.display_question_numbers = questionNumberMapping(ledger);
@@ -556,12 +568,12 @@ test('build: the worked project-kickoff example builds end to end', async () => 
   ok(existsSync(path.join(example.outDir, 'index.html')));
   eq(example.manifest.archetype, 'project-kickoff');
   eq(example.manifest.accent, 'cyan');
-  eq(example.manifest.required_question_count, 67);
+  eq(example.manifest.required_question_count, 56);
 });
 
 test('build: the output folder has the expected structure', () => {
   for (const rel of [
-    'index.html', 'service-cloud-discovery-core-team-kickoff.html', 'brand-manifest.json',
+    'index.html', 'connected-service-experience-kickoff.html', 'brand-manifest.json',
     'css/tokens.css', 'css/base.css', 'css/components.css', 'css/print.css',
     'js/motion.js', 'js/anime.esm.min.js', 'js/LICENSE.md',
     'assets/logo-slalom-white.svg',
@@ -625,31 +637,29 @@ test('build: the long-content layout stress fixture builds', async () => {
 });
 
 test('build: the project-kickoff worked example passes the gate', async () => {
-  const examplePath = path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'content.example.yaml');
+  const examplePath = path.join(SKILL_ROOT, 'templates', 'project-kickoff', 'static-example.yaml');
   const result = await build(examplePath, { out: path.join(TMP, 'kickoff'), intake: COMPLETE_INTAKE });
   eq(result.manifest.archetype, 'project-kickoff');
   ok(existsSync(path.join(result.outDir, 'index.html')));
-  includes(result.html, 'class="agenda"');
-  includes(result.html, 'class="data-table"');
+  includes(result.html, 'agenda-rail');
+  includes(result.html, 'gantt-bar');
+  includes(result.html, 'org-tree');
   const report = validateBuild(result.outDir);
   eq(report.errors.length, 0, `unexpected errors: ${report.errors.map((e) => e.message).join('; ')}`);
 });
 
 test('build: one module can render in isolation with its normal renderer paths', async () => {
   const result = await build(EXAMPLE, {
-    out: path.join(TMP, 'kickoff-context-isolated'),
+    out: path.join(TMP, 'agenda-isolated'),
     intake: COMPLETE_INTAKE,
-    previewModule: 'kickoff-context',
+    previewModule: 'agenda',
   });
-  eq(result.manifest.preview_module, 'kickoff-context');
-  eq(result.renderedDoc.sections.map((section) => section.view), ['agenda', 'working-agreement']);
-  includes(result.html, 'class="agenda"');
-  includes(result.html, '<details class="agenda-item__disclosure"');
-  includes(result.html, 'Meet the people responsible for the engagement');
-  const agendaGroups = [...result.html.matchAll(/name="(agenda-[^"]+)"/g)].map((match) => match[1]);
-  ok(agendaGroups.length > 1, 'expected multiple clickable agenda items');
-  ok(agendaGroups.every((name) => name === agendaGroups[0]), 'agenda items must share one exclusive disclosure group');
-  ok(!result.html.includes('Core team &amp; roles'), 'another module leaked into the isolated preview');
+  eq(result.manifest.preview_module, 'agenda');
+  eq(result.renderedDoc.sections.map((section) => section.view), ['agenda']);
+  includes(result.html, 'module-scene--agenda');
+  includes(result.html, '<details class="kickoff-agenda__stop"');
+  includes(result.html, 'Why this work matters');
+  ok(!result.html.includes('One team, clear responsibilities'), 'another module leaked into the isolated preview');
 });
 
 test('layout: components keep content visible and constrain data-driven columns', () => {
@@ -673,11 +683,18 @@ test('build: an unknown archetype fails with an actionable message', () => {
   includes(err.message, 'references/archetypes.md');
 });
 
-test('build: a non-numeric KPI value degrades to a plain render', () => {
-  includes(example.html, '1 in 5');
-  const tile = example.html.slice(example.html.indexOf('1 in 5') - 400, example.html.indexOf('1 in 5'));
+test('build: a non-numeric KPI value degrades to a plain render', async () => {
+  const doc = parseContentFile(EXAMPLE);
+  const outcomes = doc.sections.find((section) => section.module === 'objectives-and-success');
+  outcomes.items[0].value = '1 in 5';
+  outcomes.items[1].value = 6;
+  const file = path.join(TMP, 'non-numeric-kpi.json');
+  writeFileSync(file, JSON.stringify(doc));
+  const result = await build(file, { out: path.join(TMP, 'non-numeric-kpi'), intake: COMPLETE_INTAKE });
+  includes(result.html, '1 in 5');
+  const tile = result.html.slice(result.html.indexOf('1 in 5') - 400, result.html.indexOf('1 in 5'));
   ok(!/data-count-to/.test(tile.slice(-120)), 'a non-numeric KPI was given a count-up target');
-  includes(example.html, 'data-count-to="6"');
+  includes(result.html, 'data-count-to="6"');
 });
 
 test('build: content is escaped, not injected', async () => {
@@ -694,16 +711,16 @@ test('build: incomplete drafts show only a compact notice above the content', as
   includes(result.html, 'Draft: 1 required question is unanswered.');
   eq((result.html.match(/class="draft-notice /g) ?? []).length, 1);
   ok(result.html.indexOf('class="draft-notice ') < result.html.indexOf('<main'));
-  ok(!result.html.includes('What is the authoritative source for project status?'));
+  ok(!result.html.includes('Which communication channels and response times should the team use?'));
   ok(!result.html.includes('This section is incomplete'));
   ok(!result.html.includes('class="gap-summary"'));
   ok(!result.html.includes('class="open-questions"'));
-  eq(result.manifest.unresolved_required_questions, ['ways-of-working.status-source']);
+  eq(result.manifest.unresolved_required_questions, ['ways-of-working.channels']);
 });
 
 test('build: incomplete drafts do not create sections for missing module content', async () => {
   const intake = writeIntake('sparse-draft-intake', {
-    missing: ['ways-of-working.status-source', 'kickoff-context.project-name'],
+    missing: ['ways-of-working.channels', 'engagement-opener.identity'],
   });
   const result = await build(path.join(FIXTURES, 'valid-minimal.json'), {
     out: path.join(TMP, 'sparse-draft'), intake,
@@ -720,13 +737,13 @@ test('build: incomplete drafts do not create sections for missing module content
 
 test('build: an explicitly confirmed final build may retain required gaps', async () => {
   const intake = writeIntake('confirmed-final-intake', {
-    missing: ['ways-of-working.status-source'],
+    missing: ['ways-of-working.channels'],
     buildStatus: 'final',
     confirmAt: '2026-09-02T12:00:00Z',
   });
   const result = await build(EXAMPLE, { out: path.join(TMP, 'confirmed-final'), intake });
   eq(result.manifest.build_status, 'final');
-  includes(result.html, 'What is the authoritative source for project status?');
+  includes(result.html, 'Which communication channels and response times should the team use?');
   ok(!result.html.includes('class="draft-notice '));
 });
 
@@ -747,7 +764,7 @@ test('detach: incomplete builds require confirmation and rebuild from local sour
    ========================================================================== */
 
 test('bundle: the single file has no external reference and stands alone', () => {
-  eq(example.manifest.bundle_filename, 'service-cloud-discovery-core-team-kickoff.html');
+  eq(example.manifest.bundle_filename, 'connected-service-experience-kickoff.html');
   const bundle = readFileSync(path.join(example.outDir, example.manifest.bundle_filename), 'utf8');
   ok(!existsSync(path.join(example.outDir, 'bundle.html')), 'legacy bundle.html should not be emitted');
   ok(!/<link\b[^>]*stylesheet/i.test(bundle), 'standalone HTML still links a stylesheet');
@@ -785,10 +802,10 @@ test('validator: the clean build warns about the shipped Slalom Sans files', () 
   includes(warn.message, 'redistribution');
 });
 
-test('validator: the clean build discloses the known brand deviations', () => {
+test('validator: the clean build reports only applicable brand deviations', () => {
   const report = validateBuild(example.outDir);
   const deviations = report.warnings.filter((w) => w.rule === 'deviation');
-  ok(deviations.length >= 2, `expected the serif and Slalom line deviations, got ${deviations.length}`);
+  eq(deviations, []);
 });
 
 /** Patch helpers used by the broken fixtures below. */
@@ -889,7 +906,7 @@ brokenFixture('Avenir leaking into web output', 'rule 9', (dir) =>
   append(dir, 'css/components.css', '\n.display { font-family: "Avenir Next LT Pro", sans-serif; }\n'));
 
 brokenFixture('a headline set in capitals', 'rule 10', (dir) =>
-  replace(dir, 'index.html', '>Risks &amp; open questions</h2>', '>RISKS &amp; OPEN QUESTIONS</h2>'));
+  replace(dir, 'index.html', '>Why the project exists</h2>', '>WHY THE PROJECT EXISTS</h2>'));
 
 brokenFixture('all caps outside an eyebrow label', 'rule 10', (dir) =>
   append(dir, 'css/components.css', '\n.rec__action { text-transform: uppercase; }\n'));
@@ -920,12 +937,11 @@ brokenFixture('an icon that is not from the approved library', 'rule 15', (dir) 
 
 brokenFixture('an icon reversed onto a dark surface', 'rule 16', (dir) =>
   replace(dir, 'index.html',
-    '<section class="section surface-white" id="s7-risks-open-questions"',
-    '<section class="section surface-black" id="s7-risks-open-questions"'));
+    '<section class="section surface-white" id="s3-why-the-project-exists"',
+    '<section class="section surface-black" id="s3-why-the-project-exists"'));
 
 brokenFixture('an icon on a Slalom Blue circle', 'rule 16', (dir) => {
-  append(dir, 'css/components.css', '\n.blue-disc { border-radius: 50%; background: var(--slalom-blue); } /* no-text */\n');
-  replace(dir, 'index.html', '<div class="finding__title">', '<div class="finding__title blue-disc">');
+  append(dir, 'css/components.css', '\n.finding__icon { border-radius: 50%; background: var(--slalom-blue); } /* no-text */\n');
 });
 
 // --- Accessibility ----------------------------------------------------------
@@ -948,15 +964,15 @@ brokenFixture('severity conveyed without a text label', 'rule 19', (dir) =>
 
 brokenFixture('a heatmap cell with no printed value', 'rule 19', (dir) =>
   patch(dir, 'index.html', (html) =>
-    html.replace(/<span class="cell__value">[\s\S]*?<\/span><\/span>/g, '</span>')));
+    html.replace('<main id="main">', '<main id="main"><div class="heatmap__legend">Scale</div><span data-cell="1"></span>')));
 
 brokenFixture('an image with no alt attribute', 'rule 20', (dir) =>
   replace(dir, 'index.html', '<img src="assets/logo-slalom-white.svg" alt="Slalom">',
     '<img src="assets/logo-slalom-white.svg">'));
 
 brokenFixture('a skipped heading level', 'rule 20', (dir) =>
-  replace(dir, 'index.html', '<h2 class="headline" id="s1-purpose-scope-title">',
-    '<h4 class="headline" id="s1-purpose-scope-title">'));
+  replace(dir, 'index.html', '<h2 class="headline" id="s1-today-s-working-session-title">',
+    '<h4 class="headline" id="s1-today-s-working-session-title">'));
 
 brokenFixture('a suppressed focus outline', 'rule 20', (dir) =>
   replace(dir, 'css/base.css', 'outline: 3px solid var(--focus-color);', 'outline: none;'));
@@ -1012,7 +1028,47 @@ brokenFixture('an @font-face with no woff fallback', 'rule 27', (dir) =>
    Run
    ========================================================================== */
 
-registerDeliveryTests(test, TMP);
+
+test('reference layouts: reject incomplete copy and escape authored markup', async () => {
+  const { referenceLayout } = await import('../../modules/shared/reference-layout.mjs');
+  throws(() => referenceLayout('<p>{{message}}</p>', {copy: []}), 'missing message');
+  throws(() => referenceLayout('<p>{{message}}</p>', {copy: [{key:'message',text:'one'},{key:'message',text:'two'}]}), 'duplicate');
+  throws(() => referenceLayout('<p>{{message}}</p>', {copy: [{key:'message',text:'one'},{key:'extra',text:'two'}]}), 'unknown');
+  const html = referenceLayout('<p>{{message}}</p>', {copy: [{key:'message',text:'<script>alert(1)</script>'}]});
+  includes(html, '&lt;script&gt;');
+  ok(!html.includes('<script>'));
+});
+
+
+test('reference layouts: isolate classes and inline variables from the host kit', async () => {
+  const { referenceLayout } = await import('../../modules/shared/reference-layout.mjs');
+  const html = referenceLayout('<div class="roadmap"><span class="tag" style="--start:12;color:var(--blue)">{{label}}</span></div>', {
+    copy: [{ key: 'label', text: 'Keep --blue in authored copy' }],
+  });
+  includes(html, 'class="ref-roadmap"');
+  includes(html, 'class="ref-tag"');
+  includes(html, '--ref-start:12;color:var(--ref-blue)');
+  includes(html, 'Keep --blue in authored copy');
+  ok(!html.includes('class="roadmap"'));
+});
+
+test('reference layouts: restore source geometry and reset inherited layout', () => {
+  const css = readFileSync(path.join(SKILL_ROOT, 'assets/css/reference-layout.css'), 'utf8');
+  includes(css, 'all: revert;');
+  includes(css, 'font-size: 16px;');
+  includes(css, '--ref-page-max:68rem;');
+  includes(css, 'height:430px;padding:52px 36px 28px;position:relative');
+  includes(css, 'grid-template-columns:1fr 48px 1fr 48px 1fr');
+  ok(!/(?:^|\})\s*\.roadmap\s*\{/m.test(css), 'the reference must not style the host roadmap');
+  ok(!css.includes('.reference-kickoff .ref-module-shell { max-width: 1200px; }'));
+});
+
+test('reference layouts: metric rings have final values without JavaScript', async () => {
+  const { referenceLayout } = await import('../../modules/shared/reference-layout.mjs');
+  const html = referenceLayout('<div class="ring" data-value="30">{{value}}</div>', {copy:[{key:'value',text:'-30%'}]});
+  includes(html, '--ref-ring:108deg');
+  includes(html, '-30%');
+});
 
 let passed = 0;
 const failures = [];

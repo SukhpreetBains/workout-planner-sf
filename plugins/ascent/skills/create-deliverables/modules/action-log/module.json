@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "action-log",
+  "title": "Action Log",
+  "description": "A managed list of commitments and follow-ups that converts meeting outcomes into accountable work.",
+  "questions": [
+    {
+      "id": "action-log.actions",
+      "tier": "required",
+      "prompt": "What specific action was agreed, and what demonstrates completion?",
+      "answer_type": "owned-actions",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Action log/clarification-1"
+    },
+    {
+      "id": "action-log.owners",
+      "tier": "required",
+      "prompt": "Who owns each action, and when is it due?",
+      "answer_type": "owned-actions",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Action log/clarification-2"
+    },
+    {
+      "id": "action-log.blockers",
+      "tier": "optional",
+      "prompt": "Which dependency or pending decision could block completion?",
+      "answer_type": "risks",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Action log/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "actions",
+      "type": "table",
+      "renderer": "./html.mjs#actions",
+      "uses": [
+        "action-log.actions",
+        "action-log.owners",
+        "action-log.blockers"
+      ]
+    }
+  ]
+}

@@ -1,176 +1,40 @@
 {
   "schema_version": 1,
   "id": "ways-of-working",
-  "title": "Ways of working and logistics",
-  "description": "Defines working hours, communication, storage, tracking, access, meetings, reporting, and operating conventions.",
+  "title": "Ways of working / team norms",
+  "description": "Sets shared expectations for communication, collaboration, decisions, documentation, and team behavior.",
   "questions": [
     {
-      "id": "ways-of-working.hours-and-time-zones",
+      "id": "ways-of-working.channels",
       "tier": "required",
-      "prompt": "What are the team's normal working hours and time zones?",
+      "prompt": "Which communication channels and response times should the team use?",
       "answer_type": "table",
-      "source_ref": "6.required.1"
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Ways of working and team norms/clarification-1"
     },
     {
-      "id": "ways-of-working.communication-platform",
+      "id": "ways-of-working.records",
       "tier": "required",
-      "prompt": "What communication platform will be used?",
+      "prompt": "How will decisions, documents, and signoffs be recorded?",
       "answer_type": "text",
-      "source_ref": "6.required.2"
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Ways of working and team norms/clarification-2"
     },
     {
-      "id": "ways-of-working.document-location",
-      "tier": "required",
-      "prompt": "Where will project documents and decisions be stored?",
-      "answer_type": "text",
-      "source_ref": "6.required.3"
-    },
-    {
-      "id": "ways-of-working.tracking-system",
-      "tier": "required",
-      "prompt": "What system will track work, actions, risks, and issues?",
-      "answer_type": "text",
-      "source_ref": "6.required.4"
-    },
-    {
-      "id": "ways-of-working.access-needs",
-      "tier": "required",
-      "prompt": "What hardware, accounts, environments, licenses, or permissions are required?",
+      "id": "ways-of-working.behavior",
+      "tier": "optional",
+      "prompt": "What attendance, conflict-resolution, and escalation norms apply?",
       "answer_type": "list",
-      "source_ref": "6.required.5"
-    },
-    {
-      "id": "ways-of-working.status-source",
-      "tier": "required",
-      "prompt": "What is the authoritative source for project status?",
-      "answer_type": "text",
-      "source_ref": "6.required.6"
-    },
-    {
-      "id": "ways-of-working.recurring-meetings",
-      "tier": "required",
-      "prompt": "Which recurring meetings are required?",
-      "answer_type": "list",
-      "source_ref": "6.required.7"
-    },
-    {
-      "id": "ways-of-working.meeting-details",
-      "tier": "required",
-      "prompt": "What are the purpose, owner, attendees, and frequency of each essential meeting?",
-      "answer_type": "table",
-      "source_ref": "6.required.8"
-    },
-    {
-      "id": "ways-of-working.status-reporting",
-      "tier": "required",
-      "prompt": "How and how often will project status be reported?",
-      "answer_type": "text",
-      "source_ref": "6.required.9"
-    },
-    {
-      "id": "ways-of-working.response-times",
-      "tier": "optional",
-      "prompt": "What response-time expectations apply to messages and decisions?",
-      "answer_type": "text",
-      "source_ref": "6.optional.1"
-    },
-    {
-      "id": "ways-of-working.async-topics",
-      "tier": "optional",
-      "prompt": "Which discussions should occur asynchronously?",
-      "answer_type": "list",
-      "source_ref": "6.optional.2"
-    },
-    {
-      "id": "ways-of-working.conventions",
-      "tier": "optional",
-      "prompt": "What naming, filing, or documentation conventions should the team follow?",
-      "answer_type": "list",
-      "source_ref": "6.optional.3"
-    },
-    {
-      "id": "ways-of-working.templates",
-      "tier": "optional",
-      "prompt": "What templates should be used for status reports, decisions, or meeting notes?",
-      "answer_type": "list",
-      "source_ref": "6.optional.4"
-    },
-    {
-      "id": "ways-of-working.scheduling-process",
-      "tier": "optional",
-      "prompt": "What is the preferred process for scheduling workshops?",
-      "answer_type": "text",
-      "source_ref": "6.optional.5"
-    },
-    {
-      "id": "ways-of-working.advance-notice",
-      "tier": "optional",
-      "prompt": "How much advance notice do stakeholders require?",
-      "answer_type": "text",
-      "source_ref": "6.optional.6"
-    },
-    {
-      "id": "ways-of-working.meeting-preferences",
-      "tier": "optional",
-      "prompt": "Are there preferred meeting days or no-meeting periods?",
-      "answer_type": "schedule",
-      "source_ref": "6.optional.7"
-    },
-    {
-      "id": "ways-of-working.workstream-channels",
-      "tier": "optional",
-      "prompt": "Should specialized chat channels be created for individual workstreams?",
-      "answer_type": "list",
-      "source_ref": "6.optional.8"
-    },
-    {
-      "id": "ways-of-working.team-norms",
-      "tier": "optional",
-      "prompt": "What shared behaviors and collaboration expectations should the team agree to?",
-      "answer_type": "list",
-      "source_ref": "Reusable delivery structure: team-norms"
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Ways of working and team norms/clarification-3"
     }
   ],
   "default_output": [
     {
-      "id": "logistics",
-      "type": "table",
-      "renderer": "./html.mjs#logistics",
+      "id": "norms",
+      "type": "agenda",
+      "renderer": "./html.mjs#norms",
       "uses": [
-        "ways-of-working.hours-and-time-zones",
-        "ways-of-working.communication-platform",
-        "ways-of-working.document-location",
-        "ways-of-working.tracking-system",
-        "ways-of-working.status-source"
-      ]
-    },
-    {
-      "id": "cadence",
-      "type": "table",
-      "renderer": "./html.mjs#cadence",
-      "uses": [
-        "ways-of-working.recurring-meetings",
-        "ways-of-working.meeting-details",
-        "ways-of-working.status-reporting"
-      ]
-    },
-    {
-      "id": "meeting-cadence",
-      "type": "meeting-cadence",
-      "renderer": "./html.mjs#meeting-cadence",
-      "uses": [
-        "ways-of-working.recurring-meetings",
-        "ways-of-working.meeting-details"
-      ]
-    },
-    {
-      "id": "team-norms",
-      "type": "disclosures",
-      "renderer": "./html.mjs#team-norms",
-      "uses": [
-        "ways-of-working.team-norms",
-        "ways-of-working.hours-and-time-zones",
-        "ways-of-working.response-times"
+        "ways-of-working.channels",
+        "ways-of-working.records",
+        "ways-of-working.behavior"
       ]
     }
   ]

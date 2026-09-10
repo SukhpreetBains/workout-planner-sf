@@ -120,7 +120,7 @@ export function renderSection(section, index, ctx, renderer = null) {
   const id = sectionId(section, index);
   const title = section.title ?? FALLBACK_TITLE[type];
   const eyebrow = EYEBROW[type];
-  const titled = type !== 'quote';
+  const titled = type !== 'quote' && section.layout !== 'microsite';
   const illustration = ctx.illustrations?.get(`${section.module}:${section.view}`);
   const head = titled
     ? `
@@ -143,6 +143,13 @@ export function renderSection(section, index, ctx, renderer = null) {
   const previewAttribute = ctx.structurePreview && section.module
     ? ` data-preview-module="${esc(section.module)}"`
     : '';
+
+  if (section.layout === 'microsite') {
+    return `<section class="section section--reference surface-white" id="${esc(id)}" ${labelling}${previewAttribute}>
+      ${previewLabel ? `<div class="visually-hidden">${previewLabel}</div>` : ''}
+      ${component(section, ctx)}${openQuestions}
+    </section>`;
+  }
 
   return `
   <section class="section surface-white" id="${esc(id)}" ${labelling}${previewAttribute}>
