@@ -10,6 +10,8 @@ proposes tracker updates from what they contain, and you approve those
 updates through `workspace-review-updates` before anything is written. Every tracker row
 cites the document it came from.
 
+For a newly created Opportunity, the inbox path is `<Opportunity folder>/workspace/inbox/`.
+
 ## Folders
 
 | Folder | What goes here | Who writes it |

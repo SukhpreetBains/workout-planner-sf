@@ -6,7 +6,7 @@ Ascent gives an Opportunity team a governed path from source material to evidenc
 
 Run `initial-setup` when starting a new Opportunity or joining an existing one. It prepares or resumes the workspace, confirms storage and communications, initializes trackers and search, and records only the confirmed Account and Opportunity identity. It preserves existing project metadata and readable overview content.
 
-Initial setup does not ask for optional engagement details and does not inspect or process source documents. Users with documents should finish setup, open a fresh agent chat scoped to the Opportunity, and use this prompt:
+Initial setup does not ask for optional engagement details and does not inspect or process source documents. Users with documents should add documents, exports, meeting notes, transcripts, or other source files to the Opportunity's `workspace/inbox/` folder, then open a fresh agent chat scoped to that Opportunity and use this prompt:
 
 ```text
 Use workspace-ingest-documents to process the documents in this Opportunity workspace inbox.
