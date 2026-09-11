@@ -38,6 +38,8 @@ Do not classify expected external state, such as a genuinely missing record, as 
 
 Search for instruction sources that apply to the files and tools involved. Do not assume a single vendor-specific filename or directory. Read only relevant files, respecting their scope and precedence.
 
+When a reusable skill, plugin, or extension needs to change, resolve the canonical source before editing. Installed plugin cache paths such as `.codex/plugins/cache/...` are runtime artifacts, not the source of truth. If the applicable instruction file is being read from an installed cache, locate the backing repository or marketplace source, confirm its branch when it is a Git checkout, and apply durable refinements there. Edit the cache only when explicitly debugging the installed artifact itself, and say that those edits will not appear on a branch or survive reinstall.
+
 Common sources include:
 
 - `AGENTS.md` files from the workspace root through the target file's directory

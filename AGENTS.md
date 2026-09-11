@@ -3,6 +3,7 @@
 ## Plugin architecture
 
 - Treat `plugins/ascent/skills/` as the only authoritative skill source.
+- For local Codex plugin development, refresh the installed cache with `python3 scripts/refresh_codex_plugin.py` from the repository root after editing the authoritative source. Do not edit `.codex/plugins/cache/...` as a durable change.
 - Keep skill discovery flat at `plugins/ascent/skills/<skill-name>/SKILL.md`.
 - Keep the Ascent plugin self-contained under `plugins/ascent/`.
 - Do not add skill-discovery symlinks or host-specific copies of the skill library.

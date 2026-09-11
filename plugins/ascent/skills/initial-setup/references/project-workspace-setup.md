@@ -42,7 +42,7 @@ The project communications record remains `workspace/.system/source-context.yaml
 
 Do not inspect `workspace/inbox/`, ask about documents, or invoke a document-processing workflow during initial setup. Existing documents remain untouched.
 
-At handoff, users with documents should open a fresh agent chat scoped to the Opportunity and request `workspace-ingest-documents`. Fresh context gives that agent maximum room to inspect, organize, extract, and reason over the source material. The plugin [workflow overview](../../../README.md) defines the lifecycle after setup.
+At handoff, users with documents should be told exactly where to put them: `<Opportunity folder>/workspace/inbox/`. Use the confirmed absolute Opportunity path when available. Explain that documents, exports, meeting notes, transcripts, and other source files placed in that inbox are what `workspace-ingest-documents` will process. Then tell the user to open a fresh agent chat scoped to the Opportunity and request `workspace-ingest-documents`. Fresh context gives that agent maximum room to inspect, organize, extract, and reason over the source material. The plugin [workflow overview](../../../README.md) defines the lifecycle after setup.
 
 ## 5. Sync
 

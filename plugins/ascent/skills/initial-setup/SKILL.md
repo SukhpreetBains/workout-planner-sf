@@ -27,7 +27,7 @@ Explain a script's effect before running it. Obtain approval before package-mana
 4. Confirm the local working Account path, Account name, Opportunity name, applicable user-reported storage access, and local write readiness. Keep a runtime sandbox boundary separate from local write readiness: if the agent cannot write because of its session boundary, say so and request scoped command access; do not imply the user must change storage or folder permissions unless an operating-system check shows that they are unavailable.
 5. Create or complete the standard `workspace/` and `Deliverables/` structure without overwriting existing files.
 6. Ask whether the user uses Codex for this Opportunity. If yes, invoke `project-setup` with the confirmed Account and Opportunity names and paths. After asking whether the Codex project was created, continue setup regardless of the answer.
-7. Confirm relevant enterprise storage and messaging locations, then offer to save them in the project communications record.
+7. Confirm relevant enterprise storage and messaging locations, then offer to save them in the project communications record. If messaging or source-record decisions remain unconfirmed, ask the next user-facing setup question before closing instead of only listing them as incomplete.
 8. Initialize the workspace environment, trackers, Account and Opportunity identity, and search index.
 9. Report setup readiness and hand off document work to a fresh agent chat scoped to the Opportunity. Do not inspect `workspace/inbox/`, ask about documents, or process documents during setup.
 
@@ -171,6 +171,7 @@ Codex** and **No, continue setup**.
 ## Confirm messaging sources
 
 - Ask whether Slack and Microsoft Teams contain relevant project conversations. Treat them as defaults only after the user confirms them.
+- Do not end setup by merely reporting that Slack, Microsoft Teams, or the project communications record are not configured. If these decisions are still outstanding, present the user with the next setup choice or a concrete next step before ending the turn. In Default mode, use `request_user_input` when available; otherwise ask one concise plain-language question.
 - Request one known channel, team/channel, or distinctive Account or workstream term for each confirmed platform, then follow its reference workflow.
 - Treat a successful connector response as authentication, not proof of usable project access. Mark a platform usable only after the expected source is returned.
 - Report no-match results as **scope not verified**. Do not infer that a channel does not exist.
@@ -198,7 +199,7 @@ Never apply proposed tracker updates during setup. `workspace-review-updates` re
 
 Initial setup does not solicit, inspect, organize, extract, or process source documents, even when files are already present in `workspace/inbox/`. Leave all existing documents untouched.
 
-If the user has documents, tell them to open a fresh agent chat scoped to the Opportunity and request document ingestion there. Explain that fresh context gives the agent maximum room to inspect, organize, extract, and reason over the source material. Include this copyable starter prompt:
+If the user has documents, give an explicit upload-and-ingest next step. Tell them they can add documents, exports, meeting notes, transcripts, or other source files to `<Opportunity folder>/workspace/inbox/`. Use the confirmed absolute Opportunity path when available, so the user knows exactly where files go. Then tell them to open a fresh agent chat scoped to the Opportunity and request document ingestion there. Explain that fresh context gives the agent maximum room to inspect, organize, extract, and reason over the source material. Include this copyable starter prompt:
 
 ```text
 Use workspace-ingest-documents to process the documents in this Opportunity workspace inbox.
@@ -230,3 +231,5 @@ Always cover these items, in this order:
 10. Fresh-chat document next step, framed conditionally for users with documents and including the copyable starter prompt without asking whether documents are present.
 
 Place every item under one of the three existing status groups, even if some items are not applicable. Give one concise next step whenever anything remains incomplete.
+If the incomplete item requires user choice, the next step must be phrased as an actionable prompt rather than a passive status. For example, ask whether Slack and Microsoft Teams should be verified now, or ask the user for the known channel/team/location needed to continue. Do not rely on the user to infer that they need to ask a follow-up.
+For the fresh-chat document next step, do not write only "open a fresh agent chat" or similar shorthand. Name the exact inbox folder where the user can upload source files, state that files placed there are what `workspace-ingest-documents` will process, and include the starter prompt.

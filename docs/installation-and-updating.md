@@ -22,6 +22,14 @@ codex plugin add ascent@ascent
 
 If `codex plugin marketplace list` already includes `ascent`, skip the marketplace-add command. Start a new Codex task after installation so the plugin skills are loaded.
 
+While iterating on the local checkout, refresh the installed Codex cache with:
+
+```bash
+python3 scripts/refresh_codex_plugin.py
+```
+
+This updates the Codex manifest cachebuster, reinstalls `ascent@ascent` from the local marketplace, and reminds you to start a new Codex task.
+
 ### Claude Code
 
 ```bash
@@ -58,7 +66,7 @@ Update the clean repository checkout before refreshing the plugin:
 git pull --ff-only
 
 # Codex
-codex plugin add ascent@ascent
+python3 scripts/refresh_codex_plugin.py
 
 # Claude Code
 claude plugin marketplace update ascent
