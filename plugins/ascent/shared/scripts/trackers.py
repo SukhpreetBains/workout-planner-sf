@@ -201,3 +201,26 @@ def upsert_row(category: str, fields: dict, schema: dict) -> str:
             cell.number_format = "0.00"
     wb.save(path)
     return row_id
+
+
+def delete_row(category: str, tracker_id: str, schema: dict) -> None:
+    """Remove one accepted tracker row by its stable ID."""
+    cat = schema["categories"][category]
+    path = REPO_ROOT / cat["tracker_file"]
+    if not path.exists():
+        raise ValueError(f"{category} tracker does not exist")
+    wb = load_workbook(path)
+    try:
+        if cat["tab"] not in wb.sheetnames:
+            raise ValueError(f"{category} tracker tab does not exist")
+        ws = wb[cat["tab"]]
+        cols = [c.value for c in ws[1] if c.value]
+        identifier = id_column(category, schema)
+        for row in ws.iter_rows(min_row=2):
+            if str(row[cols.index(identifier)].value or "") == tracker_id:
+                ws.delete_rows(row[0].row, 1)
+                wb.save(path)
+                return
+        raise ValueError(f"{category} row {tracker_id} was not found")
+    finally:
+        wb.close()

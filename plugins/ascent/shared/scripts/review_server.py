@@ -100,6 +100,76 @@ class ReviewServer(ThreadingHTTPServer):
         self.review_token = token
         self.root_path = root
         self.instance_id = instance_id
+        self.accepted_cache: dict[str, object] = {"signature": None, "items": []}
+        self.link_options_cache: dict[str, object] = {"signature": None, "items": []}
+
+
+def accepted_cache_signature(root: Path, schema: dict) -> tuple[tuple[str, int, int], ...]:
+    paths = [root / definition["tracker_file"] for definition in schema["categories"].values()]
+    applied = root / "workspace" / ".system" / "applied-updates"
+    paths.extend(applied.glob("*.y*ml"))
+    return tuple(sorted((str(path), path.stat().st_mtime_ns, path.stat().st_size)
+                        for path in paths if path.is_file()))
+
+
+def accepted_items(server: ReviewServer) -> list[dict]:
+    from paths import load_schema
+    from trackers import id_column, read_rows
+    import review_store
+
+    schema = load_schema()
+    signature = accepted_cache_signature(server.root_path, schema)
+    if server.accepted_cache["signature"] == signature:
+        return server.accepted_cache["items"]
+    evidence_index = review_store.applied_evidence_index()
+    items = []
+    for category, definition in schema["categories"].items():
+        try:
+            rows = read_rows(category, schema)
+        except FileNotFoundError:
+            rows = []
+        for row in rows:
+            source_refs = [ref.strip() for ref in str(row.get("Source Refs", "")).split(schema["list_delimiter"]) if ref.strip()]
+            tracker_id = row.get(id_column(category, schema), "")
+            title = review_store.display_label(category, row, schema)
+            items.append({
+                "category": category,
+                "category_label": category.replace("_", " ").title(),
+                "tracker_id": tracker_id,
+                "title": title,
+                "status": row.get("Status", ""),
+                "fields": row,
+                "field_schema": definition.get("columns", []),
+                "source_refs": source_refs,
+                "evidence": review_store.accepted_evidence(category, tracker_id, row, source_refs, evidence_index),
+            })
+    server.accepted_cache = {
+        "signature": signature,
+        "items": items,
+    }
+    return items
+
+
+def accepted_link_options(server: ReviewServer) -> list[dict]:
+    """Return link picker data without reconstructing evidence."""
+    from paths import load_schema
+    from trackers import id_column, read_rows
+    import review_store
+
+    schema = load_schema()
+    signature = tuple(sorted((str(path), path.stat().st_mtime_ns, path.stat().st_size)
+                             for path in {server.root_path / definition["tracker_file"]
+                                          for definition in schema["categories"].values()} if path.is_file()))
+    if server.link_options_cache["signature"] == signature:
+        return server.link_options_cache["items"]
+    items = []
+    for category, definition in schema["categories"].items():
+        for row in read_rows(category, schema):
+            title = review_store.display_label(category, row, schema)
+            items.append({"category": category, "category_label": category.replace("_", " ").title(),
+                          "tracker_id": row.get(id_column(category, schema), ""), "title": title, "fields": row})
+    server.link_options_cache = {"signature": signature, "items": items}
+    return items
 
 
 class ReviewHandler(BaseHTTPRequestHandler):
@@ -185,28 +255,10 @@ class ReviewHandler(BaseHTTPRequestHandler):
             self.json(200, review_store.list_cards())
             return
         if path == "/api/accepted":
-            from paths import load_schema
-            from trackers import id_column, read_rows
-
-            schema = load_schema()
-            items = []
-            for category, definition in schema["categories"].items():
-                try:
-                    rows = read_rows(category, schema)
-                except FileNotFoundError:
-                    rows = []
-                for row in rows:
-                    title = row.get(f"{category.replace('_', ' ').title()} Title") or row.get("Statement") or "Untitled"
-                    items.append({
-                        "category": category,
-                        "category_label": category.replace("_", " ").title(),
-                        "tracker_id": row.get(id_column(category, schema), ""),
-                        "title": title,
-                        "status": row.get("Status", ""),
-                        "fields": row,
-                        "field_schema": definition.get("columns", []),
-                    })
-            self.json(200, {"items": items})
+            self.json(200, {"items": accepted_items(self.server)})
+            return
+        if path == "/api/link-options":
+            self.json(200, {"items": accepted_link_options(self.server)})
             return
         if path == "/source":
             source_ref = query.get("path", [""])[0]
@@ -289,6 +341,10 @@ class ReviewHandler(BaseHTTPRequestHandler):
                 body.get("proposal_id", ""), body.get("revision"), str(body.get("note", ""))),
             "/api/create": lambda body: review_store.create(
                 str(body.get("category", "")), str(body.get("source_ref", ""))),
+            "/api/accepted/reject": lambda body: review_store.reject_accepted(
+                str(body.get("category", "")), str(body.get("tracker_id", "")), str(body.get("reason", ""))),
+            "/api/accepted/pending": lambda body: review_store.move_accepted_to_pending(
+                str(body.get("category", "")), str(body.get("tracker_id", ""))),
         }
         if path == "/api/stop":
             self.json(200, {"stopping": True})

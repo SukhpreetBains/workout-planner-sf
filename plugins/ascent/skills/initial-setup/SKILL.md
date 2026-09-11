@@ -25,7 +25,7 @@ Explain a script's effect before running it. Obtain approval before package-mana
 2. Ask, **"Is there a shared workspace for this opportunity?"** and follow the storage decision flow below.
 3. Ask whether the user is starting a new Opportunity or joining an existing one, unless they just created a missing Account folder during the SharePoint flow. A newly created Account folder has no existing Opportunity folder, so continue with a new Opportunity without asking.
 4. Confirm the local working Account path, Account name, Opportunity name, applicable user-reported storage access, and local write readiness. Keep a runtime sandbox boundary separate from local write readiness: if the agent cannot write because of its session boundary, say so and request scoped command access; do not imply the user must change storage or folder permissions unless an operating-system check shows that they are unavailable.
-5. Create or complete the standard `workspace/` and `Deliverables/` structure without overwriting existing files.
+5. Create or complete the Account-level `AGENTS.md`, then the standard Opportunity `workspace/` and `Deliverables/` structure, without overwriting existing files.
 6. Ask whether the user uses Codex for this Opportunity. If yes, invoke `project-setup` with the confirmed Account and Opportunity names and paths. After asking whether the Codex project was created, continue setup regardless of the answer.
 7. Confirm relevant enterprise storage and messaging locations, then offer to save them in the project communications record. If messaging or source-record decisions remain unconfirmed, ask the next user-facing setup question before closing instead of only listing them as incomplete.
 8. Initialize the workspace environment, trackers, Account and Opportunity identity, and search index.
@@ -130,6 +130,7 @@ The resulting structure is:
 
 ```text
 <Account folder>/
+  AGENTS.md
   <Opportunity name>/
     AGENTS.md
     workspace/
@@ -150,6 +151,8 @@ The resulting structure is:
 ```
 
 Keep agent-created project files, working documents, trackers, indexes, and source records inside `workspace/`. Store generated output artifacts such as decks, documents, and sites in `workspace/draft-deliverables/`. Do not write agent work into `Deliverables/`; that folder is reserved for human promotion of reviewed material into a delivery phase.
+
+When the Account folder is first prepared, generate its `AGENTS.md` from `references/account-agent-workspace-template.md`. It must direct agents to create and use workspaces only under Opportunity folders within that Account. Preserve an existing Account-level `AGENTS.md`.
 
 ## Offer Codex project setup
 

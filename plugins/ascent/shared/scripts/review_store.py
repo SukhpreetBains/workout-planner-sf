@@ -31,7 +31,7 @@ from paths import (
     TRACKER_COPIES_DIR,
     load_schema,
 )
-from trackers import id_column, read_rows, upsert_row
+from trackers import delete_row, id_column, read_rows, upsert_row
 from validate_updates import validate
 
 USER_SUBMITTED_SOURCE = "User Submitted"
@@ -184,8 +184,25 @@ def current_row(update: dict, schema: dict) -> dict | None:
                  if row.get(identifier) == update["id"]), None)
 
 
-def archived_counts(directory: Path) -> dict[str, int]:
+def display_label(category: str, fields: dict, schema: dict) -> str:
+    """Return one consistent human label for tracker rows and proposals."""
+    title_field = f"{category.replace('_', ' ').title()} Title"
+    for value in (fields.get(title_field), fields.get("Name"), fields.get("Statement"), fields.get("Question")):
+        if str(value or "").strip():
+            return str(value).strip()
+    if category == "workflow_stage":
+        workflow = str(fields.get("Workflow Name") or "").strip()
+        stage = str(fields.get("Stage Name") or "").strip()
+        if workflow and stage:
+            return f"{workflow}: {stage}"
+        if workflow or stage:
+            return workflow or stage
+    return str(fields.get(id_column(category, schema)) or "").strip() or "Untitled"
+
+
+def archived_counts(directory: Path, excluded_tracker_ids: set[tuple[str, str]] | None = None) -> dict[str, int]:
     counts: dict[str, int] = {}
+    excluded_tracker_ids = excluded_tracker_ids or set()
     if not directory.exists():
         return counts
     for path in sorted(directory.glob("*.y*ml")):
@@ -195,13 +212,50 @@ def archived_counts(directory: Path) -> dict[str, int]:
             continue
         for update in document["updates"]:
             category = str(update.get("category", ""))
-            if category:
+            tracker_id = str(document.get("tracker_id", ""))
+            if category and (category, tracker_id) not in excluded_tracker_ids:
                 counts[category] = counts.get(category, 0) + 1
     return counts
 
 
+def rejected_accepted_tracker_ids() -> set[tuple[str, str]]:
+    values: set[tuple[str, str]] = set()
+    if not REJECTED_UPDATES_DIR.exists():
+        return values
+    for path in REJECTED_UPDATES_DIR.glob("*.y*ml"):
+        try:
+            document = load_yaml(path)
+        except (OSError, ReviewError, yaml.YAMLError):
+            continue
+        category = str(document.get("category", ""))
+        tracker_id = str(document.get("tracker_id", ""))
+        if category and tracker_id:
+            values.add((category, tracker_id))
+    return values
+
+
+def returned_accepted_tracker_ids() -> set[tuple[str, str]]:
+    """Return accepted rows that were restored to the review inbox."""
+    values: set[tuple[str, str]] = set()
+    if not APPLIED_UPDATES_DIR.exists():
+        return values
+    for path in APPLIED_UPDATES_DIR.glob("*.y*ml"):
+        try:
+            document = load_yaml(path)
+        except (OSError, ReviewError, yaml.YAMLError):
+            continue
+        if document.get("review_decision") != "returned_to_pending":
+            continue
+        category = str(document.get("category", ""))
+        tracker_id = str(document.get("tracker_id", ""))
+        if category and tracker_id:
+            values.add((category, tracker_id))
+    return values
+
+
 def progress_summary(cards: list[dict], schema: dict) -> dict:
-    accepted_by_category = archived_counts(APPLIED_UPDATES_DIR)
+    inactive_accepted = rejected_accepted_tracker_ids() | returned_accepted_tracker_ids()
+    accepted_by_category = archived_counts(APPLIED_UPDATES_DIR, inactive_accepted)
     rejected_by_category = archived_counts(REJECTED_UPDATES_DIR)
     categories = {}
     for category in schema["categories"]:
@@ -365,7 +419,7 @@ def autosave(proposal_id: str, revision: object, fields: dict) -> dict:
 
 
 def remove_and_archive(path: Path, document: dict, index: int, update: dict,
-                       destination: Path, decision: str, note: str = "") -> None:
+                       destination: Path, decision: str, note: str = "", tracker_id: str = "") -> None:
     destination.mkdir(parents=True, exist_ok=True)
     archive = {
         "source_refs": update.get("source_refs") or document.get("source_refs") or [],
@@ -374,6 +428,8 @@ def remove_and_archive(path: Path, document: dict, index: int, update: dict,
         "review_note": note,
         "updates": [update],
     }
+    if tracker_id:
+        archive["tracker_id"] = tracker_id
     atomic_yaml(destination / f"{path.stem}-{update['proposal_id']}.yaml", archive)
     document["updates"].pop(index)
     if document["updates"]:
@@ -425,10 +481,7 @@ def resolve_links(old: str, new: str, schema: dict) -> list[str]:
                     changed = True
             if changed:
                 row[id_column(category, schema)] = row.get(id_column(category, schema), "")
-                title = (row.get(f"{category.replace('_', ' ').title()} Title")
-                         or row.get("Name") or row.get("Statement") or row.get("Question")
-                         or row.get(id_column(category, schema), "Untitled"))
-                affected_accepted.append(str(title))
+                affected_accepted.append(display_label(category, row, schema))
                 upsert_row(category, row, schema)
     return affected_accepted
 
@@ -479,6 +532,9 @@ def accept(proposal_id: str, revision: object, idempotency_key: str) -> dict:
         try:
             row_id = upsert_row(category, fields, schema)
             resolve_links(proposal_id, row_id, schema)
+            previous_tracker_id = str(document.get("accepted_tracker_id", ""))
+            if previous_tracker_id:
+                resolve_links(previous_tracker_id, row_id, schema)
             path, document, index, update = find_item(proposal_id)
             sync = subprocess.run(
                 [sys.executable, str(Path(__file__).with_name("sync.py"))],
@@ -502,7 +558,7 @@ def accept(proposal_id: str, revision: object, idempotency_key: str) -> dict:
 
         result = {"proposal_id": proposal_id, "tracker_id": row_id,
                   "category": category, "decision": "accepted"}
-        remove_and_archive(path, document, index, update, APPLIED_UPDATES_DIR, "accepted")
+        remove_and_archive(path, document, index, update, APPLIED_UPDATES_DIR, "accepted", tracker_id=row_id)
         append_history("accept", update, {"tracker_id": row_id})
         records[idempotency_key] = result
         atomic_write_text(REVIEW_IDEMPOTENCY, json.dumps(records, indent=2, sort_keys=True))
@@ -523,6 +579,180 @@ def reject(proposal_id: str, revision: object, reason: str = "") -> dict:
                                  f"{'s' if len(affected_accepted) != 1 else ''}: "
                                  f"{', '.join(affected_accepted)}.")
         return result
+
+
+def applied_evidence_index() -> dict[str, object]:
+    """Read applied archives once and retain every update, including batch files."""
+    by_tracker: dict[tuple[str, str], tuple[Path, dict, dict]] = {}
+    legacy: dict[str, list[tuple[Path, dict, dict]]] = {}
+    for path in APPLIED_UPDATES_DIR.glob("*.y*ml"):
+        try:
+            document = load_yaml(path)
+        except (OSError, ReviewError, yaml.YAMLError):
+            continue
+        tracker_id = str(document.get("tracker_id", ""))
+        for update in document["updates"]:
+            category = str(update.get("category", ""))
+            if not category:
+                continue
+            if tracker_id:
+                by_tracker[(category, tracker_id)] = (path, document, update)
+            legacy.setdefault(category, []).append((path, document, update))
+    return {"by_tracker": by_tracker, "legacy": legacy}
+
+
+def archived_update_for_accepted(category: str, tracker_id: str, fields: dict,
+                                 evidence_index: dict[str, object] | None = None) -> tuple[Path, dict, dict] | None:
+    """Locate the one archived proposal that produced an accepted tracker row."""
+    evidence_index = evidence_index or applied_evidence_index()
+    by_tracker = evidence_index["by_tracker"]
+    legacy = evidence_index["legacy"]
+    update = by_tracker.get((category, tracker_id))
+    if update:
+        return update
+    candidates: list[tuple[int, Path, dict, dict]] = []
+    for path, document, update in legacy.get(category, []):
+        if update.get("id") == tracker_id:
+            return path, document, update
+        # Archives created before tracker IDs were recorded can still be matched
+        # to their row through the proposal's identifying field values.
+        proposal_fields = update.get("fields") or {}
+        score = sum(
+            str(value).strip().casefold() == str(fields.get(name, "")).strip().casefold()
+            for name, value in proposal_fields.items()
+            if value not in (None, "") and fields.get(name) not in (None, "")
+        )
+        if score:
+            candidates.append((score, path, document, update))
+    if candidates:
+        candidates.sort(key=lambda candidate: candidate[0], reverse=True)
+        if len(candidates) == 1 or candidates[0][0] > candidates[1][0]:
+            _score, path, document, update = candidates[0]
+            return path, document, update
+    return None
+
+
+def accepted_evidence(category: str, tracker_id: str, fields: dict, source_refs: list[str],
+                      evidence_index: dict[str, object] | None = None) -> list[dict]:
+    """Return the selected accepted value's proposal evidence, with a legacy fallback."""
+    archived = archived_update_for_accepted(category, tracker_id, fields, evidence_index)
+    if archived:
+        _path, _document, update = archived
+        return update.get("evidence") or [
+            {"source_ref": ref, "excerpt": ""} for ref in (update.get("source_refs") or source_refs)
+        ]
+    return [{"source_ref": ref, "excerpt": "No excerpt was captured for this older approval."} for ref in source_refs]
+
+
+def reject_accepted(category: str, tracker_id: str, reason: str = "") -> dict:
+    """Remove an accepted tracker row and record its later rejection."""
+    schema = load_schema()
+    if category not in schema["categories"]:
+        raise ReviewError("unknown tracker category")
+    with review_lock():
+        identifier = id_column(category, schema)
+        row = next((item for item in read_rows(category, schema) if item.get(identifier) == tracker_id), None)
+        if row is None:
+            raise NotFound(f"{category} row {tracker_id} was not found")
+        source_refs = [ref.strip() for ref in str(row.get("Source Refs", "")).split(schema["list_delimiter"]) if ref.strip()]
+        evidence = accepted_evidence(category, tracker_id, row, source_refs)
+        archived = archived_update_for_accepted(category, tracker_id, row)
+        if archived:
+            archive_path, archive_document, _update = archived
+            if not archive_document.get("tracker_id"):
+                archive_document["tracker_id"] = tracker_id
+                atomic_yaml(archive_path, archive_document)
+        delete_row(category, tracker_id, schema)
+        resolve_links(tracker_id, "", schema)
+        sync = subprocess.run(
+            [sys.executable, str(Path(__file__).with_name("sync.py")), "--trackers-only"],
+            capture_output=True, text=True, cwd=REPO_ROOT,
+        )
+        if sync.returncode:
+            raise ReviewError(sync.stderr.strip() or sync.stdout.strip() or "sync failed")
+        archive = {
+            "category": category,
+            "tracker_id": tracker_id,
+            "source_refs": source_refs,
+            "review_decision": "rejected_after_acceptance",
+            "reviewed_at": now_iso(),
+            "review_note": reason,
+            "updates": [{"proposal_id": f"accepted-{category}-{tracker_id}", "revision": 1,
+                         "category": category, "action": "delete", "id": tracker_id,
+                         "fields": row, "source_refs": source_refs, "evidence": evidence}],
+        }
+        atomic_yaml(REJECTED_UPDATES_DIR / f"accepted-{category}-{tracker_id}.yaml", archive)
+        append_history("reject-accepted", archive["updates"][0], {"tracker_id": tracker_id, "reason": reason})
+        return {"category": category, "tracker_id": tracker_id, "decision": "rejected"}
+
+
+def proposal_fields_from_row(category: str, row: dict, schema: dict) -> dict:
+    """Keep editable, non-computed fields when returning an accepted row to pending."""
+    return {
+        column["name"]: row.get(column["name"], "")
+        for column in schema["categories"][category].get("columns", [])
+        if not column.get("computed") and column["name"] in row
+    }
+
+
+def move_accepted_to_pending(category: str, tracker_id: str) -> dict:
+    """Restore an accepted tracker row as an editable pending proposal."""
+    schema = load_schema()
+    if category not in schema["categories"]:
+        raise ReviewError("unknown tracker category")
+    with review_lock():
+        identifier = id_column(category, schema)
+        row = next((item for item in read_rows(category, schema) if item.get(identifier) == tracker_id), None)
+        if row is None:
+            raise NotFound(f"{category} row {tracker_id} was not found")
+        source_refs = [ref.strip() for ref in str(row.get("Source Refs", "")).split(schema["list_delimiter"]) if ref.strip()]
+        evidence = accepted_evidence(category, tracker_id, row, source_refs)
+        proposal_id = str(uuid.uuid4())
+        update = {
+            "proposal_id": proposal_id,
+            "revision": 1,
+            "category": category,
+            "action": "add",
+            "fields": proposal_fields_from_row(category, row, schema),
+            "source_refs": source_refs,
+            "evidence": evidence,
+            "review": {"state": "pending"},
+        }
+        tracker_path = REPO_ROOT / schema["categories"][category]["tracker_file"]
+        backup = tracker_path.read_bytes() if tracker_path.exists() else None
+        pending_path = PROPOSED_UPDATES_DIR / f"returned-{category}-{proposal_id}.yaml"
+        try:
+            delete_row(category, tracker_id, schema)
+            sync = subprocess.run(
+                [sys.executable, str(Path(__file__).with_name("sync.py")), "--trackers-only"],
+                capture_output=True, text=True, cwd=REPO_ROOT,
+            )
+            if sync.returncode:
+                raise ReviewError(sync.stderr.strip() or sync.stdout.strip() or "sync failed")
+            atomic_yaml(pending_path, {"source_refs": source_refs, "accepted_tracker_id": tracker_id,
+                                       "updates": [update]})
+            archived = archived_update_for_accepted(category, tracker_id, row)
+            if archived:
+                archive_path, archive_document, _archived_update = archived
+                archive_document["category"] = category
+                archive_document["tracker_id"] = tracker_id
+                archive_document["review_decision"] = "returned_to_pending"
+                archive_document["returned_proposal_id"] = proposal_id
+                atomic_yaml(archive_path, archive_document)
+            else:
+                atomic_yaml(APPLIED_UPDATES_DIR / f"returned-{category}-{tracker_id}.yaml", {
+                    "category": category, "tracker_id": tracker_id,
+                    "review_decision": "returned_to_pending", "reviewed_at": now_iso(), "updates": [],
+                })
+        except Exception:
+            pending_path.unlink(missing_ok=True)
+            if backup is None:
+                tracker_path.unlink(missing_ok=True)
+            else:
+                tracker_path.write_bytes(backup)
+            raise
+        append_history("return-to-pending", update, {"tracker_id": tracker_id})
+        return {"proposal_id": proposal_id, "category": category, "decision": "pending"}
 
 
 def load_queue() -> dict:
