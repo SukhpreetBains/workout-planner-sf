@@ -262,6 +262,86 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(progress["categories"]["risk"]["accepted"], 1)
         self.assertEqual(progress["categories"]["risk"]["total"], 1)
 
+    def test_rejecting_an_accepted_value_removes_it_and_keeps_its_evidence(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        accepted = self.store.accept(card["proposal_id"], card["revision"], "accepted-rejection")
+        source_refs = ["workspace/meetings/2026-08-27 - Review.md"]
+
+        # Older accepted archives predate their explicit tracker ID link.
+        applied = next(self.paths.APPLIED_UPDATES_DIR.glob("*.yaml"))
+        archived = yaml.safe_load(applied.read_text(encoding="utf-8"))
+        archived.pop("tracker_id")
+        applied.write_text(yaml.safe_dump(archived, sort_keys=False), encoding="utf-8")
+
+        accepted_row = self.trackers.read_rows("risk", self.paths.load_schema())[0]
+        evidence = self.store.accepted_evidence("risk", accepted["tracker_id"], accepted_row, source_refs)
+        self.assertEqual(evidence, card["evidence"])
+
+        result = self.store.reject_accepted("risk", accepted["tracker_id"], "No longer relevant")
+        self.assertEqual(result["decision"], "rejected")
+        self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
+        rejected = list(self.paths.REJECTED_UPDATES_DIR.glob("accepted-risk-*.yaml"))
+        self.assertEqual(len(rejected), 1)
+        archive = yaml.safe_load(rejected[0].read_text(encoding="utf-8"))
+        self.assertEqual(archive["updates"][0]["evidence"], card["evidence"])
+
+        progress = self.store.list_cards()["progress"]
+        self.assertEqual(progress["accepted"], 0)
+        self.assertEqual(progress["rejected"], 1)
+
+    def test_returning_an_accepted_value_to_pending_keeps_links_unchanged(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        accepted = self.store.accept(card["proposal_id"], card["revision"], "accepted-pending")
+
+        with mock.patch.object(self.store, "resolve_links") as resolve_links:
+            result = self.store.move_accepted_to_pending("risk", accepted["tracker_id"])
+
+        resolve_links.assert_not_called()
+
+        self.assertEqual(result["decision"], "pending")
+        self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
+        pending = self.store.list_cards()["cards"]
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0]["proposal_id"], result["proposal_id"])
+        self.assertEqual(pending[0]["fields"]["Statement"], card["fields"]["Statement"])
+        self.assertEqual(pending[0]["evidence"], card["evidence"])
+        self.assertEqual(self.store.list_cards()["progress"]["accepted"], 0)
+        self.assertEqual(self.store.list_cards()["progress"]["pending"], 1)
+
+    def test_applied_evidence_index_keeps_every_update_in_a_batch_archive(self):
+        self.paths.APPLIED_UPDATES_DIR.mkdir(parents=True, exist_ok=True)
+        archive = self.paths.APPLIED_UPDATES_DIR / "batch.yaml"
+        archive.write_text(yaml.safe_dump({"updates": [
+            {"category": "risk", "fields": {"Statement": "First risk"},
+             "evidence": [{"source_ref": "workspace/first.md", "excerpt": "First evidence"}]},
+            {"category": "risk", "fields": {"Statement": "Second risk"},
+             "evidence": [{"source_ref": "workspace/second.md", "excerpt": "Second evidence"}]},
+        ]}, sort_keys=False), encoding="utf-8")
+
+        evidence = self.store.accepted_evidence(
+            "risk", "R002", {"Statement": "Second risk"}, ["workspace/second.md"],
+            self.store.applied_evidence_index())
+        self.assertEqual(evidence[0]["source_ref"], "workspace/second.md")
+
+    def test_display_label_covers_non_statement_categories(self):
+        schema = self.paths.load_schema()
+        cases = [
+            ("stakeholder", {"Name": "Executive Sponsor"}, "Executive Sponsor"),
+            ("system", {"Name": "Customer Portal"}, "Customer Portal"),
+            ("open_question", {"Question": "Who approves the budget?"}, "Who approves the budget?"),
+            ("session", {"Name": "Kickoff workshop"}, "Kickoff workshop"),
+            ("operating_model", {"Name": "Delivery governance"}, "Delivery governance"),
+            ("plan_item", {"Name": "Confirm ownership"}, "Confirm ownership"),
+            ("workflow_stage", {"Workflow Name": "Intake", "Stage Name": "Assess"}, "Intake: Assess"),
+        ]
+        for category, fields, expected in cases:
+            with self.subTest(category=category):
+                self.assertEqual(self.store.display_label(category, fields, schema), expected)
+
+        self.assertEqual(self.store.display_label("session", {"Session ID": "SES-001"}, schema), "SES-001")
+
     def test_concurrent_revision_allows_only_one_edit(self):
         self.proposal([self.risk()])
         card = self.store.list_cards()["cards"][0]

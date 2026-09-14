@@ -23,6 +23,20 @@ date, decision, or answer to fill a gap.
 
 ## Guided template workflow
 
+### Draft location and naming
+
+Create every draft deliverable inside the selected Opportunity folder at
+`workspace/draft-deliverables/<selected-template>-<opportunity-name>-<version number for example v1>/`.
+`<selected-template>` is the selected template's name, and
+`<opportunity-name>` is the confirmed Opportunity folder name. Use that exact
+directory name for all new drafts, including the intake, authored content,
+preview build, and any detached source. Do not place a draft in the Opportunity
+root, `Deliverables/`, or an unscoped temporary folder unless you are explicitly told to do so by the user.
+
+For example, a first draft of a `project-kickoff` for the Modernization`
+Opportunity in the Northstar Account folder belongs in
+Northstar/Modernization/`workspace/draft-deliverables/project-kickoff- Modernization-v1/`.
+
 ### 1. Choose a template and its modules
 
 Before loading any template-specific content, discover every directory under
@@ -195,12 +209,14 @@ status, typed value, provenance, disposition, and user decisions there. Keep
 Validate before drafting presentation content:
 
 ```bash
-node scripts/validate-intake.mjs <selected-template> path/to/intake.yaml
+node scripts/validate-intake.mjs <selected-template> \
+  workspace/draft-deliverables/<selected-template>-<opportunity-name>/intake.yaml
 ```
 
 ### 5. Draft and render for review
 
-Use module output mappings to draft polished `content.yaml`. Every resolved
+Use module output mappings to draft polished `content.yaml` in the named draft
+directory. Every resolved
 required answer must be rendered, summarized, or explicitly retained as
 supporting intake context. Author only supported content; never fill a template
 slot just to retain its shape. Do not show raw YAML as the editorial review.
@@ -208,9 +224,10 @@ slot just to retain its shape. Do not show raw YAML as the editorial review.
 Build a branded draft and give the user a preview link:
 
 ```bash
-node scripts/build.mjs path/to/content.yaml \
-  --intake path/to/intake.yaml \
-  --out path/to/build \
+node scripts/build.mjs \
+  workspace/draft-deliverables/<selected-template>-<opportunity-name>/content.yaml \
+  --intake workspace/draft-deliverables/<selected-template>-<opportunity-name>/intake.yaml \
+  --out workspace/draft-deliverables/<selected-template>-<opportunity-name>/build \
   --bundle
 ```
 

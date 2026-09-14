@@ -36,9 +36,16 @@ let scope = null;
 let acceptedOrganizations = [];
 let acceptedOwners = [];
 let filtersExpanded = false;
+let linkableAcceptedItems = null;
+let linkOptionsLoading = null;
 
 const label = value => String(value || "").replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 const longTextField = name => /description|statement|question|why it matters|answer|mitigation|rationale|notes|actions|resolution|impact if|quantified impact|contingency|plan/i.test(name);
+const percentValue = value => {
+  const decimal = Number(value);
+  return Number.isFinite(decimal) && value !== "" ? String(decimal * 100) : "";
+};
+const percentInput = (attrs, value) => el("input", { ...attrs, type: "number", value: percentValue(value), step: "1", min: "10", max: "90", inputmode: "numeric" });
 const pickerFields = {
   stakeholder: ["Name", "Role", "Organization"], pain_point: ["Statement", "Severity", "Status"],
   system: ["Name", "System Type", "Description"], objective: ["Statement", "Success Measure"],
@@ -100,7 +107,7 @@ function showToast(message) {
 function acceptedItemTitle(item) {
   const fields = item.fields || {};
   const title = item.field_schema?.find(definition => definition.name.endsWith(" Title"));
-  const candidates = [fields[title?.name], fields.Name, fields.Question, fields.Statement,
+  const candidates = [item.title, fields[title?.name], fields.Name, fields.Statement, fields.Question,
     fields[item.category_label], fields.Description, item.title];
   return candidates.map(value => String(value || "").trim()).find(Boolean) || "Untitled";
 }
@@ -149,27 +156,57 @@ function renderAcceptedPage(items) {
         control = picker.control;
         labelFor = picker.labelFor;
       } else {
-        input = definition.name === "Organization" || definition.name === "Owner" ? suggestionInput({ name: definition.name }, value) : longTextField(definition.name) ? el("textarea", { name: definition.name }, value) : el("input", { name: definition.name, type: definition.type === "date" ? "date" : definition.type === "number" ? "number" : "text", value });
+        input = definition.name === "Probability" ? percentInput({ name: definition.name }, value) : definition.name === "Organization" || definition.name === "Owner" ? suggestionInput({ name: definition.name }, value) : longTextField(definition.name) ? el("textarea", { name: definition.name }, value) : el("input", { name: definition.name, type: definition.type === "date" ? "date" : definition.type === "number" ? "number" : "text", value });
         control = input;
       }
       const suggestions = definition.name === "Organization" ? acceptedOrganizations : definition.name === "Owner" ? acceptedOwners : null;
-      form.append(el("div", { class: `field${longTextField(definition.name) ? " field-wide" : ""}` }, [el("label", { for: labelFor }, isLinkField(definition) ? linkFieldName(definition.name) : definition.name), control, ...(suggestions ? [textSuggestions(input, suggestions)] : [])]));
+      form.append(el("div", { class: `field${longTextField(definition.name) ? " field-wide" : ""}` }, [el("label", { for: labelFor }, definition.name === "Probability" ? "Probability (%)" : isLinkField(definition) ? linkFieldName(definition.name) : definition.name), control, ...(suggestions ? [textSuggestions(input, suggestions)] : [])]));
     });
     const status = el("span", { class: "save-state", role: "status" }, "");
-    form.append(el("div", { class: "modal-actions" }, [el("button", { class: "primary", type: "submit" }, "Save"), status]));
+    form.append(el("div", { class: "modal-actions" }, [
+      el("button", { class: "quiet", type: "button", onclick: () => moveAcceptedToPending(selected) }, "Move to pending"),
+      el("button", { class: "danger", type: "button", onclick: () => rejectAccepted(selected) }, "Reject approved value"),
+      el("button", { class: "primary", type: "submit" }, "Save"), status,
+    ]));
     form.addEventListener("submit", async event => {
       event.preventDefault(); status.textContent = "Saving";
       const fields = Object.fromEntries(new FormData(form).entries());
+      if (fields.Probability !== undefined && fields.Probability !== "") fields.Probability = Number(fields.Probability) / 100;
       form.querySelectorAll(".link-picker-button").forEach(input => { fields[input.name] = input.value; });
-      try { await api("/api/accepted/update", { method: "POST", body: JSON.stringify({ category: selected.category, tracker_id: selected.tracker_id, fields }) }); Object.assign(selected.fields, fields); selected.title = fields[`${selected.category_label} Title`] || fields.Statement || selected.title; status.textContent = "Saved"; }
+      try { await api("/api/accepted/update", { method: "POST", body: JSON.stringify({ category: selected.category, tracker_id: selected.tracker_id, fields }) }); invalidateLinkOptions(); Object.assign(selected.fields, fields); selected.title = fields[`${selected.category_label} Title`] || fields.Statement || selected.title; status.textContent = "Saved"; }
       catch (error) { status.textContent = error.message || "Could not save"; }
     });
-    content.append(tabs, el("div", { class: "review-layout accepted-layout" }, [list, form]));
+    content.append(tabs, el("div", { class: "review-layout accepted-layout" }, [list, form, evidence(selected)]));
   };
   render();
   flow.hidden = false;
   flow.replaceChildren(content);
   content.querySelector("button")?.focus();
+}
+
+async function refreshAcceptedAfterAction(message) {
+  invalidateLinkOptions();
+  showToast(message);
+  const refreshed = await api("/api/accepted");
+  renderAcceptedPage(refreshed.items || []);
+}
+
+async function rejectAccepted(item) {
+  try {
+    await api("/api/accepted/reject", { method: "POST", body: JSON.stringify({ category: item.category, tracker_id: item.tracker_id }) });
+    await refreshAcceptedAfterAction("Approved value rejected and removed from its tracker.");
+  } catch (error) {
+    showToast(error.message || "Could not reject the approved value.");
+  }
+}
+
+async function moveAcceptedToPending(item) {
+  try {
+    await api("/api/accepted/pending", { method: "POST", body: JSON.stringify({ category: item.category, tracker_id: item.tracker_id }) });
+    await refreshAcceptedAfterAction("Approved value moved to the pending review inbox.");
+  } catch (error) {
+    showToast(error.message || "Could not move the approved value to pending.");
+  }
 }
 
 function openAcceptedValues() {
@@ -347,6 +384,22 @@ function setAcceptedOrganizations(items) {
   acceptedOwners = uniqueValues("Owner");
 }
 
+async function linkOptions() {
+  if (linkableAcceptedItems) return linkableAcceptedItems;
+  if (!linkOptionsLoading) {
+    linkOptionsLoading = api("/api/link-options").then(result => {
+      linkableAcceptedItems = result.items || [];
+      setAcceptedOrganizations(linkableAcceptedItems);
+      return linkableAcceptedItems;
+    }).finally(() => { linkOptionsLoading = null; });
+  }
+  return linkOptionsLoading;
+}
+
+function invalidateLinkOptions() {
+  linkableAcceptedItems = null;
+}
+
 function suggestionInput(attrs, value) {
   return el("input", { ...attrs, type: "text", value, autocomplete: "off" });
 }
@@ -431,8 +484,8 @@ function openLinkPicker(card, definition, control) {
   const form = el("form", {}); form.append(el("p", { class: "eyebrow" }, linkFieldName(definition.name)), el("h2", { id: "link-picker-title" }, "Link items"), search, list, el("div", { class: "modal-actions" }, [el("button", { class: "quiet", type: "button", onclick: () => closeModal(modal, control) }, "Cancel"), el("button", { class: "primary", type: "submit" }, "Apply selections")]));
   form.addEventListener("submit", event => { event.preventDefault(); control.value = [...selected].join("; "); control.textContent = pickerSummary(control.value, definition.name); control.dispatchEvent(new Event("input", { bubbles: true })); closeModal(modal, control, false); });
   search.addEventListener("input", () => render(modal.items)); modal.append(form); showModal(modal, search, control);
-  Promise.all([api("/api/accepted"), api("/api/inbox")]).then(([accepted, inbox]) => {
-    modal.items = [...(accepted.items || []).map(item => ({ ...item, id: item.tracker_id, state: "Accepted" })), ...(inbox.cards || []).map(item => ({ ...item, id: item.proposal_id, title: cardTitle(item), state: "Pending" }))].map(item => ({ ...item, details: (pickerFields[item.category] || []).map(name => item.fields?.[name]).filter(Boolean).join(" · "), search: `${item.title} ${item.category_label} ${item.state} ${Object.values(item.fields || {}).join(" ")}`.toLowerCase() }));
+  linkOptions().then(accepted => {
+    modal.items = [...accepted.map(item => ({ ...item, id: item.tracker_id, state: "Accepted" })), ...cards.map(item => ({ ...item, id: item.proposal_id, title: cardTitle(item), state: "Pending" }))].map(item => ({ ...item, details: (pickerFields[item.category] || []).map(name => item.fields?.[name]).filter(Boolean).join(" · "), search: `${item.title} ${item.category_label} ${item.state} ${Object.values(item.fields || {}).join(" ")}`.toLowerCase() }));
     render(modal.items);
   }).catch(error => { list.replaceChildren(el("p", {}, error.message || "Could not load linkable items.")); });
 }
@@ -464,6 +517,9 @@ function fieldControl(card, definition) {
   } else if (definition.type === "date") {
     input = el("input", { id, name, type: "date", value: normalizeDate(value) });
     control = input;
+  } else if (name === "Probability") {
+    input = percentInput({ id, name }, value);
+    control = input;
   } else if (definition.type === "number") {
     input = el("input", { id, name, type: "number", value, step: "0.1",
       min: definition.minimum, max: definition.maximum, inputmode: "decimal" });
@@ -483,7 +539,7 @@ function fieldControl(card, definition) {
     scheduleSave(card);
     updateFieldGroupStatus();
   });
-  const labelChildren = [isLinkField(definition) ? linkFieldName(name) : name];
+  const labelChildren = [name === "Probability" ? "Probability (%)" : isLinkField(definition) ? linkFieldName(name) : name];
   if (definition.required) {
     labelChildren.push(
       el("span", { class: "required-marker", "aria-hidden": "true" }, " *"),
@@ -543,7 +599,7 @@ function collectFields(card) {
     const input = form.elements.namedItem(definition.name);
     if (!input) continue;
     if (input.value !== "" || Object.hasOwn(card.fields, definition.name)) {
-      fields[definition.name] = definition.type === "number" && input.value !== "" ? Number(input.value) : input.value;
+      fields[definition.name] = definition.name === "Probability" && input.value !== "" ? Number(input.value) / 100 : definition.type === "number" && input.value !== "" ? Number(input.value) : input.value;
     }
   }
   return fields;
@@ -613,7 +669,7 @@ async function revealSource(sourceRef) {
 }
 
 function evidence(card) {
-  const entries = card.evidence.length ? card.evidence : card.source_refs.map(source_ref => ({ source_ref, excerpt: "" }));
+  const entries = card.evidence?.length ? card.evidence : (card.source_refs || []).map(source_ref => ({ source_ref, excerpt: "" }));
   const section = el("aside", { class: "evidence", "aria-label": "Sources" }, [
     el("div", { class: "evidence-heading" }, [
       el("p", { class: "eyebrow" }, `${entries.length} ${entries.length === 1 ? "source" : "sources"}`),
@@ -663,6 +719,7 @@ async function decide(card, decision, note = "") {
       renderCategory();
       return;
     }
+    invalidateLinkOptions();
     await refreshInbox();
     if (!cards.length) {
       renderEmptyReview();
@@ -984,9 +1041,9 @@ function applyInboxResult(result) {
 }
 
 async function refreshInbox() {
-  const [inbox, accepted] = await Promise.all([api("/api/inbox"), api("/api/accepted")]);
+  const inbox = await api("/api/inbox");
   applyInboxResult(inbox);
-  setAcceptedOrganizations(accepted.items);
+  linkOptions().catch(() => {});
 }
 
 async function loadInbox() {
