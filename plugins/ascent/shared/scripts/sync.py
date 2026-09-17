@@ -6,6 +6,12 @@ Usage:
     py sync.py --trackers-only  # refresh current rows without scanning documents
     py sync.py --status   # report what is new/changed since the last sync
                           # and which documents have not been extracted yet
+    py sync.py --check-setup  # cheap, read-only: does this look like an
+                          # initialized Opportunity workspace at all? For any
+                          # workspace-dependent skill to call before assuming
+                          # one exists — does not require Python deps beyond
+                          # this script's own (yaml), does no scanning or
+                          # parsing of tracker/document content.
 
 Sync maintains three things under workspace/.system/:
   tracker-copies/<category>.yaml   plain-text copies of every tracker tab,
@@ -33,10 +39,12 @@ from paths import (
     INBOX,
     INDEXED_FOLDERS,
     INDEXED_SUFFIXES,
+    PROJECT_FILE,
     REPO_ROOT,
     SEARCH_DB,
     SOURCES_FILE,
     SYNC_STATE,
+    SYSTEM_DIR,
     TRACKER_COPIES_DIR,
     WORKSPACE,
     load_schema,
@@ -111,6 +119,33 @@ def extracted_sources() -> set[str]:
             if isinstance(s, dict) and s.get("status") == "extracted"}
 
 
+def check_setup() -> int:
+    """Cheap, read-only precondition check: does this look like an
+    initialized Opportunity workspace? Filesystem existence only — no
+    workbook parsing, no document scanning, safe to call before every
+    workspace-dependent skill's real work starts."""
+    schema = load_schema()
+    tracker_files = sorted({t["file"] for t in schema["trackers"].values()})
+    missing_trackers = [f for f in tracker_files if not (REPO_ROOT / f).exists()]
+
+    workspace_ready = WORKSPACE.is_dir()
+    system_ready = SYSTEM_DIR.is_dir()
+    trackers_ready = workspace_ready and not missing_trackers
+    identity_ready = PROJECT_FILE.exists()
+
+    print(f"workspace/: {'found' if workspace_ready else 'MISSING'}")
+    print(f"workspace/.system/: {'found' if system_ready else 'MISSING'}")
+    print(f"trackers: {len(tracker_files) - len(missing_trackers)}/{len(tracker_files)} initialized"
+          + (f" (missing: {', '.join(missing_trackers)})" if missing_trackers else ""))
+    print(f"identity (workspace/.system/project.yaml): {'found' if identity_ready else 'MISSING'}")
+
+    if workspace_ready and system_ready and trackers_ready:
+        print("ready: this looks like an initialized Opportunity workspace")
+    else:
+        print("not ready: this does not look like an initialized Opportunity workspace — run initial-setup first")
+    return 0
+
+
 def status() -> int:
     state = {}
     if SYNC_STATE.exists():
@@ -147,7 +182,10 @@ def main() -> int:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--status", action="store_true")
     mode.add_argument("--trackers-only", action="store_true")
+    mode.add_argument("--check-setup", action="store_true")
     args = parser.parse_args()
+    if args.check_setup:
+        return check_setup()
     if args.status:
         return status()
 
