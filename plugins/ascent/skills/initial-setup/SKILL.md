@@ -29,7 +29,8 @@ Explain a script's effect before running it. Obtain approval before package-mana
 6. Ask whether the user uses Codex for this Opportunity. If yes, invoke `project-setup` with the confirmed Account and Opportunity names and paths. After asking whether the Codex project was created, continue setup regardless of the answer.
 7. Confirm relevant enterprise storage and messaging locations, then offer to save them in the project communications record. If messaging or source-record decisions remain unconfirmed, ask the next user-facing setup question before closing instead of only listing them as incomplete.
 8. Initialize the workspace environment, trackers, Account and Opportunity identity, and search index.
-9. Report setup readiness and hand off document work to a fresh agent chat scoped to the Opportunity. Do not inspect `workspace/inbox/`, ask about documents, or process documents during setup.
+9. Ask whether an available industry flavor applies to this Opportunity, per **Confirm industry flavor** below.
+10. Report setup readiness and hand off document work to a fresh agent chat scoped to the Opportunity. Do not inspect `workspace/inbox/`, ask about documents, or process documents during setup.
 
 ## Verify the local environment
 
@@ -198,6 +199,30 @@ Follow [project workspace setup](references/project-workspace-setup.md). Use `ac
 
 Never apply proposed tracker updates during setup. `workspace-review-updates` remains the only workflow that writes approved changes into trackers.
 
+## Confirm industry flavor
+
+Scan `shared/industry/*/manifest.json` at the installed Ascent plugin root
+for available industry packs. If none exist, skip this section entirely —
+do not mention it.
+
+If one or more exist, ask once, in the same short closed-question style as
+the storage and messaging questions above: **"Is this engagement in an
+industry we have tailored guidance for?"**, offering each pack by title
+plus a **"None of these"** option. Use `request_user_input` when available.
+This is a confirmatory pick from a short list, not a request to compose
+engagement detail, so it does not conflict with leaving other optional
+project context unasked.
+
+Record the answer in `workspace/.system/project.yaml` as `industry: <id>`
+or `industry: none`, reconciling rather than replacing the file, the same
+way Account and Opportunity identity is recorded. Once set, no later
+`initial-setup` run — or any other skill — should ask again; an id present
+in the answer is what tells `workspace-ingest-documents`,
+`workspace-review-updates`, and `create-deliverables` to layer that pack's
+guidance into their normal work automatically. See
+[../../shared/industry/README.md](../../shared/industry/README.md) for the
+full contract.
+
 ## Hand off document work
 
 Initial setup does not solicit, inspect, organize, extract, or process source documents, even when files are already present in `workspace/inbox/`. Leave all existing documents untouched.
@@ -229,9 +254,10 @@ Always cover these items, in this order:
 5. Communications, including messaging sources and the project communications record.
 6. Trackers.
 7. Identity metadata for the confirmed Account and Opportunity.
-8. Search index.
-9. Workflow guidance, linked to the plugin [workflow overview](../../README.md).
-10. Fresh-chat document next step, framed conditionally for users with documents and including the copyable starter prompt without asking whether documents are present.
+8. Industry flavor, if any packs were available to offer — which one was selected, or that none was applicable. Omit this item entirely when no packs exist to offer.
+9. Search index.
+10. Workflow guidance, linked to the plugin [workflow overview](../../README.md).
+11. Fresh-chat document next step, framed conditionally for users with documents and including the copyable starter prompt without asking whether documents are present.
 
 Place every item under one of the three existing status groups, even if some items are not applicable. Give one concise next step whenever anything remains incomplete.
 If the incomplete item requires user choice, the next step must be phrased as an actionable prompt rather than a passive status. For example, ask whether Slack and Microsoft Teams should be verified now, or ask the user for the known channel/team/location needed to continue. Do not rely on the user to infer that they need to ask a follow-up.

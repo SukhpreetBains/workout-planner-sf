@@ -1,0 +1,332 @@
+{
+  "meta": {
+    "archetype": "project-kickoff",
+    "client": "Northstar Health",
+    "title": "Care Access Modernization — Kickoff",
+    "subtitle": "Consent, identity, and interoperability foundations",
+    "date": "2026-08-11",
+    "authors": [
+      { "name": "Priya Anand", "role": "Slalom Engagement Lead" }
+    ],
+    "classification": "Internal draft",
+    "accent": "purple"
+  },
+  "sections": [
+    {
+      "module": "agenda",
+      "view": "agenda",
+      "title": "Today's working session",
+      "items": [
+        { "title": "Why we're here", "detail": "Align on the Care Access Modernization program and what success looks like for patients and staff." },
+        { "title": "Scope and guiding principles", "detail": "Confirm what's in the first release, what's deferred, and the principles guiding PHI handling and interoperability choices." },
+        { "title": "Delivery approach and timeline", "detail": "Walk the phased plan from consent-capture redesign through the FHIR-based interoperability phase." },
+        { "title": "Team and governance", "detail": "Confirm the team structure, decision rights, and how regulatory and compliance decisions get escalated." },
+        { "title": "Immediate next steps", "detail": "Leave with confirmed owners and dates for the first two weeks." }
+      ]
+    },
+    {
+      "module": "team-roster",
+      "view": "roster",
+      "title": "Who's in the room",
+      "columns": ["Name", "Role", "Organization", "Contact"],
+      "rows": [
+        { "cells": ["Dana Whitfield", "Sponsor", "Northstar Health", "Executive sponsor, Patient Access"] },
+        { "cells": ["Morgan Reyes", "Client PM", "Northstar Health", "Day-to-day program coordination"] },
+        { "cells": ["Priya Anand", "Engagement Lead", "Slalom", "Overall delivery accountability"] },
+        { "cells": ["Theo Marsh", "Solution Architect", "Slalom", "Identity and interoperability design"] },
+        { "cells": ["Jordan Blake", "Delivery Lead", "Slalom", "Sprint execution and reporting"] }
+      ]
+    },
+    {
+      "module": "business-context",
+      "view": "context",
+      "title": "Why this work matters",
+      "body": "Northstar Health's patient access experience — scheduling, consent, and identity verification — has grown inconsistent across the health system's hospitals, employed-physician group, and ambulatory sites. Patients re-enter the same consent information at every touchpoint, and staff work around three different identity-verification processes depending on the site.",
+      "findings": [
+        {
+          "theme": "Consent capture is fragmented across sites",
+          "evidence": "Each site collects and stores patient consent differently; there is no single source of truth for what a patient has and hasn't authorized.",
+          "implication": "This creates both a patient-experience problem and a HIPAA documentation risk — Northstar cannot always demonstrate a consistent, current consent record on request.",
+          "severity": "high"
+        },
+        {
+          "theme": "Identity verification varies by site",
+          "evidence": "Ambulatory sites use a manual front-desk process; the employed-physician group uses a different patient portal login than the hospital system.",
+          "implication": "A modern, unified identity provider is a prerequisite for the planned FHIR-based interoperability phase, not a parallel workstream.",
+          "severity": "medium"
+        },
+        {
+          "theme": "Analytics team has partial visibility into patient-access data",
+          "evidence": "Northstar's analytics team can report on hospital-site access metrics but not ambulatory or physician-group activity.",
+          "implication": "Care Access Modernization's success metrics need a data-mapping pass before they can be trusted system-wide.",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "module": "objectives-and-success",
+      "view": "outcomes",
+      "title": "What success looks like",
+      "items": [
+        { "value": 1, "unit": "consent record", "label": "Single source of truth for patient consent, system-wide", "source": "Program charter, Care Access Modernization" },
+        { "value": 90, "unit": "%", "label": "Patient identity verifications completed without front-desk manual override", "source": "Target agreed with Dana Whitfield, Sponsor" },
+        { "value": "R4", "label": "FHIR version standardized across the identity and interoperability phase", "source": "Solution architecture direction, Theo Marsh" }
+      ]
+    },
+    {
+      "module": "scope-review",
+      "view": "scope",
+      "title": "Scope boundary",
+      "columns": ["Item", "In scope detail", "Deferred detail"],
+      "rows": [
+        { "cells": ["Consent-capture flow redesign", "One patient-facing consent flow across hospital, physician-group, and ambulatory sites", "Multi-language localization beyond English and Spanish is deferred to a later release"] },
+        { "cells": ["Identity provider integration", "Single sign-on and identity verification for patient-facing scheduling and consent", "Staff-facing single sign-on migration is deferred pending IT security review"] },
+        { "cells": ["FHIR interoperability groundwork", "Data-mapping and integration-engine planning for the upcoming EHR interoperability phase", "The interoperability phase's actual build is a separate, later-phase engagement"] }
+      ]
+    },
+    {
+      "module": "guiding-principles",
+      "view": "principles",
+      "title": "Guiding principles",
+      "items": [
+        { "title": "PHI stays minimal and purpose-bound", "detail": "Every system touching consent or identity data collects only what the specific workflow needs, and nothing is retained past its documented purpose." },
+        { "title": "One consent record, everywhere", "detail": "No site-specific consent workaround survives this program — every touchpoint reads and writes the same record." },
+        { "title": "Design for FHIR from day one", "detail": "Even before the interoperability phase begins, identity and consent data models are shaped to map cleanly onto FHIR R4 resources." },
+        { "title": "Clinical and patient-safety impact gets escalated, not absorbed", "detail": "Any finding that could affect clinical workflow or patient safety goes to governance immediately, not folded into a routine status update." }
+      ]
+    },
+    {
+      "module": "architecture",
+      "view": "architecture",
+      "title": "Current and target architecture",
+      "phases": [
+        { "name": "Current state", "window": "As of program start", "outcomes": ["Three separate identity-verification processes across sites", "Consent data stored in site-specific systems with no shared record", "No FHIR-based integration in place"] },
+        { "name": "Target state — this program", "window": "Care Access Modernization", "outcomes": ["One identity provider integrated across all patient-facing access points", "One consent record accessible from every site", "Data model designed for FHIR R4 mapping"] },
+        { "name": "Target state — interoperability phase (future)", "window": "Following program", "outcomes": ["Full EHR interoperability via a FHIR-based integration engine", "Identity and consent records exposed to the health information exchange"] }
+      ]
+    },
+    {
+      "module": "epic-overview",
+      "view": "epics",
+      "title": "Epics",
+      "columns": ["Epic", "Phase", "Description", "Owner", "Acceptance"],
+      "rows": [
+        { "cells": ["Unified consent record", "Build", "Single consent data model and API consumed by every site's front-end", "Theo Marsh", "Every site reads and writes the same consent record with no local override"] },
+        { "cells": ["Identity provider integration", "Build", "Integrate the selected identity provider for patient-facing scheduling and consent", "Theo Marsh", "Patients authenticate once and are recognized across sites"] },
+        { "cells": ["FHIR data-mapping foundation", "Discover", "Map consent and identity data to FHIR R4 resources ahead of the interoperability phase", "Jordan Blake", "Data-mapping document reviewed and accepted by Northstar's analytics team"] }
+      ]
+    },
+    {
+      "module": "delivery-approach",
+      "view": "approach",
+      "title": "Delivery approach",
+      "phases": [
+        { "name": "Discover", "window": "Weeks 1-3", "outcomes": ["Current-state consent and identity assessment complete", "Consent-capture flow design approved by Dana Whitfield"] },
+        { "name": "Build", "window": "Weeks 4-9", "outcomes": ["Unified consent record implemented", "Identity provider integrated and tested"] },
+        { "name": "Transition", "window": "Weeks 10-12", "outcomes": ["Go-live readiness confirmed across all sites", "Handoff to Northstar operations, with FHIR data-mapping foundation delivered for the next phase"] }
+      ]
+    },
+    {
+      "module": "timeline-roadmap",
+      "view": "timeline",
+      "title": "Engagement timeline",
+      "phases": [
+        { "name": "Discover", "window": "Weeks 1-3", "outcomes": ["Current-state assessment", "Consent-capture flow design"] },
+        { "name": "Build", "window": "Weeks 4-9", "outcomes": ["Consent record and identity provider integration built and tested"] },
+        { "name": "Transition", "window": "Weeks 10-12", "outcomes": ["Go-live readiness", "Handoff to Northstar operations"] }
+      ]
+    },
+    {
+      "module": "project-schedule",
+      "view": "schedule",
+      "title": "Workstream schedule",
+      "columns": ["Workstream", "Weeks", "Milestone", "Owner"],
+      "rows": [
+        { "cells": ["Consent record design and build", "Weeks 1-6", "Consent record live in staging", "Theo Marsh"] },
+        { "cells": ["Identity provider integration", "Weeks 3-9", "Identity provider integrated for patient scheduling", "Theo Marsh"] },
+        { "cells": ["FHIR data-mapping", "Weeks 6-11", "Data-mapping document accepted", "Jordan Blake"] },
+        { "cells": ["Go-live readiness", "Weeks 10-12", "All sites cut over", "Priya Anand"] }
+      ]
+    },
+    {
+      "module": "deliverables",
+      "view": "deliverables",
+      "title": "Deliverables",
+      "columns": ["Deliverable", "Description", "Owner", "Acceptance"],
+      "rows": [
+        { "cells": ["Unified consent record", "A single consent data model and API used by every site", "Theo Marsh", "All sites read and write the same record in production"] },
+        { "cells": ["Identity provider integration", "Patient-facing single sign-on across scheduling and consent", "Theo Marsh", "Patients authenticate once across every site"] },
+        { "cells": ["FHIR data-mapping document", "A mapping of consent and identity data to FHIR R4 resources", "Jordan Blake", "Reviewed and accepted by Northstar's analytics team"] }
+      ]
+    },
+    {
+      "module": "team-structure",
+      "view": "team-structure",
+      "title": "Team structure",
+      "columns": ["Workstream", "Name", "Role"],
+      "rows": [
+        { "cells": ["Sponsor", "Dana Whitfield", "Executive Sponsor"] },
+        { "cells": ["Leadership", "Morgan Reyes", "Client PM"] },
+        { "cells": ["Leadership", "Priya Anand", "Engagement Lead"] },
+        { "cells": ["Leadership", "Theo Marsh", "Solution Architect"] },
+        { "cells": ["Consent & identity", "Theo Marsh", "Workstream lead"] },
+        { "cells": ["Delivery & reporting", "Jordan Blake", "Workstream lead"] }
+      ]
+    },
+    {
+      "module": "stakeholder-register",
+      "view": "stakeholders",
+      "title": "Stakeholder map",
+      "columns": ["Name", "Impact", "Influence", "Strategy", "Owner"],
+      "rows": [
+        { "cells": ["Dana Whitfield", "High", "High", "Manage closely — weekly sponsor check-in", "Priya Anand"] },
+        { "cells": ["Morgan Reyes", "High", "Medium", "Keep informed and involved in every decision point", "Priya Anand"] },
+        { "cells": ["Northstar Compliance Office", "High", "Medium", "Consult before any PHI-handling decision is finalized", "Theo Marsh"] },
+        { "cells": ["Northstar Analytics Team", "Medium", "Low", "Keep informed, engage directly for data-mapping review", "Jordan Blake"] }
+      ]
+    },
+    {
+      "module": "governance-structure",
+      "view": "governance",
+      "title": "Governance structure",
+      "phases": [
+        { "name": "Steering committee", "window": "Monthly", "outcomes": ["Program-level direction and budget checkpoints", "Escalation point for compliance and regulatory decisions"] },
+        { "name": "Working team", "window": "Weekly", "outcomes": ["Sprint review and workstream coordination", "First escalation point for delivery risk"] },
+        { "name": "Compliance review", "window": "Ad hoc, before any PHI-handling decision", "outcomes": ["Northstar Compliance Office sign-off required before implementation"] }
+      ]
+    },
+    {
+      "module": "decision-rights",
+      "view": "decision-rights",
+      "title": "Decision rights",
+      "columns": ["Decision", "Recommends", "Approves", "Consulted", "Escalation"],
+      "rows": [
+        { "cells": ["Consent data model design", "Theo Marsh", "Dana Whitfield", "Northstar Compliance Office", "Steering committee"] },
+        { "cells": ["Identity provider selection", "Theo Marsh", "Dana Whitfield", "Northstar IT Security", "Steering committee"] },
+        { "cells": ["Go-live readiness", "Priya Anand", "Morgan Reyes", "Working team", "Steering committee"] }
+      ]
+    },
+    {
+      "module": "meeting-cadence",
+      "view": "cadence",
+      "title": "Meeting cadence",
+      "columns": ["Forum", "Cadence", "Duration", "Purpose", "Attendees"],
+      "rows": [
+        { "cells": ["Weekly status", "Weekly, Tuesdays", "30 min", "Review progress against the schedule and surface blockers", "Priya Anand, Morgan Reyes, Jordan Blake"] },
+        { "cells": ["Working team sync", "Weekly, Thursdays", "45 min", "Workstream coordination and sprint review", "Theo Marsh, Jordan Blake, Northstar analysts"] },
+        { "cells": ["Steering committee", "Monthly", "60 min", "Program-level direction, budget, and escalations", "Dana Whitfield, Priya Anand"] }
+      ]
+    },
+    {
+      "module": "ways-of-working",
+      "view": "norms",
+      "title": "Ways of working",
+      "items": [
+        { "title": "PHI never leaves approved systems", "detail": "No consent or identity data is copied into chat, email, or a shared drive outside Northstar's approved systems, even for troubleshooting." },
+        { "title": "Decisions are logged, not just discussed", "detail": "Every decision with compliance or clinical impact is recorded in the decision log within one business day of being made." },
+        { "title": "Blockers are raised the same day", "detail": "A blocker affecting the consent record or identity integration is raised in the working team channel the day it's found, not saved for the weekly sync." }
+      ]
+    },
+    {
+      "module": "service-principles",
+      "view": "service-principles",
+      "title": "Service principles",
+      "items": [
+        { "title": "Patients see one consistent experience", "detail": "Regardless of which Northstar site a patient visits, the consent and identity experience looks and behaves the same." },
+        { "title": "Staff are never asked to work around the system", "detail": "If a front-desk workaround becomes necessary, that's a design defect to fix, not a process to document." }
+      ]
+    },
+    {
+      "module": "project-logistics",
+      "view": "logistics",
+      "title": "Project logistics",
+      "columns": ["Item", "Description", "Detail", "Needed By", "Status"],
+      "rows": [
+        { "cells": ["Northstar VPN access", "Slalom team access to Northstar's internal network for integration testing", "IT Security provisioning", "Week 2", "In Progress"] },
+        { "cells": ["Identity provider sandbox", "Sandbox environment for identity provider integration testing", "Vendor provisioning", "Week 3", "Not Started"] },
+        { "cells": ["Compliance office contact", "Named compliance reviewer for PHI-handling sign-off", "Northstar Compliance Office", "Week 1", "Confirmed"] }
+      ]
+    },
+    {
+      "module": "delivery-conditions",
+      "view": "conditions",
+      "title": "Assumptions and risk conditions",
+      "findings": [
+        {
+          "theme": "Identity provider contract timing",
+          "evidence": "The identity provider vendor contract is still in Northstar's procurement process as of kickoff.",
+          "implication": "A delayed contract signature directly compresses the identity-integration testing window and could push the transition milestone.",
+          "severity": "high"
+        },
+        {
+          "theme": "Compliance office availability",
+          "evidence": "Northstar's Compliance Office has one named reviewer for this program, shared across other initiatives.",
+          "implication": "PHI-handling decisions could queue behind other compliance reviews unless a dedicated review slot is confirmed.",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "module": "raid-log",
+      "view": "raid-log",
+      "title": "Open RAID items",
+      "columns": ["ID", "Type", "Item", "Owner", "Target Date", "Status"],
+      "rows": [
+        { "cells": ["R-01", "Risk", "Identity provider contract delay could compress the integration-test window", "Theo Marsh", "08-25-2026", "High"] },
+        { "cells": ["D-01", "Dependency", "Consent-capture flow sign-off needed before build starts", "Dana Whitfield", "08-18-2026", "Active"] },
+        { "cells": ["A-01", "Assumption", "Northstar analytics team availability holds through data-mapping review", "Jordan Blake", "08-20-2026", "Confirmed"] }
+      ]
+    },
+    {
+      "module": "dependency-list",
+      "view": "dependencies",
+      "title": "Dependencies",
+      "columns": ["ID", "Dependency", "Detail", "Required By", "Owner", "Fallback"],
+      "rows": [
+        { "cells": ["DP-01", "Identity provider contract execution", "Vendor contract must be signed before sandbox provisioning can begin", "08-22-2026", "Dana Whitfield", "Extend discovery phase by two weeks"] },
+        { "cells": ["DP-02", "Compliance office review slot", "A dedicated reviewer slot for PHI-handling sign-off", "08-15-2026", "Northstar Compliance Office", "Escalate to steering committee for prioritization"] }
+      ]
+    },
+    {
+      "module": "action-log",
+      "view": "actions",
+      "title": "Open action items",
+      "columns": ["#", "Action", "Owner", "Due Date", "Status", "Notes"],
+      "rows": [
+        { "cells": ["1", "Confirm identity provider vendor contract timeline", "Dana Whitfield", "08-15-2026", "In Progress", "Procurement update expected this week"] },
+        { "cells": ["2", "Schedule dedicated compliance review slot", "Morgan Reyes", "08-14-2026", "Not Started", "Depends on Compliance Office availability"] },
+        { "cells": ["3", "Share current-state consent process documentation", "Morgan Reyes", "08-13-2026", "Complete", "Shared with Theo Marsh and analytics team"] }
+      ]
+    },
+    {
+      "module": "decision-log",
+      "view": "decisions",
+      "title": "Decisions",
+      "columns": ["ID", "Status", "Decision", "Date", "Rationale", "Follow-up"],
+      "rows": [
+        { "cells": ["DEC-01", "Confirmed", "Standardize on FHIR R4 for all data-mapping work", "08-11-2026", "Aligns with Northstar's planned interoperability phase and avoids rework", "None — carried into architecture section"] },
+        { "cells": ["DEC-02", "Pending confirmation", "Identity provider vendor selection", "Target 08-20-2026", "Awaiting procurement and Compliance Office input", "Dana Whitfield to confirm at next steering committee"] }
+      ]
+    },
+    {
+      "module": "immediate-next-steps",
+      "view": "next-steps",
+      "title": "Immediate next steps",
+      "items": [
+        "Dana Whitfield to confirm identity provider contract timeline by 08-15-2026",
+        "Morgan Reyes to schedule a dedicated Compliance Office review slot by 08-14-2026",
+        "Theo Marsh to begin the current-state consent and identity assessment"
+      ]
+    },
+    {
+      "module": "closing-discussion",
+      "view": "closing",
+      "title": "Closing and open discussion",
+      "items": [
+        "Confirm the weekly status cadence and attendee list with Morgan Reyes",
+        "Raise any concern about the identity provider timeline before next week's working team sync",
+        "Flag any additional PHI-handling scenario the Compliance Office should review early"
+      ]
+    }
+  ]
+}

@@ -38,6 +38,23 @@ Update only the Account and Opportunity identity in `workspace/project/Project O
 
 The project communications record remains `workspace/.system/source-context.yaml`; the ingested-document ledger remains `workspace/.system/sources.yaml`.
 
+## 3a. Record industry flavor, if applicable
+
+After identity is recorded, follow **Confirm industry flavor** in
+`SKILL.md`. When the user picks a pack (or explicitly declines), add one
+more key to the same `project.yaml`, reconciled the same way:
+
+```yaml
+# workspace/.system/project.yaml
+account: <account name>
+opportunity: <opportunity name>
+industry: <pack id, or the literal `none`>
+```
+
+This key is optional and only ever written after the user answers the
+industry question — never inferred, and never added when no packs exist
+to offer.
+
 ## 4. Leave source documents untouched
 
 Do not inspect `workspace/inbox/`, ask about documents, or invoke a document-processing workflow during initial setup. Existing documents remain untouched.
@@ -50,6 +67,7 @@ Run `sync.py` through the same launcher and `EAD_REPO_ROOT` value. Report:
 
 - trackers created or preserved
 - Account and Opportunity identity recorded or preserved
+- industry flavor recorded, if any packs were offered
 - existing optional project details preserved
 - search-index status
 - the fresh-chat document next step and broader workflow guidance

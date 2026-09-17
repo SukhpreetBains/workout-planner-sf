@@ -82,6 +82,31 @@ available, and give the user its preview link. Explain that it is a fictional
 starting composition. Do not ask the user to select a template or modules only
 after beginning evidence intake.
 
+## Industry flavor
+
+Check `workspace/.system/project.yaml` for an `industry:` key.
+
+- **Absent entirely** — this Opportunity has never been asked. Scan
+  `shared/industry/*/manifest.json` for available packs. If any exist, ask
+  once, offering each by title plus a "none of these" option, and write
+  whichever the user picks (an id, or `none`) into `project.yaml`,
+  preserving every other key. If no packs exist, skip this silently.
+- **`none`** — asked and declined already. Proceed exactly as documented
+  in this skill, no different from this section not existing. Do not ask
+  again.
+- **An id** — read that pack's `references/deliverable-guidance.md`
+  (`shared/industry/<id>/manifest.json` names its exact path) and apply it
+  as terminology, tone, and section emphasis within whichever template and
+  modules are already selected. It never selects a different template or
+  module set on its own, never overrides a direct in-conversation
+  instruction for this turn, and every non-negotiable above still applies
+  in full — especially never inventing a finding, number, owner, date, or
+  decision. For any fictional or preview composition, use that pack's
+  `examples/fictional_client` rather than inventing a new fictional entity.
+
+Read [../../shared/industry/README.md](../../shared/industry/README.md) for
+the full contract if anything here is ambiguous.
+
 Use `workspace/.system/tracker-copies/<category>.yaml` as the default factual
 input. Accept in `workspace-review-updates` writes the reviewed values to the
 tracker workbooks and refreshes these copies. Current rows take precedence over

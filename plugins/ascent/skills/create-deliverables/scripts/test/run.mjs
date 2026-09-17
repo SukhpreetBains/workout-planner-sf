@@ -428,6 +428,27 @@ test('templates: the static example renders every selected module with labels', 
   }
 });
 
+test('templates: --industry hls renders project-kickoff\'s full alternate static example', async () => {
+  const result = await buildStructurePreview({
+    templateName: 'project-kickoff', industry: 'hls',
+    out: path.join(TMP, 'project-kickoff-hls-example'),
+  });
+  const renderedModules = new Set(result.renderedDoc.sections.map((section) => section.module));
+  const authorableModules = MODULES.filter((module) => module.output.some((view) => view.type !== 'cover'));
+  eq([...renderedModules], authorableModules.map((module) => module.id));
+  includes(result.html, 'Northstar Health');
+  includes(result.html, 'Care Access Modernization');
+});
+
+test('templates: --industry with an unknown pack id is a clear error', async () => {
+  const err = await buildStructurePreview({
+    templateName: 'project-kickoff', industry: 'not-a-real-pack',
+    out: path.join(TMP, 'industry-unknown-pack'),
+  }).then(() => null, (e) => e);
+  ok(err instanceof ContentError, 'expected a ContentError');
+  includes(err.message, 'no such industry pack');
+});
+
 test('modules: guided content requires module plus view and derives section type', () => {
   const raw = JSON.parse(readFileSync(path.join(FIXTURES, 'valid-minimal.json'), 'utf8'));
   const resolved = resolveGuidedContent(raw, MODULES);

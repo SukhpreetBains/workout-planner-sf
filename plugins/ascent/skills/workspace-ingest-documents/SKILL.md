@@ -14,6 +14,27 @@ Locate `shared/` at the installed Ascent plugin root. Set
 `EAD_REPO_ROOT` to the Opportunity folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
 
+## Industry flavor
+
+Check `workspace/.system/project.yaml` for an `industry:` key.
+
+- **Absent entirely** — this Opportunity has never been asked. Scan
+  `shared/industry/*/manifest.json` for available packs. If any exist, ask
+  once, offering each by title plus a "none of these" option, and write
+  whichever the user picks (an id, or `none`) into `project.yaml`,
+  preserving every other key. If no packs exist, skip this silently.
+- **`none`** — asked and declined already. Proceed exactly as documented
+  below, no different from this section not existing. Do not ask again.
+- **An id** — read that pack's `references/ingestion-guidance.md`
+  (`shared/industry/<id>/manifest.json` names its exact path) and apply it
+  alongside Steps 1–4 below as emphasis and framing. It never adds a
+  tracker category or column, and it never overrides a direct
+  in-conversation instruction for this turn (e.g. "don't apply industry
+  flavor here").
+
+Read [../../shared/industry/README.md](../../shared/industry/README.md) for
+the full contract if anything here is ambiguous.
+
 ## Step 1 — Read each inbox file
 
 List `workspace/inbox/`. For each file:

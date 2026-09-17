@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 export const SKILL_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const SKILLS_DIR = path.resolve(SKILL_ROOT, '..');
+export const SHARED_DIR = path.join(SKILLS_DIR, '..', 'shared');
 
 const UI_GENERATION_DIR = path.join(SKILLS_DIR, 'utilities-ui-generation');
 

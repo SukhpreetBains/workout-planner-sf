@@ -98,6 +98,13 @@ complete module list and the user's confirmed module selection must already be
 recorded before intake begins. After content has been added and rendered, give
 the user the updated preview link when that workspace action is available.
 
+An `--industry <id>` flag on either preview command substitutes an active
+industry pack's own full alternate static example for the template's, when
+that pack declares one (`shared/industry/<id>/manifest.json`'s
+`examples.static_examples`). It is held to the exact same completeness
+contract as the template's own file — this never partially patches it. See
+[../../../shared/industry/README.md](../../../shared/industry/README.md).
+
 Every question contains:
 
 - `id`: stable and prefixed with the module ID

@@ -991,17 +991,33 @@
 .delivery-spine article small { color: var(--on-white-muted); text-transform: uppercase; letter-spacing: var(--tracking-eyebrow); }
 
 .roadmap-horizon { display: grid; gap: var(--space-2); padding: var(--space-4); border: 1px solid var(--rule-color); overflow-x: auto; }
-.roadmap-horizon__months, .roadmap-horizon__lane { min-width: 52rem; display: grid; grid-template-columns: 8rem repeat(5, 1fr); align-items: center; gap: var(--space-2); }
-.roadmap-horizon__months { color: var(--on-white-muted); font-size: var(--size-eyebrow); text-transform: uppercase; letter-spacing: var(--tracking-eyebrow); border-bottom: 1px solid var(--rule-color); }
-.roadmap-horizon__lane { position: relative; min-height: 3rem; border-bottom: 1px dotted var(--rule-color); }
-.roadmap-horizon__lane strong { color: var(--on-white-display); }
-.roadmap-horizon__lane > span { grid-column: 2 / span 2; z-index: 1; padding: var(--space-1) var(--space-2); color: var(--on-blue-body); font-weight: var(--weight-subhead); }
-.roadmap-horizon__lane > p { grid-column: 4 / span 3; z-index: 1; color: var(--on-blue-body); font-weight: var(--weight-subhead); }
-.roadmap-horizon__lane > i { position: absolute; left: 8rem; right: 0; height: 1.75rem; background: var(--surface-blue-bg); z-index: 0; /* no-text */ }
-.roadmap-horizon__lane.lane-2 > i { left: 30%; }
-.roadmap-horizon__lane.lane-3 > i { left: 42%; right: 20%; }
-.roadmap-horizon__lane.lane-4 > i { left: 68%; }
-.roadmap-horizon__milestones { display: flex; justify-content: space-around; color: var(--on-white-display); font-size: var(--size-small); }
+
+/* The label (phase name, window, outcomes) and the track (the bar alone)
+   are separate grid columns that never overlap — the label is always plain,
+   always-readable text; the track holds only the decorative bar, exactly
+   like project-schedule's Gantt bars never carry text either. A fixed
+   decorative header and a data-driven bar can't both be honest about timing
+   at once, so the header is real week ticks on the same 1-to-total scale
+   the bars use, not arbitrary era names. */
+.roadmap-horizon__axis, .roadmap-horizon__lane { min-width: 52rem; display: grid; grid-template-columns: 14rem 1fr; align-items: center; gap: var(--space-2); }
+.roadmap-horizon__axis { border-bottom: 1px solid var(--rule-color); padding-bottom: var(--space-2); }
+.roadmap-horizon__axis-ticks { display: flex; justify-content: space-between; color: var(--on-white-muted); font-size: var(--size-eyebrow); text-transform: uppercase; letter-spacing: var(--tracking-eyebrow); }
+.roadmap-horizon__lane { min-height: 3.5rem; border-bottom: 1px dotted var(--rule-color); }
+.roadmap-horizon__label { display: grid; gap: 0.15rem; }
+.roadmap-horizon__label strong { color: var(--on-white-display); }
+.roadmap-horizon__label > span { color: var(--on-white-muted); font-size: var(--size-eyebrow); font-weight: var(--weight-subhead); }
+.roadmap-horizon__label > p { color: var(--on-white-muted); font-size: var(--size-small); }
+.roadmap-horizon__track { position: relative; min-height: 1.75rem; }
+/* Position and width come from --lane-start/--lane-span/--lane-total, set
+   per lane from each phase's own window — never a fixed per-index rule,
+   which only ever matched one specific phase count and order by luck. */
+.roadmap-horizon__track > i {
+  position: absolute;
+  left: calc(100% * var(--lane-start) / var(--lane-total));
+  width: calc(100% * var(--lane-span) / var(--lane-total));
+  height: 1.75rem;
+  background: var(--surface-blue-bg);
+} /* no-text */
 
 .schedule-gantt { min-width: 58rem; padding: var(--space-4); border: 1px solid var(--rule-color); }
 .schedule-gantt__head { display: grid; grid-template-columns: 12rem repeat(16, 1fr) 4rem; gap: 1px; color: var(--on-white-muted); font-size: var(--size-eyebrow); text-transform: uppercase; letter-spacing: var(--tracking-eyebrow); }

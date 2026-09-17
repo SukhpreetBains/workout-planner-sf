@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "hls",
+  "title": "Health & Life Sciences",
+  "description": "Reference guidance and a consistent fictional client for healthcare provider, payer, pharma, and life-sciences engagements.",
+  "references": {
+    "overview": "references/overview.md",
+    "vocabulary": "references/vocabulary.md",
+    "ingestion_guidance": "references/ingestion-guidance.md",
+    "review_guidance": "references/review-guidance.md",
+    "deliverable_guidance": "references/deliverable-guidance.md"
+  },
+  "examples": {
+    "fictional_client": "examples/fictional-client.md",
+    "static_examples": {
+      "project-kickoff": "examples/project-kickoff-static-example.json"
+    }
+  }
+}
