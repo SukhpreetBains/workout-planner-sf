@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Add"
+  short_description: "File documents, capture meeting notes, and propose tracker updates"
+  default_prompt: "Use $workspace-add to process the documents in my Opportunity workspace inbox."

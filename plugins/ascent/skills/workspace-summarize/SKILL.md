@@ -1,9 +1,9 @@
 ---
-name: summarize-evidence
+name: workspace-summarize
 description: Produce an evidence-grounded narrative from an Opportunity workspace, such as a current-state picture, weekly rollup, topic deep-dive, or stakeholder view. Use when the user needs a summary from workspace documents and tracker rows; never modify trackers and keep any generated file inside workspace/.
 ---
 
-# Summarize Evidence
+# Workspace Summarize
 
 Answer "what do we know?" in prose, grounded in tracker rows and filed
 documents. This skill reads; it never writes to the trackers.

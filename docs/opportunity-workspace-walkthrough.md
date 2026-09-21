@@ -109,12 +109,12 @@ Initial setup does not ask about documents, inspect `workspace/inbox/`, or proce
 When documents are ready, finish setup and open a fresh agent chat scoped to the Opportunity. Fresh context gives the agent maximum room to inspect, organize, extract, and reason over the source material. Use this starter prompt:
 
 ```text
-Use add-documents to process the documents in this Opportunity workspace inbox.
+Use workspace-add to process the documents in this Opportunity workspace inbox.
 ```
 
 ## 7. Ingest documents and capture meetings
 
-Place new material in `workspace/inbox/`, then invoke `add-documents`.
+Place new material in `workspace/inbox/`, then invoke `workspace-add`.
 
 The skill:
 
@@ -129,7 +129,7 @@ It does not modify the trackers.
 
 ## 8. Review proposed updates
 
-Invoke `review-updates` to inspect pending changes. For each proposal, it shows:
+Invoke `workspace-review` to inspect pending changes. For each proposal, it shows:
 
 - a loopback-only visual review link when proposals are ready
 - category counts and a completed-versus-remaining progress bar
@@ -148,7 +148,7 @@ This is the only skill authorized to write tracker changes.
 
 Invoke `investigate-project` to map confirmed project knowledge locations or retrieve bounded, cited evidence for a specific task.
 
-Invoke `summarize-evidence` for current-state summaries, weekly rollups, stakeholder views, system or process deep dives, and future-state summaries.
+Invoke `workspace-summarize` for current-state summaries, weekly rollups, stakeholder views, system or process deep dives, and future-state summaries.
 
 The summarization skill searches workspace documents and tracker rows, traces important claims to their sources, identifies contradictions and gaps, and can write results beneath `workspace/current-state/` or `workspace/future-state/`. It never changes the trackers.
 
@@ -161,15 +161,15 @@ Invoke `create-deliverables` when governed evidence is ready to become a draft c
 ```text
 New documents
     ↓
-add-documents
+workspace-add
     ↓
 Proposed tracker updates
     ↓
-review-updates
+workspace-review
     ↓
 Approved tracker knowledge
     ↓
-investigate-project or summarize-evidence
+investigate-project or workspace-summarize
     ↓
 create-deliverables
 ```

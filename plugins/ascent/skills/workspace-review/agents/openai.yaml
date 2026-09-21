@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workspace Review"
+  short_description: "Review and apply approved tracker updates"
+  default_prompt: "Use $workspace-review to walk me through the pending workspace tracker proposals."

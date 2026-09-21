@@ -37,4 +37,4 @@ The project communications record remains `workspace/.system/source-context.yaml
 
 Do not inspect `workspace/inbox/`, ask about documents, or invoke a document-processing workflow during setup. Existing documents remain untouched.
 
-At handoff, follow [the setup readiness contract](setup-readiness.md). Users with documents should place them in the confirmed `<Opportunity folder>/workspace/inbox/` and open a fresh agent chat scoped to that Opportunity for `add-documents`.
+At handoff, follow [the setup readiness contract](setup-readiness.md). Users with documents should place them in the confirmed `<Opportunity folder>/workspace/inbox/` and open a fresh agent chat scoped to that Opportunity for `workspace-add`.

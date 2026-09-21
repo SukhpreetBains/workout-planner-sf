@@ -1,14 +1,14 @@
 ---
-name: add-documents
+name: workspace-add
 description: Process new documents from workspace/inbox/ by filing them in the workspace, turning meeting transcripts or raw notes into a structured session note, recording everything in the document-source ledger, extracting evidence-backed tracker updates, validating the proposals, and refreshing the search index. Use whenever new project source material arrives, including after workshops, interviews, standups, or other project sessions, in an initialized Opportunity workspace.
 ---
 
-# Add Project Documents
+# Workspace Add
 
 Turn whatever landed in `workspace/inbox/` into filed documents (plus a
 structured session note for meeting material) and proposed tracker
 updates. Nothing is written to the trackers here; that only happens
-after the user approves through `review-updates`.
+after the user approves through `workspace-review`.
 
 Locate `shared/` at the installed Ascent plugin root. Set
 `ASCENT_OPPORTUNITY_ROOT` to the Opportunity folder for every engine command, then
@@ -170,7 +170,7 @@ step implicit. State:
   ready for your approval. Would you like me to review and populate the
   project trackers now?”
 
-If the user approves, invoke `review-updates` and walk the
+If the user approves, invoke `workspace-review` and walk the
 proposals through its governed review. If they do not approve, leave the
 proposals in place and make clear that they are available for a later
 review. Also report what was filed (including where any session note

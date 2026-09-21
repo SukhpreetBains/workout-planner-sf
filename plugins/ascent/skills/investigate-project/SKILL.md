@@ -89,6 +89,6 @@ evidence cutoff, access or freshness gaps, and the persisted index
 path.
 
 Neither mode claims that content was reviewed when only its location
-was resolved. Neither mode substitutes for `add-documents`
+was resolved. Neither mode substitutes for `workspace-add`
 — files a user drops in `workspace/inbox/` are that skill's job, not
 this one's.

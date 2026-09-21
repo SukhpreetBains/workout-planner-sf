@@ -61,7 +61,7 @@ def assert_workflow_contract() -> None:
 
     combined_setup_contract = initial_setup + workspace_setup
     assert "Do not inspect `workspace/inbox/`" in combined_setup_contract
-    assert "invoke `add-documents`" not in combined_setup_contract
+    assert "invoke `workspace-add`" not in combined_setup_contract
     assert "Existing documents remain untouched" in combined_setup_contract
     assert "fresh agent chat scoped to the Opportunity" in combined_setup_contract
 

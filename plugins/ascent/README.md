@@ -9,22 +9,22 @@ Run `initial-setup` when starting a new Opportunity or joining an existing one. 
 Initial setup does not ask for optional engagement details and does not inspect or process source documents. Users with documents should add documents, exports, meeting notes, transcripts, or other source files to the Opportunity's `workspace/inbox/` folder, then open a fresh agent chat scoped to that Opportunity and use this prompt:
 
 ```text
-Use add-documents to process the documents in this Opportunity workspace inbox.
+Use workspace-add to process the documents in this Opportunity workspace inbox.
 ```
 
 Fresh context gives the agent maximum room to inspect, organize, extract, and reason over the source material.
 
 ## Knowledge lifecycle
 
-1. **Ingest documents:** `add-documents` files new material, records its provenance, extracts evidence-backed findings, proposes tracker updates, and refreshes search. It does not change trackers.
-2. **Review proposed updates:** `review-updates` lets a person approve, edit, or reject each proposal with its source evidence. It is the only workflow that writes approved changes into trackers.
-3. **Investigate or summarize governed evidence:** `investigate-project` maps confirmed knowledge locations or retrieves bounded, cited evidence for a specific task. `summarize-evidence` turns approved tracker knowledge and filed sources into evidence-grounded narratives without changing trackers.
+1. **Ingest documents:** `workspace-add` files new material, records its provenance, extracts evidence-backed findings, proposes tracker updates, and refreshes search. It does not change trackers.
+2. **Review proposed updates:** `workspace-review` lets a person approve, edit, or reject each proposal with its source evidence. It is the only workflow that writes approved changes into trackers.
+3. **Investigate or summarize governed evidence:** `investigate-project` maps confirmed knowledge locations or retrieves bounded, cited evidence for a specific task. `workspace-summarize` turns approved tracker knowledge and filed sources into evidence-grounded narratives without changing trackers.
 4. **Create deliverables:** `create-deliverables` uses the governed project evidence to create draft client deliverables in `workspace/draft-deliverables/` for review and human promotion.
 
 ```text
-add-documents
-    -> review-updates
-    -> investigate-project or summarize-evidence
+workspace-add
+    -> workspace-review
+    -> investigate-project or workspace-summarize
     -> create-deliverables
 ```
 

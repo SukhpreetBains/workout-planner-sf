@@ -47,7 +47,7 @@ If the agent cannot write because of its session boundary, request scoped comman
 
 ## Initialize project knowledge
 
-Follow [project workspace setup](references/project-workspace-setup.md). Use the already confirmed `account` and `opportunity` values consistently. Never apply proposed tracker updates during setup. `review-updates` remains the only workflow that writes approved tracker changes.
+Follow [project workspace setup](references/project-workspace-setup.md). Use the already confirmed `account` and `opportunity` values consistently. Never apply proposed tracker updates during setup. `workspace-review` remains the only workflow that writes approved tracker changes.
 
 ## Document boundary
 
@@ -56,7 +56,7 @@ Do not inspect `workspace/inbox/`, ask about documents, or process documents dur
 At handoff, tell users with documents to place documents, exports, meeting notes, transcripts, or other source files in the confirmed `<Opportunity folder>/workspace/inbox/`, then open a fresh agent chat scoped to the Opportunity. Include this prompt:
 
 ```text
-Use add-documents to process the documents in this Opportunity workspace inbox.
+Use workspace-add to process the documents in this Opportunity workspace inbox.
 ```
 
 ## Output contract

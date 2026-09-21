@@ -1,9 +1,9 @@
 ---
-name: review-updates
+name: workspace-review
 description: Review pending evidence-backed updates in workspace/.system/proposed-updates/ with the user, let them approve, edit, or reject each change, and write only approved rows into workspace tracker workbooks. Use whenever proposed workspace updates await governed human review; this is the only workflow that writes to trackers.
 ---
 
-# Review Updates
+# Workspace Review
 
 Proposed updates only become tracker rows after a human approves them
 here. Never apply updates the user has not seen.

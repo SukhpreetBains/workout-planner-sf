@@ -29,8 +29,8 @@ Cover these items in this order:
 
 Give one concise next step whenever anything is incomplete. Phrase required user choices as actionable prompts. For example, ask whether Slack or Microsoft Teams should be verified now, or request the known channel, team, or location needed to continue.
 
-For the document next step, name the confirmed absolute `<Opportunity folder>/workspace/inbox/` path. State that files placed there are what `add-documents` will process, and include:
+For the document next step, name the confirmed absolute `<Opportunity folder>/workspace/inbox/` path. State that files placed there are what `workspace-add` will process, and include:
 
 ```text
-Use add-documents to process the documents in this Opportunity workspace inbox.
+Use workspace-add to process the documents in this Opportunity workspace inbox.
 ```

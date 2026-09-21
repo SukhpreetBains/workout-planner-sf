@@ -20,7 +20,7 @@ def main() -> None:
     if result.returncode:
         raise RuntimeError(f"visual review acceptance failed:\n{result.stdout}\n{result.stderr}")
 
-    app = SKILLS_ROOT / "review-updates" / "assets" / "review-app"
+    app = SKILLS_ROOT / "workspace-review" / "assets" / "review-app"
     required = [
         app / "index.html",
         app / "app.css",

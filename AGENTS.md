@@ -14,8 +14,8 @@
 ## Current implementation state
 
 The following skills are implemented: `initial-setup`, `project-setup`,
-`investigate-project`, `add-documents`, `review-updates`,
-`summarize-evidence`, `create-deliverables`, `update-deliverable-structure`, and
+`investigate-project`, `workspace-add`, `workspace-review`,
+`workspace-summarize`, `create-deliverables`, `update-deliverable-structure`, and
 `utilities-ui-generation`.
 
 Do not treat `analyze-org`, `compose-deliverable`, `design-skill-evals`,

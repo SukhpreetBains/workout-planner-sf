@@ -7,7 +7,7 @@ the trackers that hold what we've learned.
 
 Drop new files into `inbox/`. The agent files them into the right folder,
 proposes tracker updates from what they contain, and you approve those
-updates through `review-updates` before anything is written. Every tracker row
+updates through `workspace-review` before anything is written. Every tracker row
 cites the document it came from.
 
 For a newly created Opportunity, the inbox path is `<Opportunity folder>/workspace/inbox/`.
@@ -19,11 +19,11 @@ For a newly created Opportunity, the inbox path is `<Opportunity folder>/workspa
 | `inbox/` | New, unprocessed documents — the only folder you need to remember | You |
 | `draft-deliverables/` | Agent-created decks, documents, and generated outputs awaiting human review or promotion | Agent |
 | `project/` | Project overview, timeline, phase context | You + agent |
-| `meetings/` | Session notes and transcripts, named `YYYY-MM-DD - Title` | Agent through `add-documents` |
+| `meetings/` | Session notes and transcripts, named `YYYY-MM-DD - Title` | Agent through `workspace-add` |
 | `current-state/` | How things work today — summaries, landscape docs | You + agent |
 | `future-state/` | Where things are heading — options, scope, focus areas | You + agent |
 | `reference/` | Background material: SOWs, proposals, exports, client docs | Agent files these from the inbox |
-| `trackers/` | Four Excel workbooks — the structured memory of the project | Only `review-updates` (after your approval) |
+| `trackers/` | Four Excel workbooks — the structured memory of the project | Only `workspace-review` (after your approval) |
 | `.system/` | Machine-managed: project and source context, proposed/applied updates, search index, plain-text tracker copies, sync state | Agent + scripts |
 
 ## Trackers
