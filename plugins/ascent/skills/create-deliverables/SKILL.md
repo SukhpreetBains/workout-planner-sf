@@ -82,6 +82,37 @@ available, and give the user its preview link. Explain that it is a fictional
 starting composition. Do not ask the user to select a template or modules only
 after beginning evidence intake.
 
+Before evidence intake, confirm the workspace itself is initialized. Locate
+`shared/` at the installed Ascent plugin root, set `EAD_REPO_ROOT` to the
+Opportunity folder, and run:
+
+```bash
+PY <shared-skill-dir>/scripts/sync.py --check-setup
+```
+
+This is a cheap, read-only filesystem check shared by every workspace-
+dependent skill, not a scan of any content. If it reports the workspace as
+not ready, stop before intake and tell the user this doesn't look like an
+initialized Opportunity workspace — offer to hand off to `initial-setup`
+first, the same way a document-processing gap hands off to
+`workspace-ingest-documents`. Do not attempt the tracker-copy refresh below
+against an uninitialized workspace; the scripts it runs assume the standard
+structure exists.
+
+Then check whether unprocessed material exists:
+
+```bash
+PY <shared-skill-dir>/scripts/sync.py --status
+```
+
+If it reports inbox files waiting or files not yet extracted into trackers,
+tell the user before intake begins: tracker copies may not reflect material
+they just added, and the resulting draft could show gaps that
+`workspace-ingest-documents` and `workspace-review-updates` would otherwise
+fill. Offer to route there first. This is advisory, not a gate — if the user
+wants a draft anyway, continue into intake. Run this check once per fresh
+intake, not on every resume or rebuild.
+
 ## Industry flavor
 
 Check `workspace/.system/project.yaml` for an `industry:` key.
@@ -112,8 +143,7 @@ input. Accept in `workspace-review-updates` writes the reviewed values to the
 tracker workbooks and refreshes these copies. Current rows take precedence over
 historical `applied-updates` payloads, which can contain superseded values.
 
-Locate `shared/` at the installed Ascent plugin root. Set `EAD_REPO_ROOT` to
-the Opportunity folder and run its `shared/scripts/py` (or `py.cmd`) wrapper:
+Then run the same wrapper with `--trackers-only`:
 
 ```bash
 PY <shared-skill-dir>/scripts/sync.py --trackers-only

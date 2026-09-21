@@ -433,6 +433,18 @@
 .heatmap__legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); font-size: var(--size-small); color: var(--on-white-muted); }
 .heatmap__legend li { display: flex; align-items: center; gap: var(--space-2); }
 
+/* --- Status dot ----------------------------------------------------------
+   A literal Green/Amber/Red indicator for the weekly-status-report RAG
+   scorecard — see the "Status" note in tokens.css. Decoration only: the
+   printed word in .cell__value is what actually carries the status, same
+   as every other heatmap cell, so this is exempt from the surface/text
+   pairing rule (no text ever sits on it).
+   ------------------------------------------------------------------- */
+.status-dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; flex-shrink: 0; } /* no-text */
+.status-dot--green { background: var(--status-green); } /* no-text */
+.status-dot--amber { background: var(--status-amber); } /* no-text */
+.status-dot--red { background: var(--status-red); } /* no-text */
+
 /* ==========================================================================
    ROADMAP / TIMELINE
    ========================================================================== */

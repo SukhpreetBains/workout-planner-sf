@@ -12,6 +12,16 @@ Locate `shared/` at the installed Ascent plugin root. Set
 `EAD_REPO_ROOT` to the Opportunity folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
 
+Before anything else, confirm the workspace is initialized:
+
+```
+PY <shared-skill-dir>/scripts/sync.py --check-setup
+```
+
+This is a cheap, read-only filesystem check. If it reports the workspace as
+not ready, stop here and tell the user this doesn't look like an initialized
+Opportunity workspace — offer to hand off to `initial-setup` first.
+
 ## Industry flavor
 
 Check `workspace/.system/project.yaml` for an `industry:` key.

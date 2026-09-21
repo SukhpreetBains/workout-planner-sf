@@ -129,6 +129,20 @@ export const SECTION_SCHEMA = {
       },
     },
   },
+  'status-grid': {
+    title: { type: 'string', required: true },
+    rows: {
+      type: 'list', required: true, min: 1,
+      of: {
+        area: { type: 'string', required: true },
+        status: {
+          type: 'string', required: true, enum: ['green', 'amber', 'red'],
+          hint: 'colour never carries the value alone; the status word always prints alongside the meter',
+        },
+        note: { type: 'string' },
+      },
+    },
+  },
   'next-steps': {
     title: { type: 'string' },
     items: { type: 'stringlist', required: true, min: 1 },
