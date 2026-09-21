@@ -1,15 +1,15 @@
 ---
-name: workspace-review-updates
+name: review-updates
 description: Review pending evidence-backed updates in workspace/.system/proposed-updates/ with the user, let them approve, edit, or reject each change, and write only approved rows into workspace tracker workbooks. Use whenever proposed workspace updates await governed human review; this is the only workflow that writes to trackers.
 ---
 
-# Review Workspace Updates
+# Review Updates
 
 Proposed updates only become tracker rows after a human approves them
 here. Never apply updates the user has not seen.
 
 Locate `shared/` at the installed Ascent plugin root. Set
-`EAD_REPO_ROOT` to the Opportunity folder for every engine command, then
+`ASCENT_OPPORTUNITY_ROOT` to the Opportunity folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
 
 Before anything else, confirm the workspace is initialized:
@@ -27,7 +27,7 @@ Opportunity workspace — offer to hand off to `initial-setup` first.
 Start or reuse the loopback-only inbox with:
 
 ```
-PY <shared-skill-dir>/scripts/review_server.py start --root "$EAD_REPO_ROOT"
+PY <shared-skill-dir>/scripts/review_server.py start --root "$ASCENT_OPPORTUNITY_ROOT"
 ```
 
 Post the returned URL in chat and let the user open it. Never open the browser
@@ -44,7 +44,7 @@ the item pending and adds the clarification note to
 An active agent can wait for flags with:
 
 ```
-PY <shared-skill-dir>/scripts/review_server.py wait --root "$EAD_REPO_ROOT" --timeout 60
+PY <shared-skill-dir>/scripts/review_server.py wait --root "$ASCENT_OPPORTUNITY_ROOT" --timeout 60
 ```
 
 If the returned `items` list is non-empty, resume the conversation with those

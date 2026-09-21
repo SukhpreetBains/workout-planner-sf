@@ -63,23 +63,6 @@ Represent reporting structure as another column in the team/roles `table`
 instead (e.g. a "Reports to" column). Revisit as a dedicated component if a
 deck genuinely needs the visual, not the data.
 
-## `hls-project-kickoff`
-
-Approved client-facing Salesforce Health and Life Sciences Cloud implementation
-kickoff. It includes purpose, agenda, team profiles grouped by organization,
-phase progression, a detailed workstream schedule, meeting cadence, working
-agreements, story workflow, readiness criteria, accountability tables, operating
-roles, risks, and next steps. Module selection remains available during intake.
-
-The template's custom instructions show three approved Slalom photo backgrounds
-and ask the user to choose one for the cover. The choice is saved in intake.
-All three approved illustration accents are included in their selected sections.
-Native disclosures keep supporting details expandable without JavaScript.
-The original `project-kickoff` composition is preserved.
-
-See [the template guide](../templates/hls-project-kickoff/README.md) for examples,
-validation, and rendering commands.
-
 ## Adding an archetype
 
 1. `mkdir templates/<name>` and write `archetype.json`:

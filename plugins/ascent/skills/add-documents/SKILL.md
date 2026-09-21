@@ -1,17 +1,17 @@
 ---
-name: workspace-ingest-documents
+name: add-documents
 description: Process new documents from workspace/inbox/ by filing them in the workspace, turning meeting transcripts or raw notes into a structured session note, recording everything in the document-source ledger, extracting evidence-backed tracker updates, validating the proposals, and refreshing the search index. Use whenever new project source material arrives, including after workshops, interviews, standups, or other project sessions, in an initialized Opportunity workspace.
 ---
 
-# Ingest Workspace Documents
+# Add Project Documents
 
 Turn whatever landed in `workspace/inbox/` into filed documents (plus a
 structured session note for meeting material) and proposed tracker
 updates. Nothing is written to the trackers here; that only happens
-after the user approves through `workspace-review-updates`.
+after the user approves through `review-updates`.
 
 Locate `shared/` at the installed Ascent plugin root. Set
-`EAD_REPO_ROOT` to the Opportunity folder for every engine command, then
+`ASCENT_OPPORTUNITY_ROOT` to the Opportunity folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
 
 Before anything else, confirm the workspace is initialized:
@@ -149,7 +149,7 @@ Run `PY <shared-skill-dir>/scripts/sync.py`. If validation produced one or more
 proposals, run:
 
 ```
-PY <shared-skill-dir>/scripts/review_server.py start --root "$EAD_REPO_ROOT"
+PY <shared-skill-dir>/scripts/review_server.py start --root "$ASCENT_OPPORTUNITY_ROOT"
 ```
 
 The command health-checks and reuses a running inbox or safely replaces stale
@@ -170,7 +170,7 @@ step implicit. State:
   ready for your approval. Would you like me to review and populate the
   project trackers now?”
 
-If the user approves, invoke `workspace-review-updates` and walk the
+If the user approves, invoke `review-updates` and walk the
 proposals through its governed review. If they do not approve, leave the
 proposals in place and make clear that they are available for a later
 review. Also report what was filed (including where any session note

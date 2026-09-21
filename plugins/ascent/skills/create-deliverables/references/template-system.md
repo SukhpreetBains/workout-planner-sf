@@ -146,7 +146,7 @@ machine-enforced gate instead of a drafting convention.
 For live workspace intake, source-backed values come from current reviewed
 tracker rows in `workspace/.system/tracker-copies/`, not the source documents.
 Refresh them once with `shared/scripts/sync.py --trackers-only`, using the
-installed plugin's Python wrapper and the Opportunity's `EAD_REPO_ROOT`.
+installed plugin's Python wrapper and the Opportunity's `ASCENT_OPPORTUNITY_ROOT`.
 In each answer's `sources` list, use `source_id` for the tracker-copy path and
 `locator` for the stable row ID and field names. Preserve the row's original
 source references for provenance without reopening the documents. Explicit

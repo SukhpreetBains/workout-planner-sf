@@ -1,15 +1,15 @@
 ---
-name: workspace-summarize
+name: summarize-evidence
 description: Produce an evidence-grounded narrative from an Opportunity workspace, such as a current-state picture, weekly rollup, topic deep-dive, or stakeholder view. Use when the user needs a summary from workspace documents and tracker rows; never modify trackers and keep any generated file inside workspace/.
 ---
 
-# Summarize the Workspace
+# Summarize Evidence
 
 Answer "what do we know?" in prose, grounded in tracker rows and filed
 documents. This skill reads; it never writes to the trackers.
 
 Locate `shared/` at the installed Ascent plugin root. Set
-`EAD_REPO_ROOT` to the Opportunity folder for every engine command, then
+`ASCENT_OPPORTUNITY_ROOT` to the Opportunity folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
 
 Before anything else, confirm the workspace is initialized:

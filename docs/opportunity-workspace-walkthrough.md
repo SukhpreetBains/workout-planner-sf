@@ -4,16 +4,22 @@ This guide explains how identity-only initial setup hands an Opportunity into th
 
 ## 1. Run `initial-setup`
 
-Start with an existing SharePoint Account folder. The skill:
+Start with a shared workspace or choose a local-only location. For SharePoint,
+setup can reuse an existing Account folder or guide the user through creating a
+missing one. The skill:
 
 1. Verifies Python 3.10 or newer.
-2. Resolves the SharePoint Account location.
-3. Guides the user through connecting it to OneDrive when necessary.
+2. Selects shared or local-only storage and resolves its local Account path.
+3. For SharePoint, guides the user through locating or creating the Account
+   folder and connecting it to OneDrive when necessary.
 4. Asks whether the user is starting a new Opportunity or joining an existing one.
-5. Confirms the Account name, Opportunity name, synced local path, user-reported SharePoint Edit access, and local write readiness.
+5. Confirms the Account name, Opportunity name, local path, applicable
+   user-reported storage access, and local write readiness.
 6. Records only the confirmed Account and Opportunity identity while preserving existing project details.
 
-Before changing anything, setup runs a read-only check showing what exists and what is missing.
+Before changing anything, setup runs a read-only check showing what exists and
+what is missing. A local-only workspace is valid, but it is not shared or
+synchronized automatically.
 
 ## 2. Prepare the Opportunity folder
 
@@ -51,7 +57,11 @@ account: <account name>
 opportunity: <opportunity name>
 ```
 
-Setup reconciles these two identity fields without replacing the file or changing any other existing keys. It updates the Account and Opportunity in `workspace/project/Project Overview.md` while preserving all other readable content. Setup does not request or create optional project details.
+The idempotent identity script reconciles these two identity fields without
+replacing the file or changing any other existing keys. It updates the Account
+and Opportunity row in `workspace/project/Project Overview.md` while preserving
+all other readable content. Setup does not request or create optional project
+details.
 
 ## 4. Record external project locations
 
@@ -67,13 +77,23 @@ It is separate from `workspace/.system/sources.yaml`, which inventories individu
 
 ## 5. Initialize the workspace engine
 
-Setup initializes:
+One orchestrating command initializes:
 
-- the Python environment at `workspace/.system/.venv/`
+- a Python environment in the per-user Ascent cache, outside the synced folder
+- `workspace/.system/.venv-path`, which points to that cached environment
 - four Excel tracker workbooks
 - plain-text tracker copies
 - the full-text search index
 - proposed and applied update queues
+
+Set `ASCENT_OPPORTUNITY_ROOT` to the Opportunity folder. Set `ASCENT_PYTHON` to
+the exact supported interpreter that should build or reuse the environment.
+`ASCENT_CACHE_DIR` can override the default per-user cache root. The launcher
+does not install dependencies silently; installation requires the explicit
+`--install-dependencies` option after user approval.
+
+The setup command prints the readiness report defined by the authoritative
+[setup readiness contract](../plugins/ascent/skills/initial-setup/references/setup-readiness.md).
 
 The trackers are:
 
@@ -89,12 +109,12 @@ Initial setup does not ask about documents, inspect `workspace/inbox/`, or proce
 When documents are ready, finish setup and open a fresh agent chat scoped to the Opportunity. Fresh context gives the agent maximum room to inspect, organize, extract, and reason over the source material. Use this starter prompt:
 
 ```text
-Use workspace-ingest-documents to process the documents in this Opportunity workspace inbox.
+Use add-documents to process the documents in this Opportunity workspace inbox.
 ```
 
 ## 7. Ingest documents and capture meetings
 
-Place new material in `workspace/inbox/`, then invoke `workspace-ingest-documents`.
+Place new material in `workspace/inbox/`, then invoke `add-documents`.
 
 The skill:
 
@@ -109,7 +129,7 @@ It does not modify the trackers.
 
 ## 8. Review proposed updates
 
-Invoke `workspace-review-updates` to inspect pending changes. For each proposal, it shows:
+Invoke `review-updates` to inspect pending changes. For each proposal, it shows:
 
 - a loopback-only visual review link when proposals are ready
 - category counts and a completed-versus-remaining progress bar
@@ -128,7 +148,7 @@ This is the only skill authorized to write tracker changes.
 
 Invoke `investigate-project` to map confirmed project knowledge locations or retrieve bounded, cited evidence for a specific task.
 
-Invoke `workspace-summarize` for current-state summaries, weekly rollups, stakeholder views, system or process deep dives, and future-state summaries.
+Invoke `summarize-evidence` for current-state summaries, weekly rollups, stakeholder views, system or process deep dives, and future-state summaries.
 
 The summarization skill searches workspace documents and tracker rows, traces important claims to their sources, identifies contradictions and gaps, and can write results beneath `workspace/current-state/` or `workspace/future-state/`. It never changes the trackers.
 
@@ -141,15 +161,15 @@ Invoke `create-deliverables` when governed evidence is ready to become a draft c
 ```text
 New documents
     ↓
-workspace-ingest-documents
+add-documents
     ↓
 Proposed tracker updates
     ↓
-workspace-review-updates
+review-updates
     ↓
 Approved tracker knowledge
     ↓
-investigate-project or workspace-summarize
+investigate-project or summarize-evidence
     ↓
 create-deliverables
 ```

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Summarize Evidence"
+  short_description: "Summarize workspace evidence and tracker knowledge"
+  default_prompt: "Use $summarize-evidence to produce an evidence-grounded summary from my Opportunity workspace."
