@@ -9,7 +9,6 @@
     "path_or_form": "A fresh temporary Opportunity fixture",
     "note": "The fixture is synthetic and contains no client data."
   },
-  "human_baseline": {"recorded": false, "minutes": "unknown", "source": "unknown", "note": "No timed manual setup of this exact fixture has been recorded."},
   "golden_reference": {"available": false, "reference_id": null, "owner": null, "note": "Behavior is graded against explicit state transitions rather than a prose golden file."},
   "expected_skill_invocations": ["initial-setup"],
   "expected_skill_invocations_note": "Not observable because the deterministic runner invokes shipped scripts directly.",

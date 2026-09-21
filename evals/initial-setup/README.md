@@ -10,4 +10,4 @@ python3 evals/initial-setup/run_deterministic.py
 
 The runner uses a fresh temporary directory, redirects `HOME`, blocks network APIs in subprocesses, and does not install dependencies. It grades concepts and filesystem state rather than exact documentation wording.
 
-This deterministic package does not answer model cost, a no-skill baseline, human time saved, or agent behavior. Those remain explicit gaps: `no-cost-data`, `no-baseline-arm`, `no-human-baseline`, and `behavior-not-observable`.
+This deterministic package does not answer model cost, a no-skill baseline, or agent behavior. Those remain explicit gaps: `no-cost-data`, `no-baseline-arm`, and `behavior-not-observable`.
