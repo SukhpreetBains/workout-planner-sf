@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "escalation-log",
+  "title": "Escalation Log",
+  "description": "Items that need client or sponsor support and a decision right now — distinct from the action log, which tracks internal work rather than pending decisions.",
+  "questions": [
+    {
+      "id": "escalation-log.items",
+      "tier": "required",
+      "prompt": "What items need client or sponsor support right now, and what specifically is being asked for?",
+      "answer_type": "table",
+      "source_ref": "Slalom Weekly Status Report - Template.pdf/Slide 5"
+    },
+    {
+      "id": "escalation-log.decision-process",
+      "tier": "required",
+      "prompt": "Who is the decision maker for each item, and by when is input needed?",
+      "answer_type": "decision",
+      "source_ref": "Slalom Weekly Status Report - Template.pdf/Slide 5"
+    },
+    {
+      "id": "escalation-log.closure",
+      "tier": "optional",
+      "prompt": "How are resolved escalation items tracked and closed out?",
+      "answer_type": "text",
+      "source_ref": "Slalom Weekly Status Report - Template.pdf/Slide 5"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "escalation-log",
+      "type": "table",
+      "renderer": "./html.mjs#escalation-log",
+      "uses": [
+        "escalation-log.items",
+        "escalation-log.decision-process",
+        "escalation-log.closure"
+      ]
+    }
+  ]
+}

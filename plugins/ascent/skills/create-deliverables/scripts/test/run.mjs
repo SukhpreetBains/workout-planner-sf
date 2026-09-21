@@ -299,6 +299,15 @@ test('content: heatmap values outside 1-5 are an error', () => {
   contentError(doc, 'is outside 1–5');
 });
 
+test('content: a status-grid status outside green/amber/red is an error', () => {
+  const doc = content();
+  doc.sections.push({
+    type: 'status-grid', title: 'Status',
+    rows: [{ area: 'Schedule', status: 'yellow' }],
+  });
+  contentError(doc, 'is not one of green, amber, red');
+});
+
 test('content: an external link in prose is an error', () => {
   const doc = content();
   doc.sections[0].body = 'See [the source](https://example.com/report).';
@@ -422,6 +431,21 @@ test('templates: the static example renders every selected module with labels', 
   });
   const renderedModules = new Set(result.renderedDoc.sections.map((section) => section.module));
   const authorableModules = MODULES.filter((module) => module.output.some((view) => view.type !== 'cover'));
+  eq([...renderedModules], authorableModules.map((module) => module.id));
+  for (const module of authorableModules) {
+    includes(result.html, `data-preview-module="${module.id}"`);
+  }
+});
+
+test('templates: weekly-status-report\'s static example renders every selected module with labels', async () => {
+  const wsrArchetype = loadArchetype('weekly-status-report');
+  const wsrModules = loadTemplateModules(wsrArchetype, SKILL_ROOT);
+  const result = await buildStructurePreview({
+    templateName: 'weekly-status-report',
+    out: path.join(TMP, 'weekly-status-report-static-example'),
+  });
+  const renderedModules = new Set(result.renderedDoc.sections.map((section) => section.module));
+  const authorableModules = wsrModules.filter((module) => module.output.some((view) => view.type !== 'cover'));
   eq([...renderedModules], authorableModules.map((module) => module.id));
   for (const module of authorableModules) {
     includes(result.html, `data-preview-module="${module.id}"`);
@@ -965,6 +989,12 @@ brokenFixture('severity conveyed without a text label', 'rule 19', (dir) =>
 brokenFixture('a heatmap cell with no printed value', 'rule 19', (dir) =>
   patch(dir, 'index.html', (html) =>
     html.replace('<main id="main">', '<main id="main"><div class="heatmap__legend">Scale</div><span data-cell="1"></span>')));
+
+brokenFixture('a status-grid cell with a colour dot but no printed status word', 'rule 19', (dir) =>
+  patch(dir, 'index.html', (html) =>
+    html.replace('<main id="main">',
+      '<main id="main"><div class="heatmap__legend">Scale</div>'
+      + '<td data-cell><span class="cell"><span class="status-dot status-dot--green"></span></span></td>')));
 
 brokenFixture('an image with no alt attribute', 'rule 20', (dir) =>
   replace(dir, 'index.html', '<img src="assets/logo-slalom-white.svg" alt="Slalom">',
