@@ -29,8 +29,8 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve()
 PLUGIN_ROOT = SCRIPT.parents[2]
-SOURCE_APP_DIR = PLUGIN_ROOT / "skills" / "workspace-review-updates" / "assets" / "review-app"
-INSTALLED_APP_DIR = PLUGIN_ROOT / "workspace-review-updates" / "assets" / "review-app"
+SOURCE_APP_DIR = PLUGIN_ROOT / "skills" / "workspace-review" / "assets" / "review-app"
+INSTALLED_APP_DIR = PLUGIN_ROOT / "workspace-review" / "assets" / "review-app"
 APP_DIR = SOURCE_APP_DIR if SOURCE_APP_DIR.is_dir() else INSTALLED_APP_DIR
 STARTED_PROCESSES: dict[str, subprocess.Popen] = {}
 CONFIGURED_ROOT: Path | None = None
@@ -41,7 +41,7 @@ def configure_root(root: Path) -> None:
     resolved = root.resolve()
     if CONFIGURED_ROOT == resolved:
         return
-    os.environ["EAD_REPO_ROOT"] = str(resolved)
+    os.environ["ASCENT_OPPORTUNITY_ROOT"] = str(resolved)
     for module in ("paths", "trackers", "validate_updates", "review_store"):
         sys.modules.pop(module, None)
     CONFIGURED_ROOT = resolved

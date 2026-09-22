@@ -1,0 +1,33 @@
+{
+  "schema_version": "ascent.skill-eval-plan.v1",
+  "skill_id": "initial-setup",
+  "questions": {
+    "correctness": {"status": "measured", "how": "A deterministic runner checks all declared storage decisions against the routed documentation, initializes a fresh Opportunity, verifies the readiness result, then removes identity metadata and requires readiness to fail.", "reported": ["outcome", "checks_total", "checks_passed", "failed_check_ids", "evaluated_task_count", "outcome_pass_rate"]},
+    "cost": {"status": "not-instrumented", "how": "unknown", "reported": [], "note": "The runner has no model session, so tokens and dollars are not observable."},
+    "time": {"status": "not-instrumented", "how": "unknown", "reported": ["harness_wall_clock_seconds"], "note": "Harness duration is reported only as runner performance."}
+  },
+  "arms": {
+    "with-skills": {"status": "implemented", "note": "The runner exercises the shipped setup scripts and documentation contract."},
+    "baseline-no-skills": {"status": "not-implemented", "note": "A deterministic script runner cannot represent an unaided model setup session."}
+  },
+  "runs_per_arm": 3,
+  "consistency": {"metric": "coefficient_of_variation(total_tokens)", "verdict": "unknown", "thresholds": {"predictable": "< 0.10", "variable": "0.10-0.30", "unpredictable": "> 0.30"}, "thresholds_status": "provisional", "note": "No token-bearing agent runs exist."},
+  "coverage": {"mode": "regression", "rationale": "Protect the established storage branches and readiness state transition."},
+  "trials": {"count": 1, "reliability_metric": "outcome_pass_rate", "rationale": "Each run uses a fresh synthetic workspace and deterministic state checks."},
+  "graders": [
+    {"id": "storage-contract", "type": "code", "required": true, "rationale": "Case-defined concepts establish that every supported storage branch remains represented without pinning exact prose."},
+    {"id": "readiness-contract", "type": "code", "required": true, "rationale": "Filesystem state and command exit codes directly grade setup completeness and the missing-identity failure."}
+  ],
+  "behavior_checks": {
+    "skills_invoked": {"status": "not-observable", "expected": ["initial-setup"], "note": "The harness invokes scripts, not an agent session."},
+    "clarifying_questions": {"status": "not-observable", "required": ["Storage choice", "Account and Opportunity identity"], "note": "The harness has no user turn."}
+  },
+  "metrics": ["outcome", "checks_total", "checks_passed", "failed_check_ids", "evaluated_task_count", "outcome_pass_rate", "harness_wall_clock_seconds"],
+  "gaps": [
+    {"id": "no-cost-data", "question": "cost", "statement": "No token or dollar data exists because the runner has no model session.", "unblocked_by": "Run the cases through a host agent and extract session telemetry."},
+    {"id": "no-baseline-arm", "question": "cost", "statement": "The cases have not been run with Ascent skills withheld.", "unblocked_by": "Run the same prompt and fixture on the same host and model without the skill."},
+    {"id": "behavior-not-observable", "question": "correctness", "statement": "The runner cannot observe agent skill invocation or questions.", "unblocked_by": "Add a model-driven arm with deterministic session-log extraction."}
+  ],
+  "aggregation": {"command": "python3 -m evals.lib.aggregate --suite initial-setup", "status": "available"},
+  "taxonomy": {"eval_type": "regression", "interaction_scope": "single-turn", "graded_surface": ["outcome", "trajectory"], "grader_types": ["code-based"], "scoring": "binary", "reliability_estimator": "repeated-whole-suite-runs", "execution_context": "local", "failure_mode_provenance": "contract-enumeration", "reference_dependence": "reference-free", "note": "The synthetic state contract is not a human golden artifact."}
+}

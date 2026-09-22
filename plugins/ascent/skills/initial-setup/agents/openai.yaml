@@ -1,6 +1,8 @@
 interface:
   display_name: "Initial Setup"
   short_description: "Prepare an Opportunity workspace and project context"
+  icon_small: "./assets/skill-icon.svg"
+  icon_large: "./assets/skill-icon.svg"
   default_prompt: "Use $initial-setup to prepare a new or existing Opportunity workspace and help me choose shared or local-only storage."
 
 policy:
