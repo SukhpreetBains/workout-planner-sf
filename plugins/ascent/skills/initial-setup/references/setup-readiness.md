@@ -21,9 +21,10 @@ Cover these items in this order:
 5. Communications, including messaging sources and the project communications record.
 6. Trackers.
 7. Identity metadata for the confirmed Account and Opportunity.
-8. Search index.
-9. Workflow guidance, linked to the plugin workflow overview.
-10. Fresh-chat document next step, framed conditionally for users with documents and including the copyable starter prompt without asking whether documents are present.
+8. Industry flavor, if any packs were available to offer — which one was selected, or that none was applicable. Omit this item entirely when no packs exist to offer.
+9. Search index.
+10. Workflow guidance, linked to the plugin workflow overview.
+11. Fresh-chat document next step, framed conditionally for users with documents and including the copyable starter prompt without asking whether documents are present.
 
 ## Incomplete items
 

@@ -22,6 +22,26 @@ This is a cheap, read-only filesystem check. If it reports the workspace as
 not ready, stop here and tell the user this doesn't look like an initialized
 Opportunity workspace — offer to hand off to `initial-setup` first.
 
+## Industry flavor
+
+Check `workspace/.system/project.yaml` for an `industry:` key.
+
+- **Absent entirely** — this Opportunity has never been asked. Scan
+  `shared/industry/*/manifest.json` for available packs. If any exist, ask
+  once, offering each by title plus a "none of these" option, and write
+  whichever the user picks (an id, or `none`) into `project.yaml`,
+  preserving every other key. If no packs exist, skip this silently.
+- **`none`** — asked and declined already. Proceed exactly as documented
+  below, no different from this section not existing. Do not ask again.
+- **An id** — read that pack's `references/review-guidance.md`
+  (`shared/industry/<id>/manifest.json` names its exact path) and apply it
+  alongside the steps below as what to double-check before approving a
+  row. It never changes what approve, edit, or reject do, and it never
+  overrides a direct in-conversation instruction for this turn.
+
+Read [../../shared/industry/README.md](../../shared/industry/README.md) for
+the full contract if anything here is ambiguous.
+
 ## Visual review inbox
 
 Start or reuse the loopback-only inbox with:

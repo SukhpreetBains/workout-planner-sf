@@ -43,13 +43,14 @@ import { validateBuild } from './validate-brand.mjs';
    ========================================================================== */
 
 function parseArgs(argv) {
-  const opts = { content: null, out: null, intake: null, previewModule: null, previewTemplate: null, bundle: false, validate: true };
+  const opts = { content: null, out: null, intake: null, previewModule: null, previewTemplate: null, industry: null, bundle: false, validate: true };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--out') opts.out = argv[++i];
     else if (arg === '--intake') opts.intake = argv[++i];
     else if (arg === '--preview-module') opts.previewModule = argv[++i];
     else if (arg === '--preview-template') opts.previewTemplate = argv[++i];
+    else if (arg === '--industry') opts.industry = argv[++i];
     else if (arg === '--bundle') opts.bundle = true;
     else if (arg === '--no-validate') opts.validate = false;
     else if (arg === '-h' || arg === '--help') opts.help = true;
@@ -60,13 +61,16 @@ function parseArgs(argv) {
   if (opts.content === null && !opts.previewModule && !opts.previewTemplate && !opts.help) {
     throw new Error('give a content file, --preview-module <id>, or --preview-template <name>');
   }
+  if (opts.industry && !opts.previewModule && !opts.previewTemplate) {
+    throw new Error('--industry only applies to --preview-module or --preview-template');
+  }
   return opts;
 }
 
 const USAGE = `
   node scripts/build.mjs <content.yaml|.json> [--intake <file>] [--preview-module <id>] [--out <dir>] [--bundle] [--no-validate]
-  node scripts/build.mjs --preview-module <id> [--preview-template <name>] [--out <dir>] [--bundle]
-  node scripts/build.mjs --preview-template <name> [--out <dir>] [--bundle]
+  node scripts/build.mjs --preview-module <id> [--preview-template <name>] [--industry <id>] [--out <dir>] [--bundle]
+  node scripts/build.mjs --preview-template <name> [--industry <id>] [--out <dir>] [--bundle]
 `;
 
 /* ==========================================================================
@@ -208,6 +212,7 @@ export async function build(contentPath, {
       ? (s.findings ?? []).map((f) => f.icon).filter(Boolean)
       : []);
   const clientLogo = meta.client_logo ? path.resolve(contentDir, meta.client_logo) : null;
+  const coverBackground = meta.cover_background ? path.resolve(contentDir, meta.cover_background) : null;
 
   const outDir = path.resolve(out ?? path.join(
     process.cwd(), 'build',
@@ -217,9 +222,10 @@ export async function build(contentPath, {
   mkdirSync(outDir, { recursive: true });
 
   const assets = copyAssets(outDir, {
-    logoVariants: [coverLogo, footerLogo, ...(archetype.cover_background_question ? ['blue'] : [])],
+    logoVariants: [coverLogo, footerLogo, ...(archetype.cover_background_question || coverBackground ? ['blue'] : [])],
     icons,
     clientLogo,
+    coverBackground,
   });
   copyOwnAssets(outDir, {
     referenceLayouts: meta.layout === 'microsite' || renderedDoc.sections.some((section) => section.layout === 'microsite'),
@@ -228,12 +234,17 @@ export async function build(contentPath, {
   const profiles = copyProfileAssets(renderedDoc.sections, contentDir, outDir);
 
   // 3. Render.
+  // meta.cover_background (direct-authored, e.g. by an industry-flavored
+  // draft) wins over the template_questions gallery pick if a build somehow
+  // has both — only one path is normally in play at a time.
+  const resolvedCoverBackground = assets.coverBackground ?? templateAssets.coverBackground;
   const ctx = {
     meta,
     ...templateAssets,
+    coverBackground: resolvedCoverBackground,
     profilePath: (name) => profiles[name],
     coverSurface,
-    logoPath: assets.logos[templateAssets.coverBackground ? 'blue' : coverLogo],
+    logoPath: assets.logos[resolvedCoverBackground ? 'blue' : coverLogo],
     footerLogoPath: assets.logos[footerLogo],
     clientLogoPath: assets.clientLogo,
     iconPath: (name) => {
@@ -314,7 +325,7 @@ function isolatedArchetype(archetype, moduleId) {
 }
 
 export async function buildStructurePreview({
-  moduleId = null, templateName = null, out = null, bundle = false,
+  moduleId = null, templateName = null, industry = null, out = null, bundle = false,
 } = {}) {
   let resolvedTemplate = templateName;
   if (!resolvedTemplate && moduleId) {
@@ -324,7 +335,7 @@ export async function buildStructurePreview({
   }
   const archetype = moduleId ? isolatedArchetype(loadArchetype(resolvedTemplate), moduleId) : loadArchetype(resolvedTemplate);
   const modules = loadTemplateModules(archetype, SKILL_ROOT);
-  const raw = composeStructurePreview(archetype, modules, SKILL_ROOT, { previewModule: moduleId });
+  const raw = composeStructurePreview(archetype, modules, SKILL_ROOT, { previewModule: moduleId, industry });
   const tempDir = mkdtempSync(path.join(os.tmpdir(), 'create-deliverables-preview-'));
   const contentPath = path.join(tempDir, 'content.json');
   writeFileSync(contentPath, `${JSON.stringify(raw, null, 2)}\n`, 'utf8');
@@ -370,6 +381,7 @@ async function main() {
       : await buildStructurePreview({
           moduleId: opts.previewModule,
           templateName: opts.previewTemplate,
+          industry: opts.industry,
           out: opts.out,
           bundle: opts.bundle,
         });

@@ -31,7 +31,8 @@ Explain a script's effect before running it. Obtain approval before package-mana
 6. Invoke an applicable host project-setup workflow with the confirmed names and paths. If none applies, continue without loading host-specific guidance.
 7. Follow [messaging confirmation](references/messaging-confirmation.md) for relevant enterprise storage and messaging locations. Offer to save confirmed locations in the project communications record.
 8. Run the orchestrated workspace setup in [project workspace setup](references/project-workspace-setup.md). It initializes the runtime, trackers, identity, and search index.
-9. Report readiness from [the authoritative readiness contract](references/setup-readiness.md), then hand document work to a fresh agent chat scoped to the Opportunity.
+9. Ask whether an available industry flavor applies to this Opportunity, per **Confirm industry flavor** below.
+10. Report readiness from [the authoritative readiness contract](references/setup-readiness.md), then hand document work to a fresh agent chat scoped to the Opportunity.
 
 ## Prepare the Opportunity folder
 
@@ -48,6 +49,32 @@ If the agent cannot write because of its session boundary, request scoped comman
 ## Initialize project knowledge
 
 Follow [project workspace setup](references/project-workspace-setup.md). Use the already confirmed `account` and `opportunity` values consistently. Never apply proposed tracker updates during setup. `workspace-review` remains the only workflow that writes approved tracker changes.
+
+## Document boundary
+
+## Confirm industry flavor
+
+Scan `shared/industry/*/manifest.json` at the installed Ascent plugin root
+for available industry packs. If none exist, skip this section entirely —
+do not mention it.
+
+If one or more exist, ask once, in the same short closed-question style as
+the storage and messaging questions above: **"Is this engagement in an
+industry we have tailored guidance for?"**, offering each pack by title
+plus a **"None of these"** option. Use `request_user_input` when available.
+This is a confirmatory pick from a short list, not a request to compose
+engagement detail, so it does not conflict with leaving other optional
+project context unasked.
+
+Record the answer in `workspace/.system/project.yaml` as `industry: <id>`
+or `industry: none`, reconciling rather than replacing the file, the same
+way Account and Opportunity identity is recorded. Once set, no later
+`initial-setup` run — or any other skill — should ask again; an id present
+in the answer is what tells `workspace-add`, `workspace-review`, and
+`create-deliverables` to layer that pack's guidance into their normal work
+automatically. See
+[../../shared/industry/README.md](../../shared/industry/README.md) for the
+full contract.
 
 ## Document boundary
 

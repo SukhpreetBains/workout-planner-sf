@@ -63,8 +63,8 @@ export function renderProse(value) {
 
 export function renderCover(meta, ctx) {
   const authors = (meta.authors ?? []).map((author) => `<div><dt>${typeset(author.role || 'Prepared by')}</dt><dd>${typeset(author.name)}</dd></div>`).join('');
-  const clientLockup = ctx.clientLogoPath ? `<div class="lockup"><img src="${esc(ctx.clientLogoPath)}" alt="${typeset(meta.client)}"></div>` : '';
-  const background = ctx.coverBackground ? `<img class="cover__background" src="${esc(ctx.coverBackground)}" alt="">` : '';
+  const clientLockup = ctx.clientLogoPath ? `<div class="lockup"><img data-authored-asset src="${esc(ctx.clientLogoPath)}" alt="${typeset(meta.client)}"></div>` : '';
+  const background = ctx.coverBackground ? `<img class="cover__background" data-authored-asset src="${esc(ctx.coverBackground)}" alt="">` : '';
   return `
     <header class="cover surface-blue${background ? ' cover--image' : ''}" data-bar-bg="blue">
       ${background}

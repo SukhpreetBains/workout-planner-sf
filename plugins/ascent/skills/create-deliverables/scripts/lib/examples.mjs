@@ -1,44 +1,69 @@
 /** Load a template-owned static example and compose structure previews. */
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { ContentError, parseContentFile } from './content.mjs';
+import { SHARED_DIR } from './assets.mjs';
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
-function readStaticExample(archetype, modules, skillRoot, problems) {
-  const relativeFile = archetype.static_example;
+/** Resolve `relativeFile` against `baseDir`, refusing to escape it. */
+function resolveExampleFile(baseDir, relativeFile, label, problems) {
   if (typeof relativeFile !== 'string' || !relativeFile.trim()) {
-    problems.push(`${archetype.name}: archetype.json must declare static_example`);
+    problems.push(`${label} must declare a static example path`);
     return null;
   }
-  const templateDir = path.join(skillRoot, 'templates', archetype.name);
-  const file = path.resolve(templateDir, relativeFile);
-  if (file !== templateDir && !file.startsWith(`${templateDir}${path.sep}`)) {
-    problems.push(`${archetype.name}: static_example must stay inside its template folder`);
+  const file = path.resolve(baseDir, relativeFile);
+  if (file !== baseDir && !file.startsWith(`${baseDir}${path.sep}`)) {
+    problems.push(`${label}: static example must stay inside ${baseDir}`);
     return null;
   }
   if (!existsSync(file)) {
-    problems.push(`${archetype.name}: missing ${relativeFile}`);
+    problems.push(`${label}: missing ${relativeFile}`);
     return null;
   }
+  return file;
+}
+
+/**
+ * Parse `file` as a static example and validate it against `modules`: every
+ * non-cover authorable view selected by the template must appear exactly
+ * once. Used identically for a template's own static example and for an
+ * industry pack's full alternate example — an override is held to the same
+ * completeness bar as the template's own file, not a partial patch.
+ */
+function readAndValidateExample(file, archetype, modules, label, problems) {
   let example;
   try {
     example = parseContentFile(file);
   } catch (err) {
-    problems.push(`${archetype.name}: ${relativeFile} is invalid (${err.message})`);
+    problems.push(`${label}: ${path.basename(file)} is invalid (${err.message})`);
     return null;
   }
   if (!isObject(example)) {
-    problems.push(`${archetype.name}: ${relativeFile} must be a mapping`);
+    problems.push(`${label}: static example must be a mapping`);
     return null;
   }
+  // Structure previews relocate the composed content to a temp directory
+  // before build() ever sees it (see buildStructurePreview), so a relative
+  // meta.client_logo/cover_background authored against this file's own
+  // location would silently resolve against the wrong directory instead.
+  // Rewrite to absolute here, while the real source directory is known.
+  if (isObject(example.meta)) {
+    const sourceDir = path.dirname(file);
+    for (const key of ['client_logo', 'cover_background']) {
+      const value = example.meta[key];
+      if (typeof value === 'string' && value && !path.isAbsolute(value)) {
+        example.meta[key] = path.resolve(sourceDir, value);
+      }
+    }
+  }
   if (example.meta?.archetype !== archetype.name) {
-    problems.push(`${archetype.name}: static example meta.archetype must be ${archetype.name}`);
+    problems.push(`${label}: static example meta.archetype must be ${archetype.name}`);
   }
   if (!Array.isArray(example.sections)) {
-    problems.push(`${archetype.name}: static example sections must be a list`);
+    problems.push(`${label}: static example sections must be a list`);
     return example;
   }
 
@@ -48,7 +73,7 @@ function readStaticExample(archetype, modules, skillRoot, problems) {
       .map((output) => [`${module.id}:${output.id}`, { module, output }])));
   const seenViews = new Map();
   for (const [index, section] of example.sections.entries()) {
-    const where = `${archetype.name}.${relativeFile}.sections[${index}]`;
+    const where = `${label}.sections[${index}]`;
     if (!isObject(section)) {
       problems.push(`${where} must be a mapping`);
       continue;
@@ -59,15 +84,57 @@ function readStaticExample(archetype, modules, skillRoot, problems) {
     else seenViews.set(key, (seenViews.get(key) ?? 0) + 1);
   }
   for (const [key] of authorableViews) {
-    if (!seenViews.has(key)) problems.push(`${archetype.name}: static example is missing ${key}`);
-    else if (seenViews.get(key) > 1) problems.push(`${archetype.name}: static example repeats ${key}`);
+    if (!seenViews.has(key)) problems.push(`${label}: static example is missing ${key}`);
+    else if (seenViews.get(key) > 1) problems.push(`${label}: static example repeats ${key}`);
   }
   return example;
 }
 
-export function composeStructurePreview(archetype, modules, skillRoot, { previewModule = null } = {}) {
+function readTemplateExample(archetype, modules, skillRoot, problems) {
+  const templateDir = path.join(skillRoot, 'templates', archetype.name);
+  const file = resolveExampleFile(templateDir, archetype.static_example, archetype.name, problems);
+  if (!file) return null;
+  return readAndValidateExample(file, archetype, modules, archetype.name, problems);
+}
+
+/**
+ * Resolve `shared/industry/<industry>/manifest.json` and the template-name
+ * entry under its `examples.static_examples`, then validate that file the
+ * same way as a template's own static example. Returns null (with a problem
+ * pushed) if the pack, the manifest field, or the file itself is missing —
+ * an industry with no override for this template is a configuration
+ * problem to report, not something to silently fall back from.
+ */
+function readIndustryExample(archetype, modules, industry, problems) {
+  const label = `industry ${industry}`;
+  const packDir = path.join(SHARED_DIR, 'industry', industry);
+  const manifestFile = path.join(packDir, 'manifest.json');
+  if (!existsSync(manifestFile)) {
+    problems.push(`${label}: no such industry pack (expected ${manifestFile})`);
+    return null;
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(manifestFile, 'utf8'));
+  } catch (err) {
+    problems.push(`${label}: manifest.json is invalid (${err.message})`);
+    return null;
+  }
+  const relativeFile = manifest.examples?.static_examples?.[archetype.name];
+  if (!relativeFile) {
+    problems.push(`${label}: has no static example override for template \`${archetype.name}\``);
+    return null;
+  }
+  const file = resolveExampleFile(packDir, relativeFile, label, problems);
+  if (!file) return null;
+  return readAndValidateExample(file, archetype, modules, label, problems);
+}
+
+export function composeStructurePreview(archetype, modules, skillRoot, { previewModule = null, industry = null } = {}) {
   const problems = [];
-  const example = readStaticExample(archetype, modules, skillRoot, problems);
+  const example = industry
+    ? readIndustryExample(archetype, modules, industry, problems)
+    : readTemplateExample(archetype, modules, skillRoot, problems);
   if (previewModule && !modules.some((module) => module.id === previewModule)) {
     problems.push(`preview module ${previewModule} is not selected by template ${archetype.name}`);
   }

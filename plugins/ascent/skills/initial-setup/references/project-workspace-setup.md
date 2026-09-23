@@ -33,6 +33,23 @@ Use only the Account and Opportunity already confirmed during setup. Do not ask 
 
 The project communications record remains `workspace/.system/source-context.yaml`; the ingested-document ledger remains `workspace/.system/sources.yaml`.
 
+## Record industry flavor, if applicable
+
+After identity is recorded, follow **Confirm industry flavor** in
+`SKILL.md`. When the user picks a pack (or explicitly declines), add one
+more key to the same `project.yaml`, reconciled the same way:
+
+```yaml
+# workspace/.system/project.yaml
+account: <account name>
+opportunity: <opportunity name>
+industry: <pack id, or the literal `none`>
+```
+
+This key is optional and only ever written after the user answers the
+industry question — never inferred, and never added when no packs exist
+to offer.
+
 ## Document boundary
 
 Do not inspect `workspace/inbox/`, ask about documents, or invoke a document-processing workflow during setup. Existing documents remain untouched.
