@@ -22,7 +22,7 @@ sections:
     rows:
       - cells: [Taylor, Lead]
   - module: delivery-approach
-    view: timeline
+    view: execution_map
     phases:
       - name: Learn
         window: Week 1

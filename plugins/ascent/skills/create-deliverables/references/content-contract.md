@@ -99,11 +99,50 @@ summarize.
 | `owner` | no |
 
 ### `roadmap` (alias: `timeline`)
+| Section field | Required | Notes |
+|---|---|---|
+| `time_scale` | no | `auto`, `week`, `two-week`, or `month`. This is the semantic calendar resolution, not a visual layout instruction. `auto` lets the renderer derive a useful scale from the earliest start and latest end. |
+| `phases` | yes | One to six phases. |
+
 | Phase field | Required |
 |---|---|
 | `name` | yes |
 | `window` | yes |
 | `outcomes` | yes, at least one |
+| `start` / `end` | no — ISO 8601 dates supplied together, with `end` on or after `start`. When present, they render as the phase's factual date range; `window` remains the human-readable fallback. |
+| `summary` | no — a short statement of the phase's purpose. |
+| `activities` | no — up to six `{ title, detail? }` entries describing what happens inside the phase. |
+| `decision` | no — the decision or review point that closes or advances the phase. |
+| `milestones` | no — up to four `{ title, date?, detail? }` entries. They render in a native disclosure so the primary timeline stays scannable while its decision points remain available. |
+
+The delivery-approach module exposes one view over this payload:
+
+- `execution_map` positions phases proportionally when every phase supplies
+  `start` and `end`; otherwise it renders the supplied ordered phase sequence.
+  A reader can move through the map by period and select a phase to inspect its
+  supplied activities, outcomes, milestones, and decision point.
+
+The execution map does not create week names, weekly goals, activities, dates,
+milestones, decisions, or outcomes that are absent from the input.
+
+#### Boundary from discovered context to rendering
+
+The review inbox remains the evidence and approval surface. A module composer
+maps approved context into this contract before HTML is rendered:
+
+| Reviewed source signal | Roadmap field |
+|---|---|
+| Confirmed phase or workstream name | `name` |
+| Confirmed start and end | `start`, `end` |
+| Human-readable planning language | `window` |
+| Supported description of intent | `summary` |
+| Supported work within the phase | `activities` |
+| Supported result | `outcomes` |
+| Confirmed review or approval | `decision` or `milestones` |
+
+The mapping step retains citations and dispositions in `intake.yaml`; the
+presentation content contains only approved, typed values. The renderer does
+not infer dates, activities, decisions, or time scale from prose.
 
 ### `quote`
 | Field | Required | Notes |

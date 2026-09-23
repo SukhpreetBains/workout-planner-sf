@@ -295,6 +295,49 @@ test('content: heatmap values outside 1-5 are an error', () => {
   contentError(doc, 'is outside 1–5');
 });
 
+test('content: roadmap phase dates must be ISO 8601', () => {
+  const doc = content();
+  doc.sections[3].phases[0].start = 'next Tuesday';
+  contentError(doc, 'ISO 8601');
+});
+
+test('content: roadmap phases limit milestone detail to four items', () => {
+  const doc = content();
+  doc.sections[3].phases[0].milestones = Array.from({ length: 5 }, (_, i) => ({ title: `Milestone ${i + 1}` }));
+  contentError(doc, 'at most 4 items, found 5');
+});
+
+test('content: roadmap time scale uses a supported calendar resolution', () => {
+  const doc = content();
+  doc.sections[3].time_scale = 'quarter-ish';
+  contentError(doc, '`quarter-ish` is not one of auto, week, two-week, month');
+});
+
+test('content: roadmap phases limit activities to six items', () => {
+  const doc = content();
+  doc.sections[3].phases[0].activities = Array.from({ length: 7 }, (_, i) => ({ title: `Activity ${i + 1}` }));
+  contentError(doc, 'at most 6 items, found 7');
+});
+
+test('content: roadmap phase dates are paired and chronological', () => {
+  const partial = content();
+  partial.sections[3].phases[0].start = '2026-03-02';
+  contentError(partial, 'start and end must be supplied together');
+
+  const reversed = content();
+  reversed.sections[3].phases[0].start = '2026-03-09';
+  reversed.sections[3].phases[0].end = '2026-03-02';
+  contentError(reversed, 'end must be on or after start');
+});
+
+test('content: roadmap limits the timeline to six phases', () => {
+  const doc = content();
+  doc.sections[3].phases = Array.from({ length: 7 }, (_, index) => ({
+    name: `Phase ${index + 1}`, window: `Window ${index + 1}`, outcomes: ['Supported outcome'],
+  }));
+  contentError(doc, 'at most 6 items, found 7');
+});
+
 test('content: an external link in prose is an error', () => {
   const doc = content();
   doc.sections[0].body = 'See [the source](https://example.com/report).';
@@ -550,6 +593,35 @@ test('build: one module can render in isolation with its normal renderer paths',
   ok(!result.html.includes('Core team &amp; roles'), 'another module leaked into the isolated preview');
 });
 
+test('build: execution map renders only contract fields with progressive disclosure', async () => {
+  const result = await buildStructurePreview({
+    moduleId: 'delivery-approach',
+    out: path.join(TMP, 'delivery-approach-isolated'),
+  });
+  includes(result.html, '<time datetime="2026-03-02">2026-03-02</time>');
+  includes(result.html, 'data-component="execution_map"');
+  includes(result.html, 'class="execution-map__bar"');
+  includes(result.html, 'class="execution-map__inspector"');
+  includes(result.html, 'data-time-scale="week"');
+  includes(result.html, 'Collapse phase details');
+  includes(result.html, 'Confirm outcomes');
+  includes(result.html, 'Decision point');
+  includes(result.html, 'Roadmap decision');
+});
+
+test('build: execution map labels undated input as sequence without inventing dates', async () => {
+  const doc = JSON.parse(readFileSync(path.join(FIXTURES, 'valid-minimal.json'), 'utf8'));
+  doc.sections[3].view = 'execution_map';
+  writeFileSync(path.join(TMP, 'undated-gantt.json'), JSON.stringify(doc));
+  const result = await build(path.join(TMP, 'undated-gantt.json'), {
+    out: path.join(TMP, 'undated-gantt'), intake: COMPLETE_INTAKE,
+  });
+  includes(result.html, 'data-component="execution_map"');
+  includes(result.html, 'data-calendar-scaled="false"');
+  includes(result.html, 'Ordered phase sequence');
+  ok(!result.html.includes('<time '), 'undated input must not emit invented date elements');
+});
+
 test('layout: components keep content visible and constrain data-driven columns', () => {
   const baseCss = readFileSync(path.join(SKILL_ROOT, 'assets', 'css', 'base.css'), 'utf8');
   const componentsCss = readFileSync(path.join(SKILL_ROOT, 'assets', 'css', 'components.css'), 'utf8');
@@ -557,6 +629,7 @@ test('layout: components keep content visible and constrain data-driven columns'
   includes(componentsCss, 'container-type: inline-size;', 'KPI tiles need container-aware typography');
   includes(componentsCss, 'minmax(10rem, 18rem)', 'recommendation metadata needs a bounded column');
   includes(componentsCss, 'overflow-wrap: anywhere;', 'long client-provided content must be able to wrap');
+  includes(componentsCss, '.execution-map__bar', 'execution map phases must remain interactive controls');
 });
 
 test('build: the minimal YAML fixture and its JSON twin render identically', async () => {

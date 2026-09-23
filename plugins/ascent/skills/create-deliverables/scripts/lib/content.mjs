@@ -91,12 +91,33 @@ export const SECTION_SCHEMA = {
   },
   roadmap: {
     title: { type: 'string' },
+    time_scale: { type: 'string', enum: ['auto', 'week', 'two-week', 'month'] },
     phases: {
-      type: 'list', required: true, min: 1,
+      type: 'list', required: true, min: 1, max: 6,
+      maxHint: 'timeline components support one to six scannable phases',
       of: {
         name: { type: 'string', required: true },
         window: { type: 'string', required: true },
+        start: { type: 'string', pattern: /^\d{4}-\d{2}-\d{2}$/, hint: 'ISO 8601, e.g. 2026-08-11' },
+        end: { type: 'string', pattern: /^\d{4}-\d{2}-\d{2}$/, hint: 'ISO 8601, e.g. 2026-08-11' },
+        summary: { type: 'string' },
         outcomes: { type: 'stringlist', required: true, min: 1 },
+        activities: {
+          type: 'list', max: 6,
+          of: {
+            title: { type: 'string', required: true },
+            detail: { type: 'string' },
+          },
+        },
+        decision: { type: 'string' },
+        milestones: {
+          type: 'list', max: 4,
+          of: {
+            title: { type: 'string', required: true },
+            date: { type: 'string', pattern: /^\d{4}-\d{2}-\d{2}$/, hint: 'ISO 8601, e.g. 2026-08-11' },
+            detail: { type: 'string' },
+          },
+        },
       },
     },
   },
@@ -317,6 +338,20 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
         view: { type: 'string' },
         ...schema,
       }, where, problems, ctx);
+      if (type === 'roadmap' && Array.isArray(section.phases)) {
+        section.phases.forEach((phase, phaseIndex) => {
+          if (!isPlainObject(phase)) return;
+          const phaseWhere = `${where}.phases[${phaseIndex}]`;
+          const hasStart = typeof phase.start === 'string' && phase.start !== '';
+          const hasEnd = typeof phase.end === 'string' && phase.end !== '';
+          if (hasStart !== hasEnd) {
+            problems.push(`${phaseWhere}: start and end must be supplied together; execution_map never invents the missing boundary`);
+          } else if (hasStart && /^\d{4}-\d{2}-\d{2}$/.test(phase.start) && /^\d{4}-\d{2}-\d{2}$/.test(phase.end)
+              && phase.end < phase.start) {
+            problems.push(`${phaseWhere}: end must be on or after start`);
+          }
+        });
+      }
     });
 
     if (archetype?.required_sections?.length) {

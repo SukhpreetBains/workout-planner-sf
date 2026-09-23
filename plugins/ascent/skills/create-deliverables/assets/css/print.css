@@ -72,6 +72,7 @@
   .kpi,
   .finding,
   .phase,
+  .execution-map__row,
   .rec,
   .quote,
   .exec-summary,
@@ -86,6 +87,9 @@
   .heatmap table { min-width: 0; }
   .data-table__scroll { overflow: visible; }
   .data-table table { min-width: 0; }
+
+  .execution-map__source { display: block !important; }
+  .execution-map__inspector, .execution-map__prompt, .execution-map__scrubber { display: none !important; }
 
   /* A link's URL is useless on paper and this deliverable has no external
      links by design, so suppress decoration rather than print href text. */

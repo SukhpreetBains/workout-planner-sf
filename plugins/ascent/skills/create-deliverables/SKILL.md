@@ -21,6 +21,11 @@ date, decision, or answer to fill a gap.
   `update-deliverable-structure`. Do not turn a one-off customization into a
   shared structure without the user's explicit request.
 
+For a reusable module UI iteration, read
+[references/module-ui-iteration.md](references/module-ui-iteration.md) before
+changing the renderer. It defines the isolated-preview and contract-preserving
+workflow.
+
 ## Guided template workflow
 
 ### 1. Load the template and evidence

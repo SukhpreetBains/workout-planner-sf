@@ -77,32 +77,64 @@ sections:
       - cells: [Aliyah Brandt, IT Program Manager, Meridian Outfitters, Internal coordination and system access]
 
   - module: delivery-approach
-    view: timeline
+    view: execution_map
     title: Approach & timeline
+    time_scale: week
     phases:
       - name: Prepare & mobilize
         window: Weeks 1–2
+        start: 2026-03-02
+        end: 2026-03-13
+        summary: Establish the shared starting point and make the team ready for discovery.
         outcomes:
           - Team onboarding and system access confirmed
           - Workshop schedule and logistics finalized
           - Current-state documentation collected
+        activities:
+          - title: Confirm outcomes
+            detail: Align the objectives and priority questions for the engagement.
+          - title: Mobilize the team
+            detail: Confirm participants, system access, and working agreements.
+        decision: Confirm readiness to begin discovery.
+        milestones:
+          - title: Kickoff and access confirmation
+            date: 2026-03-02
+            detail: Align on the working team, objectives, and system access.
       - name: Learn
         window: Weeks 2–4
+        start: 2026-03-16
+        end: 2026-03-27
         outcomes:
           - Current-state process and pain-point workshops complete
           - Stakeholder interviews complete across store and support teams
           - Draft future-state process flows shared for review
+        milestones:
+          - title: Synthesis review
+            date: 2026-03-27
+            detail: Validate the emerging findings and priority needs with sponsors.
       - name: Ideate
         window: Weeks 4–5
+        start: 2026-03-30
+        end: 2026-04-03
         outcomes:
           - Solution options evaluated against MVP scope
           - Integration and data migration approach drafted
           - User experience prototype reviewed with store associates
+        milestones:
+          - title: Solution option review
+            date: 2026-04-03
+            detail: Review the recommended direction against the MVP scope.
       - name: Plan
         window: Week 6
+        start: 2026-04-06
+        end: 2026-04-10
         outcomes:
           - Prioritized backlog and implementation roadmap approved
           - Design/deliver phase plan and staffing confirmed
+        milestones:
+          - title: Roadmap decision
+            date: 2026-04-10
+            detail: Approve the sequenced roadmap and transition plan.
 
   - module: discovery-and-deliverables
     view: deliverables

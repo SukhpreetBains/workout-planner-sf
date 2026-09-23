@@ -115,8 +115,8 @@ export function loadTemplateModules(archetype, skillRoot) {
       for (const [mappingIndex, mapping] of rawOutput.entries()) {
         const where = `${entry.id}.output[${mappingIndex}]`;
         if (!isObject(mapping)) { problems.push(`${where} must be a mapping`); continue; }
-        if (typeof mapping.id !== 'string' || !/^[a-z0-9-]+$/.test(mapping.id)) {
-          problems.push(`${where}.id must be a lowercase view id`);
+        if (typeof mapping.id !== 'string' || !/^[a-z0-9_-]+$/.test(mapping.id)) {
+          problems.push(`${where}.id must be a lowercase view id using letters, numbers, hyphens, or underscores`);
         } else if (seenViews.has(mapping.id)) {
           problems.push(`${where}.id repeats view \`${mapping.id}\``);
         } else seenViews.add(mapping.id);
@@ -124,7 +124,7 @@ export function loadTemplateModules(archetype, skillRoot) {
           problems.push(`${where}.type references unavailable section type \`${mapping.type}\``);
         }
         const rendererMatch = typeof mapping.renderer === 'string'
-          ? mapping.renderer.match(/^(.+\.mjs)#([a-z0-9-]+)$/)
+          ? mapping.renderer.match(/^(.+\.mjs)#([a-z0-9_-]+)$/)
           : null;
         let rendererFile = null;
         let rendererExport = null;
