@@ -2,8 +2,8 @@
 
 An industry pack is optional reference content — vocabulary, extraction
 emphasis, review considerations, and deliverable framing — that the
-agnostic Ascent skills (`workspace-ingest-documents`,
-`workspace-review-updates`, `create-deliverables`) may layer on top of
+agnostic Ascent skills (`workspace-add`,
+`workspace-review`, `create-deliverables`) may layer on top of
 their normal behavior when one is active for an Opportunity. It never
 changes what those skills fundamentally do, and it never touches
 `shared/schema/trackers.yaml`: every industry shares the same tracker
@@ -27,10 +27,10 @@ shared/industry/<id>/
                                # regulatory/market landscape
     vocabulary.md              # standard terms and acronyms, so extraction
                                # and deliverables use client-familiar language
-    ingestion-guidance.md      # what workspace-ingest-documents should weight
+    ingestion-guidance.md      # what workspace-add should weight
                                # or watch for when classifying and extracting
                                # from this industry's source material
-    review-guidance.md         # what workspace-review-updates should double
+    review-guidance.md         # what workspace-review should double
                                # check before a person approves a proposed row
     deliverable-guidance.md    # terminology, tone, and section emphasis for
                                # create-deliverables output

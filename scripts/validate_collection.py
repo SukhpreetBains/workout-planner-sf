@@ -28,8 +28,8 @@ EXPECTED_SKILLS = {
     "project-setup",
     "recursive-improvement",
     "utilities-ui-generation",
-    "workspace-ingest-documents",
-    "workspace-review-updates",
+    "workspace-add",
+    "workspace-review",
     "workspace-summarize",
 }
 LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")

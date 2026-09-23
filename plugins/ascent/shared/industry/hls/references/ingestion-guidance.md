@@ -1,6 +1,6 @@
 # Health & Life Sciences — ingestion guidance
 
-Read alongside `workspace-ingest-documents`'s normal instructions. This
+Read alongside `workspace-add`'s normal instructions. This
 never introduces a new tracker category or column — every finding still
 goes through the same `risk` / `issue` / `stakeholder` / etc. categories
 defined in `shared/schema/trackers.yaml`. It only shapes what to weight

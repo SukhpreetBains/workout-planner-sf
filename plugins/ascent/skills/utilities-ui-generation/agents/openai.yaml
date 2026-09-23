@@ -1,4 +1,6 @@
 interface:
   display_name: "UI Generation Utilities"
   short_description: "Anime.js motion and brand styling, by active pack"
+  icon_small: "./assets/skill-icon.svg"
+  icon_large: "./assets/skill-icon.svg"
   default_prompt: "Use $utilities-ui-generation for animation with Anime.js, or to apply brand styling from the active branding pack."

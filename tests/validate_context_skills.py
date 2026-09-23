@@ -12,8 +12,8 @@ SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
 SKILLS = (
     "initial-setup",
     "investigate-project",
-    "workspace-ingest-documents",
-    "workspace-review-updates",
+    "workspace-add",
+    "workspace-review",
     "workspace-summarize",
 )
 LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)")

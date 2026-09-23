@@ -1,6 +1,6 @@
 # Health & Life Sciences — review guidance
 
-Read alongside `workspace-review-updates`'s normal instructions. These are
+Read alongside `workspace-review`'s normal instructions. These are
 additional things worth a reviewer's attention before approving a
 proposed row — never a reason to change how the review mechanism itself
 works.

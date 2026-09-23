@@ -48,7 +48,7 @@ class EngineTest(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.root = Path(cls.tmp.name)
-        cls.env = {**os.environ, "EAD_REPO_ROOT": str(cls.root)}
+        cls.env = {**os.environ, "ASCENT_OPPORTUNITY_ROOT": str(cls.root)}
         meetings = cls.root / "workspace" / "meetings"
         meetings.mkdir(parents=True)
         (meetings / "2026-08-14 - Test.md").write_text(

@@ -38,8 +38,8 @@ intermediate fixed 16:9 slide stage, not a microsite and not a handoff artifact.
 
 ## Current scope
 
-This is a reference-informed implementation for the `executive-readout`
-archetype. It preserves text as editable PowerPoint text, uses native shapes for
+This is a reference-informed implementation for an executive readout
+presentation. It preserves text as editable PowerPoint text, uses native shapes for
 layout, supports trusted local partner logos, and emits a fixture-derived
 manifest for structural validation. An explicit storyboard can split findings,
 recommendations, and other collection sections without losing or repeating

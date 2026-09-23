@@ -1,0 +1,8 @@
+interface:
+  display_name: "Analyze Org"
+  short_description: "Map a Salesforce org's architecture"
+  icon_small: "./assets/skill-icon.svg"
+  icon_large: "./assets/skill-icon.svg"
+
+policy:
+  allow_implicit_invocation: false
