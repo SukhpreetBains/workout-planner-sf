@@ -390,6 +390,36 @@ class VisualReviewTest(unittest.TestCase):
         server.server_close()
         thread.join(timeout=2)
 
+    def test_permission_denied_health_preserves_state(self):
+        state = {"pid": 123, "port": 456, "token": "test", "instance_id": "existing"}
+        self.server_module.write_state(self.root, state)
+        denied = urllib.error.URLError(PermissionError(1, "Operation not permitted"))
+        for operation in (self.server_module.start, self.server_module.status,
+                          self.server_module.stop):
+            with self.subTest(operation=operation.__name__), \
+                    mock.patch.object(self.server_module, "request_json", side_effect=denied), \
+                    mock.patch.object(self.server_module.subprocess, "Popen") as spawn:
+                with self.assertRaises(self.server_module.LocalServerPermissionError):
+                    operation(self.root)
+                spawn.assert_not_called()
+                self.assertEqual(self.server_module.read_state(self.root), state)
+
+    def test_bind_permission_denied_has_actionable_exit(self):
+        with mock.patch.object(self.server_module, "ReviewServer", side_effect=PermissionError(1, "denied")):
+            self.assertEqual(self.server_module.serve(self.root, "test", "test"), 77)
+        self.assertIsNone(self.server_module.read_state(self.root))
+
+    def test_failed_child_exits_without_startup_timeout(self):
+        for code in (77, 1):
+            child = mock.Mock()
+            child.poll.return_value = code
+            with self.subTest(code=code), \
+                    mock.patch.object(self.server_module.subprocess, "Popen", return_value=child), \
+                    mock.patch.object(self.server_module.time, "sleep") as sleep:
+                self.assertEqual(self.server_module.start(self.root), code)
+                sleep.assert_not_called()
+                self.assertFalse(self.server_module.STARTED_PROCESSES)
+
     def test_start_reuses_server_and_recovers_stale_state(self):
         stale = self.root / "workspace" / ".system" / "review-server.json"
         stale.write_text(json.dumps({

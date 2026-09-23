@@ -3,11 +3,8 @@ rem Run a workspace engine script with the Opportunity's Python environment.
 rem Set EAD_REPO_ROOT when the installed skill library lives elsewhere.
 setlocal
 set SCRIPT_DIR=%~dp0
-if defined EAD_REPO_ROOT (
-  set REPO_ROOT=%EAD_REPO_ROOT%
-) else (
-  set REPO_ROOT=%CD%
-)
+python "%SCRIPT_DIR%launcher_preflight.py" %* || exit /b 2
+set REPO_ROOT=%EAD_REPO_ROOT%
 set VENV=%REPO_ROOT%\workspace\.system\.venv
 set PYTHON=%VENV%\Scripts\python.exe
 

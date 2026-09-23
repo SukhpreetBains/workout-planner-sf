@@ -5,7 +5,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="${EAD_REPO_ROOT:-$PWD}"
+python3 "$SCRIPT_DIR/launcher_preflight.py" "$@"
+REPO_ROOT="$EAD_REPO_ROOT"
 VENV="$REPO_ROOT/workspace/.system/.venv"
 PYTHON="$VENV/bin/python"
 
