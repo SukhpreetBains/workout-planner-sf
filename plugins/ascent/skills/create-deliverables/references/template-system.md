@@ -98,6 +98,13 @@ complete module list and the user's confirmed module selection must already be
 recorded before intake begins. After content has been added and rendered, give
 the user the updated preview link when that workspace action is available.
 
+An `--industry <id>` flag on either preview command substitutes an active
+industry pack's own full alternate static example for the template's, when
+that pack declares one (`shared/industry/<id>/manifest.json`'s
+`examples.static_examples`). It is held to the exact same completeness
+contract as the template's own file — this never partially patches it. See
+[../../../shared/industry/README.md](../../../shared/industry/README.md).
+
 Every question contains:
 
 - `id`: stable and prefixed with the module ID
@@ -146,7 +153,7 @@ machine-enforced gate instead of a drafting convention.
 For live workspace intake, source-backed values come from current reviewed
 tracker rows in `workspace/.system/tracker-copies/`, not the source documents.
 Refresh them once with `shared/scripts/sync.py --trackers-only`, using the
-installed plugin's Python wrapper and the Opportunity's `EAD_REPO_ROOT`.
+installed plugin's Python wrapper and the Opportunity's `ASCENT_OPPORTUNITY_ROOT`.
 In each answer's `sources` list, use `source_id` for the tracker-copy path and
 `locator` for the stable row ID and field names. Preserve the row's original
 source references for provenance without reopening the documents. Explicit

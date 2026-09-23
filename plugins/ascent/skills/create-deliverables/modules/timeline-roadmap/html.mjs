@@ -1,11 +1,38 @@
 import { referenceLayout } from '../shared/reference-layout.mjs';
-import { moduleIndex, typeset } from '../shared/primitives.mjs';
+import { moduleIndex, typeset, weekRange } from '../shared/primitives.mjs';
 
-const view = (section) => `<div class="roadmap-horizon" data-motion="stagger-up">
-  <div class="roadmap-horizon__months" aria-hidden="true"><span>Start</span><span>Near term</span><span>Midpoint</span><span>Later</span><span>Transition</span></div>
-  ${section.phases.map((phase, index) => `<div class="roadmap-horizon__lane lane-${index + 1}" data-motion-item><strong>${typeset(phase.name)}</strong><span>${typeset(phase.window)}</span><p>${phase.outcomes.map(typeset).join(' + ')}</p><i aria-hidden="true"></i></div>`).join('')}
-  <div class="roadmap-horizon__milestones"><span>◆ Alignment</span><span>◆ Readiness</span><span>◆ Handoff</span></div>
+/**
+ * Label and bar are laid out as separate grid columns, never overlapping —
+ * the same separation `project-schedule` already uses (its bars never carry
+ * text either). A fixed decorative header ("Start / Near term / Midpoint...")
+ * and an independently-positioned bar cannot both be honest about timing at
+ * once, so the header is now real week ticks spanning the same 1-to-`total`
+ * scale the bars use, computed the same way from each phase's own
+ * `phase.window` via `weekRange` (the "Week N-M" parser `project-schedule`
+ * also uses) — not from the phase's index, which only ever matched one past
+ * example's specific phase count and order by coincidence.
+ */
+function axisTicks(total, count = 4) {
+  return Array.from({ length: count + 1 }, (_, i) => 1 + Math.round(((total - 1) * i) / count));
+}
+
+const view = (section) => {
+  const ranges = section.phases.map((phase) => weekRange(phase.window, 1));
+  const total = Math.max(1, ...ranges.map(({ start, span }) => start + span - 1));
+  const axis = axisTicks(total).map((week) => `<span>Week ${week}</span>`).join('');
+  const lanes = section.phases.map((phase, index) => {
+    const { start, span } = ranges[index];
+    const style = `--lane-start:${start - 1};--lane-span:${span};--lane-total:${total}`;
+    return `<div class="roadmap-horizon__lane" data-motion-item>
+      <div class="roadmap-horizon__label"><strong>${typeset(phase.name)}</strong><span>${typeset(phase.window)}</span><p>${phase.outcomes.map(typeset).join(' + ')}</p></div>
+      <div class="roadmap-horizon__track" style="${style}"><i aria-hidden="true"></i></div>
+    </div>`;
+  }).join('');
+  return `<div class="roadmap-horizon" data-motion="stagger-up">
+  <div class="roadmap-horizon__axis" aria-hidden="true"><span class="roadmap-horizon__axis-spacer"></span><div class="roadmap-horizon__axis-ticks">${axis}</div></div>
+  ${lanes}
 </div>`;
+};
 
 const STANDARD_RENDERERS = { 'timeline': view };
 

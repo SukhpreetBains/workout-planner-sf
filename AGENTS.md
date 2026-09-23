@@ -14,7 +14,7 @@
 ## Current implementation state
 
 The following skills are implemented: `initial-setup`, `project-setup`,
-`investigate-project`, `workspace-ingest-documents`, `workspace-review-updates`,
+`investigate-project`, `workspace-add`, `workspace-review`,
 `workspace-summarize`, `create-deliverables`, `update-deliverable-structure`, and
 `utilities-ui-generation`.
 

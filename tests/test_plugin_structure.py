@@ -23,7 +23,10 @@ class PluginStructureTests(unittest.TestCase):
     def test_repository_plugin_contract(self) -> None:
         validator = load_validator()
         self.assertEqual(validator.validate_repository(), [])
-        self.assertEqual(len(validator.EXPECTED_SKILLS), 14)
+        self.assertEqual(
+            validator.EXPECTED_SKILLS,
+            {path.parent.name for path in validator.SKILLS_ROOT.glob("*/SKILL.md")},
+        )
 
 
 if __name__ == "__main__":

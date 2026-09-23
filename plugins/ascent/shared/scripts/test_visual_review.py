@@ -27,7 +27,7 @@ class VisualReviewTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
-        os.environ["EAD_REPO_ROOT"] = str(self.root)
+        os.environ["ASCENT_OPPORTUNITY_ROOT"] = str(self.root)
         for name in ("paths", "trackers", "validate_updates", "review_store", "review_server", "sync"):
             sys.modules.pop(name, None)
         self.paths = importlib.import_module("paths")

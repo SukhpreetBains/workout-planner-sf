@@ -139,7 +139,7 @@ def check_setup() -> int:
           + (f" (missing: {', '.join(missing_trackers)})" if missing_trackers else ""))
     print(f"identity (workspace/.system/project.yaml): {'found' if identity_ready else 'MISSING'}")
 
-    if workspace_ready and system_ready and trackers_ready:
+    if workspace_ready and system_ready and trackers_ready and identity_ready:
         print("ready: this looks like an initialized Opportunity workspace")
     else:
         print("not ready: this does not look like an initialized Opportunity workspace — run initial-setup first")

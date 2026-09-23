@@ -8,12 +8,12 @@ from pathlib import Path
 
 
 def validate(arguments: list[str]) -> None:
-    value = os.environ.get("EAD_REPO_ROOT", "").strip()
+    value = os.environ.get("ASCENT_OPPORTUNITY_ROOT", "").strip()
     if not value:
-        raise ValueError("Set EAD_REPO_ROOT to the confirmed Opportunity folder before running the workspace engine.")
+        raise ValueError("Set ASCENT_OPPORTUNITY_ROOT to the confirmed Opportunity folder before running the workspace engine.")
     root = Path(value).expanduser()
     if not root.is_absolute() or not root.is_dir():
-        raise ValueError("EAD_REPO_ROOT must be an existing absolute Opportunity path.")
+        raise ValueError("ASCENT_OPPORTUNITY_ROOT must be an existing absolute Opportunity path.")
     root = root.resolve()
     workspace = root / "workspace"
     if not all((workspace / name).is_dir() for name in ("project", "trackers", "inbox", ".system")):
@@ -23,9 +23,9 @@ def validate(arguments: list[str]) -> None:
     for index, argument in enumerate(arguments[1:], 1):
         if argument == "--root":
             if index + 1 >= len(arguments) or Path(arguments[index + 1]).resolve() != root:
-                raise ValueError("--root must match EAD_REPO_ROOT.")
+                raise ValueError("--root must match ASCENT_OPPORTUNITY_ROOT.")
         elif argument.startswith("--root=") and Path(argument.split("=", 1)[1]).resolve() != root:
-            raise ValueError("--root must match EAD_REPO_ROOT.")
+            raise ValueError("--root must match ASCENT_OPPORTUNITY_ROOT.")
 
 
 if __name__ == "__main__":

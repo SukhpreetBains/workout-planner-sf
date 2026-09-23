@@ -83,7 +83,7 @@ starting composition. Do not ask the user to select a template or modules only
 after beginning evidence intake.
 
 Before evidence intake, confirm the workspace itself is initialized. Locate
-`shared/` at the installed Ascent plugin root, set `EAD_REPO_ROOT` to the
+`shared/` at the installed Ascent plugin root, set `ASCENT_OPPORTUNITY_ROOT` to the
 Opportunity folder, and run:
 
 ```bash
@@ -95,7 +95,7 @@ dependent skill, not a scan of any content. If it reports the workspace as
 not ready, stop before intake and tell the user this doesn't look like an
 initialized Opportunity workspace — offer to hand off to `initial-setup`
 first, the same way a document-processing gap hands off to
-`workspace-ingest-documents`. Do not attempt the tracker-copy refresh below
+`workspace-add`. Do not attempt the tracker-copy refresh below
 against an uninitialized workspace; the scripts it runs assume the standard
 structure exists.
 
@@ -108,13 +108,38 @@ PY <shared-skill-dir>/scripts/sync.py --status
 If it reports inbox files waiting or files not yet extracted into trackers,
 tell the user before intake begins: tracker copies may not reflect material
 they just added, and the resulting draft could show gaps that
-`workspace-ingest-documents` and `workspace-review-updates` would otherwise
+`workspace-add` and `workspace-review` would otherwise
 fill. Offer to route there first. This is advisory, not a gate — if the user
 wants a draft anyway, continue into intake. Run this check once per fresh
 intake, not on every resume or rebuild.
 
+## Industry flavor
+
+Check `workspace/.system/project.yaml` for an `industry:` key.
+
+- **Absent entirely** — this Opportunity has never been asked. Scan
+  `shared/industry/*/manifest.json` for available packs. If any exist, ask
+  once, offering each by title plus a "none of these" option, and write
+  whichever the user picks (an id, or `none`) into `project.yaml`,
+  preserving every other key. If no packs exist, skip this silently.
+- **`none`** — asked and declined already. Proceed exactly as documented
+  in this skill, no different from this section not existing. Do not ask
+  again.
+- **An id** — read that pack's `references/deliverable-guidance.md`
+  (`shared/industry/<id>/manifest.json` names its exact path) and apply it
+  as terminology, tone, and section emphasis within whichever template and
+  modules are already selected. It never selects a different template or
+  module set on its own, never overrides a direct in-conversation
+  instruction for this turn, and every non-negotiable above still applies
+  in full — especially never inventing a finding, number, owner, date, or
+  decision. For any fictional or preview composition, use that pack's
+  `examples/fictional_client` rather than inventing a new fictional entity.
+
+Read [../../shared/industry/README.md](../../shared/industry/README.md) for
+the full contract if anything here is ambiguous.
+
 Use `workspace/.system/tracker-copies/<category>.yaml` as the default factual
-input. Accept in `workspace-review-updates` writes the reviewed values to the
+input. Accept in `workspace-review` writes the reviewed values to the
 tracker workbooks and refreshes these copies. Current rows take precedence over
 historical `applied-updates` payloads, which can contain superseded values.
 
@@ -200,7 +225,7 @@ If required answers remain unresolved:
 3. Offer direct answers, deferral, or an update through the review inbox. Do
   not start another document-discovery pass.
 4. If the user provides documents, route them through
-  `workspace-ingest-documents` and then `workspace-review-updates`. Only after
+  `workspace-add` and then `workspace-review`. Only after
   acceptance may their tracker values populate this deliverable. There is no
   deliverable-only document bypass.
 5. After review, reload only changed category copies and revisit affected

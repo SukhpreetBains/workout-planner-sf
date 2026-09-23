@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workspace review inbox</title>
+  <link rel="stylesheet" href="/app.css?v=review-ux-1">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to review content</a>
+  <header class="site-header">
+    <img class="brand-logo" src="/logo.svg" alt="Slalom">
+    <div class="header-copy">
+      <span id="header-title">Review Inbox</span>
+      <span id="header-count" class="header-count" aria-label="0 items">0</span>
+    </div>
+    <button id="view-accepted" class="quiet accepted-button" type="button">View accepted</button>
+  </header>
+  <main id="main" tabindex="-1">
+    <section id="loading" class="state-panel" aria-live="polite">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <p class="eyebrow">Loading</p>
+      <h1>Preparing your review inbox</h1>
+    </section>
+    <section id="review-flow" hidden></section>
+    <section id="error-state" class="state-panel" hidden role="alert"></section>
+  </main>
+  <div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+  <script type="module" src="/app.js?v=review-ux-1"></script>
+</body>
+</html>
