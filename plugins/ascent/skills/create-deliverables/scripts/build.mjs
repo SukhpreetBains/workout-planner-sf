@@ -212,6 +212,7 @@ export async function build(contentPath, {
       ? (s.findings ?? []).map((f) => f.icon).filter(Boolean)
       : []);
   const clientLogo = meta.client_logo ? path.resolve(contentDir, meta.client_logo) : null;
+  const coverBackground = meta.cover_background ? path.resolve(contentDir, meta.cover_background) : null;
 
   const outDir = path.resolve(out ?? path.join(
     process.cwd(), 'build',
@@ -221,9 +222,10 @@ export async function build(contentPath, {
   mkdirSync(outDir, { recursive: true });
 
   const assets = copyAssets(outDir, {
-    logoVariants: [coverLogo, footerLogo, ...(archetype.cover_background_question ? ['blue'] : [])],
+    logoVariants: [coverLogo, footerLogo, ...(archetype.cover_background_question || coverBackground ? ['blue'] : [])],
     icons,
     clientLogo,
+    coverBackground,
   });
   copyOwnAssets(outDir, {
     referenceLayouts: meta.layout === 'microsite' || renderedDoc.sections.some((section) => section.layout === 'microsite'),
@@ -232,12 +234,17 @@ export async function build(contentPath, {
   const profiles = copyProfileAssets(renderedDoc.sections, contentDir, outDir);
 
   // 3. Render.
+  // meta.cover_background (direct-authored, e.g. by an industry-flavored
+  // draft) wins over the template_questions gallery pick if a build somehow
+  // has both — only one path is normally in play at a time.
+  const resolvedCoverBackground = assets.coverBackground ?? templateAssets.coverBackground;
   const ctx = {
     meta,
     ...templateAssets,
+    coverBackground: resolvedCoverBackground,
     profilePath: (name) => profiles[name],
     coverSurface,
-    logoPath: assets.logos[templateAssets.coverBackground ? 'blue' : coverLogo],
+    logoPath: assets.logos[resolvedCoverBackground ? 'blue' : coverLogo],
     footerLogoPath: assets.logos[footerLogo],
     clientLogoPath: assets.clientLogo,
     iconPath: (name) => {

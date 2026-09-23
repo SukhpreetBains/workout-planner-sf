@@ -45,6 +45,20 @@ function readAndValidateExample(file, archetype, modules, label, problems) {
     problems.push(`${label}: static example must be a mapping`);
     return null;
   }
+  // Structure previews relocate the composed content to a temp directory
+  // before build() ever sees it (see buildStructurePreview), so a relative
+  // meta.client_logo/cover_background authored against this file's own
+  // location would silently resolve against the wrong directory instead.
+  // Rewrite to absolute here, while the real source directory is known.
+  if (isObject(example.meta)) {
+    const sourceDir = path.dirname(file);
+    for (const key of ['client_logo', 'cover_background']) {
+      const value = example.meta[key];
+      if (typeof value === 'string' && value && !path.isAbsolute(value)) {
+        example.meta[key] = path.resolve(sourceDir, value);
+      }
+    }
+  }
   if (example.meta?.archetype !== archetype.name) {
     problems.push(`${label}: static example meta.archetype must be ${archetype.name}`);
   }

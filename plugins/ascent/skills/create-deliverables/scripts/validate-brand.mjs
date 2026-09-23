@@ -614,7 +614,7 @@ export function validateBuild(dir) {
   const brandAssetBytes = collectBrandAssets();
   for (const el of elements.filter((e) => e.tag === 'img')) {
     const src = el.attrs.src ?? '';
-    if ('data-client-asset' in el.attrs) continue;      // the client's own mark
+    if ('data-authored-asset' in el.attrs) continue;    // directly-authored (client logo, cover background) — not the icon/illustration library
     if (!/^assets\//.test(src)) continue;               // handled by rules 22/23
     const full = path.join(abs, src);
     if (!existsSync(full)) { report.error('rule 15', `\`${src}\` is referenced but not in the output`); continue; }

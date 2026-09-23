@@ -122,10 +122,11 @@ function copy(src, dest) {
  * @param {string[]} plan.logoVariants  logo variants in use, e.g. ['white']
  * @param {string[]} plan.icons         icon names in use
  * @param {string|null} plan.clientLogo absolute path to the client's mark
- * @returns {{fonts: string[], logos: Record<string,string>, icons: Record<string,string>, clientLogo: string|null, anime: string, license: string}}
+ * @param {string|null} plan.coverBackground absolute path to a direct-authored cover image
+ * @returns {{fonts: string[], logos: Record<string,string>, icons: Record<string,string>, clientLogo: string|null, coverBackground: string|null, anime: string, license: string}}
  */
 export function copyAssets(outDir, plan) {
-  const result = { fonts: [], logos: {}, icons: {}, clientLogo: null, anime: '', license: '' };
+  const result = { fonts: [], logos: {}, icons: {}, clientLogo: null, coverBackground: null, anime: '', license: '' };
 
   // --- Fonts ------------------------------------------------------------
   require_(WEBFONT_DIR, 'the Slalom Sans webfont directory');
@@ -172,6 +173,23 @@ export function copyAssets(outDir, plan) {
     const out = `assets/client-logo${ext}`;
     copy(plan.clientLogo, path.join(outDir, out));
     result.clientLogo = out;
+  }
+
+  // --- Direct-authored cover background ----------------------------------
+  // Same shape as the client mark above, not the template_questions gallery
+  // mechanism: the caller (guided or industry-flavored authoring) places a
+  // reachable image and points meta.cover_background at it directly.
+  if (plan.coverBackground) {
+    if (!existsSync(plan.coverBackground)) {
+      throw new AssetError(`the cover background \`${plan.coverBackground}\` does not exist (meta.cover_background is relative to the content file)`);
+    }
+    const ext = path.extname(plan.coverBackground).toLowerCase();
+    if (!['.svg', '.png', '.jpg', '.jpeg', '.webp'].includes(ext)) {
+      throw new AssetError(`the cover background must be .svg, .png, .jpg, .jpeg, or .webp, found \`${ext}\``);
+    }
+    const out = `assets/cover-background${ext}`;
+    copy(plan.coverBackground, path.join(outDir, out));
+    result.coverBackground = out;
   }
 
   // --- Anime.js ---------------------------------------------------------

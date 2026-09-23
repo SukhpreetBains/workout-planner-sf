@@ -9,7 +9,8 @@
       { "name": "Priya Anand", "role": "Slalom Engagement Lead" }
     ],
     "classification": "Internal draft",
-    "accent": "purple"
+    "accent": "purple",
+    "cover_background": "../assets/illustrations/healthcare-stethoscope-01-horizontal.jpg"
   },
   "sections": [
     {

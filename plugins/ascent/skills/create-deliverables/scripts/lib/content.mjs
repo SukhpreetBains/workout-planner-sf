@@ -41,6 +41,7 @@ const META_FIELDS = {
   classification: { type: 'string', required: true },
   accent: { type: 'string', required: true, enum: ACCENTS },
   client_logo: { type: 'string' },
+  cover_background: { type: 'string', hint: 'relative to the content file, same as client_logo — the caller places a reachable image' },
   layout: { ...MICROSITE_FIELDS.layout, required: false },
   copy: MICROSITE_FIELDS.copy,
 };
