@@ -30,6 +30,8 @@ if ! "$BASE_PYTHON" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3
 fi
 
 OPPORTUNITY_ROOT="$($BASE_PYTHON -c 'import pathlib, sys; print(pathlib.Path(sys.argv[1]).expanduser().resolve())' "$OPPORTUNITY_ROOT")"
+export ASCENT_OPPORTUNITY_ROOT="$OPPORTUNITY_ROOT"
+"$BASE_PYTHON" "$SCRIPT_DIR/launcher_preflight.py" "$@"
 PATH_HASH="$($BASE_PYTHON -c 'import hashlib, os, sys; value=os.path.normcase(os.path.realpath(sys.argv[1])).encode("utf-8"); print(hashlib.sha256(value).hexdigest()[:20])' "$OPPORTUNITY_ROOT")"
 CACHE_ROOT="${ASCENT_CACHE_DIR:-$HOME/.ascent}"
 VENV="$CACHE_ROOT/venvs/$PATH_HASH"
@@ -53,5 +55,4 @@ elif ! "$PYTHON" -c 'import docx, fitz, openpyxl, pptx, yaml' >/dev/null 2>&1; t
   exit 2
 fi
 
-export ASCENT_OPPORTUNITY_ROOT="$OPPORTUNITY_ROOT"
 exec "$PYTHON" "$@"

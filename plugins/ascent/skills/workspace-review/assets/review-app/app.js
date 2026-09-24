@@ -20,6 +20,7 @@ const errorState = document.querySelector("#error-state");
 const toast = document.querySelector("#toast");
 const acceptedButton = document.querySelector("#view-accepted");
 const headerTitle = document.querySelector("#header-title");
+const headerCount = document.querySelector("#header-count");
 const acceptedPage = location.pathname === "/accepted";
 let cards = [];
 let categories = [];
@@ -113,6 +114,7 @@ function acceptedItemTitle(item) {
 }
 
 function renderAcceptedPage(items) {
+  setHeaderCount(items.length);
   const content = el("div", { class: "accepted-values-content" });
   let activeCategory = items[0]?.category || "";
   let selected = items[0] || null;
@@ -229,23 +231,9 @@ function groupedCards() {
   }, groups);
 }
 
-function progress() {
-  const { completed = 0, total = 0, pending = cards.length, accepted = 0, rejected = 0, flagged = 0 } = progressSummary;
-  const percent = total ? Math.round((completed / total) * 100) : 100;
-  return el("div", { class: "progress-shell" }, [
-    el("div", { class: "progress-copy" }, [
-      el("strong", {}, `${completed} of ${total} reviewed`),
-      el("span", {}, `${pending} pending`),
-    ]),
-    el("div", { class: "progress-track", role: "progressbar", "aria-label": "Review progress",
-      "aria-valuemin": "0", "aria-valuemax": String(total), "aria-valuenow": String(completed) },
-      el("div", { class: "progress-value", style: `width:${percent}%` })),
-    el("div", { class: "progress-details", "aria-label": "Review totals" }, [
-      el("span", {}, `${accepted} accepted`),
-      el("span", {}, `${rejected} rejected`),
-      el("span", {}, `${flagged} flagged`),
-    ]),
-  ]);
+function setHeaderCount(count) {
+  headerCount.textContent = String(count);
+  headerCount.setAttribute("aria-label", `${count} ${count === 1 ? "item" : "items"}`);
 }
 
 function missingRequired(card) {
@@ -711,13 +699,6 @@ async function decide(card, decision, note = "") {
     } else if (decision === "reject") {
       result = await api("/api/reject", { method: "POST", body: JSON.stringify({ ...body, reason: note }) });
       showToast(result.warning || "Rejected. No tracker row was written.");
-    } else {
-      result = await api("/api/flag", { method: "POST", body: JSON.stringify({ ...body, note }) });
-      showToast("Flagged for AI review and kept in the pending inbox.");
-      await refreshInbox();
-      currentIndex = cards.findIndex(item => item.proposal_id === card.proposal_id);
-      renderCategory();
-      return;
     }
     invalidateLinkOptions();
     await refreshInbox();
@@ -734,22 +715,22 @@ async function decide(card, decision, note = "") {
   }
 }
 
-function categoryNavigation(matches) {
+function categoryNavigation() {
   const nav = el("nav", { class: "category-tabs", "aria-label": "Proposal categories" });
-  const matchingCounts = matches.reduce((counts, card) => {
-    counts[card.category] = (counts[card.category] || 0) + 1;
-    return counts;
-  }, {});
   Object.entries(groupedCards()).forEach(([category, items]) => {
     const summary = progressSummary.categories?.[category] || { completed: 0, total: items.length, pending: items.length };
-    const matching = matchingCounts[category] || 0;
-    nav.append(el("button", { class: `quiet category-${category}`, type: "button",
+    const remaining = summary.pending ?? items.length;
+    nav.append(el("div", { class: `category-tab category-${category}` }, [
+      el("button", { class: "quiet category-selector", type: "button",
       "aria-current": category === activeCategory ? "true" : "false",
-      "aria-label": `${label(category)}, ${summary.completed} of ${summary.total} reviewed, ${matching} matching pending`,
+      "aria-label": `${label(category)}, ${remaining} remaining`,
       onclick: () => openFlow(category),
     }, [
       el("span", { class: "category-tab-label" }, label(category)),
-      el("span", { class: "category-tab-meta" }, `${summary.completed}/${summary.total} reviewed · ${matching === items.length ? `${items.length} pending` : `${matching} match`}`),
+      el("span", { class: "category-tab-meta" }, String(remaining)),
+    ]),
+      el("button", { class: "quiet category-tab-create", type: "button", title: `Create ${label(category)} proposal`,
+        "aria-label": `Create ${label(category)} proposal`, onclick: () => createManualProposal(category) }, "+"),
     ]));
   });
   return nav;
@@ -805,10 +786,7 @@ function renderProposalListItem(card, selected) {
 function reviewActions(card) {
   return el("div", { class: "category-actions", "aria-label": "Review decision" }, [
     el("button", { class: "primary", type: "button", onclick: () => decide(card, "accept") }, "Accept"),
-    el("button", { class: "danger", type: "button", onclick: event => openDecisionModal(card, "reject", event.currentTarget) }, "Reject"),
-    el("button", { class: "secondary", type: "button", onclick: event => openDecisionModal(card, "flag", event.currentTarget) }, "Flag for AI review"),
-    el("button", { class: "quiet create-proposal", type: "button", title: `Create ${label(activeCategory)} proposal`,
-      "aria-label": `Create ${label(activeCategory)} proposal`, onclick: event => openCreateProposalModal(activeCategory, event.currentTarget) }, "+"),
+    el("button", { class: "danger", type: "button", onclick: () => decide(card, "reject") }, "Reject"),
   ]);
 }
 
@@ -905,44 +883,8 @@ function showModal(modal, initialFocus, trigger) {
   initialFocus.focus();
 }
 
-function openDecisionModal(card, decision, trigger) {
-  const isReject = decision === "reject";
-  const modal = el("div", { class: "review-note-modal", role: "dialog", "aria-modal": "true",
-    "aria-labelledby": "review-note-title", "aria-describedby": "review-note-description" });
-  const form = el("form", {});
-  const note = el("textarea", { id: "decision-note", placeholder: isReject
-    ? "Optionally explain why this proposal is being rejected."
-    : "Optionally describe what should be reviewed." });
-  form.append(
-    el("p", { class: "eyebrow" }, isReject ? "Reject proposal" : "Flag for AI review"),
-    el("h2", { id: "review-note-title" }, isReject ? "Add a rejection note" : "Add a review note"),
-    el("p", { id: "review-note-description" }, isReject ? "The proposal will be archived without writing to a tracker." : "The proposal will remain pending for clarification."),
-    el("label", { for: "decision-note" }, "Optional reviewer note"),
-    note,
-    el("div", { class: "modal-actions" }, [
-      el("button", { class: "quiet", type: "button", onclick: () => closeModal(modal, trigger) }, "Cancel"),
-      el("button", { class: isReject ? "danger" : "secondary", type: "submit" }, isReject ? "Reject proposal" : "Flag for AI review"),
-    ]),
-  );
-  form.addEventListener("submit", event => {
-    event.preventDefault();
-    const value = note.value.trim();
-    closeModal(modal, trigger, false);
-    decide(card, decision, value);
-  });
-  modal.append(form);
-  showModal(modal, note, trigger);
-}
-
 function categoryToolbar(card) {
-  return el("section", { class: "category-toolbar", "aria-label": `${label(activeCategory)} review actions` }, [
-    el("div", { class: "toolbar-actions" }, [
-      el("div", { class: "category-actions", "aria-label": "Review decision" }, [
-        ...(card ? [] : [el("button", { class: "quiet create-proposal", type: "button", title: `Create ${label(activeCategory)} proposal`,
-          "aria-label": `Create ${label(activeCategory)} proposal`, onclick: event => openCreateProposalModal(activeCategory, event.currentTarget) }, "+")]),
-      ]),
-    ]),
-  ]);
+  return el("section", { class: "category-toolbar", "aria-label": `${label(activeCategory)} review actions` });
 }
 
 function renderCategory(options = {}) {
@@ -952,7 +894,8 @@ function renderCategory(options = {}) {
   const categoryCards = matches.filter(item => item.category === activeCategory);
   const card = categoryCards.includes(cards[currentIndex]) ? cards[currentIndex] : categoryCards[0] || null;
   if (card) activeCategory = card.category;
-  flow.replaceChildren(progress(), triageControls(matches.length), categoryNavigation(matches));
+  setHeaderCount(progressSummary.pending ?? cards.length);
+  flow.replaceChildren(triageControls(matches.length), categoryNavigation());
   const list = el("aside", { class: "proposal-list", "aria-label": `${label(activeCategory)} proposals` });
   categoryCards.forEach(item => list.append(renderProposalListItem(item, item === card)));
   const review = el("div", { class: `category-review${card ? "" : " empty-category-review"}` }, card ? [] : [categoryToolbar(card)]);
@@ -989,41 +932,17 @@ function openFlow(category) {
   renderCategory();
 }
 
-function openCreateProposalModal(category, trigger) {
-  const modal = el("div", { class: "review-note-modal", role: "dialog", "aria-modal": "true",
-    "aria-labelledby": "create-proposal-title", "aria-describedby": "create-proposal-description" });
-  const form = el("form", {});
-  const sourceRef = el("input", { id: "proposal-source-ref", type: "text", required: "", value: userSubmittedSource, placeholder: "workspace/meetings/2026-09-04 - Workshop.md" });
-  const status = el("p", { class: "save-state", role: "status" }, "");
-  form.append(
-    el("p", { class: "eyebrow" }, `New ${label(category)} proposal`),
-    el("h2", { id: "create-proposal-title" }, "Create a pending proposal"),
-    el("p", { id: "create-proposal-description" }, "This defaults to reviewer-provided evidence. Replace it with a workspace source when one is available, then complete the fields before accepting it."),
-    el("label", { for: "proposal-source-ref" }, "Workspace source reference"),
-    sourceRef,
-    status,
-    el("div", { class: "modal-actions" }, [
-      el("button", { class: "quiet", type: "button", onclick: () => closeModal(modal, trigger) }, "Cancel"),
-      el("button", { class: "primary", type: "submit" }, "Create proposal"),
-    ]),
-  );
-  form.addEventListener("submit", async event => {
-    event.preventDefault();
-    status.textContent = "Creating";
-    try {
-      const created = await api("/api/create", { method: "POST", body: JSON.stringify({ category, source_ref: sourceRef.value.trim() }) });
-      await refreshInbox();
-      activeCategory = category;
-      currentIndex = cards.findIndex(card => card.proposal_id === created.proposal_id);
-      closeModal(modal, trigger, false);
-      renderCategory();
-      showToast("Pending proposal created.");
-    } catch (error) {
-      status.textContent = error.message || "Could not create the proposal";
-    }
-  });
-  modal.append(form);
-  showModal(modal, sourceRef, trigger);
+async function createManualProposal(category) {
+  try {
+    const created = await api("/api/create", { method: "POST", body: JSON.stringify({ category, source_ref: userSubmittedSource }) });
+    await refreshInbox();
+    activeCategory = category;
+    currentIndex = cards.findIndex(card => card.proposal_id === created.proposal_id);
+    renderCategory();
+    showToast("Blank manual entry created.");
+  } catch (error) {
+    showToast(error.message || "Could not create the manual entry.");
+  }
 }
 
 function applyInboxResult(result) {

@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 import mimetypes
 import os
@@ -34,6 +35,17 @@ INSTALLED_APP_DIR = PLUGIN_ROOT / "workspace-review" / "assets" / "review-app"
 APP_DIR = SOURCE_APP_DIR if SOURCE_APP_DIR.is_dir() else INSTALLED_APP_DIR
 STARTED_PROCESSES: dict[str, subprocess.Popen] = {}
 CONFIGURED_ROOT: Path | None = None
+PERMISSION_EXIT = 77
+PERMISSION_HINT = (
+    "Local review server access was blocked by runtime permissions. "
+    "Retry this same command with scoped host access using the agent's permission mechanism. "
+    "Keep the server bound to 127.0.0.1; do not change filesystem permissions or disable the sandbox."
+)
+
+
+class LocalServerPermissionError(PermissionError):
+    """A sandbox blocked a loopback operation; existing state must be preserved."""
+
 
 
 def configure_root(root: Path) -> None:
@@ -88,7 +100,10 @@ def healthy(state: dict | None) -> bool:
     try:
         result = request_json(f"http://127.0.0.1:{state['port']}/api/health")
         return result.get("ok") is True and result.get("instance_id") == state.get("instance_id")
-    except (OSError, ValueError, urllib.error.URLError):
+    except (OSError, ValueError, urllib.error.URLError) as exc:
+        reason = getattr(exc, "reason", exc)
+        if isinstance(reason, PermissionError) or getattr(reason, "errno", None) in (errno.EPERM, errno.EACCES):
+            raise LocalServerPermissionError(PERMISSION_HINT) from exc
         return False
 
 
@@ -398,7 +413,11 @@ class ReviewHandler(BaseHTTPRequestHandler):
 
 def serve(root: Path, token: str, instance_id: str) -> int:
     configure_root(root)
-    server = ReviewServer(("127.0.0.1", 0), token, root, instance_id)
+    try:
+        server = ReviewServer(("127.0.0.1", 0), token, root, instance_id)
+    except PermissionError:
+        print(PERMISSION_HINT, file=sys.stderr)
+        return PERMISSION_EXIT
     state = {
         "pid": os.getpid(),
         "port": server.server_port,
@@ -438,6 +457,14 @@ def start(root: Path) -> int:
         STARTED_PROCESSES[instance_id] = process
     deadline = time.monotonic() + 8
     while time.monotonic() < deadline:
+        returncode = process.poll()
+        if returncode is not None:
+            STARTED_PROCESSES.pop(instance_id, None)
+            if returncode == PERMISSION_EXIT:
+                print(PERMISSION_HINT, file=sys.stderr)
+            else:
+                print(f"review server exited with status {returncode}; see {log}", file=sys.stderr)
+            return returncode or 1
         state = read_state(root)
         if healthy(state):
             print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
@@ -526,4 +553,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except LocalServerPermissionError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(PERMISSION_EXIT)

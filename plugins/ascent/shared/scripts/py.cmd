@@ -25,6 +25,8 @@ if defined ASCENT_PYTHON (
 )
 
 for /f "usebackq delims=" %%I in (`"%BASE_PYTHON%" -c "import pathlib,sys; print(pathlib.Path(sys.argv[1]).expanduser().resolve())" "%OPPORTUNITY_ROOT%"`) do set "OPPORTUNITY_ROOT=%%I"
+set "ASCENT_OPPORTUNITY_ROOT=%OPPORTUNITY_ROOT%"
+"%BASE_PYTHON%" "%SCRIPT_DIR%launcher_preflight.py" %* || exit /b 2
 for /f "usebackq delims=" %%I in (`"%BASE_PYTHON%" -c "import hashlib,os,sys; value=os.path.normcase(os.path.realpath(sys.argv[1])).encode('utf-8'); print(hashlib.sha256(value).hexdigest()[:20])" "%OPPORTUNITY_ROOT%"`) do set "PATH_HASH=%%I"
 if defined ASCENT_CACHE_DIR (set "CACHE_ROOT=%ASCENT_CACHE_DIR%") else (set "CACHE_ROOT=%USERPROFILE%\.ascent")
 set "VENV=%CACHE_ROOT%\venvs\%PATH_HASH%"
@@ -49,5 +51,4 @@ if "%INSTALL_DEPENDENCIES%"=="1" (
   )
 )
 
-set "ASCENT_OPPORTUNITY_ROOT=%OPPORTUNITY_ROOT%"
 "%PYTHON%" %*
