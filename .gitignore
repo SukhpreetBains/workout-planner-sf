@@ -19,3 +19,6 @@ Call Transcripts/
 .venv-inspect-poc/
 # Salesforce CLI local org cache (machine-local, org-specific).
 .sf/
+
+# Generated HLS template review previews.
+/internal/hls-template-review/

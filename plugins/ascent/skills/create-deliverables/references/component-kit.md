@@ -18,7 +18,7 @@ renderer explicitly. Low-level HTML utilities and primitives live in
 | Component | Purpose | Default motion |
 |---|---|---|
 | `cover` | Client, title, date, logo, optional client lockup, colour bar, classification | `color-bar-draw` + `line-draw` |
-| `progress-rail` | Sticky section progress — an executive needs to see the length | `scroll-sync` |
+| `progress-rail` | Sticky previous/current/next section context plus document progress | `scroll-sync` |
 | `exec-summary` | The "if you read one thing" block | `fade-up` |
 | `kpi-row` | 2–4 stat tiles | `count-up` (staggers and counts) |
 | `finding-card` | theme → evidence → implication. The core unit. | `stagger-up` |
@@ -97,10 +97,12 @@ serif, and no serif ships with this repo, so neither can be fully satisfied. The
 validator raises this as a known deviation on every build that includes a quote.
 See `delivery.md`.
 
-**`progress-rail`** — keyboard navigable with a visible focus ring, marks the
-current section with `aria-current`, hidden in print. Under reduced motion the
-scroll-linked fill is removed rather than frozen at zero, because an empty
-progress bar is worse than none.
+**`progress-rail`** — keyboard navigable with a visible focus ring, shows only
+the previous, current, and next sections, and marks the current section with
+`aria-current`. On section changes, the visible labels move right to left over
+300 ms. It is hidden on narrow screens and in print. Under reduced motion the
+labels update without movement and the scroll-linked fill is removed rather
+than frozen at zero, because an empty progress bar is worse than none.
 
 ## Adding a component
 
@@ -114,8 +116,8 @@ progress bar is worse than none.
    that is not a token, add the token to `tokens.css` — that is the only file
    allowed to hold a literal.
 4. Reference the renderer as `./html.mjs#<view-id>` in `module.json`.
-5. Add fictional source for the view to the module's `example.json` so it can
-   be reviewed directly and in every template that selects the module.
+5. Add fictional source for the view to each selecting template's declared
+   `static_example` so the view can be reviewed directly and in context.
 6. Add the type to the relevant `archetype.json` `allowed_sections`.
 7. Add a case to `scripts/test/run.mjs` and rebuild the worked example.
 

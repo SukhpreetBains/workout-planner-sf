@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "agenda",
+  "title": "Agenda / meeting objectives",
+  "description": "A concise plan for the session and the alignment outcomes expected by the end of it.",
+  "questions": [
+    {
+      "id": "agenda.topics",
+      "tier": "required",
+      "prompt": "Which topics must the kickoff cover?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Agenda and meeting objectives/clarification-1"
+    },
+    {
+      "id": "agenda.outcomes",
+      "tier": "required",
+      "prompt": "What decisions or alignment must the session achieve?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Agenda and meeting objectives/clarification-2"
+    },
+    {
+      "id": "agenda.facilitation",
+      "tier": "optional",
+      "prompt": "How much time is available, and who leads each section?",
+      "answer_type": "text",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Agenda and meeting objectives/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "agenda",
+      "type": "agenda",
+      "renderer": "./html.mjs#agenda",
+      "uses": [
+        "agenda.topics",
+        "agenda.outcomes",
+        "agenda.facilitation"
+      ]
+    }
+  ]
+}

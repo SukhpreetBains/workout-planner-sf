@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 
 export const SKILL_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const SKILLS_DIR = path.resolve(SKILL_ROOT, '..');
+export const SHARED_DIR = path.join(SKILLS_DIR, '..', 'shared');
 
 const UI_GENERATION_DIR = path.join(SKILLS_DIR, 'utilities-ui-generation');
 
@@ -121,10 +122,11 @@ function copy(src, dest) {
  * @param {string[]} plan.logoVariants  logo variants in use, e.g. ['white']
  * @param {string[]} plan.icons         icon names in use
  * @param {string|null} plan.clientLogo absolute path to the client's mark
- * @returns {{fonts: string[], logos: Record<string,string>, icons: Record<string,string>, clientLogo: string|null, anime: string, license: string}}
+ * @param {string|null} plan.coverBackground absolute path to a direct-authored cover image
+ * @returns {{fonts: string[], logos: Record<string,string>, icons: Record<string,string>, clientLogo: string|null, coverBackground: string|null, anime: string, license: string}}
  */
 export function copyAssets(outDir, plan) {
-  const result = { fonts: [], logos: {}, icons: {}, clientLogo: null, anime: '', license: '' };
+  const result = { fonts: [], logos: {}, icons: {}, clientLogo: null, coverBackground: null, anime: '', license: '' };
 
   // --- Fonts ------------------------------------------------------------
   require_(WEBFONT_DIR, 'the Slalom Sans webfont directory');
@@ -173,6 +175,23 @@ export function copyAssets(outDir, plan) {
     result.clientLogo = out;
   }
 
+  // --- Direct-authored cover background ----------------------------------
+  // Same shape as the client mark above, not the template_questions gallery
+  // mechanism: the caller (guided or industry-flavored authoring) places a
+  // reachable image and points meta.cover_background at it directly.
+  if (plan.coverBackground) {
+    if (!existsSync(plan.coverBackground)) {
+      throw new AssetError(`the cover background \`${plan.coverBackground}\` does not exist (meta.cover_background is relative to the content file)`);
+    }
+    const ext = path.extname(plan.coverBackground).toLowerCase();
+    if (!['.svg', '.png', '.jpg', '.jpeg', '.webp'].includes(ext)) {
+      throw new AssetError(`the cover background must be .svg, .png, .jpg, .jpeg, or .webp, found \`${ext}\``);
+    }
+    const out = `assets/cover-background${ext}`;
+    copy(plan.coverBackground, path.join(outDir, out));
+    result.coverBackground = out;
+  }
+
   // --- Anime.js ---------------------------------------------------------
   // MIT requires the licence travel with the code. It ships next to the bundle,
   // always, and the validator treats its absence as an error.
@@ -188,8 +207,8 @@ export function copyAssets(outDir, plan) {
 }
 
 /** Copy this skill's own stylesheets and motion layer. */
-export function copyOwnAssets(outDir) {
-  const css = ['tokens.css', 'base.css', 'components.css', 'print.css'];
+export function copyOwnAssets(outDir, { referenceLayouts = false } = {}) {
+  const css = ['tokens.css', 'base.css', 'components.css', ...(referenceLayouts ? ['reference-layout.css'] : []), 'print.css'];
   for (const file of css) {
     copy(require_(path.join(SKILL_ROOT, 'assets', 'css', file), `this skill's ${file}`),
       path.join(outDir, 'css', file));
@@ -200,3 +219,18 @@ export function copyOwnAssets(outDir) {
 }
 
 export { ensureDir, readFileSync, writeFileSync, statSync, existsSync, require_ as requireFile };
+
+/** Optional profile portraits are copied locally, never requested at runtime. */
+export function copyProfileAssets(sections, contentDir, outDir) {
+  const result = {};
+  const paths = [...new Set(sections.flatMap((s) => (s.roles ?? []).map((r) => r.photo).filter(Boolean)))];
+  for (const [index, photo] of paths.entries()) {
+    const file = path.resolve(contentDir, photo);
+    if (!existsSync(file) || !statSync(file).isFile()) throw new AssetError(`profile photo ${photo} does not exist; omit photo when unavailable`);
+    const relative = `assets/profiles/portrait-${index}${path.extname(photo).toLowerCase()}`;
+    mkdirSync(path.join(outDir, 'assets', 'profiles'), { recursive: true });
+    copyFileSync(file, path.join(outDir, relative));
+    result[photo] = relative;
+  }
+  return result;
+}

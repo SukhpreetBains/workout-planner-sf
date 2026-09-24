@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "objectives-and-success",
+  "title": "Objectives, outcomes, and success definition",
+  "description": "Defines what the engagement is expected to achieve and how success will be recognized.",
+  "questions": [
+    {
+      "id": "objectives-and-success.outcomes",
+      "tier": "required",
+      "prompt": "Which business and technical outcomes define success?",
+      "answer_type": "list",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Objectives, outcomes, and success definition/clarification-1"
+    },
+    {
+      "id": "objectives-and-success.measures",
+      "tier": "required",
+      "prompt": "What measures and targets will demonstrate progress and results?",
+      "answer_type": "table",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Objectives, outcomes, and success definition/clarification-2"
+    },
+    {
+      "id": "objectives-and-success.acceptance",
+      "tier": "optional",
+      "prompt": "Who confirms that the outcomes have been achieved?",
+      "answer_type": "people",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Objectives, outcomes, and success definition/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "outcomes",
+      "type": "kpi-row",
+      "renderer": "./html.mjs#outcomes",
+      "uses": [
+        "objectives-and-success.outcomes",
+        "objectives-and-success.measures",
+        "objectives-and-success.acceptance"
+      ]
+    }
+  ]
+}

@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 import mimetypes
 import os
@@ -28,9 +29,23 @@ from pathlib import Path
 
 
 SCRIPT = Path(__file__).resolve()
-APP_DIR = SCRIPT.parents[2] / "workspace-review-updates" / "assets" / "review-app"
+PLUGIN_ROOT = SCRIPT.parents[2]
+SOURCE_APP_DIR = PLUGIN_ROOT / "skills" / "workspace-review" / "assets" / "review-app"
+INSTALLED_APP_DIR = PLUGIN_ROOT / "workspace-review" / "assets" / "review-app"
+APP_DIR = SOURCE_APP_DIR if SOURCE_APP_DIR.is_dir() else INSTALLED_APP_DIR
 STARTED_PROCESSES: dict[str, subprocess.Popen] = {}
 CONFIGURED_ROOT: Path | None = None
+PERMISSION_EXIT = 77
+PERMISSION_HINT = (
+    "Local review server access was blocked by runtime permissions. "
+    "Retry this same command with scoped host access using the agent's permission mechanism. "
+    "Keep the server bound to 127.0.0.1; do not change filesystem permissions or disable the sandbox."
+)
+
+
+class LocalServerPermissionError(PermissionError):
+    """A sandbox blocked a loopback operation; existing state must be preserved."""
+
 
 
 def configure_root(root: Path) -> None:
@@ -38,7 +53,7 @@ def configure_root(root: Path) -> None:
     resolved = root.resolve()
     if CONFIGURED_ROOT == resolved:
         return
-    os.environ["EAD_REPO_ROOT"] = str(resolved)
+    os.environ["ASCENT_OPPORTUNITY_ROOT"] = str(resolved)
     for module in ("paths", "trackers", "validate_updates", "review_store"):
         sys.modules.pop(module, None)
     CONFIGURED_ROOT = resolved
@@ -85,7 +100,10 @@ def healthy(state: dict | None) -> bool:
     try:
         result = request_json(f"http://127.0.0.1:{state['port']}/api/health")
         return result.get("ok") is True and result.get("instance_id") == state.get("instance_id")
-    except (OSError, ValueError, urllib.error.URLError):
+    except (OSError, ValueError, urllib.error.URLError) as exc:
+        reason = getattr(exc, "reason", exc)
+        if isinstance(reason, PermissionError) or getattr(reason, "errno", None) in (errno.EPERM, errno.EACCES):
+            raise LocalServerPermissionError(PERMISSION_HINT) from exc
         return False
 
 
@@ -97,6 +115,76 @@ class ReviewServer(ThreadingHTTPServer):
         self.review_token = token
         self.root_path = root
         self.instance_id = instance_id
+        self.accepted_cache: dict[str, object] = {"signature": None, "items": []}
+        self.link_options_cache: dict[str, object] = {"signature": None, "items": []}
+
+
+def accepted_cache_signature(root: Path, schema: dict) -> tuple[tuple[str, int, int], ...]:
+    paths = [root / definition["tracker_file"] for definition in schema["categories"].values()]
+    applied = root / "workspace" / ".system" / "applied-updates"
+    paths.extend(applied.glob("*.y*ml"))
+    return tuple(sorted((str(path), path.stat().st_mtime_ns, path.stat().st_size)
+                        for path in paths if path.is_file()))
+
+
+def accepted_items(server: ReviewServer) -> list[dict]:
+    from paths import load_schema
+    from trackers import id_column, read_rows
+    import review_store
+
+    schema = load_schema()
+    signature = accepted_cache_signature(server.root_path, schema)
+    if server.accepted_cache["signature"] == signature:
+        return server.accepted_cache["items"]
+    evidence_index = review_store.applied_evidence_index()
+    items = []
+    for category, definition in schema["categories"].items():
+        try:
+            rows = read_rows(category, schema)
+        except FileNotFoundError:
+            rows = []
+        for row in rows:
+            source_refs = [ref.strip() for ref in str(row.get("Source Refs", "")).split(schema["list_delimiter"]) if ref.strip()]
+            tracker_id = row.get(id_column(category, schema), "")
+            title = review_store.display_label(category, row, schema)
+            items.append({
+                "category": category,
+                "category_label": category.replace("_", " ").title(),
+                "tracker_id": tracker_id,
+                "title": title,
+                "status": row.get("Status", ""),
+                "fields": row,
+                "field_schema": definition.get("columns", []),
+                "source_refs": source_refs,
+                "evidence": review_store.accepted_evidence(category, tracker_id, row, source_refs, evidence_index),
+            })
+    server.accepted_cache = {
+        "signature": signature,
+        "items": items,
+    }
+    return items
+
+
+def accepted_link_options(server: ReviewServer) -> list[dict]:
+    """Return link picker data without reconstructing evidence."""
+    from paths import load_schema
+    from trackers import id_column, read_rows
+    import review_store
+
+    schema = load_schema()
+    signature = tuple(sorted((str(path), path.stat().st_mtime_ns, path.stat().st_size)
+                             for path in {server.root_path / definition["tracker_file"]
+                                          for definition in schema["categories"].values()} if path.is_file()))
+    if server.link_options_cache["signature"] == signature:
+        return server.link_options_cache["items"]
+    items = []
+    for category, definition in schema["categories"].items():
+        for row in read_rows(category, schema):
+            title = review_store.display_label(category, row, schema)
+            items.append({"category": category, "category_label": category.replace("_", " ").title(),
+                          "tracker_id": row.get(id_column(category, schema), ""), "title": title, "fields": row})
+    server.link_options_cache = {"signature": signature, "items": items}
+    return items
 
 
 class ReviewHandler(BaseHTTPRequestHandler):
@@ -182,28 +270,10 @@ class ReviewHandler(BaseHTTPRequestHandler):
             self.json(200, review_store.list_cards())
             return
         if path == "/api/accepted":
-            from paths import load_schema
-            from trackers import id_column, read_rows
-
-            schema = load_schema()
-            items = []
-            for category, definition in schema["categories"].items():
-                try:
-                    rows = read_rows(category, schema)
-                except FileNotFoundError:
-                    rows = []
-                for row in rows:
-                    title = row.get(f"{category.replace('_', ' ').title()} Title") or row.get("Statement") or "Untitled"
-                    items.append({
-                        "category": category,
-                        "category_label": category.replace("_", " ").title(),
-                        "tracker_id": row.get(id_column(category, schema), ""),
-                        "title": title,
-                        "status": row.get("Status", ""),
-                        "fields": row,
-                        "field_schema": definition.get("columns", []),
-                    })
-            self.json(200, {"items": items})
+            self.json(200, {"items": accepted_items(self.server)})
+            return
+        if path == "/api/link-options":
+            self.json(200, {"items": accepted_link_options(self.server)})
             return
         if path == "/source":
             source_ref = query.get("path", [""])[0]
@@ -284,6 +354,12 @@ class ReviewHandler(BaseHTTPRequestHandler):
                 body.get("proposal_id", ""), body.get("revision"), str(body.get("reason", ""))),
             "/api/flag": lambda body: review_store.flag(
                 body.get("proposal_id", ""), body.get("revision"), str(body.get("note", ""))),
+            "/api/create": lambda body: review_store.create(
+                str(body.get("category", "")), str(body.get("source_ref", ""))),
+            "/api/accepted/reject": lambda body: review_store.reject_accepted(
+                str(body.get("category", "")), str(body.get("tracker_id", "")), str(body.get("reason", ""))),
+            "/api/accepted/pending": lambda body: review_store.move_accepted_to_pending(
+                str(body.get("category", "")), str(body.get("tracker_id", ""))),
         }
         if path == "/api/stop":
             self.json(200, {"stopping": True})
@@ -337,7 +413,11 @@ class ReviewHandler(BaseHTTPRequestHandler):
 
 def serve(root: Path, token: str, instance_id: str) -> int:
     configure_root(root)
-    server = ReviewServer(("127.0.0.1", 0), token, root, instance_id)
+    try:
+        server = ReviewServer(("127.0.0.1", 0), token, root, instance_id)
+    except PermissionError:
+        print(PERMISSION_HINT, file=sys.stderr)
+        return PERMISSION_EXIT
     state = {
         "pid": os.getpid(),
         "port": server.server_port,
@@ -377,6 +457,14 @@ def start(root: Path) -> int:
         STARTED_PROCESSES[instance_id] = process
     deadline = time.monotonic() + 8
     while time.monotonic() < deadline:
+        returncode = process.poll()
+        if returncode is not None:
+            STARTED_PROCESSES.pop(instance_id, None)
+            if returncode == PERMISSION_EXIT:
+                print(PERMISSION_HINT, file=sys.stderr)
+            else:
+                print(f"review server exited with status {returncode}; see {log}", file=sys.stderr)
+            return returncode or 1
         state = read_state(root)
         if healthy(state):
             print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
@@ -465,4 +553,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except LocalServerPermissionError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(PERMISSION_EXIT)

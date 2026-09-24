@@ -56,6 +56,19 @@
   --chartreuse-light-2: #EFFFA6;
   --chartreuse-light-3: #F8FFDB;
 
+  /* --- Status ------------------------------------------------------------
+     Not in the Slalom Brand Guide. A documented, deliberate deviation for
+     the weekly-status-report RAG scorecard, where a client expects literal
+     traffic-light colour, not just a Slalom Blue-derived accent. Colour is
+     always decoration alongside a printed status word (validate-brand.mjs
+     rule 19); it never carries the value alone. See validate-brand.mjs's
+     STATUS_COLORS for the matching allowlist and the "deviation" warning
+     this triggers on every build that uses them.
+     ------------------------------------------------------------------- */
+  --status-green: #2E7D32;
+  --status-amber: #FFA000;
+  --status-red: #D32F2F;
+
   /* ======================================================================
      SURFACES
 

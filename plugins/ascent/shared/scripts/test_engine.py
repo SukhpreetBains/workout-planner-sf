@@ -48,7 +48,7 @@ class EngineTest(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.root = Path(cls.tmp.name)
-        cls.env = {**os.environ, "EAD_REPO_ROOT": str(cls.root)}
+        cls.env = {**os.environ, "ASCENT_OPPORTUNITY_ROOT": str(cls.root)}
         meetings = cls.root / "workspace" / "meetings"
         meetings.mkdir(parents=True)
         (meetings / "2026-08-14 - Test.md").write_text(
@@ -70,8 +70,15 @@ class EngineTest(unittest.TestCase):
     def test_pipeline(self):
         proposed = self.root / "workspace" / ".system" / "proposed-updates"
 
+        out = self.run_script("sync.py", "--check-setup")
+        self.assertIn("not ready", out)
+        self.assertIn("trackers: 0/", out)
+
         out = self.run_script("init_trackers.py")
         self.assertIn("created workspace/trackers/stakeholders.xlsx", out)
+
+        out = self.run_script("sync.py", "--check-setup")
+        self.assertIn("ready: this looks like an initialized Opportunity workspace", out)
 
         bad = proposed / "bad.yaml"
         bad.write_text(BAD_UPDATES, encoding="utf-8")

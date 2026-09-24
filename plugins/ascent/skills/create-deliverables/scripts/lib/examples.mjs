@@ -1,88 +1,143 @@
-/** Load module-owned example source and compose structure previews. */
+/** Load a template-owned static example and compose structure previews. */
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { ContentError } from './content.mjs';
+import { ContentError, parseContentFile } from './content.mjs';
+import { SHARED_DIR } from './assets.mjs';
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
-function readExample(module, skillRoot, problems) {
-  const file = path.join(skillRoot, 'modules', module.id, 'example.json');
-  if (!existsSync(file)) {
-    problems.push(`${module.id}: missing example.json`);
+/** Resolve `relativeFile` against `baseDir`, refusing to escape it. */
+function resolveExampleFile(baseDir, relativeFile, label, problems) {
+  if (typeof relativeFile !== 'string' || !relativeFile.trim()) {
+    problems.push(`${label} must declare a static example path`);
     return null;
   }
+  const file = path.resolve(baseDir, relativeFile);
+  if (file !== baseDir && !file.startsWith(`${baseDir}${path.sep}`)) {
+    problems.push(`${label}: static example must stay inside ${baseDir}`);
+    return null;
+  }
+  if (!existsSync(file)) {
+    problems.push(`${label}: missing ${relativeFile}`);
+    return null;
+  }
+  return file;
+}
+
+/**
+ * Parse `file` as a static example and validate it against `modules`: every
+ * non-cover authorable view selected by the template must appear exactly
+ * once. Used identically for a template's own static example and for an
+ * industry pack's full alternate example — an override is held to the same
+ * completeness bar as the template's own file, not a partial patch.
+ */
+function readAndValidateExample(file, archetype, modules, label, problems) {
   let example;
   try {
-    example = JSON.parse(readFileSync(file, 'utf8'));
+    example = parseContentFile(file);
   } catch (err) {
-    problems.push(`${module.id}: example.json is not valid JSON (${err.message})`);
+    problems.push(`${label}: ${path.basename(file)} is invalid (${err.message})`);
     return null;
   }
   if (!isObject(example)) {
-    problems.push(`${module.id}: example.json must be a mapping`);
+    problems.push(`${label}: static example must be a mapping`);
     return null;
   }
-  if (example.schema_version !== 1) problems.push(`${module.id}: example schema_version must be 1`);
-  if (example.module !== module.id) problems.push(`${module.id}: example module must be ${module.id}`);
+  // Structure previews relocate the composed content to a temp directory
+  // before build() ever sees it (see buildStructurePreview), so a relative
+  // meta.client_logo/cover_background authored against this file's own
+  // location would silently resolve against the wrong directory instead.
+  // Rewrite to absolute here, while the real source directory is known.
+  if (isObject(example.meta)) {
+    const sourceDir = path.dirname(file);
+    for (const key of ['client_logo', 'cover_background']) {
+      const value = example.meta[key];
+      if (typeof value === 'string' && value && !path.isAbsolute(value)) {
+        example.meta[key] = path.resolve(sourceDir, value);
+      }
+    }
+  }
+  if (example.meta?.archetype !== archetype.name) {
+    problems.push(`${label}: static example meta.archetype must be ${archetype.name}`);
+  }
   if (!Array.isArray(example.sections)) {
-    problems.push(`${module.id}: example sections must be a list`);
+    problems.push(`${label}: static example sections must be a list`);
     return example;
   }
 
-  const authorableViews = module.output.filter((output) => output.type !== 'cover');
-  const knownViews = new Set(authorableViews.map((output) => output.id));
-  const seenViews = new Set();
+  const authorableViews = new Map(modules.flatMap((module) =>
+    module.output
+      .filter((output) => output.type !== 'cover')
+      .map((output) => [`${module.id}:${output.id}`, { module, output }])));
+  const seenViews = new Map();
   for (const [index, section] of example.sections.entries()) {
-    const where = `${module.id}.example.sections[${index}]`;
+    const where = `${label}.sections[${index}]`;
     if (!isObject(section)) {
       problems.push(`${where} must be a mapping`);
       continue;
     }
-    if (section.type !== undefined || section.module !== undefined) {
-      problems.push(`${where} declares only a view and its example data`);
-    }
-    if (!knownViews.has(section.view)) problems.push(`${where}.view is not an authorable module view`);
-    else if (seenViews.has(section.view)) problems.push(`${where}.view repeats ${section.view}`);
-    else seenViews.add(section.view);
+    if (section.type !== undefined) problems.push(`${where} must not declare type`);
+    const key = `${section.module}:${section.view}`;
+    if (!authorableViews.has(key)) problems.push(`${where} does not match a selected module view`);
+    else seenViews.set(key, (seenViews.get(key) ?? 0) + 1);
   }
-  for (const output of authorableViews) {
-    if (!seenViews.has(output.id)) problems.push(`${module.id}: example is missing view ${output.id}`);
-  }
-  if (module.output.some((output) => output.type === 'cover') && !isObject(example.cover)) {
-    problems.push(`${module.id}: the module owns a cover view, so example.cover is required`);
+  for (const [key] of authorableViews) {
+    if (!seenViews.has(key)) problems.push(`${label}: static example is missing ${key}`);
+    else if (seenViews.get(key) > 1) problems.push(`${label}: static example repeats ${key}`);
   }
   return example;
 }
 
-export function composeStructurePreview(archetype, modules, skillRoot, { previewModule = null } = {}) {
+function readTemplateExample(archetype, modules, skillRoot, problems) {
+  const templateDir = path.join(skillRoot, 'templates', archetype.name);
+  const file = resolveExampleFile(templateDir, archetype.static_example, archetype.name, problems);
+  if (!file) return null;
+  return readAndValidateExample(file, archetype, modules, archetype.name, problems);
+}
+
+/**
+ * Resolve `shared/industry/<industry>/manifest.json` and the template-name
+ * entry under its `examples.static_examples`, then validate that file the
+ * same way as a template's own static example. Returns null (with a problem
+ * pushed) if the pack, the manifest field, or the file itself is missing —
+ * an industry with no override for this template is a configuration
+ * problem to report, not something to silently fall back from.
+ */
+function readIndustryExample(archetype, modules, industry, problems) {
+  const label = `industry ${industry}`;
+  const packDir = path.join(SHARED_DIR, 'industry', industry);
+  const manifestFile = path.join(packDir, 'manifest.json');
+  if (!existsSync(manifestFile)) {
+    problems.push(`${label}: no such industry pack (expected ${manifestFile})`);
+    return null;
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(manifestFile, 'utf8'));
+  } catch (err) {
+    problems.push(`${label}: manifest.json is invalid (${err.message})`);
+    return null;
+  }
+  const relativeFile = manifest.examples?.static_examples?.[archetype.name];
+  if (!relativeFile) {
+    problems.push(`${label}: has no static example override for template \`${archetype.name}\``);
+    return null;
+  }
+  const file = resolveExampleFile(packDir, relativeFile, label, problems);
+  if (!file) return null;
+  return readAndValidateExample(file, archetype, modules, label, problems);
+}
+
+export function composeStructurePreview(archetype, modules, skillRoot, { previewModule = null, industry = null } = {}) {
   const problems = [];
-  const examples = modules.map((module) => ({ module, example: readExample(module, skillRoot, problems) }));
+  const example = industry
+    ? readIndustryExample(archetype, modules, industry, problems)
+    : readTemplateExample(archetype, modules, skillRoot, problems);
   if (previewModule && !modules.some((module) => module.id === previewModule)) {
     problems.push(`preview module ${previewModule} is not selected by template ${archetype.name}`);
   }
-  if (problems.length) throw new ContentError(problems.map((problem) => `module examples: ${problem}`));
-
-  const coverOwner = examples.find(({ module }) => module.output.some((output) => output.type === 'cover'));
-  const cover = coverOwner?.example.cover ?? {};
-  const title = previewModule
-    ? `${modules.find((module) => module.id === previewModule).title} module preview`
-    : `${archetype.title} module preview`;
-  return {
-    meta: {
-      archetype: archetype.name,
-      client: cover.client ?? 'Fictional example organization',
-      title,
-      subtitle: previewModule
-        ? 'An isolated example of every view owned by this module'
-        : 'Every template module shown with fictional example content',
-      date: cover.date ?? '2026-01-15',
-      authors: cover.authors ?? [{ name: 'Example delivery team', role: 'Structure preview' }],
-      classification: cover.classification ?? 'Internal draft',
-      accent: cover.accent ?? 'cyan',
-    },
-    sections: examples.flatMap(({ module, example }) =>
-      example.sections.map((section) => ({ ...section, module: module.id }))),
-  };
+  if (problems.length) throw new ContentError(problems.map((problem) => `static template example: ${problem}`));
+  return example;
 }

@@ -27,7 +27,9 @@ export function detachBuild(buildDir, outDir, { confirmIncomplete = false } = {}
   const sourceDir = path.join(destination, 'src');
   mkdirSync(destination, { recursive: true });
   cpSync(sourceBuild, sourceDir, { recursive: true });
-  const staleBundle = path.join(sourceDir, 'bundle.html');
+  const staleBundle = buildManifest.bundle_filename
+    ? path.join(sourceDir, buildManifest.bundle_filename)
+    : path.join(sourceDir, 'bundle.html');
   if (existsSync(staleBundle)) rmSync(staleBundle);
 
   const detachedAt = new Date().toISOString();

@@ -28,11 +28,25 @@ AGENTS_FILE_NAME = "AGENTS.md"
 SKILL_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_WORKSPACE_TEMPLATE = SKILL_ROOT / "assets" / "workspace-template"
 AGENTS_TEMPLATE_PATH = SKILL_ROOT / "references" / "agent-workspace-template.md"
+ACCOUNT_AGENTS_TEMPLATE_PATH = SKILL_ROOT / "references" / "account-agent-workspace-template.md"
 
 
 def agents_md_content(opportunity_name: str) -> str:
     template = AGENTS_TEMPLATE_PATH.read_text(encoding="utf-8")
     return template.replace("{{OPPORTUNITY_NAME}}", opportunity_name)
+
+
+def ensure_account_agents_file(account_root: Path, write: bool) -> bool:
+    agents_path = account_root / AGENTS_FILE_NAME
+    if agents_path.is_file():
+        print(f"ready: {agents_path}")
+        return True
+    if not write:
+        print(f"missing: {agents_path}")
+        return False
+    agents_path.write_text(ACCOUNT_AGENTS_TEMPLATE_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+    print(f"created: {agents_path}")
+    return True
 
 
 def ensure_agents_file(opportunity_path: Path, write: bool) -> bool:
@@ -80,7 +94,7 @@ def expected_entries(template_root: Path) -> list[tuple[Path | None, Path]]:
     return entries
 
 
-def print_template_status(opportunity_path: Path, template_root: Path) -> list[str]:
+def print_template_status(account_root: Path, opportunity_path: Path, template_root: Path) -> list[str]:
     missing: list[str] = []
     for source, relative in expected_entries(template_root):
         target = opportunity_path / relative
@@ -91,12 +105,12 @@ def print_template_status(opportunity_path: Path, template_root: Path) -> list[s
         else:
             print(f"missing: {target}")
             missing.append(relative.as_posix())
-    agents_path = opportunity_path / AGENTS_FILE_NAME
-    if agents_path.is_file():
-        print(f"ready: {agents_path}")
-    else:
-        print(f"missing: {agents_path}")
-        missing.append(AGENTS_FILE_NAME)
+    for agents_path in (account_root / AGENTS_FILE_NAME, opportunity_path / AGENTS_FILE_NAME):
+        if agents_path.is_file():
+            print(f"ready: {agents_path}")
+        else:
+            print(f"missing: {agents_path}")
+            missing.append(agents_path.relative_to(account_root).as_posix())
     return missing
 
 
@@ -141,11 +155,12 @@ def check_local_write_readiness(path: Path) -> bool:
     return False
 
 
-def prepare_opportunity(opportunity_path: Path, template_root: Path) -> int:
+def prepare_opportunity(account_root: Path, opportunity_path: Path, template_root: Path) -> int:
     try:
         opportunity_path.mkdir(exist_ok=True)
         copy_missing_workspace(template_root, opportunity_path)
         ensure_deliverables(opportunity_path)
+        ensure_account_agents_file(account_root, write=True)
         ensure_agents_file(opportunity_path, write=True)
     except OSError as error:
         print(f"Could not prepare Opportunity folder: {error}", file=sys.stderr)
@@ -196,13 +211,13 @@ def main() -> int:
 
     if args.check_only:
         if opportunity_path.is_dir():
-            print_template_status(opportunity_path, template_root)
+            print_template_status(account_root, opportunity_path, template_root)
         else:
             print(f"ready to create: {opportunity_path}")
         print("check complete: no folders or files were created or changed")
         return 0
 
-    return prepare_opportunity(opportunity_path, template_root)
+    return prepare_opportunity(account_root, opportunity_path, template_root)
 
 
 if __name__ == "__main__":

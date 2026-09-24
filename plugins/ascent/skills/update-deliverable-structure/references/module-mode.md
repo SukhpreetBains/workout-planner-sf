@@ -38,11 +38,13 @@ Create or modify one reusable content-domain module.
    finished module views there. If composition is insufficient, explain why
    before adding a primitive, then update its schema, styles, motion, tests, and
    relevant template allowlists.
-7. Add `modules/<module-id>/example.json` with fictional example data for every
-   authorable view in `module.json`. If the module owns a cover view, include its
-   fictional cover metadata. Never use real client information.
-8. Render the module directly with `build.mjs --preview-module <module-id>`.
-   Give the user the bundled preview link and iterate until approved.
+7. Add fictional example content for every authorable view to the representative
+   template's declared `static_example` file. If the module owns a cover view,
+   update the static example's cover metadata. Modules do not own example data.
+   Never use real client information.
+8. Render the module from that static template example with
+   `build.mjs --preview-module <module-id>`. Give the user the bundled preview
+   link and iterate until approved.
 9. Render the same module inside a representative template. Check neighboring
    sections, progress navigation, responsive behavior, reduced motion, print,
    JavaScript-disabled reading, and keyboard order. Obtain explicit approval.

@@ -1,0 +1,8 @@
+interface:
+  display_name: "Compose Deliverable"
+  short_description: "Build a Slalom-branded PowerPoint deliverable"
+  icon_small: "./assets/skill-icon.svg"
+  icon_large: "./assets/skill-icon.svg"
+
+policy:
+  allow_implicit_invocation: false

@@ -17,7 +17,7 @@
 #   - "Source Refs", "Created At", "Updated At" exist on every tab and are
 #     managed by apply_updates.py ("Source Refs" comes from the update file).
 
-schema_version: "1.1"
+schema_version: "1.2"
 list_delimiter: "; "
 
 trackers:
@@ -33,6 +33,9 @@ trackers:
   raid:
     file: workspace/trackers/raid.xlsx
     tabs: [risk, assumption, issue, decision, dependency, constraint, open_question]
+  delivery:
+    file: workspace/trackers/delivery.xlsx
+    tabs: [session, operating_model, plan_item, workflow_stage, working_agreement, action_item]
 
 categories:
   stakeholder:
@@ -305,3 +308,131 @@ categories:
       - {name: Answer}
       - {name: Status, required: true, default: open,
          enum: [open, answered, parked]}
+
+  session:
+    tab: Sessions
+    id_prefix: SES-
+    what_belongs: >
+      A planned one-time or recurring interaction with a defined purpose,
+      participants, owner, and timing.
+    bar_to_clear: >
+      A named meeting, workshop, ceremony, review, or kickoff with enough
+      detail to schedule or facilitate it.
+    columns:
+      - {name: Name, required: true}
+      - {name: Session Type, required: true,
+         enum: [kickoff, workshop, governance, delivery_ceremony, review, training, other]}
+      - {name: Purpose}
+      - {name: Owner Stakeholder IDs, links_to: stakeholder}
+      - {name: Participant Stakeholder IDs, links_to: stakeholder}
+      - {name: Frequency}
+      - {name: Scheduled Start, type: date}
+      - {name: Duration}
+      - {name: Agenda}
+      - {name: Status, required: true, default: planned,
+         enum: [planned, active, completed, cancelled]}
+
+  operating_model:
+    tab: Operating Model
+    id_prefix: OPM-
+    what_belongs: >
+      A governance or delivery grouping, responsibility assignment, decision
+      right, or escalation arrangement that defines how work is led or delivered.
+    bar_to_clear: >
+      A stated structure or activity assignment with named roles or decision
+      accountability, not merely a list of people.
+    columns:
+      - {name: Name, required: true}
+      - {name: Model Type, required: true,
+         enum: [governance, leadership, delivery, adoption, responsibility_assignment, other]}
+      - {name: Purpose}
+      - {name: Activity}
+      - {name: Member Stakeholder IDs, links_to: stakeholder}
+      - {name: Responsible Stakeholder IDs, links_to: stakeholder}
+      - {name: Accountable Stakeholder IDs, links_to: stakeholder}
+      - {name: Consulted Stakeholder IDs, links_to: stakeholder}
+      - {name: Informed Stakeholder IDs, links_to: stakeholder}
+      - {name: Decision Rights}
+      - {name: Escalation Path}
+      - {name: Status, required: true, default: active,
+         enum: [proposed, active, retired]}
+
+  plan_item:
+    tab: Delivery Plan
+    id_prefix: PLN-
+    what_belongs: >
+      A dated unit of planned work, outcome, release, or decision point in a
+      delivery plan.
+    bar_to_clear: >
+      A named phase, workstream, iteration, task, milestone, or release with a
+      timing, sequencing, ownership, or outcome signal.
+    columns:
+      - {name: Name, required: true}
+      - {name: Plan Item Type, required: true,
+         enum: [phase, workstream, iteration, task, milestone, release]}
+      - {name: Parent Item}
+      - {name: Start Date, type: date}
+      - {name: End Date, type: date}
+      - {name: Owner Stakeholder IDs, links_to: stakeholder}
+      - {name: Planned Outcome}
+      - {name: Dependency IDs, links_to_any: [plan_item, dependency]}
+      - {name: Status, required: true, default: planned,
+         enum: [planned, active, complete, delayed, cancelled]}
+
+  workflow_stage:
+    tab: Workflow Stages
+    id_prefix: WFS-
+    what_belongs: >
+      A defined stage in a repeatable work process, including entry criteria,
+      exit criteria, participating roles, and permitted next stages.
+    bar_to_clear: >
+      A named state or transition in a workflow, not a one-time project task.
+    columns:
+      - {name: Workflow Name, required: true}
+      - {name: Stage Name, required: true}
+      - {name: Sequence}
+      - {name: Description}
+      - {name: Participating Stakeholder IDs, links_to: stakeholder}
+      - {name: Entry Criteria}
+      - {name: Exit Criteria}
+      - {name: Allowed Next Stages}
+      - {name: Rework Stages}
+      - {name: Status, required: true, default: active,
+         enum: [draft, active, retired]}
+
+  working_agreement:
+    tab: Working Agreements
+    id_prefix: WAG-
+    what_belongs: >
+      A shared expectation for communication, availability, documentation,
+      responsiveness, decision making, or collaboration behavior.
+    bar_to_clear: >
+      An explicit team norm or operating convention intended to guide recurring
+      delivery behavior.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Agreement Type, required: true,
+         enum: [availability, communication, documentation, decision_making, collaboration, other]}
+      - {name: Applies To Stakeholder IDs, links_to: stakeholder}
+      - {name: Owner Stakeholder IDs, links_to: stakeholder}
+      - {name: Status, required: true, default: proposed,
+         enum: [proposed, agreed, retired]}
+
+  action_item:
+    tab: Action Items
+    id_prefix: ACT-
+    what_belongs: >
+      A specific owned follow-up action needed to progress work, resolve a
+      blocker, or prepare for a future event.
+    bar_to_clear: >
+      A concrete verb-led commitment with an owner, or with a clearly stated
+      need to assign one.
+    columns:
+      - {name: Statement, required: true}
+      - {name: Owner Stakeholder IDs, links_to: stakeholder}
+      - {name: Due Date, type: date}
+      - {name: Related Plan Item IDs, links_to: plan_item}
+      - {name: Related RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
+      - {name: Next Event}
+      - {name: Status, required: true, default: open,
+         enum: [open, in_progress, blocked, complete, cancelled]}

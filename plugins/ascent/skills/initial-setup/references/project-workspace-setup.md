@@ -1,69 +1,57 @@
 # Project Workspace Setup
 
-Initialize the standard workspace after the Opportunity path is confirmed and writable. The workflow is resumable: create missing state and preserve existing files and tracker rows.
+Initialize the standard workspace after the Opportunity path is confirmed and writable. The workflow is resumable: create missing state and preserve existing files, identity fields, project details, and tracker rows.
 
-Generated output artifacts, including decks, documents, and sites, belong in `workspace/deliverables/`. `Deliverables/` is reserved for a human to promote reviewed material into the appropriate delivery phase.
+Generated output artifacts belong in `workspace/draft-deliverables/`. `Deliverables/` is reserved for a human to promote reviewed material into the appropriate delivery phase.
 
-## 1. Locate the workspace engine
+## Run the orchestrated setup
 
-Locate `shared/` at the installed Ascent plugin root. Set `EAD_REPO_ROOT` to the Opportunity folder before invoking its `scripts/py` launcher so all generated state lands beneath `<Opportunity>/workspace/`.
-
-On macOS or Linux:
+Locate `shared/` and `initial-setup/` at the installed Ascent plugin root. Set `ASCENT_OPPORTUNITY_ROOT` to the confirmed Opportunity folder and invoke the setup script through the shared launcher:
 
 ```text
-EAD_REPO_ROOT="<Opportunity folder>" <shared-skill-dir>/scripts/py <shared-skill-dir>/scripts/init_trackers.py
+ASCENT_OPPORTUNITY_ROOT="<Opportunity folder>" <shared-dir>/scripts/py <initial-setup-dir>/scripts/setup-workspace.py --opportunity "<Opportunity folder>" --account "<account name>" --opportunity-name "<opportunity name>"
 ```
 
-On Windows, set `EAD_REPO_ROOT` for the command session and use `scripts/py.cmd`.
+On Windows, set `ASCENT_OPPORTUNITY_ROOT` for the command session and use `<shared-dir>/scripts/py.cmd` with the same setup arguments.
 
-The launcher creates `<Opportunity>/workspace/.system/.venv/` for runtime dependencies so generated project state remains inside `workspace/`.
+Set `ASCENT_PYTHON` to the exact supported Python interpreter that should build or reuse the environment. Use `ASCENT_CACHE_DIR` only when the default per-user Ascent cache location must be overridden. Do not rely on the platform's ambiguous `python` or `python3` command selection.
 
-## 2. Initialize trackers
+The command runs the full sequence:
 
-Run `init_trackers.py`. It creates missing tracker workbooks and tabs without changing existing rows.
+1. Resolve or create the per-user cached Python environment.
+2. Write `workspace/.system/.venv-path` as a pointer to that environment. Do not place the environment inside the synced Opportunity folder.
+3. Create or preserve the tracker workbooks and tabs.
+4. Reconcile `workspace/.system/project.yaml` and `workspace/project/Project Overview.md` with the confirmed Account and Opportunity, preserving all other content.
+5. Refresh the workspace search index.
+6. Print the readiness report defined by [the setup readiness contract](setup-readiness.md).
 
-## 3. Record project basics
+The launcher must not silently install dependencies. If dependencies are missing, explain what is required and obtain approval before rerunning with `--install-dependencies`.
 
-Use the Account and Opportunity already confirmed during setup. Ask only for missing details:
+## Identity boundary
 
-- engagement type
-- a short engagement summary
-- key dates
-- current focus
+Use only the Account and Opportunity already confirmed during setup. Do not ask for engagement details, summaries, dates, focus areas, or optional project context.
 
-Write:
+The project communications record remains `workspace/.system/source-context.yaml`; the ingested-document ledger remains `workspace/.system/sources.yaml`.
+
+## Record industry flavor, if applicable
+
+After identity is recorded, follow **Confirm industry flavor** in
+`SKILL.md`. When the user picks a pack (or explicitly declines), add one
+more key to the same `project.yaml`, reconciled the same way:
 
 ```yaml
 # workspace/.system/project.yaml
 account: <account name>
 opportunity: <opportunity name>
-engagement_type: <type or null>
-summary: <summary or null>
-dates: <dates or null>
-current_focus: <focus or null>
+industry: <pack id, or the literal `none`>
 ```
 
-Update `workspace/project/Project Overview.md` with the same information in readable prose. Preserve useful existing content.
+This key is optional and only ever written after the user answers the
+industry question — never inferred, and never added when no packs exist
+to offer.
 
-The project communications record remains `workspace/.system/source-context.yaml`; the ingested-document ledger remains `workspace/.system/sources.yaml`.
+## Document boundary
 
-## 4. Process starting material
+Do not inspect `workspace/inbox/`, ask about documents, or invoke a document-processing workflow during setup. Existing documents remain untouched.
 
-For a **new** Opportunity, ask the user: "Do you have any starting documents to add to `workspace/inbox/` now — SOWs, notes, transcripts, exports? Let me know when they're in place, or tell me to continue without them." Wait for their reply before re-checking the inbox; do not treat silence or a quick reply as "no documents" without confirming.
-
-For an **existing** Opportunity, check `workspace/inbox/` once without prompting — documents may already be filed or waiting from prior sessions.
-
-In both cases: if `workspace/inbox/` contains files, invoke `workspace-ingest-documents` — it handles both ordinary documents and meeting transcripts or raw notes. If the inbox is empty after this check, continue without treating it as an error — the user can add material at any later time and mention it to trigger the same skill.
-
-Do not apply proposed updates. Direct the user to `workspace-review-updates` when review is needed.
-
-## 5. Sync
-
-Run `sync.py` through the same launcher and `EAD_REPO_ROOT` value. Report:
-
-- trackers created or preserved
-- documents filed
-- proposed updates by category
-- missing project basics
-- search-index status
-- the next best workflow by skill name
+At handoff, follow [the setup readiness contract](setup-readiness.md). Users with documents should place them in the confirmed `<Opportunity folder>/workspace/inbox/` and open a fresh agent chat scoped to that Opportunity for `workspace-add`.

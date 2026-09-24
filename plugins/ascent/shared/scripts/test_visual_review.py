@@ -27,7 +27,7 @@ class VisualReviewTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
-        os.environ["EAD_REPO_ROOT"] = str(self.root)
+        os.environ["ASCENT_OPPORTUNITY_ROOT"] = str(self.root)
         for name in ("paths", "trackers", "validate_updates", "review_store", "review_server", "sync"):
             sys.modules.pop(name, None)
         self.paths = importlib.import_module("paths")
@@ -71,6 +71,28 @@ class VisualReviewTest(unittest.TestCase):
         value.update(overrides)
         return value
 
+    def test_trackers_only_sync_exports_accepted_values_without_document_scan(self):
+        self.proposal([self.risk(), self.risk(fields={"Statement": "Still pending."})])
+        card = self.store.list_cards()["cards"][0]
+        self.store.accept(card["proposal_id"], card["revision"], "snapshot-accept")
+        sync_module = importlib.import_module("sync")
+        index_before = self.paths.SEARCH_DB.read_bytes()
+        state_before = self.paths.SYNC_STATE.read_bytes()
+        copy_path = self.paths.TRACKER_COPIES_DIR / "risk.yaml"
+        copy_path.unlink()
+        with mock.patch.object(sys, "argv", ["sync.py", "--trackers-only"]), \
+                mock.patch.object(sync_module, "workspace_files", side_effect=AssertionError("document scan")), \
+                mock.patch.object(sync_module, "build_search_index", side_effect=AssertionError("index rebuild")):
+            self.assertEqual(sync_module.main(), 0)
+        snapshot = yaml.safe_load(copy_path.read_text(encoding="utf-8"))
+        self.assertEqual(snapshot["count"], 1)
+        self.assertEqual(snapshot["rows"][0]["Statement"], card["fields"]["Statement"])
+        self.assertTrue(snapshot["rows"][0]["Risk ID"])
+        self.assertIn("Source Refs", snapshot["rows"][0])
+        self.assertEqual(self.paths.SEARCH_DB.read_bytes(), index_before)
+        self.assertEqual(self.paths.SYNC_STATE.read_bytes(), state_before)
+        self.assertEqual(len(self.store.list_cards()["cards"]), 1)
+
     def test_legacy_proposals_upgrade_with_stable_identity(self):
         path = self.proposal([self.risk()])
         first = self.store.list_cards()["cards"][0]
@@ -80,6 +102,16 @@ class VisualReviewTest(unittest.TestCase):
         stored = yaml.safe_load(path.read_text(encoding="utf-8"))["updates"][0]
         self.assertEqual(stored["proposal_id"], first["proposal_id"])
         self.assertIn("review", stored)
+
+    def test_manual_proposal_is_pending_and_categories_include_empty_tabs(self):
+        created = self.store.create("decision", "User Submitted")
+        inbox = self.store.list_cards()
+        card = next(card for card in inbox["cards"] if card["proposal_id"] == created["proposal_id"])
+        self.assertEqual(card["category"], "decision")
+        self.assertEqual(card["review"]["state"], "pending")
+        self.assertEqual(card["source_refs"], ["User Submitted"])
+        self.assertIn("risk", [category["id"] for category in inbox["categories"]])
+        self.assertEqual(inbox["counts"].get("risk", 0), 0)
 
     def test_typed_validation_and_path_containment(self):
         update = self.risk(fields={"Statement": "Risk", "Probability": 1.2,
@@ -167,6 +199,16 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
         self.assertEqual(len(self.store.list_cards()["cards"]), 1)
 
+    def test_accept_explains_onedrive_file_timeout_and_preserves_proposal(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        timeout = OSError(self.store.errno.ETIMEDOUT, "Operation timed out")
+        with mock.patch.object(self.store, "upsert_row", side_effect=timeout):
+            with self.assertRaisesRegex(self.store.ReviewError, "OneDrive"):
+                self.store.accept(card["proposal_id"], card["revision"], "onedrive-timeout")
+        self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
+        self.assertEqual(len(self.store.list_cards()["cards"]), 1)
+
     def test_cross_category_raidd_links(self):
         schema = self.paths.load_schema()
         issue_id = self.trackers.upsert_row("issue", {
@@ -195,6 +237,110 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(len(remaining), 1)
         self.assertEqual(remaining[0]["review"]["state"], "flagged")
         self.assertEqual(self.store.queue_after(0)["items"][0]["note"], "Confirm impact")
+
+        progress = self.store.list_cards()["progress"]
+        self.assertEqual(progress["pending"], 1)
+        self.assertEqual(progress["accepted"], 0)
+        self.assertEqual(progress["rejected"], 1)
+        self.assertEqual(progress["flagged"], 1)
+        self.assertEqual(progress["completed"], 1)
+        self.assertEqual(progress["total"], 2)
+        self.assertEqual(progress["categories"]["risk"]["pending"], 1)
+        self.assertEqual(progress["categories"]["risk"]["rejected"], 1)
+
+    def test_progress_summary_counts_archived_accepts_by_category(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        self.store.accept(card["proposal_id"], card["revision"], "progress-accept")
+
+        progress = self.store.list_cards()["progress"]
+        self.assertEqual(progress["pending"], 0)
+        self.assertEqual(progress["accepted"], 1)
+        self.assertEqual(progress["rejected"], 0)
+        self.assertEqual(progress["completed"], 1)
+        self.assertEqual(progress["total"], 1)
+        self.assertEqual(progress["categories"]["risk"]["accepted"], 1)
+        self.assertEqual(progress["categories"]["risk"]["total"], 1)
+
+    def test_rejecting_an_accepted_value_removes_it_and_keeps_its_evidence(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        accepted = self.store.accept(card["proposal_id"], card["revision"], "accepted-rejection")
+        source_refs = ["workspace/meetings/2026-08-27 - Review.md"]
+
+        # Older accepted archives predate their explicit tracker ID link.
+        applied = next(self.paths.APPLIED_UPDATES_DIR.glob("*.yaml"))
+        archived = yaml.safe_load(applied.read_text(encoding="utf-8"))
+        archived.pop("tracker_id")
+        applied.write_text(yaml.safe_dump(archived, sort_keys=False), encoding="utf-8")
+
+        accepted_row = self.trackers.read_rows("risk", self.paths.load_schema())[0]
+        evidence = self.store.accepted_evidence("risk", accepted["tracker_id"], accepted_row, source_refs)
+        self.assertEqual(evidence, card["evidence"])
+
+        result = self.store.reject_accepted("risk", accepted["tracker_id"], "No longer relevant")
+        self.assertEqual(result["decision"], "rejected")
+        self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
+        rejected = list(self.paths.REJECTED_UPDATES_DIR.glob("accepted-risk-*.yaml"))
+        self.assertEqual(len(rejected), 1)
+        archive = yaml.safe_load(rejected[0].read_text(encoding="utf-8"))
+        self.assertEqual(archive["updates"][0]["evidence"], card["evidence"])
+
+        progress = self.store.list_cards()["progress"]
+        self.assertEqual(progress["accepted"], 0)
+        self.assertEqual(progress["rejected"], 1)
+
+    def test_returning_an_accepted_value_to_pending_keeps_links_unchanged(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        accepted = self.store.accept(card["proposal_id"], card["revision"], "accepted-pending")
+
+        with mock.patch.object(self.store, "resolve_links") as resolve_links:
+            result = self.store.move_accepted_to_pending("risk", accepted["tracker_id"])
+
+        resolve_links.assert_not_called()
+
+        self.assertEqual(result["decision"], "pending")
+        self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
+        pending = self.store.list_cards()["cards"]
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0]["proposal_id"], result["proposal_id"])
+        self.assertEqual(pending[0]["fields"]["Statement"], card["fields"]["Statement"])
+        self.assertEqual(pending[0]["evidence"], card["evidence"])
+        self.assertEqual(self.store.list_cards()["progress"]["accepted"], 0)
+        self.assertEqual(self.store.list_cards()["progress"]["pending"], 1)
+
+    def test_applied_evidence_index_keeps_every_update_in_a_batch_archive(self):
+        self.paths.APPLIED_UPDATES_DIR.mkdir(parents=True, exist_ok=True)
+        archive = self.paths.APPLIED_UPDATES_DIR / "batch.yaml"
+        archive.write_text(yaml.safe_dump({"updates": [
+            {"category": "risk", "fields": {"Statement": "First risk"},
+             "evidence": [{"source_ref": "workspace/first.md", "excerpt": "First evidence"}]},
+            {"category": "risk", "fields": {"Statement": "Second risk"},
+             "evidence": [{"source_ref": "workspace/second.md", "excerpt": "Second evidence"}]},
+        ]}, sort_keys=False), encoding="utf-8")
+
+        evidence = self.store.accepted_evidence(
+            "risk", "R002", {"Statement": "Second risk"}, ["workspace/second.md"],
+            self.store.applied_evidence_index())
+        self.assertEqual(evidence[0]["source_ref"], "workspace/second.md")
+
+    def test_display_label_covers_non_statement_categories(self):
+        schema = self.paths.load_schema()
+        cases = [
+            ("stakeholder", {"Name": "Executive Sponsor"}, "Executive Sponsor"),
+            ("system", {"Name": "Customer Portal"}, "Customer Portal"),
+            ("open_question", {"Question": "Who approves the budget?"}, "Who approves the budget?"),
+            ("session", {"Name": "Kickoff workshop"}, "Kickoff workshop"),
+            ("operating_model", {"Name": "Delivery governance"}, "Delivery governance"),
+            ("plan_item", {"Name": "Confirm ownership"}, "Confirm ownership"),
+            ("workflow_stage", {"Workflow Name": "Intake", "Stage Name": "Assess"}, "Intake: Assess"),
+        ]
+        for category, fields, expected in cases:
+            with self.subTest(category=category):
+                self.assertEqual(self.store.display_label(category, fields, schema), expected)
+
+        self.assertEqual(self.store.display_label("session", {"Session ID": "SES-001"}, schema), "SES-001")
 
     def test_concurrent_revision_allows_only_one_edit(self):
         self.proposal([self.risk()])
@@ -243,6 +389,36 @@ class VisualReviewTest(unittest.TestCase):
         server.shutdown()
         server.server_close()
         thread.join(timeout=2)
+
+    def test_permission_denied_health_preserves_state(self):
+        state = {"pid": 123, "port": 456, "token": "test", "instance_id": "existing"}
+        self.server_module.write_state(self.root, state)
+        denied = urllib.error.URLError(PermissionError(1, "Operation not permitted"))
+        for operation in (self.server_module.start, self.server_module.status,
+                          self.server_module.stop):
+            with self.subTest(operation=operation.__name__), \
+                    mock.patch.object(self.server_module, "request_json", side_effect=denied), \
+                    mock.patch.object(self.server_module.subprocess, "Popen") as spawn:
+                with self.assertRaises(self.server_module.LocalServerPermissionError):
+                    operation(self.root)
+                spawn.assert_not_called()
+                self.assertEqual(self.server_module.read_state(self.root), state)
+
+    def test_bind_permission_denied_has_actionable_exit(self):
+        with mock.patch.object(self.server_module, "ReviewServer", side_effect=PermissionError(1, "denied")):
+            self.assertEqual(self.server_module.serve(self.root, "test", "test"), 77)
+        self.assertIsNone(self.server_module.read_state(self.root))
+
+    def test_failed_child_exits_without_startup_timeout(self):
+        for code in (77, 1):
+            child = mock.Mock()
+            child.poll.return_value = code
+            with self.subTest(code=code), \
+                    mock.patch.object(self.server_module.subprocess, "Popen", return_value=child), \
+                    mock.patch.object(self.server_module.time, "sleep") as sleep:
+                self.assertEqual(self.server_module.start(self.root), code)
+                sleep.assert_not_called()
+                self.assertFalse(self.server_module.STARTED_PROCESSES)
 
     def test_start_reuses_server_and_recovers_stale_state(self):
         stale = self.root / "workspace" / ".system" / "review-server.json"

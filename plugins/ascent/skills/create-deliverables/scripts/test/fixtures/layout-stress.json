@@ -1,12 +1,12 @@
 {
   "meta": {"archetype":"project-kickoff","client":"Layout Stress Test Client","title":"A deliberately long project kickoff title for layout verification","subtitle":"A deliberately long subtitle used to verify client-ready wrapping at constrained widths","date":"2026-01-15","classification":"Internal draft","accent":"cyan"},
   "sections": [
-    {"module":"objectives-and-scope","view":"purpose","body":"A layout stress fixture with intentionally long text."},
-    {"module":"kickoff-context","view":"agenda","items":[{"title":"A deliberately long agenda topic used to verify normal text wrapping","detail":"A deliberately detailed agenda explanation that confirms the disclosure card wraps safely at constrained widths and remains easy to scan."}]},
-    {"module":"team-and-responsibilities","view":"team","title":"Long team details","columns":["Name","Responsibility"],"rows":[{"cells":["A deliberately long participant name","A deliberately long table value designed to exercise wrapping without colliding with adjacent content"]}]},
-    {"module":"objectives-and-scope","view":"success-measures","title":"Long metrics","items":[{"value":"A deliberately long KPI value","unit":"with a descriptive unit","label":"A deliberately long label that must remain readable","source":"A deliberately long source label"},{"value":"123.45","unit":"%","label":"A second long metric label","source":"Long source text"}]},
-    {"module":"delivery-approach","view":"execution_map","phases":[{"name":"A deliberately long phase name","window":"A deliberately long provisional time window","outcomes":["A deliberately long outcome that must wrap without expanding its card"]}]},
-    {"module":"raid","view":"summary","title":"Long risks","findings":[{"theme":"A deliberately long risk heading designed to wrap","evidence":"Evidence text.","implication":"Implication text."}]},
-    {"module":"immediate-next-steps","view":"actions","items":["A deliberately long next step used to verify normal text wrapping."]}
+    {"module":"business-context","view":"context","title":"Long context","findings":[{"theme":"A deliberately long context heading designed to wrap","evidence":"A layout stress fixture with intentionally long text.","implication":"The composition must remain readable."}]},
+    {"module":"agenda","view":"agenda","items":[{"title":"A deliberately long agenda topic used to verify normal text wrapping","detail":"A deliberately detailed agenda explanation that confirms the disclosure card wraps safely at constrained widths and remains easy to scan."}]},
+    {"module":"team-roster","view":"roster","title":"Long team details","columns":["Name","Responsibility"],"rows":[{"cells":["A deliberately long participant name","A deliberately long table value designed to exercise wrapping without colliding with adjacent content"]}]},
+    {"module":"objectives-and-success","view":"outcomes","title":"Long metrics","items":[{"value":"A deliberately long KPI value","unit":"with a descriptive unit","label":"A deliberately long label that must remain readable","source":"A deliberately long source label"},{"value":"123.45","unit":"%","label":"A second long metric label","source":"Long source text"}]},
+    {"module":"delivery-approach","view":"approach","phases":[{"name":"A deliberately long phase name","window":"A deliberately long provisional time window","outcomes":["A deliberately long outcome that must wrap without expanding its card"]}]},
+    {"module":"delivery-conditions","view":"conditions","title":"Long risks","findings":[{"theme":"A deliberately long risk heading designed to wrap","evidence":"Evidence text.","implication":"Implication text."}]},
+    {"module":"immediate-next-steps","view":"next-steps","items":["A deliberately long next step used to verify normal text wrapping."]}
   ]
 }

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "delivery-conditions",
+  "title": "Assumptions, dependencies, risks, and issues",
+  "description": "Summarizes the delivery conditions and uncertainties that need visibility, ownership, and action.",
+  "questions": [
+    {
+      "id": "delivery-conditions.threats",
+      "tier": "required",
+      "prompt": "Which risks, issues, or dependencies most threaten success?",
+      "answer_type": "risks",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Assumptions, dependencies, risks, and issues/clarification-1"
+    },
+    {
+      "id": "delivery-conditions.assumptions",
+      "tier": "required",
+      "prompt": "Which assumptions still need validation, and by whom?",
+      "answer_type": "risks",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Assumptions, dependencies, risks, and issues/clarification-2"
+    },
+    {
+      "id": "delivery-conditions.responses",
+      "tier": "optional",
+      "prompt": "Who owns the responses, and what triggers escalation?",
+      "answer_type": "table",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Assumptions, dependencies, risks, and issues/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "conditions",
+      "type": "theme-group",
+      "renderer": "./html.mjs#conditions",
+      "uses": [
+        "delivery-conditions.threats",
+        "delivery-conditions.assumptions",
+        "delivery-conditions.responses"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "team-structure",
+  "title": "Team structure, roles, and responsibilities",
+  "description": "Shows how the delivery team is organized and who is accountable for workstreams.",
+  "questions": [
+    {
+      "id": "team-structure.staffing",
+      "tier": "required",
+      "prompt": "Which customer and delivery roles are staffed, and at what allocation?",
+      "answer_type": "table",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Team structure, roles, and responsibilities/clarification-1"
+    },
+    {
+      "id": "team-structure.accountability",
+      "tier": "required",
+      "prompt": "Who is accountable for each workstream?",
+      "answer_type": "table",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Team structure, roles, and responsibilities/clarification-2"
+    },
+    {
+      "id": "team-structure.gaps",
+      "tier": "optional",
+      "prompt": "Where are staffing gaps or shared responsibilities unresolved?",
+      "answer_type": "risks",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Team structure, roles, and responsibilities/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "team-structure",
+      "type": "table",
+      "renderer": "./html.mjs#team-structure",
+      "uses": [
+        "team-structure.staffing",
+        "team-structure.accountability",
+        "team-structure.gaps"
+      ]
+    }
+  ]
+}

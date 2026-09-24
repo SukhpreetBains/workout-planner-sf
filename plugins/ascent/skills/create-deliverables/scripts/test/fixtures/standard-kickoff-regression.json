@@ -1,0 +1,1109 @@
+{
+  "meta": {
+    "archetype": "project-kickoff",
+    "client": "Harborview Services",
+    "title": "Connected service experience kickoff",
+    "subtitle": "Align the team, delivery system, and first actions",
+    "date": "2026-10-05",
+    "authors": [
+      {
+        "name": "Example delivery team",
+        "role": "Engagement team"
+      }
+    ],
+    "classification": "Internal draft",
+    "accent": "cyan"
+  },
+  "sections": [
+    {
+      "module": "agenda",
+      "view": "agenda",
+      "title": "Today’s working session",
+      "items": [
+        {
+          "title": "Why this work matters",
+          "detail": "Confirm the business context, vision, and desired outcomes."
+        },
+        {
+          "title": "What we will deliver",
+          "detail": "Review scope, delivery approach, roadmap, and major outputs."
+        },
+        {
+          "title": "How we will work",
+          "detail": "Align on roles, governance, cadence, and working norms."
+        },
+        {
+          "title": "What happens next",
+          "detail": "Confirm decisions, owners, and first-week actions."
+        }
+      ]
+    },
+    {
+      "module": "team-roster",
+      "view": "roster",
+      "title": "One team, clear responsibilities",
+      "columns": [
+        "Name",
+        "Role",
+        "Organization",
+        "Responsibility"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Avery Morgan",
+            "Executive sponsor",
+            "Harborview Services",
+            "Removes enterprise barriers"
+          ]
+        },
+        {
+          "cells": [
+            "Rina Kapoor",
+            "Product owner",
+            "Harborview Services",
+            "Owns product priorities"
+          ]
+        },
+        {
+          "cells": [
+            "Jordan Lee",
+            "Technology lead",
+            "Harborview Services",
+            "Owns platform decisions"
+          ]
+        },
+        {
+          "cells": [
+            "Maya Singh",
+            "Engagement lead",
+            "Slalom",
+            "Owns outcomes and delivery"
+          ]
+        },
+        {
+          "cells": [
+            "Theo Price",
+            "Solution architect",
+            "Slalom",
+            "Owns solution integrity"
+          ]
+        },
+        {
+          "cells": [
+            "Casey Nguyen",
+            "Experience lead",
+            "Slalom",
+            "Owns customer experience"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "business-context",
+      "view": "context",
+      "title": "Why the project exists",
+      "body": "The project connects a clear operating pressure to a focused opportunity.",
+      "findings": [
+        {
+          "theme": "Current pressure",
+          "evidence": "Customers move across disconnected service channels and repeat information.",
+          "implication": "Service effort and avoidable contacts continue to rise.",
+          "severity": "high",
+          "icon": "people"
+        },
+        {
+          "theme": "Trigger",
+          "evidence": "Leadership committed to a unified service experience before the next peak period.",
+          "implication": "The readiness window is fixed and visible.",
+          "severity": "medium",
+          "icon": "search"
+        },
+        {
+          "theme": "Opportunity",
+          "evidence": "A connected service layer can unify context, routing, and next steps.",
+          "implication": "Customers receive faster resolution with greater trust.",
+          "severity": "high"
+        }
+      ]
+    },
+    {
+      "module": "objectives-and-success",
+      "view": "outcomes",
+      "title": "Outcomes before activities",
+      "items": [
+        {
+          "value": 30,
+          "unit": "%",
+          "label": "Reduce avoidable contacts",
+          "source": "Fictional target for module review"
+        },
+        {
+          "value": 20,
+          "unit": "%",
+          "label": "Reduce average handle time",
+          "source": "Fictional target for module review"
+        },
+        {
+          "value": 85,
+          "unit": "%",
+          "label": "Reach priority-journey proficiency",
+          "source": "Fictional target for module review"
+        }
+      ]
+    },
+    {
+      "module": "scope-review",
+      "view": "scope",
+      "title": "A practical boundary for the first release",
+      "columns": [
+        "Boundary",
+        "Included now",
+        "Deferred or excluded"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Customer journeys",
+            "Two priority service journeys",
+            "Additional journeys after first-release learning"
+          ]
+        },
+        {
+          "cells": [
+            "Platform",
+            "Existing identity and service capabilities",
+            "Core-platform replacement"
+          ]
+        },
+        {
+          "cells": [
+            "Change",
+            "Readiness for affected service teams",
+            "Enterprise-wide operating-model redesign"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "guiding-principles",
+      "view": "principles",
+      "title": "Principles for practical choices",
+      "items": [
+        {
+          "title": "Start with the customer",
+          "detail": "Prioritize a clear next step over exposing every platform capability."
+        },
+        {
+          "title": "Earn trust by design",
+          "detail": "Treat privacy, consent, and accessibility as acceptance conditions."
+        },
+        {
+          "title": "Reuse before extending",
+          "detail": "Build on proven platform capabilities before adding new ones."
+        },
+        {
+          "title": "Prove value, then expand",
+          "detail": "Release a focused first version and learn from real usage."
+        }
+      ]
+    },
+    {
+      "module": "architecture",
+      "view": "architecture",
+      "title": "One customer journey, connected services",
+      "phases": [
+        {
+          "name": "Customer channel",
+          "window": "Experience",
+          "outcomes": [
+            "Two guided service journeys"
+          ]
+        },
+        {
+          "name": "Journey services",
+          "window": "Orchestration",
+          "outcomes": [
+            "Validation",
+            "Routing",
+            "Status"
+          ]
+        },
+        {
+          "name": "Identity and consent",
+          "window": "Existing platform",
+          "outcomes": [
+            "Authentication",
+            "Permission checks"
+          ]
+        },
+        {
+          "name": "Service APIs",
+          "window": "Enterprise services",
+          "outcomes": [
+            "Request",
+            "Status",
+            "Error handling"
+          ]
+        },
+        {
+          "name": "Service analytics",
+          "window": "Measurement",
+          "outcomes": [
+            "Approved journey events"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "epic-overview",
+      "view": "epics",
+      "title": "Capabilities connected to outcomes",
+      "columns": [
+        "Epic",
+        "Release",
+        "Outcome",
+        "Owner",
+        "Acceptance signal"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Guided service journeys",
+            "First release",
+            "Help customers complete two priority journeys",
+            "Product and experience",
+            "Customer-tested steps"
+          ]
+        },
+        {
+          "cells": [
+            "Identity and consent",
+            "First release",
+            "Recognize customers and honor permissions",
+            "Technology",
+            "Agreed test scenarios pass"
+          ]
+        },
+        {
+          "cells": [
+            "Service integration",
+            "First release",
+            "Connect requests to existing services",
+            "Architecture",
+            "Request and error paths pass"
+          ]
+        },
+        {
+          "cells": [
+            "Outcome measurement",
+            "First release",
+            "Make journey performance visible",
+            "Product",
+            "Events and baselines are available"
+          ]
+        },
+        {
+          "cells": [
+            "Additional journeys",
+            "Later",
+            "Extend proven patterns",
+            "Product",
+            "Scope follows first-release learning"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "delivery-approach",
+      "view": "approach",
+      "title": "Progressive confidence through delivery",
+      "phases": [
+        {
+          "name": "Align",
+          "window": "Phase 1",
+          "outcomes": [
+            "Shared outcomes",
+            "Evidence and constraints"
+          ]
+        },
+        {
+          "name": "Design",
+          "window": "Phase 2",
+          "outcomes": [
+            "Experience decisions",
+            "Solution decisions"
+          ]
+        },
+        {
+          "name": "Build",
+          "window": "Phase 3",
+          "outcomes": [
+            "Working increments",
+            "Frequent demonstrations"
+          ]
+        },
+        {
+          "name": "Validate",
+          "window": "Phase 4",
+          "outcomes": [
+            "Business confidence",
+            "Technical confidence"
+          ]
+        },
+        {
+          "name": "Transition",
+          "window": "Phase 5",
+          "outcomes": [
+            "Launch readiness",
+            "Ownership handoff"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "timeline-roadmap",
+      "view": "timeline",
+      "title": "A shared horizon from kickoff to transition",
+      "phases": [
+        {
+          "name": "Mobilize",
+          "window": "Weeks 1 to 2",
+          "outcomes": [
+            "Access ready",
+            "Plan confirmed"
+          ]
+        },
+        {
+          "name": "Discover and design",
+          "window": "Weeks 3 to 6",
+          "outcomes": [
+            "Journeys validated",
+            "Architecture agreed"
+          ]
+        },
+        {
+          "name": "Build and test",
+          "window": "Weeks 7 to 14",
+          "outcomes": [
+            "Working releases",
+            "Acceptance evidence"
+          ]
+        },
+        {
+          "name": "Launch and transition",
+          "window": "Weeks 15 to 18",
+          "outcomes": [
+            "Teams ready",
+            "Ownership transferred"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "project-schedule",
+      "view": "schedule",
+      "title": "The first six weeks",
+      "columns": [
+        "Workstream",
+        "Timing",
+        "Milestone",
+        "Owner",
+        "Dependency"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Mobilization",
+            "Week 1",
+            "Access and environments ready",
+            "Delivery lead",
+            "Security onboarding"
+          ]
+        },
+        {
+          "cells": [
+            "Journey discovery",
+            "Weeks 1 to 3",
+            "Priority journeys validated",
+            "Experience lead",
+            "Customer availability"
+          ]
+        },
+        {
+          "cells": [
+            "Solution design",
+            "Weeks 2 to 4",
+            "Architecture direction confirmed",
+            "Solution architect",
+            "Integration inventory"
+          ]
+        },
+        {
+          "cells": [
+            "Delivery planning",
+            "Weeks 4 to 6",
+            "First-release backlog ready",
+            "Product owner",
+            "Scope decisions"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "deliverables",
+      "view": "deliverables",
+      "title": "Value packages with clear acceptance",
+      "columns": [
+        "Deliverable",
+        "Purpose",
+        "Owner",
+        "Acceptance"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Experience blueprint",
+            "Defines priority journeys and moments that matter",
+            "Experience",
+            "Product approval"
+          ]
+        },
+        {
+          "cells": [
+            "Solution design",
+            "Documents architecture and integration decisions",
+            "Architecture",
+            "Technology approval"
+          ]
+        },
+        {
+          "cells": [
+            "Configured first release",
+            "Delivers working priority journeys",
+            "Delivery",
+            "Business and technology acceptance"
+          ]
+        },
+        {
+          "cells": [
+            "Launch readiness package",
+            "Prepares testing, training, support, and transition",
+            "Delivery lead",
+            "Sponsor approval"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "team-structure",
+      "view": "team-structure",
+      "title": "Team structure, roles, and responsibilities",
+      "columns": [
+        "Workstream",
+        "Accountable",
+        "Delivery roles",
+        "Customer partners"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Executive sponsorship",
+            "Avery Morgan",
+            "Executive sponsor",
+            "Outcome ownership and barrier removal"
+          ]
+        },
+        {
+          "cells": [
+            "Program leadership",
+            "Rina Kapoor",
+            "Product owner",
+            "Product priorities"
+          ]
+        },
+        {
+          "cells": [
+            "Program leadership",
+            "Maya Singh",
+            "Engagement lead",
+            "Outcomes and delivery"
+          ]
+        },
+        {
+          "cells": [
+            "Program leadership",
+            "Jordan Lee",
+            "Technology lead",
+            "Platform decisions"
+          ]
+        },
+        {
+          "cells": [
+            "Experience",
+            "Casey Nguyen",
+            "Experience lead",
+            "Maya Singh"
+          ]
+        },
+        {
+          "cells": [
+            "Platform",
+            "Theo Price",
+            "Solution architect",
+            "Jordan Lee"
+          ]
+        },
+        {
+          "cells": [
+            "Data and integration",
+            "Jordan Lee",
+            "Technology lead",
+            "Jordan Lee"
+          ]
+        },
+        {
+          "cells": [
+            "Change and readiness",
+            "Rina Kapoor",
+            "Product owner",
+            "Maya Singh"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "stakeholder-register",
+      "view": "stakeholders",
+      "title": "Stakeholders who shape delivery",
+      "columns": [
+        "Stakeholder",
+        "Role",
+        "Influence",
+        "Engagement need",
+        "Relationship owner"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Avery Morgan",
+            "Executive sponsor",
+            "High",
+            "Monthly outcome review",
+            "Engagement lead"
+          ]
+        },
+        {
+          "cells": [
+            "Rina Kapoor",
+            "Product owner",
+            "High",
+            "Weekly priorities and decisions",
+            "Product lead"
+          ]
+        },
+        {
+          "cells": [
+            "Jordan Lee",
+            "Technology lead",
+            "High",
+            "Architecture and dependency review",
+            "Solution architect"
+          ]
+        },
+        {
+          "cells": [
+            "Service operations",
+            "Affected team",
+            "Medium",
+            "Demonstrations and readiness checks",
+            "Change lead"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "governance-structure",
+      "view": "governance",
+      "title": "A clear path from delivery to sponsorship",
+      "phases": [
+        {
+          "name": "Delivery team",
+          "window": "Daily",
+          "outcomes": [
+            "Coordinate work",
+            "Resolve execution questions"
+          ]
+        },
+        {
+          "name": "Working leadership",
+          "window": "Weekly",
+          "outcomes": [
+            "Confirm priorities",
+            "Resolve cross-workstream decisions"
+          ]
+        },
+        {
+          "name": "Steering group",
+          "window": "Monthly",
+          "outcomes": [
+            "Review outcomes",
+            "Approve material changes"
+          ]
+        },
+        {
+          "name": "Executive sponsor",
+          "window": "As needed",
+          "outcomes": [
+            "Remove enterprise barriers",
+            "Confirm major commitments"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "decision-rights",
+      "view": "decision-rights",
+      "title": "Decision authority at a glance",
+      "columns": [
+        "Decision",
+        "Recommends",
+        "Approves",
+        "Consulted",
+        "Escalation"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Scope priority",
+            "Product owner",
+            "Executive sponsor",
+            "Delivery and technology leads",
+            "Steering group"
+          ]
+        },
+        {
+          "cells": [
+            "Solution design",
+            "Solution architect",
+            "Technology lead",
+            "Security and product",
+            "Executive sponsor"
+          ]
+        },
+        {
+          "cells": [
+            "Release readiness",
+            "Delivery lead",
+            "Business and technology owners",
+            "Change and support",
+            "Executive sponsor"
+          ]
+        },
+        {
+          "cells": [
+            "Material timeline change",
+            "Engagement lead",
+            "Executive sponsor",
+            "Steering group",
+            "Contract governance"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "meeting-cadence",
+      "view": "cadence",
+      "title": "The operating heartbeat",
+      "columns": [
+        "Forum",
+        "Frequency",
+        "Participants",
+        "Purpose",
+        "Output"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Team stand-up",
+            "Daily",
+            "Delivery team",
+            "Coordinate work and blockers",
+            "Updated actions"
+          ]
+        },
+        {
+          "cells": [
+            "Product and design review",
+            "Twice weekly",
+            "Product, experience, technology",
+            "Review working increments",
+            "Decisions and feedback"
+          ]
+        },
+        {
+          "cells": [
+            "Delivery leadership",
+            "Weekly",
+            "Workstream leads",
+            "Manage scope, schedule, and risks",
+            "Status and escalations"
+          ]
+        },
+        {
+          "cells": [
+            "Steering group",
+            "Monthly",
+            "Sponsors and leaders",
+            "Review outcomes and major decisions",
+            "Approvals and direction"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "ways-of-working",
+      "view": "norms",
+      "title": "How the team will work together",
+      "items": [
+        {
+          "title": "Decide in the room",
+          "detail": "Capture the decision and owner before the meeting ends."
+        },
+        {
+          "title": "Show work early",
+          "detail": "Use working increments to invite useful feedback."
+        },
+        {
+          "title": "Escalate blocked decisions quickly",
+          "detail": "Raise decisions that remain blocked beyond the agreed response window."
+        },
+        {
+          "title": "Use one source of truth",
+          "detail": "Keep each artifact in its agreed authoritative location."
+        },
+        {
+          "title": "Assume positive intent",
+          "detail": "Challenge the work while protecting the partnership."
+        }
+      ]
+    },
+    {
+      "module": "service-principles",
+      "view": "service-principles",
+      "title": "The experience we intend to create",
+      "items": [
+        {
+          "title": "Make progress visible",
+          "detail": "Show what changed, what remains open, and what happens next."
+        },
+        {
+          "title": "Design with the people affected",
+          "detail": "Include customers and service teams in priority decisions."
+        },
+        {
+          "title": "Reduce avoidable effort",
+          "detail": "Remove repeated steps, unclear ownership, and unnecessary handoffs."
+        },
+        {
+          "title": "Close the feedback loop",
+          "detail": "Tell participants what changed because of their input."
+        }
+      ]
+    },
+    {
+      "module": "project-logistics",
+      "view": "logistics",
+      "title": "Readiness before delivery begins",
+      "columns": [
+        "Area",
+        "Source of truth",
+        "Owner",
+        "Needed by",
+        "Status"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "Backlog",
+            "Azure DevOps",
+            "Product owner",
+            "Kickoff week",
+            "Ready"
+          ]
+        },
+        {
+          "cells": [
+            "Project files",
+            "Customer collaboration site",
+            "Delivery lead",
+            "Kickoff week",
+            "Ready"
+          ]
+        },
+        {
+          "cells": [
+            "Development environment",
+            "Platform sandbox",
+            "Technology lead",
+            "End of week 1",
+            "In progress"
+          ]
+        },
+        {
+          "cells": [
+            "Test data",
+            "Approved synthetic dataset",
+            "Security lead",
+            "Start of build",
+            "Needs decision"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "delivery-conditions",
+      "view": "conditions",
+      "title": "Conditions for success",
+      "body": "Each item names the condition, owner, and next management action.",
+      "findings": [
+        {
+          "theme": "Assumption",
+          "evidence": "Product subject-matter experts remain available each week.",
+          "implication": "Validate allocation before discovery begins.",
+          "severity": "medium"
+        },
+        {
+          "theme": "Dependency",
+          "evidence": "Identity interfaces are available before the second build cycle.",
+          "implication": "Confirm the interface contract and fallback.",
+          "severity": "high"
+        },
+        {
+          "theme": "Risk",
+          "evidence": "Test data may omit consent history.",
+          "implication": "Agree on a compliant test-data pattern.",
+          "severity": "high"
+        },
+        {
+          "theme": "Issue",
+          "evidence": "Two delivery accounts are not yet provisioned.",
+          "implication": "Escalate through the access owner.",
+          "severity": "medium"
+        }
+      ]
+    },
+    {
+      "module": "raid-log",
+      "view": "raid-log",
+      "title": "The active management queue",
+      "columns": [
+        "ID",
+        "Type",
+        "Item",
+        "Owner",
+        "Due",
+        "Status"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "R-07",
+            "Risk",
+            "Consent-history test data is incomplete",
+            "Technology lead",
+            "Oct 12",
+            "High"
+          ]
+        },
+        {
+          "cells": [
+            "D-03",
+            "Dependency",
+            "Identity interface contract confirmed",
+            "Solution architect",
+            "Oct 16",
+            "Active"
+          ]
+        },
+        {
+          "cells": [
+            "A-04",
+            "Assumption",
+            "Subject-matter expert allocation remains available",
+            "Product owner",
+            "Oct 9",
+            "Validate"
+          ]
+        },
+        {
+          "cells": [
+            "I-02",
+            "Issue",
+            "Delivery access provisioning",
+            "Engagement lead",
+            "Oct 8",
+            "Resolving"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "dependency-list",
+      "view": "dependencies",
+      "title": "Prerequisites that shape the plan",
+      "columns": [
+        "ID",
+        "Dependency",
+        "Controlled by",
+        "Required by",
+        "Impact",
+        "Fallback"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "D-01",
+            "Identity interface contract",
+            "Platform team",
+            "Week 2",
+            "Build sequencing",
+            "Use agreed mock interface"
+          ]
+        },
+        {
+          "cells": [
+            "D-02",
+            "Approved test data",
+            "Security team",
+            "Week 4",
+            "Validation coverage",
+            "Generate compliant synthetic data"
+          ]
+        },
+        {
+          "cells": [
+            "D-03",
+            "Customer research participants",
+            "Product team",
+            "Week 2",
+            "Journey evidence",
+            "Use service-team proxy review"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "action-log",
+      "view": "actions",
+      "title": "Commitments with owners and dates",
+      "columns": [
+        "ID",
+        "Action",
+        "Owner",
+        "Due",
+        "Status",
+        "Completion evidence"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "ACT-01",
+            "Confirm discovery participants",
+            "Product owner",
+            "Oct 8",
+            "Open",
+            "Accepted participant list"
+          ]
+        },
+        {
+          "cells": [
+            "ACT-02",
+            "Complete delivery access",
+            "Technology lead",
+            "Oct 9",
+            "In progress",
+            "All named users can sign in"
+          ]
+        },
+        {
+          "cells": [
+            "ACT-03",
+            "Publish decision calendar",
+            "Engagement lead",
+            "Oct 8",
+            "Open",
+            "Calendar shared with governance members"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "decision-log",
+      "view": "decisions",
+      "title": "Decisions and their implications",
+      "columns": [
+        "ID",
+        "Status",
+        "Decision",
+        "Decision maker",
+        "Rationale",
+        "Follow-up"
+      ],
+      "rows": [
+        {
+          "cells": [
+            "DEC-01",
+            "Confirmed",
+            "Focus the first release on two service journeys",
+            "Executive sponsor",
+            "Maximize learning before broader expansion",
+            "Validate journey selection"
+          ]
+        },
+        {
+          "cells": [
+            "DEC-02",
+            "Confirmed",
+            "Use one backlog as the source of truth",
+            "Product owner",
+            "Avoid duplicate tracking",
+            "Migrate open items"
+          ]
+        },
+        {
+          "cells": [
+            "DEC-03",
+            "Open",
+            "Choose the consent-history test-data pattern",
+            "Technology lead",
+            "Balance fidelity and compliance",
+            "Review options with security"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "immediate-next-steps",
+      "view": "next-steps",
+      "title": "Move from alignment to action",
+      "items": [
+        "Within 48 hours: publish the confirmed decision and meeting calendar.",
+        "By the end of week 1: complete access and environment readiness.",
+        "Before discovery: confirm participants, inputs, and priority journeys.",
+        "Before build begins: approve the first-release boundary and architecture direction."
+      ]
+    },
+    {
+      "module": "closing-discussion",
+      "view": "closing",
+      "title": "Confirm before we close",
+      "items": [
+        "We share the same definition of success.",
+        "We understand the first-release boundary.",
+        "We know how decisions will be made.",
+        "Every first-week action has an owner."
+      ]
+    }
+  ]
+}

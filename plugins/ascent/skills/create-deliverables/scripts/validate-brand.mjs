@@ -80,6 +80,18 @@ const APPROVED_ON = {
   '#F8FFDB': ['#000000'],
 };
 
+/**
+ * Status colours for the weekly-status-report RAG scorecard: not in the
+ * Slalom Brand Guide, so never merged into PALETTE (which represents that
+ * guide, nothing else). A build that references one via `var(--status-*)`
+ * gets a "deviation" warning, never a rule 2 error — see the split below.
+ */
+const STATUS_COLORS = {
+  '#2E7D32': 'Status Green',
+  '#FFA000': 'Status Amber',
+  '#D32F2F': 'Status Red',
+};
+
 const SLALOM_BLUES = ['#0C62FB', '#002FAF'];
 const ACCENTS = { cyan: '#1BE1F2', 'coral-red': '#FF4D5F', purple: '#C7B9FF', chartreuse: '#DEFF4D' };
 const DARK_3 = { blue: '#002FAF', cyan: '#00BAD6', 'coral-red': '#E6154A', purple: '#9488F0', chartreuse: '#B3CC3E' };
@@ -354,6 +366,7 @@ export function validateBuild(dir) {
   const allCssText = styleFiles.map((f) => readFileSync(f.abs, 'utf8')).join('\n');
   const authoredRules = authoredCss.flatMap((f) =>
     parseCss(readFileSync(f.abs, 'utf8')).map((r) => ({ ...r, file: f.rel })));
+  const referenced = new Set([...allCssText.matchAll(/var\(\s*(--[a-z0-9-]+)/gi)].map((m) => m[1]));
 
   report.note(`accent ${accent ?? '(unset)'} · ${files.length} files`);
 
@@ -372,12 +385,28 @@ export function validateBuild(dir) {
       + 'Colour lives in tokens.css and nowhere else.');
   }
 
-  // 2. Every hex in tokens.css is in the brand palette.
+  // 2. Every hex in tokens.css is in the brand palette, or is a documented
+  // status colour (STATUS_COLORS) — which never errors, but warns as a
+  // "deviation" on any build that actually uses one.
   const tokenHexes = [...new Set([...tokensCss.matchAll(HEX_RE)].map((m) => m[0].toUpperCase()))];
-  const offPalette = tokenHexes.filter((h) => !(h in PALETTE));
+  const offPalette = tokenHexes.filter((h) => !(h in PALETTE) && !(h in STATUS_COLORS));
   report.check(offPalette.length === 0, 'rule 2',
     `tokens.css declares off-palette colour${offPalette.length === 1 ? '' : 's'}: ${offPalette.join(', ')}`);
   report.check(tokenHexes.length > 0, 'rule 2', 'tokens.css declares no colours at all');
+  // `referenced` (below) only proves components.css *defines* a rule for
+  // --status-*, which is true in every build since that CSS ships
+  // unconditionally. Whether THIS page actually uses one is an HTML
+  // question: does a .status-dot--<colour> element actually appear.
+  const usedStatusColors = Object.entries(STATUS_COLORS)
+    .filter(([hex]) => tokenHexes.includes(hex))
+    .filter(([, label]) => elements.some((e) =>
+      hasClass(e, `status-dot--${label.toLowerCase().replace('status ', '')}`)));
+  if (usedStatusColors.length) {
+    report.warn('deviation',
+      `this build uses ${usedStatusColors.length} status colour${usedStatusColors.length === 1 ? '' : 's'} `
+      + `not in the Slalom Brand Guide (${usedStatusColors.map(([, l]) => l).join(', ')}), approved for the `
+      + 'weekly-status-report RAG scorecard. Confirm before this reaches a client.');
+  }
 
   // 3. Exactly one secondary accent in use, matching the content.
   report.check(accent !== null && accent in ACCENTS, 'rule 3',
@@ -397,7 +426,6 @@ export function validateBuild(dir) {
   }
 
   // 4. A Slalom Blue is present.
-  const referenced = new Set([...allCssText.matchAll(/var\(\s*(--[a-z0-9-]+)/gi)].map((m) => m[1]));
   const bluePresent = [...referenced].some((name) => {
     const hex = resolveColor(tokens, name, accent);
     return hex && SLALOM_BLUES.includes(hex);
@@ -519,7 +547,13 @@ export function validateBuild(dir) {
     const align = declarations(rule).decls.get('text-align')?.trim();
     if (!align) continue;
     report.check(align !== 'justify', 'rule 11', `\`${rule.selector}\` sets text-align: justify. Type is flush left, ragged right.`);
-    report.check(align !== 'center', 'rule 11', `\`${rule.selector}\` centres text. Type is flush left, ragged right.`);
+    // Explicit visual-review decision: center only the workflow stage titles.
+    const centeredWorkflowTitle = rule.selector.trim() === '.workflow-chevron h3';
+    report.check(align !== 'center', 'rule 11',
+      centeredWorkflowTitle
+        ? 'Workflow stage titles are centered by explicit user request; other type remains flush left.'
+        : `\`${rule.selector}\` centres text. Type is flush left, ragged right.`,
+      { warn: centeredWorkflowTitle });
   }
 
   // 12. At most three type sizes per composition (warn).
@@ -580,7 +614,7 @@ export function validateBuild(dir) {
   const brandAssetBytes = collectBrandAssets();
   for (const el of elements.filter((e) => e.tag === 'img')) {
     const src = el.attrs.src ?? '';
-    if ('data-client-asset' in el.attrs) continue;      // the client's own mark
+    if ('data-authored-asset' in el.attrs) continue;    // directly-authored (client logo, cover background) — not the icon/illustration library
     if (!/^assets\//.test(src)) continue;               // handled by rules 22/23
     const full = path.join(abs, src);
     if (!existsSync(full)) { report.error('rule 15', `\`${src}\` is referenced but not in the output`); continue; }
@@ -825,16 +859,17 @@ export function validateBuild(dir) {
 
   /* --- The bundle ------------------------------------------------------- */
 
-  const bundlePath = path.join(abs, 'bundle.html');
+  const bundleFilename = manifest?.bundle_filename ?? 'bundle.html';
+  const bundlePath = path.join(abs, bundleFilename);
   if (existsSync(bundlePath)) {
     const bundle = readFileSync(bundlePath, 'utf8');
     const hits = externalReferences(bundle);
     report.check(hits.length === 0, 'rule 22',
-      `bundle.html makes an external reference: ${hits.slice(0, 3).join(', ')}`);
+      `${bundleFilename} makes an external reference: ${hits.slice(0, 3).join(', ')}`);
     report.check(!/<link\b[^>]*stylesheet/i.test(bundle), 'bundle',
-      'bundle.html still links an external stylesheet, so it is not standalone');
+      `${bundleFilename} still links an external stylesheet, so it is not standalone`);
     report.check(!/<script\b[^>]*\ssrc=/i.test(bundle), 'bundle',
-      'bundle.html still loads a script by src, so it is not standalone');
+      `${bundleFilename} still loads a script by src, so it is not standalone`);
   }
 
   return report;
@@ -876,12 +911,12 @@ function decodeEntities(text) {
 let brandAssetCache = null;
 function collectBrandAssets() {
   if (brandAssetCache) return brandAssetCache;
-  const dirs = ['iconography', 'illustrations', 'logos', 'color-bars'].map((d) => path.join(BRANDING, d));
+  const dirs = ['iconography', 'illustrations', 'logos', 'color-bars', 'photography'].map((d) => path.join(BRANDING, d));
   const bytes = [];
   for (const dir of dirs) {
     if (!existsSync(dir)) continue;
     for (const file of walk(dir)) {
-      if (/\.(svg|png|jpg|jpeg)$/i.test(file)) bytes.push(readFileSync(file));
+      if (/\.(svg|png|jpg|jpeg|webp)$/i.test(file)) bytes.push(readFileSync(file));
     }
   }
   brandAssetCache = bytes;

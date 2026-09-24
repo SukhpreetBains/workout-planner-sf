@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "template": "weekly-status-report",
+  "build_status": "draft",
+  "optional_review": "complete",
+  "answers": {
+    "engagement-opener.identity": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "engagement-opener.session": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "engagement-opener.brand": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "agenda.topics": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "agenda.outcomes": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "agenda.facilitation": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "escalation-log.items": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "escalation-log.decision-process": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "escalation-log.closure": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "status-summary.roster": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "status-summary.scorecard": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "status-summary.scope-note": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "status-summary.completed": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "status-summary.planned": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "status-summary.critical-questions": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "status-summary.milestones": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "action-log.actions": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "action-log.owners": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "action-log.blockers": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "timeline-roadmap.milestones": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "timeline-roadmap.dates": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "timeline-roadmap.dependencies": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "raid-log.items": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "raid-log.thresholds": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "raid-log.closure": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "engagement-financials.contract-summary": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "engagement-financials.invoices": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "engagement-financials.team-effort": {
+      "status": "answered",
+      "answer": [
+        "Covered by the fictional weekly status report example."
+      ],
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    },
+    "engagement-financials.notes": {
+      "status": "answered",
+      "answer": "Covered by the fictional weekly status report example.",
+      "answered_by": "source",
+      "disposition": "rendered",
+      "sources": [
+        {
+          "source_id": "fictional-example",
+          "locator": "templates/weekly-status-report/static-example.json"
+        }
+      ]
+    }
+  }
+}

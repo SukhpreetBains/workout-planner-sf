@@ -7,9 +7,9 @@ from pathlib import Path
 
 import yaml
 
-# EAD_REPO_ROOT identifies the Opportunity workspace root. Default to the
+# ASCENT_OPPORTUNITY_ROOT identifies the Opportunity workspace root. Default to the
 # caller's working directory so plugin installation depth never affects data.
-REPO_ROOT = Path(os.environ.get("EAD_REPO_ROOT")
+REPO_ROOT = Path(os.environ.get("ASCENT_OPPORTUNITY_ROOT")
                  or Path.cwd()).resolve()
 
 WORKSPACE = REPO_ROOT / "workspace"

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "id": "project-schedule",
+  "title": "Project Schedule",
+  "description": "A working schedule that sequences workstreams, milestones, dependencies, dates, and accountable owners.",
+  "questions": [
+    {
+      "id": "project-schedule.fixed-dates",
+      "tier": "required",
+      "prompt": "Which dates or milestones are contractually fixed?",
+      "answer_type": "milestones",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Project schedule/clarification-1"
+    },
+    {
+      "id": "project-schedule.sequence",
+      "tier": "required",
+      "prompt": "Which approvals or dependencies determine the work sequence?",
+      "answer_type": "schedule",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Project schedule/clarification-2"
+    },
+    {
+      "id": "project-schedule.constraints",
+      "tier": "optional",
+      "prompt": "What availability constraints or blackout periods affect the schedule?",
+      "answer_type": "schedule",
+      "source_ref": "Ascent Modules.xlsx/List of Modules/Project schedule/clarification-3"
+    }
+  ],
+  "default_output": [
+    {
+      "id": "schedule",
+      "type": "table",
+      "renderer": "./html.mjs#schedule",
+      "uses": [
+        "project-schedule.fixed-dates",
+        "project-schedule.sequence",
+        "project-schedule.constraints"
+      ]
+    }
+  ]
+}

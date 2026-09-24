@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseYaml, YamlError } from './yaml.mjs';
+import { DELIVERY_SCHEMA, validateDelivery } from './delivery-schema.mjs';
 
 export class ContentError extends Error {
   constructor(problems) {
@@ -22,6 +23,14 @@ export class ContentError extends Error {
 export const ACCENTS = ['cyan', 'coral-red', 'purple', 'chartreuse'];
 export const SEVERITIES = ['high', 'medium', 'low'];
 
+const MICROSITE_FIELDS = {
+  layout: { type: 'string', required: true, enum: ['microsite'] },
+  copy: { type: 'list', required: true, min: 1, of: {
+    key: { type: 'string', required: true, pattern: /^[a-z0-9-]+$/ },
+    text: { type: 'string', required: true },
+  } },
+};
+
 const META_FIELDS = {
   archetype: { type: 'string', required: true },
   client: { type: 'string', required: true },
@@ -32,6 +41,9 @@ const META_FIELDS = {
   classification: { type: 'string', required: true },
   accent: { type: 'string', required: true, enum: ACCENTS },
   client_logo: { type: 'string' },
+  cover_background: { type: 'string', hint: 'relative to the content file, same as client_logo — the caller places a reachable image' },
+  layout: { ...MICROSITE_FIELDS.layout, required: false },
+  copy: MICROSITE_FIELDS.copy,
 };
 
 /**
@@ -39,6 +51,7 @@ const META_FIELDS = {
  * injected by the archetype and are deliberately not authorable.
  */
 export const SECTION_SCHEMA = {
+  ...DELIVERY_SCHEMA,
   'exec-summary': {
     title: { type: 'string' },
     body: { type: 'prose', required: true },
@@ -134,6 +147,20 @@ export const SECTION_SCHEMA = {
       of: {
         capability: { type: 'string', required: true },
         values: { type: 'numberlist', required: true, min: 1, range: [1, 5] },
+        note: { type: 'string' },
+      },
+    },
+  },
+  'status-grid': {
+    title: { type: 'string', required: true },
+    rows: {
+      type: 'list', required: true, min: 1,
+      of: {
+        area: { type: 'string', required: true },
+        status: {
+          type: 'string', required: true, enum: ['green', 'amber', 'red'],
+          hint: 'colour never carries the value alone; the status word always prints alongside the meter',
+        },
         note: { type: 'string' },
       },
     },
@@ -303,7 +330,10 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
   }
 
   if (!('meta' in doc)) problems.push('missing required key `meta`');
-  else checkFields(doc.meta, META_FIELDS, 'meta', problems, ctx);
+  else {
+    checkFields(doc.meta, { ...META_FIELDS, copy: { ...MICROSITE_FIELDS.copy, required: doc.meta?.layout === 'microsite' } }, 'meta', problems, ctx);
+    if (doc.meta.copy && doc.meta.layout !== 'microsite') problems.push('meta.copy requires layout: microsite');
+  }
 
   if (!('sections' in doc) || !Array.isArray(doc.sections)) {
     problems.push('missing required key `sections` (a list of sections)');
@@ -332,11 +362,12 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
           problems.push(`${where}: the \`${archetype.name}\` archetype does not permit a \`${rawType}\` section (it allows: ${allowed.join(', ')})`);
         }
       }
+      const previousProblems = problems.length;
       checkFields(section, {
         type: { type: 'string', required: true },
         module: { type: 'string' },
         view: { type: 'string' },
-        ...schema,
+        ...(section.layout === 'microsite' ? { title: { type: 'string', required: true }, ...MICROSITE_FIELDS } : schema),
       }, where, problems, ctx);
       if (type === 'roadmap' && Array.isArray(section.phases)) {
         section.phases.forEach((phase, phaseIndex) => {
@@ -352,6 +383,7 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
           }
         });
       }
+      if (section.layout !== 'microsite' && problems.length === previousProblems) validateDelivery(section, where, problems);
     });
 
     if (archetype?.required_sections?.length) {

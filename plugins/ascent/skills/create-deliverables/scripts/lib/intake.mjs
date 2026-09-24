@@ -4,6 +4,7 @@
  * content.yaml, which remains the presentation contract.
  */
 
+import { templateQuestions } from './template-options.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -24,7 +25,7 @@ const isObject = (value) => value !== null && typeof value === 'object' && !Arra
 const hasValue = (value) => value !== null && value !== undefined && value !== ''
   && (!Array.isArray(value) || value.length > 0);
 
-function answerMatchesType(value, answerType) {
+export function answerMatchesType(value, answerType) {
   if (['text', 'person', 'decision'].includes(answerType)) return typeof value === 'string';
   if (answerType === 'date') return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
   return Array.isArray(value) && value.length > 0
@@ -239,8 +240,24 @@ export function evaluateIntake(intake, archetype, modules) {
   const answers = answerMap(intake, problems);
   const known = new Map(modules.flatMap((module) =>
     module.questions.map((question) => [question.id, { ...question, module_id: module.id, module_title: module.title }])));
+  for (const question of templateQuestions(archetype)) {
+    if (known.has(question.id)) problems.push(`duplicate question id ${question.id}`);
+    known.set(question.id, question);
+  }
   for (const id of Object.keys(answers)) {
     if (!known.has(id)) problems.push(`intake.answers contains unknown question \`${id}\``);
+  }
+  if (intake.display_question_numbers !== undefined) {
+    if (!isObject(intake.display_question_numbers)) {
+      problems.push('intake.display_question_numbers must map stable question IDs to display numbers');
+    } else {
+      for (const [id, number] of Object.entries(intake.display_question_numbers)) {
+        if (!known.has(id)) problems.push(`intake.display_question_numbers contains unknown question \`${id}\``);
+        if (typeof number !== 'string' || !/^\d+[a-z]?$/.test(number)) {
+          problems.push(`intake.display_question_numbers.${id} must be a number such as 7 or 7a`);
+        }
+      }
+    }
   }
 
   const evaluated = [];
@@ -255,6 +272,10 @@ export function evaluateIntake(intake, archetype, modules) {
     if (status === 'answered' && !hasValue(raw.answer)) problems.push(`${question.id}: answered status requires an answer`);
     else if (status === 'answered' && !answerMatchesType(raw.answer, question.answer_type)) {
       problems.push(`${question.id}: answer does not match declared type \`${question.answer_type}\``);
+    }
+    if (status === 'answered' && question.choices) {
+      if (!question.choices.some(choice => choice.value === raw.answer)) problems.push(`${question.id}: answer must name an available choice`);
+      if (raw.answered_by !== 'user') problems.push(`${question.id}: template choices require an explicit user answer`);
     }
     if (status === 'answered') {
       if (!['source', 'user', 'mixed'].includes(raw.answered_by)) {
@@ -303,6 +324,9 @@ export function loadAndEvaluateIntake(intakePath, archetype, modules) {
 
 export function decorateContentWithGaps(doc, intake, modules) {
   if (!intake || intake.requiredGaps.length === 0) return doc;
+  if (intake.buildStatus === 'draft') {
+    return { ...doc, _unansweredRequiredCount: intake.requiredGaps.length };
+  }
   const sections = doc.sections.map((section) => ({ ...section }));
   const allItems = intake.requiredGaps.map((gap) => ({
     id: gap.id,

@@ -3,21 +3,37 @@
 Templates are user-facing compositions of reusable content-domain modules. The
 implementation retains the internal `archetype` name for compatibility.
 
+## Selection workflow
+
+For every new guided deliverable, enumerate every `templates/*/archetype.json`
+manifest and show the user the complete catalog with each template's ID, title,
+and description. The user must explicitly choose a template. Do not default to
+`project-kickoff` or infer a template from the request.
+
+After a template is selected, load its manifest and show the full ordered list
+of available modules, including each module's ID, title, and description. Show
+the template's recommended modules separately, using the template-owned
+instructions. Before the user selects a final subset, ask whether they would
+like one or more modules rendered with fictional example data. Render and show
+only the modules they request, never the full template or all available modules
+by default. Then let the user select the modules to include, preserve template
+order for the selected subset, and confirm the module selection before evidence
+intake or questions.
+
 ## Files
 
 ```text
 templates/
   project-kickoff/
     archetype.json
-    content.example.yaml
-    intake.example.yaml
+    static-example.yaml
+    intake.example.json
 modules/
   shared/
     primitives.mjs
   <module-id>/
     module.json
     html.mjs
-    example.json
 ```
 
 An archetype owns module order, question selection or promotion, and optional
@@ -48,13 +64,14 @@ Every renderer path must reference the `html.mjs` in the same module folder.
 Module renderers may import low-level primitives from `modules/shared/`, but
 one module never imports a finished view from another module.
 
-## Module examples
+## Static template examples
 
-Every module owns `example.json`, a fictional, renderable demonstration of all
-authorable views declared by that module. A module that owns the template cover
-also supplies the fictional cover metadata. Example source never contains real
-client information and is validated against the same content schemas and HTML
-renderers used for deliverables.
+Every template declares one `static_example` file in `archetype.json`. The file
+contains fictional, renderable content for every authorable view selected by
+that template, including the cover metadata. Modules remain reusable structural
+definitions and do not carry fictional content. Static examples never contain
+real client information and are validated against the same content schemas and
+HTML renderers used for deliverables.
 
 Render one module directly:
 
@@ -64,18 +81,29 @@ node scripts/build.mjs --preview-module kickoff-context \
   --bundle
 ```
 
-Render every module selected by a template:
+Render every module associated with a selected template only when the user
+explicitly requests a full-template preview:
 
 ```bash
-node scripts/build.mjs --preview-template project-kickoff \
+node scripts/build.mjs --preview-template <selected-template> \
   --out path/to/template-preview \
   --bundle
 ```
 
-Template previews compose the module-owned examples in template order and add a
-visible module label to every section. Show this preview when a user selects a
-template, then explain that they may choose which modules to include in their
-output before intake begins.
+Template previews render the template-owned static example in template order
+and add a visible module label to every section. Isolated module previews select
+the matching section from that same static example. After a template is
+selected, show only the isolated previews the user requested. The template's
+complete module list and the user's confirmed module selection must already be
+recorded before intake begins. After content has been added and rendered, give
+the user the updated preview link when that workspace action is available.
+
+An `--industry <id>` flag on either preview command substitutes an active
+industry pack's own full alternate static example for the template's, when
+that pack declares one (`shared/industry/<id>/manifest.json`'s
+`examples.static_examples`). It is held to the exact same completeness
+contract as the template's own file — this never partially patches it. See
+[../../../shared/industry/README.md](../../../shared/industry/README.md).
 
 Every question contains:
 
@@ -122,19 +150,35 @@ plus a `disposition` of `rendered`, `summarized`, or `supporting`. Source-backed
 answers include at least one source citation. This makes answer coverage a
 machine-enforced gate instead of a drafting convention.
 
+For live workspace intake, source-backed values come from current reviewed
+tracker rows in `workspace/.system/tracker-copies/`, not the source documents.
+Refresh them once with `shared/scripts/sync.py --trackers-only`, using the
+installed plugin's Python wrapper and the Opportunity's `ASCENT_OPPORTUNITY_ROOT`.
+In each answer's `sources` list, use `source_id` for the tracker-copy path and
+`locator` for the stable row ID and field names. Preserve the row's original
+source references for provenance without reopening the documents. Explicit
+user answers remain `answered_by: user`; a missing reviewed value remains a
+gap until review acceptance or a direct user answer resolves it.
+
 ## Gap behavior
 
-Required gaps do not disappear. A generated site contains:
+Required gaps remain recorded in the intake and generated manifest. A draft
+shows one compact notice above the cover with the unanswered required-question
+count. It does not inject missing questions, gap-only sections, or placeholders
+into the page. Author only supported fields, rows, and views; omit a view when
+there is not enough supported content to satisfy its schema. Keep the supported
+parts of partially answered modules.
 
-- one opening summary grouped by module
-- the unanswered question inside the section it would have populated
-- a generated manifest list of unresolved IDs
+An explicit draft request does not require a gap interview or separate
+incomplete-build confirmation before rendering. Show the draft first and offer
+gap resolution afterward. An explicitly confirmed final build retains the
+opening summary grouped by module and contextual unanswered questions.
 
 Optional gaps are warned about before building and retained in intake, but are
 not rendered.
 
 The user may explicitly override required gaps and may mark the result final.
-The system records the confirmation and keeps the gap indicators. It never
+The system records the confirmation and keeps the final gap indicators. It never
 invents substitute content.
 
 ## Human review
@@ -143,3 +187,71 @@ The machine-readable content file remains the source, but the branded draft is
 the review surface. Do not ask a user to approve raw YAML. After the first
 render, offer customizations. A confirmed customization request detaches the
 site into local editable source and stops enforcing module and template shape.
+
+## Custom template instructions and visual preferences
+
+An optional `instructions` field in `archetype.json` names a Markdown file inside
+the template directory. The loader validates and reads it as `instructionsText`;
+the guided workflow reads it on selection and resume. Templates without the field
+retain their existing behavior. Missing files, empty instructions, and paths
+outside the template (including symlinks) fail validation.
+
+Optional `template_questions` hold presentation preferences, separate from module
+content questions. Each has a template-prefixed `id`, `prompt`, `tier`,
+`answer_type: decision`, and at least two `choices`. Each choice has a unique
+`value`, `label`, and local `image` path. A `brand:` prefix resolves inside the active branding pack’s
+assets directory, avoiding duplicate assets across templates. Answer them through the normal intake
+with explicit user provenance. Required gaps, not-applicable reasons, draft
+builds, and final overrides use the same rules as module questions.
+
+`cover_background_question` references one of these questions. An answered choice
+provides the cover image; unresolved or explicitly not-applicable answers leave
+the existing solid cover. The builder writes `template-choices.html` with every
+choice shown, and copies the assets locally for offline use. No background is
+automatically chosen for structure previews.
+
+Optional `illustrations` entries target a selected `module` and `view`, using a
+local `image` as a decorative section-heading accent. Only authored sections
+render their accents. Keep approved asset provenance in the template assets
+README. The HLS kickoff template demonstrates all of these fields.
+
+## Reference microsite compositions
+
+The project-kickoff static example reproduces the user-supplied Northstar Health
+sample from `Ascent Mocrosite Modules.html`. It is sample content, never project
+evidence. Module titles, descriptions, order, and all 28 composition bodies match
+that reference.
+
+Each module keeps its reference composition in its own `html.mjs`. Set
+`layout: microsite` on a section (or cover metadata) and provide `copy`, a list of
+`key` and `text` pairs. Keys correspond to named placeholders in the module's
+composition. Missing, duplicate, and unknown keys fail rendering; values are
+escaped even when used in attributes. The template owns all example wording.
+Reference layouts have a fixed composition and card count. Use the standard
+structured fields without `layout` when the content needs a different item count.
+Do not combine the two content forms in a section.
+
+Reference styling is restored from the supplied microsite in
+`assets/css/reference-layout.css`. Its declaration values, cascade order, colors,
+and geometry are preserved. The rendering boundary prefixes every class and
+inline custom property with `ref-`; the stylesheet uses the same prefix. A scoped
+browser-default reset prevents the standard kit's element resets and components
+from changing these layouts. The section wrapper does not add another content
+width or another set of gutters. Load this stylesheet only when a reference
+layout is used.
+
+Keep source fidelity distinct from token compliance. The source contains literal
+colors, gradients, and centered diagram labels that the existing token-only
+brand gate rejects. Do not rewrite those declarations merely to obtain a passing
+report, and do not suppress the gate's findings. The standard layouts retain
+normal brand validation. Desktop visual review of the supplied-reference layouts
+is still required before claiming a visual match.
+
+Flow selection, design notes, and epic filters are scoped to each rendered
+module. Metric rings and other numeric graphics include their final state in
+static output. The existing standard renderers remain available for previously
+authored content.
+
+The standard-renderer regression fixture under `scripts/test/fixtures/` preserves
+validator mutation coverage independently of the evolving template example. It
+is test data, not an authoring example.

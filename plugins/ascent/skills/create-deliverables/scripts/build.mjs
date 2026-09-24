@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { loadTemplateOptions, copyTemplateOptions } from './lib/template-options.mjs';
 /**
  * build.mjs — content in, static microsite out.
  *
@@ -6,9 +7,9 @@
  *
  *   --out <dir>       output directory (default ./build/<client>-<archetype>)
  *   --intake <file>   question coverage and evidence record for modular templates
- *   --preview-module  render a module-owned example for isolated visual review
- *   --preview-template render every module example in template order
- *   --bundle          also emit bundle.html, everything inlined into one file
+ *   --preview-module  isolate one module from its template's static example
+ *   --preview-template render a template-owned static example with every module
+ *   --bundle          also emit <deliverable-name>.html, everything inlined into one file
  *   --no-validate     skip the brand gate for iteration only
  *
  * The microsite is a pure function of the content file. Nobody hand-edits the
@@ -20,13 +21,13 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 
-import { ContentError, parseContentFile, resolveSectionType, validateContent } from './lib/content.mjs';
+import { ContentError, parseContentFile, resolveSectionType, validSectionTypes, validateContent } from './lib/content.mjs';
 import {
   INCOMPLETE_CONSEQUENCES, decorateContentWithGaps, loadAndEvaluateIntake, loadModuleRenderers,
   loadTemplateModules, resolveGuidedContent,
 } from './lib/intake.mjs';
 import {
-  AssetError, SKILL_ROOT, copyAssets, copyOwnAssets, listIconNames, logoVariantFor,
+  AssetError, SKILL_ROOT, copyAssets, copyOwnAssets, copyProfileAssets, listIconNames, logoVariantFor,
 } from './lib/assets.mjs';
 import {
   railLabel, renderFooter, renderRail, renderSection, sectionId,
@@ -42,13 +43,14 @@ import { validateBuild } from './validate-brand.mjs';
    ========================================================================== */
 
 function parseArgs(argv) {
-  const opts = { content: null, out: null, intake: null, previewModule: null, previewTemplate: null, bundle: false, validate: true };
+  const opts = { content: null, out: null, intake: null, previewModule: null, previewTemplate: null, industry: null, bundle: false, validate: true };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--out') opts.out = argv[++i];
     else if (arg === '--intake') opts.intake = argv[++i];
     else if (arg === '--preview-module') opts.previewModule = argv[++i];
     else if (arg === '--preview-template') opts.previewTemplate = argv[++i];
+    else if (arg === '--industry') opts.industry = argv[++i];
     else if (arg === '--bundle') opts.bundle = true;
     else if (arg === '--no-validate') opts.validate = false;
     else if (arg === '-h' || arg === '--help') opts.help = true;
@@ -59,13 +61,16 @@ function parseArgs(argv) {
   if (opts.content === null && !opts.previewModule && !opts.previewTemplate && !opts.help) {
     throw new Error('give a content file, --preview-module <id>, or --preview-template <name>');
   }
+  if (opts.industry && !opts.previewModule && !opts.previewTemplate) {
+    throw new Error('--industry only applies to --preview-module or --preview-template');
+  }
   return opts;
 }
 
 const USAGE = `
   node scripts/build.mjs <content.yaml|.json> [--intake <file>] [--preview-module <id>] [--out <dir>] [--bundle] [--no-validate]
-  node scripts/build.mjs --preview-module <id> [--preview-template <name>] [--out <dir>] [--bundle]
-  node scripts/build.mjs --preview-template <name> [--out <dir>] [--bundle]
+  node scripts/build.mjs --preview-module <id> [--preview-template <name>] [--industry <id>] [--out <dir>] [--bundle]
+  node scripts/build.mjs --preview-template <name> [--industry <id>] [--out <dir>] [--bundle]
 `;
 
 /* ==========================================================================
@@ -84,7 +89,7 @@ export function loadArchetype(name) {
   }
   const manifest = JSON.parse(readFileSync(file, 'utf8'));
   manifest.name ??= name;
-  return manifest;
+  return loadTemplateOptions(manifest, path.dirname(file));
 }
 
 /* ==========================================================================
@@ -116,6 +121,13 @@ export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRende
   const description = meta.subtitle
     ? `${meta.title} — ${meta.subtitle}`
     : meta.title;
+  const unansweredCount = doc._unansweredRequiredCount ?? 0;
+  const draftNotice = unansweredCount > 0
+    ? `
+    <aside class="draft-notice surface-white" role="status" aria-label="Incomplete draft">
+      <div class="section__inner"><p>Draft: ${unansweredCount} required question${unansweredCount === 1 ? ' is' : 's are'} unanswered.</p></div>
+    </aside>`
+    : '';
 
   return `<!doctype html>
 <html lang="en" data-accent="${esc(meta.accent)}" data-deliverable-status="${esc(ctx.buildStatus ?? 'final')}">
@@ -131,12 +143,13 @@ export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRende
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
+  ${meta.layout === 'microsite' || sections.some((section) => section.layout === 'microsite') ? '<link rel="stylesheet" href="css/reference-layout.css">' : ''}
   <link rel="stylesheet" href="css/print.css">
   <script type="importmap">{"imports":{"animejs":"./js/anime.esm.min.js"}}</script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="page">
+  <div class="page">${draftNotice}
 ${coverRenderer(meta, ctx)}
 ${renderRail(railEntries)}
     <main id="main">
@@ -165,7 +178,9 @@ export async function build(contentPath, {
   //    against both the schema and that archetype's manifest.
   const raw = parseContentFile(absContent);
   const archetypeName = raw?.meta?.archetype;
-  const archetype = loadArchetype(archetypeName);
+  const archetype = previewModule && structurePreview
+    ? isolatedArchetype(loadArchetype(archetypeName), previewModule)
+    : loadArchetype(archetypeName);
   const modules = loadTemplateModules(archetype, SKILL_ROOT);
   const guidedRaw = resolveGuidedContent(raw, modules);
   const doc = validateContent(guidedRaw, { archetype, iconNames: listIconNames() });
@@ -176,11 +191,13 @@ export async function build(contentPath, {
     : null;
   let renderedDoc = decorateContentWithGaps(doc, intake, modules);
   if (previewModule) {
-    if (!modules.some((module) => module.id === previewModule)) {
+    const previewDefinition = modules.find((module) => module.id === previewModule);
+    if (!previewDefinition) {
       throw new ContentError(`preview module \`${previewModule}\` is not selected by this template`);
     }
     const previewSections = renderedDoc.sections.filter((section) => section.module === previewModule);
-    if (previewSections.length === 0) {
+    const ownsBodyView = previewDefinition.output.some((output) => output.type !== 'cover');
+    if (previewSections.length === 0 && ownsBodyView) {
       throw new ContentError(`content has no authored sections for preview module \`${previewModule}\``);
     }
     renderedDoc = { ...renderedDoc, sections: previewSections };
@@ -192,9 +209,10 @@ export async function build(contentPath, {
   const footerLogo = logoVariantFor(archetype.footer_surface ?? 'black');
   const icons = renderedDoc.sections.flatMap((s) =>
     resolveSectionType(s.type) === 'theme-group'
-      ? s.findings.map((f) => f.icon).filter(Boolean)
+      ? (s.findings ?? []).map((f) => f.icon).filter(Boolean)
       : []);
   const clientLogo = meta.client_logo ? path.resolve(contentDir, meta.client_logo) : null;
+  const coverBackground = meta.cover_background ? path.resolve(contentDir, meta.cover_background) : null;
 
   const outDir = path.resolve(out ?? path.join(
     process.cwd(), 'build',
@@ -204,17 +222,29 @@ export async function build(contentPath, {
   mkdirSync(outDir, { recursive: true });
 
   const assets = copyAssets(outDir, {
-    logoVariants: [coverLogo, footerLogo],
+    logoVariants: [coverLogo, footerLogo, ...(archetype.cover_background_question || coverBackground ? ['blue'] : [])],
     icons,
     clientLogo,
+    coverBackground,
   });
-  copyOwnAssets(outDir);
+  copyOwnAssets(outDir, {
+    referenceLayouts: meta.layout === 'microsite' || renderedDoc.sections.some((section) => section.layout === 'microsite'),
+  });
+  const templateAssets = copyTemplateOptions(archetype, intake, outDir);
+  const profiles = copyProfileAssets(renderedDoc.sections, contentDir, outDir);
 
   // 3. Render.
+  // meta.cover_background (direct-authored, e.g. by an industry-flavored
+  // draft) wins over the template_questions gallery pick if a build somehow
+  // has both — only one path is normally in play at a time.
+  const resolvedCoverBackground = assets.coverBackground ?? templateAssets.coverBackground;
   const ctx = {
     meta,
+    ...templateAssets,
+    coverBackground: resolvedCoverBackground,
+    profilePath: (name) => profiles[name],
     coverSurface,
-    logoPath: assets.logos[coverLogo],
+    logoPath: assets.logos[resolvedCoverBackground ? 'blue' : coverLogo],
     footerLogoPath: assets.logos[footerLogo],
     clientLogoPath: assets.clientLogo,
     iconPath: (name) => {
@@ -251,10 +281,11 @@ export async function build(contentPath, {
     date: meta.date,
     classification: meta.classification,
     cover_surface: coverSurface,
-    logo_variants: { cover: coverLogo, footer: footerLogo },
+    logo_variants: { cover: templateAssets.coverBackground ? 'blue' : coverLogo, footer: footerLogo },
     icons: Object.keys(assets.icons),
     fonts: assets.fonts,
     bundle: Boolean(bundle),
+    bundle_filename: bundle ? `${slugify(meta.title)}.html` : null,
     template_mode: modules.length ? 'guided' : 'legacy',
     build_status: intake?.buildStatus ?? 'final',
     required_question_count: intake?.answers.filter((answer) => answer.tier === 'required').length ?? 0,
@@ -268,7 +299,7 @@ export async function build(contentPath, {
   writeFileSync(path.join(outDir, 'brand-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
   let bundlePath = null;
-  if (bundle) bundlePath = writeBundle(outDir);
+  if (bundle) bundlePath = writeBundle(outDir, manifest.bundle_filename);
 
   return { outDir, html, manifest, assets, bundlePath, doc, renderedDoc, archetype, modules, intake };
 }
@@ -286,21 +317,25 @@ function templatesContainingModule(moduleId) {
     });
 }
 
+/** Isolated review includes every owned view, regardless of template selection. */
+function isolatedArchetype(archetype, moduleId) {
+  return { ...archetype, allowed_sections: validSectionTypes(), required_sections: [],
+    modules: archetype.modules.map((entry) => (typeof entry === 'string' ? entry : entry.id) === moduleId ? { id: moduleId } : entry),
+  };
+}
+
 export async function buildStructurePreview({
-  moduleId = null, templateName = null, out = null, bundle = false,
+  moduleId = null, templateName = null, industry = null, out = null, bundle = false,
 } = {}) {
   let resolvedTemplate = templateName;
   if (!resolvedTemplate && moduleId) {
     const candidates = templatesContainingModule(moduleId);
     if (candidates.length === 0) throw new ContentError(`no template selects module \`${moduleId}\``);
-    if (candidates.length > 1) {
-      throw new ContentError(`module \`${moduleId}\` belongs to multiple templates (${candidates.join(', ')}); add --preview-template`);
-    }
-    [resolvedTemplate] = candidates;
+    resolvedTemplate = candidates.includes('project-kickoff') ? 'project-kickoff' : candidates[0];
   }
-  const archetype = loadArchetype(resolvedTemplate);
+  const archetype = moduleId ? isolatedArchetype(loadArchetype(resolvedTemplate), moduleId) : loadArchetype(resolvedTemplate);
   const modules = loadTemplateModules(archetype, SKILL_ROOT);
-  const raw = composeStructurePreview(archetype, modules, SKILL_ROOT, { previewModule: moduleId });
+  const raw = composeStructurePreview(archetype, modules, SKILL_ROOT, { previewModule: moduleId, industry });
   const tempDir = mkdtempSync(path.join(os.tmpdir(), 'create-deliverables-preview-'));
   const contentPath = path.join(tempDir, 'content.json');
   writeFileSync(contentPath, `${JSON.stringify(raw, null, 2)}\n`, 'utf8');
@@ -346,6 +381,7 @@ async function main() {
       : await buildStructurePreview({
           moduleId: opts.previewModule,
           templateName: opts.previewTemplate,
+          industry: opts.industry,
           out: opts.out,
           bundle: opts.bundle,
         });
@@ -369,6 +405,8 @@ async function main() {
   }
   report.note(`preview  cd ${path.relative(process.cwd(), result.outDir) || '.'} && python3 -m http.server 8000`);
   report.print();
+  if (result.archetype.instructionsText && opts.previewTemplate) console.log(`\nTemplate custom instructions:\n${result.archetype.instructionsText}`);
+  if (result.archetype.template_questions?.length) console.log(`Visual choices: ${path.join(result.outDir, 'template-choices.html')}`);
 
   if (result.intake?.requiredGaps.length) {
     console.log(`  ${style.yellow('Required information warning')}  ${result.intake.requiredGaps.length} required answers remain unresolved.`);

@@ -1,0 +1,2994 @@
+meta:
+  archetype: "project-kickoff"
+  client: "Northstar Health"
+  title: "Kickoff the work. Align the system."
+  subtitle: "A living project kickoff that turns alignment into an operating system for delivery."
+  date: "2026-09-14"
+  authors:
+    -
+      name: "Example delivery team"
+      role: "Engagement team"
+  classification: "Confidential"
+  accent: "purple"
+  layout: "microsite"
+  copy:
+    -
+      key: "div-module-kicker-1"
+      text: "MODULE 01 · IDENTITY + INTENT"
+    -
+      key: "div-h2-1"
+      text: "Title / engagement opener"
+    -
+      key: "div-p-1"
+      text: "The opening slide that establishes the engagement identity, audience, and meeting context."
+    -
+      key: "hero-copy-eyebrow-1"
+      text: "NORTHSTAR HEALTH · MEMBER EXPERIENCE MODERNIZATION"
+    -
+      key: "hero-copy-kinetic-title-1"
+      text: "Kickoff the work."
+    -
+      key: "kinetic-title-span-1"
+      text: "Align the system."
+    -
+      key: "hero-copy-hero-sub-1"
+      text: "A living project kickoff that turns alignment into an operating system for delivery."
+    -
+      key: "hero-meta-span-1"
+      text: "September 14, 2026"
+    -
+      key: "hero-meta-span-2"
+      text: "16-week mobilization"
+    -
+      key: "hero-meta-span-3"
+      text: "Confidential"
+    -
+      key: "pulse-orbit-orbit-label-1"
+      text: "VALUE"
+    -
+      key: "pulse-orbit-orbit-label-2"
+      text: "DELIVERY"
+    -
+      key: "pulse-orbit-orbit-label-3"
+      text: "CLIENT"
+    -
+      key: "reference-notes-summary-1"
+      text: "Design notes"
+    -
+      key: "div-span-1"
+      text: "BEST STORY"
+    -
+      key: "div-p-2"
+      text: "Make the opener behave like a launch sequence: establish engagement identity, context, and one sentence that tells the room why this meeting matters."
+    -
+      key: "div-span-2"
+      text: "MOTION PURPOSE"
+    -
+      key: "div-p-3"
+      text: "Kinetic headline reveal, a breathing project pulse, and slow orbital motion create energy without distracting from the engagement identity."
+    -
+      key: "source-signals-span-1"
+      text: "SOURCE SIGNALS"
+    -
+      key: "div-span-3"
+      text: "SOW"
+    -
+      key: "div-span-4"
+      text: "MSA"
+    -
+      key: "div-span-5"
+      text: "Proposal Decks"
+    -
+      key: "div-span-6"
+      text: "Salesforce Opportunity info"
+    -
+      key: "div-span-7"
+      text: "Customer's Logo & colors"
+sections:
+  -
+    module: "agenda"
+    view: "agenda"
+    title: "Agenda / meeting objectives"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 02 · OUTCOME-LED JOURNEY"
+      -
+        key: "div-h2-1"
+        text: "Agenda / meeting objectives"
+      -
+        key: "div-p-1"
+        text: "A concise plan for the session and the alignment outcomes expected by the end of it."
+      -
+        key: "agenda-step-b-1"
+        text: "01"
+      -
+        key: "agenda-step-span-1"
+        text: "Why now"
+      -
+        key: "agenda-step-small-1"
+        text: "Align on context + outcomes"
+      -
+        key: "agenda-step-b-2"
+        text: "02"
+      -
+        key: "agenda-step-span-2"
+        text: "What we will deliver"
+      -
+        key: "agenda-step-small-2"
+        text: "Confirm scope + approach"
+      -
+        key: "agenda-step-b-3"
+        text: "03"
+      -
+        key: "agenda-step-span-3"
+        text: "How we will work"
+      -
+        key: "agenda-step-small-3"
+        text: "Clarify team + governance"
+      -
+        key: "agenda-step-b-4"
+        text: "04"
+      -
+        key: "agenda-step-span-4"
+        text: "How we stay in control"
+      -
+        key: "agenda-step-small-4"
+        text: "Activate RAID + decisions"
+      -
+        key: "agenda-step-b-5"
+        text: "05"
+      -
+        key: "agenda-step-span-5"
+        text: "What happens next"
+      -
+        key: "agenda-step-small-5"
+        text: "Commit first-week actions"
+      -
+        key: "objective-strip-strong-1"
+        text: "By the end of kickoff:"
+      -
+        key: "module-visual-objective-strip-1"
+        text: "everyone can explain the destination, the boundaries, the operating model, and their next action."
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Tell attendees where the conversation is going and what will be true by the end. Organize around alignment outcomes, not presentation topics."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "The agenda rail activates progressively as the reader moves, turning the meeting plan into a navigable journey."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "facilitation plan"
+      -
+        key: "div-span-4"
+        text: "SOW"
+      -
+        key: "div-span-5"
+        text: "Proposal Decks"
+      -
+        key: "div-span-6"
+        text: "Meeting Notes"
+      -
+        key: "div-span-7"
+        text: "Engagement Tracker"
+  -
+    module: "team-roster"
+    view: "roster"
+    title: "Welcome, introductions, and team roster"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 03 · HUMAN CONSTELLATION"
+      -
+        key: "div-h2-1"
+        text: "Welcome, introductions, and team roster"
+      -
+        key: "div-p-1"
+        text: "Introduces the client, partner, and delivery participants so attendees understand who is involved."
+      -
+        key: "person-card-avatar-1"
+        text: "AM"
+      -
+        key: "person-card-h3-1"
+        text: "Avery Morgan"
+      -
+        key: "person-card-p-1"
+        text: "Executive Sponsor"
+      -
+        key: "person-card-small-1"
+        text: "Northstar Health"
+      -
+        key: "person-card-responsibility-1"
+        text: "Removes enterprise barriers"
+      -
+        key: "person-card-avatar-2"
+        text: "RK"
+      -
+        key: "person-card-h3-2"
+        text: "Rina Kapoor"
+      -
+        key: "person-card-p-2"
+        text: "Product Owner"
+      -
+        key: "person-card-small-2"
+        text: "Northstar Health"
+      -
+        key: "person-card-responsibility-2"
+        text: "Owns product priorities"
+      -
+        key: "person-card-avatar-3"
+        text: "JL"
+      -
+        key: "person-card-h3-3"
+        text: "Jordan Lee"
+      -
+        key: "person-card-p-3"
+        text: "Technology Lead"
+      -
+        key: "person-card-small-3"
+        text: "Northstar Health"
+      -
+        key: "person-card-responsibility-3"
+        text: "Owns platform decisions"
+      -
+        key: "person-card-avatar-4"
+        text: "MS"
+      -
+        key: "person-card-h3-4"
+        text: "Maya Singh"
+      -
+        key: "person-card-p-4"
+        text: "Engagement Lead"
+      -
+        key: "person-card-small-4"
+        text: "Slalom"
+      -
+        key: "person-card-responsibility-4"
+        text: "Owns outcomes + delivery"
+      -
+        key: "person-card-avatar-5"
+        text: "TP"
+      -
+        key: "person-card-h3-5"
+        text: "Theo Price"
+      -
+        key: "person-card-p-5"
+        text: "Solution Architect"
+      -
+        key: "person-card-small-5"
+        text: "Slalom"
+      -
+        key: "person-card-responsibility-5"
+        text: "Owns solution integrity"
+      -
+        key: "person-card-avatar-6"
+        text: "CN"
+      -
+        key: "person-card-h3-6"
+        text: "Casey Nguyen"
+      -
+        key: "person-card-p-6"
+        text: "Experience Lead"
+      -
+        key: "person-card-small-6"
+        text: "Slalom"
+      -
+        key: "person-card-responsibility-6"
+        text: "Owns member experience"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Show people as a connected delivery system, not a list of headshots. Pair each person with the responsibility the room should remember."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Cards assemble into the team constellation; subtle pulses highlight cross-company pairings and shared ownership."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Staffing plan"
+      -
+        key: "div-span-4"
+        text: "RACI"
+      -
+        key: "div-span-5"
+        text: "Client Org Chart / Stakeholder map"
+      -
+        key: "div-span-6"
+        text: "Salesforce Opportunity info"
+      -
+        key: "div-span-7"
+        text: "Meeting Notes."
+  -
+    module: "business-context"
+    view: "context"
+    title: "Business context / why the project exists"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 04 · PRESSURE → TRIGGER → OPPORTUNITY"
+      -
+        key: "div-h2-1"
+        text: "Business context / why the project exists"
+      -
+        key: "div-p-1"
+        text: "Connects the engagement to the current-state challenge, business drivers, and value at stake."
+      -
+        key: "context-card-span-1"
+        text: "01 · PRESSURE"
+      -
+        key: "context-card-h3-1"
+        text: "Fragmented member journeys"
+      -
+        key: "context-card-p-1"
+        text: "5 channels, 3 identity patterns, inconsistent case visibility."
+      -
+        key: "context-card-strong-1"
+        text: "+18% avoidable contacts"
+      -
+        key: "context-flow-context-arrow-1"
+        text: "→"
+      -
+        key: "context-card-span-2"
+        text: "02 · TRIGGER"
+      -
+        key: "context-card-h3-2"
+        text: "2027 service commitment"
+      -
+        key: "context-card-p-2"
+        text: "Leadership has committed to a single member service experience before peak enrollment."
+      -
+        key: "context-card-strong-2"
+        text: "Fixed readiness window"
+      -
+        key: "context-flow-context-arrow-2"
+        text: "→"
+      -
+        key: "context-card-span-3"
+        text: "03 · OPPORTUNITY"
+      -
+        key: "context-card-h3-3"
+        text: "One connected service layer"
+      -
+        key: "context-card-p-3"
+        text: "Unify identity, service history, routing, and next-best action."
+      -
+        key: "context-card-strong-3"
+        text: "Faster resolution + trust"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Compress the case for change into three forces: what is not working, why action is required now, and what becomes possible."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Three context panels stage sequentially while the opportunity band expands, visually turning pressure into momentum."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "Original RFP"
+      -
+        key: "div-span-5"
+        text: "Proposal Decks"
+      -
+        key: "div-span-6"
+        text: "Salesforce Opportunity info"
+      -
+        key: "div-span-7"
+        text: "customer or user research"
+  -
+    module: "objectives-and-success"
+    view: "outcomes"
+    title: "Objectives, outcomes, and success definition"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 05 · OUTCOMES BEFORE ACTIVITIES"
+      -
+        key: "div-h2-1"
+        text: "Objectives, outcomes, and success definition"
+      -
+        key: "div-p-1"
+        text: "Defines what the engagement is expected to achieve and how success will be recognized."
+      -
+        key: "ring-span-1"
+        text: "-30%"
+      -
+        key: "outcome-card-h3-1"
+        text: "Reduce avoidable contacts"
+      -
+        key: "outcome-card-p-1"
+        text: "More issues resolved in the digital journey before agent escalation."
+      -
+        key: "outcome-card-small-1"
+        text: "Signal · contact deflection"
+      -
+        key: "ring-span-2"
+        text: "-20%"
+      -
+        key: "outcome-card-h3-2"
+        text: "Reduce handle time"
+      -
+        key: "outcome-card-p-2"
+        text: "Unified context eliminates swivel-chair discovery during service."
+      -
+        key: "outcome-card-small-2"
+        text: "Signal · average handle time"
+      -
+        key: "ring-span-3"
+        text: "85%"
+      -
+        key: "outcome-card-h3-3"
+        text: "Build adoption confidence"
+      -
+        key: "outcome-card-p-3"
+        text: "Agents and managers can complete priority journeys in the new experience."
+      -
+        key: "outcome-card-small-3"
+        text: "Signal · proficiency at launch"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Translate goals into observable business outcomes and pair each with a success signal so the engagement can be managed toward value."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Outcome rings fill and metrics count up to make success feel measurable rather than aspirational."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "Original RFP"
+      -
+        key: "div-span-5"
+        text: "Proposal Decks"
+      -
+        key: "div-span-6"
+        text: "Salesforce Opportunity info"
+      -
+        key: "div-span-7"
+        text: "success metrics"
+  -
+    module: "scope-review"
+    view: "scope"
+    title: "Scope review"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 06 · BOUNDARY MAP"
+      -
+        key: "div-h2-1"
+        text: "Scope review"
+      -
+        key: "div-p-1"
+        text: "Establishes what the engagement will and will not cover so the team shares practical boundaries."
+      -
+        key: "scope-half-scope-label-1"
+        text: "IN SCOPE · MVP"
+      -
+        key: "scope-items-span-1"
+        text: "Member 360"
+      -
+        key: "scope-items-span-2"
+        text: "Case intake"
+      -
+        key: "scope-items-span-3"
+        text: "Routing rules"
+      -
+        key: "scope-items-span-4"
+        text: "Knowledge surfaces"
+      -
+        key: "scope-items-span-5"
+        text: "Agent workspace"
+      -
+        key: "scope-items-span-6"
+        text: "Priority integrations"
+      -
+        key: "scope-boundary-span-1"
+        text: "CHANGE CONTROL"
+      -
+        key: "scope-half-scope-label-2"
+        text: "DEFERRED / OUT"
+      -
+        key: "scope-items-span-7"
+        text: "Claims adjudication"
+      -
+        key: "scope-items-span-8"
+        text: "Provider portal"
+      -
+        key: "scope-items-span-9"
+        text: "Enterprise MDM replacement"
+      -
+        key: "scope-items-span-10"
+        text: "Marketing automation"
+      -
+        key: "scope-items-span-11"
+        text: "Non-priority lines of business"
+      -
+        key: "scope-note-b-1"
+        text: "Phase boundary:"
+      -
+        key: "module-visual-scope-note-1"
+        text: "MVP proves the connected service pattern for two high-volume journeys before enterprise expansion."
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Make boundaries unmistakable: what is inside the engagement, what is adjacent, and what is explicitly deferred."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "A moving boundary line and staggered scope tiles reveal the contract between focus and restraint."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "MSA"
+      -
+        key: "div-span-5"
+        text: "Original RFP"
+      -
+        key: "div-span-6"
+        text: "Proposal Decks"
+      -
+        key: "div-span-7"
+        text: "backlog"
+  -
+    module: "guiding-principles"
+    view: "principles"
+    title: "Guiding Principles"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 07 · ALIGNMENT INTO DELIVERY"
+      -
+        key: "div-h2-1"
+        text: "Guiding Principles"
+      -
+        key: "div-p-1"
+        text: "Shared principles for product, design, architecture, and delivery tradeoffs."
+      -
+        key: "added-intro-eyebrow-1"
+        text: "NORTHSTAR HEALTH · DECISION PRINCIPLES"
+      -
+        key: "added-intro-h3-1"
+        text: "Four principles. Practical choices."
+      -
+        key: "added-intro-p-1"
+        text: "Open a principle to see how it shapes a delivery decision."
+      -
+        key: "summary-guide-number-1"
+        text: "01"
+      -
+        key: "span-b-1"
+        text: "Start with the member"
+      -
+        key: "span-small-1"
+        text: "Make the two MVP service journeys easier to complete."
+      -
+        key: "guide-item-p-1"
+        text: "Prioritize a clear next step over exposing every platform capability. Validate the journey with members before expanding scope."
+      -
+        key: "summary-guide-number-2"
+        text: "02"
+      -
+        key: "span-b-2"
+        text: "Earn trust by design"
+      -
+        key: "span-small-2"
+        text: "Treat privacy, consent, and accessibility as acceptance conditions."
+      -
+        key: "guide-item-p-2"
+        text: "Use approved test data and verify consent at the service boundary. Escalate unresolved constraints before release."
+      -
+        key: "summary-guide-number-3"
+        text: "03"
+      -
+        key: "span-b-3"
+        text: "Reuse before extending"
+      -
+        key: "span-small-3"
+        text: "Build on existing identity and service capabilities."
+      -
+        key: "guide-item-p-3"
+        text: "Check the current platform first. Theo and Jordan review exceptions when reuse cannot meet the agreed outcome."
+      -
+        key: "summary-guide-number-4"
+        text: "04"
+      -
+        key: "span-b-4"
+        text: "Prove value, then expand"
+      -
+        key: "span-small-4"
+        text: "Release a focused MVP and learn from real usage."
+      -
+        key: "guide-item-p-4"
+        text: "Keep additional journeys in the later-release backlog. Rina proposes priority changes; Avery approves changes to the MVP boundary."
+      -
+        key: "module-visual-added-foot-1"
+        text: "When principles conflict, document the tradeoff in the Decision Log and use the agreed decision rights."
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Connect each principle to a concrete choice and a path for handling exceptions."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Principles reveal once in sequence; opening one exposes its decision implications."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Product vision"
+      -
+        key: "div-span-4"
+        text: "Customer research"
+      -
+        key: "div-span-5"
+        text: "Architecture standards"
+      -
+        key: "div-span-6"
+        text: "Stakeholder interviews"
+  -
+    module: "architecture"
+    view: "architecture"
+    title: "High Level Architecture Diagram"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 08 · ALIGNMENT INTO DELIVERY"
+      -
+        key: "div-h2-1"
+        text: "High Level Architecture Diagram"
+      -
+        key: "div-p-1"
+        text: "Major solution components, system boundaries, integrations, and information flows."
+      -
+        key: "added-intro-eyebrow-1"
+        text: "PROPOSED TARGET STATE · SAMPLE"
+      -
+        key: "added-intro-h3-1"
+        text: "One member journey, connected services."
+      -
+        key: "added-intro-p-1"
+        text: "Select a flow to trace the systems involved. Confirm this concept during solution design."
+      -
+        key: "flow-controls-button-1"
+        text: "Member journey"
+      -
+        key: "flow-controls-button-2"
+        text: "Identity & consent"
+      -
+        key: "flow-controls-button-3"
+        text: "Service insights"
+      -
+        key: "arch-node-small-1"
+        text: "MEMBER CHANNEL"
+      -
+        key: "arch-node-h4-1"
+        text: "Member portal"
+      -
+        key: "arch-node-p-1"
+        text: "Two guided service journeys"
+      -
+        key: "arch-map-arch-link-1"
+        text: "→"
+      -
+        key: "arch-node-small-2"
+        text: "EXPERIENCE LAYER"
+      -
+        key: "arch-node-h4-2"
+        text: "Journey services"
+      -
+        key: "arch-node-p-2"
+        text: "Validation and orchestration"
+      -
+        key: "arch-map-arch-link-2"
+        text: "→"
+      -
+        key: "arch-node-small-3"
+        text: "EXISTING PLATFORM"
+      -
+        key: "arch-node-h4-3"
+        text: "Identity & consent"
+      -
+        key: "arch-node-p-3"
+        text: "Authentication and permission checks"
+      -
+        key: "arch-node-small-4"
+        text: "EXISTING PLATFORM"
+      -
+        key: "arch-node-h4-4"
+        text: "Member service APIs"
+      -
+        key: "arch-node-p-4"
+        text: "Service request and status"
+      -
+        key: "arch-node-small-5"
+        text: "MEASUREMENT"
+      -
+        key: "arch-node-h4-5"
+        text: "Service analytics"
+      -
+        key: "arch-node-p-5"
+        text: "Approved journey events"
+      -
+        key: "flow-explanation-b-1"
+        text: "Member journey"
+      -
+        key: "flow-explanation-p-1"
+        text: "The portal sends a validated request through journey services to the existing member service APIs; status returns along the same route."
+      -
+        key: "module-visual-added-foot-1"
+        text: "Design dependencies: identity API contract, consent-history test data, and security review. Jordan + Theo own validation. Links indicate logical exchanges, not deployment topology."
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Show how the member experience connects to existing enterprise capabilities and name unresolved design dependencies."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Selecting a flow highlights its participating systems in sequence; all labels remain readable."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Solution design"
+      -
+        key: "div-span-4"
+        text: "Integration inventory"
+      -
+        key: "div-span-5"
+        text: "Security requirements"
+      -
+        key: "div-span-6"
+        text: "Dependency List"
+      -
+        key: "flow-journey-description"
+        text: "The portal sends a validated request through journey services to the existing member service APIs; status returns along the same route."
+      -
+        key: "flow-consent-description"
+        text: "The portal and journey services use existing identity and consent capabilities to verify the member and authorize the requested service."
+      -
+        key: "flow-insight-description"
+        text: "Approved journey events pass from the portal through journey services to analytics, supporting agreed measures without exposing unnecessary member data."
+  -
+    module: "epic-overview"
+    view: "epics"
+    title: "Epic Overview"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 09 · ALIGNMENT INTO DELIVERY"
+      -
+        key: "div-h2-1"
+        text: "Epic Overview"
+      -
+        key: "div-p-1"
+        text: "Major capability groups linked to outcomes, MVP priorities, owners, and acceptance expectations."
+      -
+        key: "added-intro-eyebrow-1"
+        text: "CAPABILITIES TO OUTCOMES · SAMPLE BACKLOG"
+      -
+        key: "added-intro-h3-1"
+        text: "Make the MVP boundary tangible."
+      -
+        key: "added-intro-p-1"
+        text: "Review the capability groups, owners, and evidence needed for acceptance."
+      -
+        key: "epic-controls-button-1"
+        text: "All epics"
+      -
+        key: "epic-controls-button-2"
+        text: "MVP"
+      -
+        key: "epic-controls-button-3"
+        text: "Later releases"
+      -
+        key: "epic-controls-epic-count-1"
+        text: "5 epics · 4 MVP / 1 later"
+      -
+        key: "epic-entry-epic-id-1"
+        text: "E01"
+      -
+        key: "epic-id-small-1"
+        text: "MVP"
+      -
+        key: "div-h4-1"
+        text: "Guided service journeys"
+      -
+        key: "div-p-2"
+        text: "Help members complete two priority journeys."
+      -
+        key: "details-summary-1"
+        text: "Acceptance & dependencies"
+      -
+        key: "p-b-1"
+        text: "Acceptance:"
+      -
+        key: "details-p-1"
+        text: "Member-tested steps and agreed accessibility checks."
+      -
+        key: "p-b-2"
+        text: "Depends on:"
+      -
+        key: "details-p-2"
+        text: "Journey research and MVP boundary"
+      -
+        key: "epic-owner-small-1"
+        text: "OWNER"
+      -
+        key: "epic-entry-epic-owner-1"
+        text: "Casey + Rina"
+      -
+        key: "epic-entry-epic-id-2"
+        text: "E02"
+      -
+        key: "epic-id-small-2"
+        text: "MVP"
+      -
+        key: "div-h4-2"
+        text: "Identity and consent"
+      -
+        key: "div-p-3"
+        text: "Recognize members and honor their permissions."
+      -
+        key: "details-summary-2"
+        text: "Acceptance & dependencies"
+      -
+        key: "p-b-3"
+        text: "Acceptance:"
+      -
+        key: "details-p-3"
+        text: "Authentication and consent checks pass agreed test scenarios."
+      -
+        key: "p-b-4"
+        text: "Depends on:"
+      -
+        key: "details-p-4"
+        text: "Identity API contract and consent test data"
+      -
+        key: "epic-owner-small-2"
+        text: "OWNER"
+      -
+        key: "epic-entry-epic-owner-2"
+        text: "Jordan + Theo"
+      -
+        key: "epic-entry-epic-id-3"
+        text: "E03"
+      -
+        key: "epic-id-small-3"
+        text: "MVP"
+      -
+        key: "div-h4-3"
+        text: "Service integration"
+      -
+        key: "div-p-4"
+        text: "Connect requests to existing member services."
+      -
+        key: "details-summary-3"
+        text: "Acceptance & dependencies"
+      -
+        key: "p-b-5"
+        text: "Acceptance:"
+      -
+        key: "details-p-5"
+        text: "Request, status, and error paths pass integration tests."
+      -
+        key: "p-b-6"
+        text: "Depends on:"
+      -
+        key: "details-p-6"
+        text: "Service API access and sandbox readiness"
+      -
+        key: "epic-owner-small-3"
+        text: "OWNER"
+      -
+        key: "epic-entry-epic-owner-3"
+        text: "Theo"
+      -
+        key: "epic-entry-epic-id-4"
+        text: "E04"
+      -
+        key: "epic-id-small-4"
+        text: "MVP"
+      -
+        key: "div-h4-4"
+        text: "Outcome measurement"
+      -
+        key: "div-p-5"
+        text: "Make journey performance visible."
+      -
+        key: "details-summary-4"
+        text: "Acceptance & dependencies"
+      -
+        key: "p-b-7"
+        text: "Acceptance:"
+      -
+        key: "details-p-7"
+        text: "Agreed events and baseline measures available for validation."
+      -
+        key: "p-b-8"
+        text: "Depends on:"
+      -
+        key: "details-p-8"
+        text: "Measurement definitions and approved event data"
+      -
+        key: "epic-owner-small-4"
+        text: "OWNER"
+      -
+        key: "epic-entry-epic-owner-4"
+        text: "Rina"
+      -
+        key: "epic-entry-epic-id-5"
+        text: "E05"
+      -
+        key: "epic-id-small-5"
+        text: "Later"
+      -
+        key: "div-h4-5"
+        text: "Additional service journeys"
+      -
+        key: "div-p-6"
+        text: "Extend proven patterns across more member needs."
+      -
+        key: "details-summary-5"
+        text: "Acceptance & dependencies"
+      -
+        key: "p-b-9"
+        text: "Acceptance:"
+      -
+        key: "details-p-9"
+        text: "Scope and acceptance criteria defined after MVP learning."
+      -
+        key: "p-b-10"
+        text: "Depends on:"
+      -
+        key: "details-p-10"
+        text: "MVP evidence and sponsor prioritization"
+      -
+        key: "epic-owner-small-5"
+        text: "OWNER"
+      -
+        key: "epic-entry-epic-owner-5"
+        text: "Rina"
+      -
+        key: "module-visual-added-foot-1"
+        text: "Proposed for kickoff alignment. Azure DevOps remains the backlog source of truth; release assignments require product-owner confirmation."
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-7"
+        text: "Expose the MVP boundary and connect each epic to value, ownership, and dependencies."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-8"
+        text: "Filtering focuses the release scope; a short reveal introduces the matching epics without implying progress."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Product backlog"
+      -
+        key: "div-span-4"
+        text: "MVP scope"
+      -
+        key: "div-span-5"
+        text: "Roadmap"
+      -
+        key: "div-span-6"
+        text: "Requirements"
+  -
+    module: "delivery-approach"
+    view: "approach"
+    title: "Delivery approach / phase model"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 10 · PROGRESSIVE CONFIDENCE"
+      -
+        key: "div-h2-1"
+        text: "Delivery approach / phase model"
+      -
+        key: "div-p-1"
+        text: "Explains the method used to move from alignment through delivery, validation, and transition."
+      -
+        key: "phase-card-b-1"
+        text: "01"
+      -
+        key: "phase-card-span-1"
+        text: "ALIGN"
+      -
+        key: "phase-card-small-1"
+        text: "Shared outcomes + evidence"
+      -
+        key: "phase-card-b-2"
+        text: "02"
+      -
+        key: "phase-card-span-2"
+        text: "DESIGN"
+      -
+        key: "phase-card-small-2"
+        text: "Experience + solution decisions"
+      -
+        key: "phase-card-b-3"
+        text: "03"
+      -
+        key: "phase-card-span-3"
+        text: "BUILD"
+      -
+        key: "phase-card-small-3"
+        text: "Iterative working increments"
+      -
+        key: "phase-card-b-4"
+        text: "04"
+      -
+        key: "phase-card-span-4"
+        text: "VALIDATE"
+      -
+        key: "phase-card-small-4"
+        text: "Business + technical confidence"
+      -
+        key: "phase-card-b-5"
+        text: "05"
+      -
+        key: "phase-card-span-5"
+        text: "TRANSITION"
+      -
+        key: "phase-card-small-5"
+        text: "Launch + ownership handoff"
+      -
+        key: "phase-gates-span-1"
+        text: "Gate 1 · MVP signed"
+      -
+        key: "phase-gates-span-2"
+        text: "Gate 2 · Build ready"
+      -
+        key: "phase-gates-span-3"
+        text: "Gate 3 · Launch ready"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Explain how uncertainty is reduced phase by phase, with each phase answering a different question and producing a clear gate."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Phase cards travel from ambiguity to confidence, with the active phase pulsing through the delivery spine."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "Original RFP"
+      -
+        key: "div-span-5"
+        text: "Proposal Decks"
+      -
+        key: "div-span-6"
+        text: "delivery methodology"
+      -
+        key: "div-span-7"
+        text: "Engagement Tracker"
+  -
+    module: "timeline-roadmap"
+    view: "timeline"
+    title: "Timeline / roadmap"
+    time_scale: "month"
+    phases:
+      -
+        name: "Align"
+        window: "September"
+        start: "2026-09-14"
+        end: "2026-09-25"
+        summary: "Establish shared outcomes, evidence, and working agreements."
+        outcomes: ["Kickoff complete", "Success measures aligned"]
+        activities:
+          -
+            title: "Confirm outcomes"
+            detail: "Align objectives, measures, and decision boundaries."
+          -
+            title: "Mobilize the team"
+            detail: "Confirm access, participants, and working agreements."
+        decision: "Confirm readiness to begin design."
+        milestones:
+          -
+            title: "Kickoff"
+            date: "2026-09-14"
+            detail: "Launch the engagement and confirm the operating model."
+      -
+        name: "Design"
+        window: "September to October"
+        start: "2026-09-21"
+        end: "2026-10-23"
+        summary: "Turn evidence into experience and solution decisions."
+        outcomes: ["Experience direction approved", "Architecture decisions recorded"]
+        activities:
+          -
+            title: "Shape the experience"
+            detail: "Prototype priority journeys with users and stakeholders."
+          -
+            title: "Resolve architecture"
+            detail: "Confirm the technical direction and delivery constraints."
+        decision: "Approve the MVP direction."
+        milestones:
+          -
+            title: "MVP signoff"
+            date: "2026-10-23"
+            detail: "Approve the experience and solution boundary."
+      -
+        name: "Build"
+        window: "October to December"
+        start: "2026-10-12"
+        end: "2026-12-04"
+        summary: "Deliver working increments and retire implementation risk."
+        outcomes: ["Priority capabilities implemented", "Release candidate ready"]
+        activities:
+          -
+            title: "Deliver increments"
+            detail: "Build and demonstrate usable slices every two weeks."
+          -
+            title: "Integrate continuously"
+            detail: "Validate quality, data, and system behavior throughout delivery."
+        decision: "Confirm the release candidate is ready for validation."
+        milestones:
+          -
+            title: "Build ready"
+            date: "2026-12-04"
+            detail: "Complete the agreed MVP scope for formal validation."
+      -
+        name: "Validate"
+        window: "December"
+        start: "2026-12-01"
+        end: "2026-12-23"
+        summary: "Establish business, technical, and operational confidence."
+        outcomes: ["Acceptance criteria met", "Launch readiness confirmed"]
+        activities:
+          -
+            title: "Run acceptance testing"
+            detail: "Validate priority scenarios with business owners."
+          -
+            title: "Assess readiness"
+            detail: "Close critical defects and confirm launch support."
+        decision: "Authorize production launch."
+        milestones:
+          -
+            title: "UAT start"
+            date: "2026-12-01"
+            detail: "Begin formal business acceptance."
+          -
+            title: "Launch decision"
+            date: "2026-12-23"
+            detail: "Confirm readiness to release."
+      -
+        name: "Transition"
+        window: "January"
+        start: "2027-01-04"
+        end: "2027-01-15"
+        summary: "Launch the solution and transfer durable ownership."
+        outcomes: ["Solution live", "Operational ownership transferred"]
+        activities:
+          -
+            title: "Launch and stabilize"
+            detail: "Monitor production behavior and resolve launch issues."
+          -
+            title: "Transfer ownership"
+            detail: "Complete enablement, documentation, and handoff."
+        decision: "Accept the transition into steady-state ownership."
+        milestones:
+          -
+            title: "Go-live"
+            date: "2027-01-04"
+            detail: "Release the solution to production."
+          -
+            title: "Handoff complete"
+            date: "2027-01-15"
+            detail: "Close hypercare and transfer ownership."
+  -
+    module: "project-schedule"
+    view: "schedule"
+    title: "Project Schedule"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 12 · EXECUTABLE PLAN"
+      -
+        key: "div-h2-1"
+        text: "Project Schedule"
+      -
+        key: "div-p-1"
+        text: "A working schedule that sequences workstreams, milestones, dependencies, dates, and accountable owners."
+      -
+        key: "gantt-head-span-1"
+        text: "WORKSTREAM"
+      -
+        key: "weeks-i-1"
+        text: "W1"
+      -
+        key: "weeks-i-2"
+        text: "W2"
+      -
+        key: "weeks-i-3"
+        text: "W3"
+      -
+        key: "weeks-i-4"
+        text: "W4"
+      -
+        key: "weeks-i-5"
+        text: "W5"
+      -
+        key: "weeks-i-6"
+        text: "W6"
+      -
+        key: "weeks-i-7"
+        text: "W7"
+      -
+        key: "weeks-i-8"
+        text: "W8"
+      -
+        key: "weeks-i-9"
+        text: "W9"
+      -
+        key: "weeks-i-10"
+        text: "W10"
+      -
+        key: "weeks-i-11"
+        text: "W11"
+      -
+        key: "weeks-i-12"
+        text: "W12"
+      -
+        key: "weeks-i-13"
+        text: "W13"
+      -
+        key: "weeks-i-14"
+        text: "W14"
+      -
+        key: "weeks-i-15"
+        text: "W15"
+      -
+        key: "weeks-i-16"
+        text: "W16"
+      -
+        key: "gantt-row-label-1"
+        text: "Mobilize + discovery"
+      -
+        key: "gantt-row-b-1"
+        text: "MS"
+      -
+        key: "gantt-row-label-2"
+        text: "Experience design"
+      -
+        key: "gantt-row-b-2"
+        text: "CN"
+      -
+        key: "gantt-row-label-3"
+        text: "Platform configuration"
+      -
+        key: "gantt-row-b-3"
+        text: "TP"
+      -
+        key: "gantt-row-label-4"
+        text: "Integration + data"
+      -
+        key: "gantt-row-b-4"
+        text: "JL"
+      -
+        key: "gantt-row-label-5"
+        text: "Testing + readiness"
+      -
+        key: "gantt-row-b-5"
+        text: "RK"
+      -
+        key: "gantt-row-label-6"
+        text: "Launch + hypercare"
+      -
+        key: "gantt-row-b-6"
+        text: "MS"
+      -
+        key: "gantt-pin-span-1"
+        text: "◆"
+      -
+        key: "gantt-pin-small-1"
+        text: "Design gate"
+      -
+        key: "gantt-pin-span-2"
+        text: "◆"
+      -
+        key: "gantt-pin-small-2"
+        text: "UAT ready"
+      -
+        key: "gantt-pin-span-3"
+        text: "◆"
+      -
+        key: "gantt-pin-small-3"
+        text: "Launch"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Move from roadmap to operational truth: detailed workstreams, owners, dependencies, and dates that can be actively managed."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Gantt bars draw left-to-right and milestone pins pulse, creating a sense of work coming online."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "Original RFP"
+      -
+        key: "div-span-5"
+        text: "Proposal Decks"
+      -
+        key: "div-span-6"
+        text: "implementation plan"
+      -
+        key: "div-span-7"
+        text: "staffing plan"
+  -
+    module: "deliverables"
+    view: "deliverables"
+    title: "Deliverables / outputs"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 13 · VALUE PACKAGE, NOT FILE LIST"
+      -
+        key: "div-h2-1"
+        text: "Deliverables / outputs"
+      -
+        key: "div-p-1"
+        text: "Makes the planned artifacts and their acceptance expectations concrete."
+      -
+        key: "deliverable-card-d-icon-1"
+        text: "01"
+      -
+        key: "deliverable-card-h3-1"
+        text: "Experience blueprint"
+      -
+        key: "deliverable-card-p-1"
+        text: "Target journeys, service principles, prioritized moments that matter."
+      -
+        key: "deliverable-card-small-1"
+        text: "Owner · Experience | Accept · Product"
+      -
+        key: "deliverable-card-d-icon-2"
+        text: "02"
+      -
+        key: "deliverable-card-h3-2"
+        text: "Solution design"
+      -
+        key: "deliverable-card-p-2"
+        text: "Architecture, platform decisions, integration contracts, nonfunctional guardrails."
+      -
+        key: "deliverable-card-small-2"
+        text: "Owner · Architecture | Accept · Technology"
+      -
+        key: "deliverable-card-d-icon-3"
+        text: "03"
+      -
+        key: "deliverable-card-h3-3"
+        text: "Configured MVP"
+      -
+        key: "deliverable-card-p-3"
+        text: "Working service experience for two priority member journeys."
+      -
+        key: "deliverable-card-small-3"
+        text: "Owner · Delivery | Accept · Business + IT"
+      -
+        key: "deliverable-card-d-icon-4"
+        text: "04"
+      -
+        key: "deliverable-card-h3-4"
+        text: "Launch readiness pack"
+      -
+        key: "deliverable-card-p-4"
+        text: "Test evidence, runbook, training, support model, transition checklist."
+      -
+        key: "deliverable-card-small-4"
+        text: "Owner · PMO | Accept · Sponsor"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Frame each deliverable by the decision or capability it enables, then show owner, timing, and acceptance expectation."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Deliverable cards progress from draft to review to accepted, emphasizing that outputs evolve through collaboration."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "MSA"
+      -
+        key: "div-span-5"
+        text: "Original RFP"
+      -
+        key: "div-span-6"
+        text: "Proposal Decks"
+      -
+        key: "div-span-7"
+        text: "Meeting Notes."
+  -
+    module: "team-structure"
+    view: "team-structure"
+    title: "Team structure, roles, and responsibilities"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 14 · ACCOUNTABILITY ARCHITECTURE"
+      -
+        key: "div-h2-1"
+        text: "Team structure, roles, and responsibilities"
+      -
+        key: "div-p-1"
+        text: "Shows how the delivery team is organized and who is accountable for workstreams."
+      -
+        key: "org-node-b-1"
+        text: "Avery Morgan"
+      -
+        key: "org-node-span-1"
+        text: "Executive Sponsor"
+      -
+        key: "org-node-b-2"
+        text: "Rina Kapoor"
+      -
+        key: "org-node-span-2"
+        text: "Product Owner"
+      -
+        key: "org-node-b-3"
+        text: "Maya Singh"
+      -
+        key: "org-node-span-3"
+        text: "Engagement Lead"
+      -
+        key: "org-node-b-4"
+        text: "Jordan Lee"
+      -
+        key: "org-node-span-4"
+        text: "Technology Lead"
+      -
+        key: "org-node-b-5"
+        text: "Experience"
+      -
+        key: "org-node-span-5"
+        text: "Casey Nguyen"
+      -
+        key: "org-node-b-6"
+        text: "Platform"
+      -
+        key: "org-node-span-6"
+        text: "Theo Price"
+      -
+        key: "org-node-b-7"
+        text: "Data + Integration"
+      -
+        key: "org-node-span-7"
+        text: "Jordan Lee"
+      -
+        key: "org-node-b-8"
+        text: "Change + Readiness"
+      -
+        key: "org-node-span-8"
+        text: "Rina Kapoor"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Show the delivery system from sponsor to workstream, emphasizing accountable roles, interfaces, and gaps."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "The org spine draws first, then nodes branch out and settle into place to reinforce reporting and collaboration paths."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Staffing plan"
+      -
+        key: "div-span-4"
+        text: "RACI"
+      -
+        key: "div-span-5"
+        text: "Client Org Chart / Stakeholder map"
+      -
+        key: "div-span-6"
+        text: "Salesforce Opportunity info"
+      -
+        key: "div-span-7"
+        text: "organization chart"
+  -
+    module: "stakeholder-register"
+    view: "stakeholders"
+    title: "Stakeholder Register"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 15 · INFLUENCE + ENGAGEMENT MAP"
+      -
+        key: "div-h2-1"
+        text: "Stakeholder Register"
+      -
+        key: "div-p-1"
+        text: "An actionable inventory of stakeholders, their roles, influence, engagement needs, and communication preferences."
+      -
+        key: "axis-span-1"
+        text: "HIGH INFLUENCE"
+      -
+        key: "axis-span-2"
+        text: "LOW INFLUENCE"
+      -
+        key: "axis-span-3"
+        text: "LOW IMPACT"
+      -
+        key: "axis-span-4"
+        text: "HIGH IMPACT"
+      -
+        key: "stake-dot-span-1"
+        text: "AM"
+      -
+        key: "stake-dot-small-1"
+        text: "Exec sponsor"
+      -
+        key: "stake-dot-span-2"
+        text: "RK"
+      -
+        key: "stake-dot-small-2"
+        text: "Product"
+      -
+        key: "stake-dot-span-3"
+        text: "JL"
+      -
+        key: "stake-dot-small-3"
+        text: "Technology"
+      -
+        key: "stake-dot-span-4"
+        text: "SO"
+      -
+        key: "stake-dot-small-4"
+        text: "Service Ops"
+      -
+        key: "stake-dot-span-5"
+        text: "SC"
+      -
+        key: "stake-dot-small-5"
+        text: "Security"
+      -
+        key: "stake-dot-span-6"
+        text: "AG"
+      -
+        key: "stake-dot-small-6"
+        text: "Agent group"
+      -
+        key: "stake-legend-span-1"
+        text: "Manage closely"
+      -
+        key: "stake-legend-span-2"
+        text: "Keep engaged"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Turn the stakeholder list into an action map by showing influence, level of impact, and the engagement posture required."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Stakeholder points enter a live influence/impact field; high-priority relationships breathe subtly to focus attention."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Client Org Chart / Stakeholder map"
+      -
+        key: "div-span-4"
+        text: "RACI"
+      -
+        key: "div-span-5"
+        text: "Salesforce Opportunity info"
+      -
+        key: "div-span-6"
+        text: "stakeholder interviews"
+      -
+        key: "div-span-7"
+        text: "organization chart"
+  -
+    module: "governance-structure"
+    view: "governance"
+    title: "Stakeholder alignment / governance structure"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 16 · DECISION LADDER"
+      -
+        key: "div-h2-1"
+        text: "Stakeholder alignment / governance structure"
+      -
+        key: "div-p-1"
+        text: "Defines sponsors, decision makers, working teams, approvers, and escalation routes."
+      -
+        key: "gov-tier-b-1"
+        text: "Executive Steering"
+      -
+        key: "gov-tier-span-1"
+        text: "Monthly"
+      -
+        key: "gov-tier-p-1"
+        text: "Outcomes · budget · enterprise barriers"
+      -
+        key: "gov-tier-small-1"
+        text: "Avery · Rina · Maya"
+      -
+        key: "gov-tier-b-2"
+        text: "Program Leadership"
+      -
+        key: "gov-tier-span-2"
+        text: "Weekly"
+      -
+        key: "gov-tier-p-2"
+        text: "Scope · schedule · cross-workstream decisions"
+      -
+        key: "gov-tier-small-2"
+        text: "Rina · Maya · Jordan · Theo"
+      -
+        key: "gov-tier-b-3"
+        text: "Delivery Team"
+      -
+        key: "gov-tier-span-3"
+        text: "2× weekly"
+      -
+        key: "gov-tier-p-3"
+        text: "Execution · blockers · working decisions"
+      -
+        key: "gov-tier-small-3"
+        text: "Workstream leads + SMEs"
+      -
+        key: "escalation-beam-span-1"
+        text: "ESCALATE WHEN DECISION AGE > 48H"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Show where different decisions live, who participates, and how escalation moves when delivery needs a faster answer."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Governance tiers stack upward while an escalation signal travels through the ladder."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Client Org Chart / Stakeholder map"
+      -
+        key: "div-span-4"
+        text: "RACI"
+      -
+        key: "div-span-5"
+        text: "Salesforce Opportunity info"
+      -
+        key: "div-span-6"
+        text: "stakeholder register"
+      -
+        key: "div-span-7"
+        text: "governance model"
+  -
+    module: "decision-rights"
+    view: "decision-rights"
+    title: "Ownership and decision rights"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 17 · DECISION CONTRACT"
+      -
+        key: "div-h2-1"
+        text: "Ownership and decision rights"
+      -
+        key: "div-p-1"
+        text: "Clarifies responsibility boundaries, retained client decisions, and approval or go/no-go authority."
+      -
+        key: "dm-row-b-1"
+        text: "Decision"
+      -
+        key: "dm-row-span-1"
+        text: "Recommend"
+      -
+        key: "dm-row-span-2"
+        text: "Approve"
+      -
+        key: "dm-row-span-3"
+        text: "Execute"
+      -
+        key: "dm-row-b-2"
+        text: "MVP scope"
+      -
+        key: "dm-row-span-4"
+        text: "Product + Slalom"
+      -
+        key: "dm-row-hot-1"
+        text: "Executive Sponsor"
+      -
+        key: "dm-row-span-5"
+        text: "Delivery Leads"
+      -
+        key: "dm-row-b-3"
+        text: "Experience design"
+      -
+        key: "dm-row-span-6"
+        text: "Experience Lead"
+      -
+        key: "dm-row-hot-2"
+        text: "Product Owner"
+      -
+        key: "dm-row-span-7"
+        text: "Design + Build"
+      -
+        key: "dm-row-b-4"
+        text: "Architecture"
+      -
+        key: "dm-row-span-8"
+        text: "Solution Architect"
+      -
+        key: "dm-row-hot-3"
+        text: "Technology Lead"
+      -
+        key: "dm-row-span-9"
+        text: "Platform Team"
+      -
+        key: "dm-row-b-5"
+        text: "Schedule change"
+      -
+        key: "dm-row-span-10"
+        text: "Engagement Lead"
+      -
+        key: "dm-row-hot-4"
+        text: "Product + Sponsor*"
+      -
+        key: "dm-row-span-11"
+        text: "PMO"
+      -
+        key: "dm-row-b-6"
+        text: "Go-live"
+      -
+        key: "dm-row-span-12"
+        text: "Program Leadership"
+      -
+        key: "dm-row-hot-5"
+        text: "Executive Sponsor"
+      -
+        key: "dm-row-span-13"
+        text: "Release Team"
+      -
+        key: "module-visual-matrix-foot-1"
+        text: "*Sponsor approval required when critical path or contractual milestone changes."
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Make authority explicit across scope, budget, design, schedule, and go-live so the team knows who recommends, approves, and executes."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "The matrix scans decision-by-decision, spotlighting the approval path rather than forcing the reader to parse every cell at once."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "MSA"
+      -
+        key: "div-span-5"
+        text: "Original RFP"
+      -
+        key: "div-span-6"
+        text: "RACI"
+      -
+        key: "div-span-7"
+        text: "Client Org Chart / Stakeholder map"
+  -
+    module: "meeting-cadence"
+    view: "cadence"
+    title: "Meeting cadence / rhythm of business"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 18 · OPERATING HEARTBEAT"
+      -
+        key: "div-h2-1"
+        text: "Meeting cadence / rhythm of business"
+      -
+        key: "div-p-1"
+        text: "Defines the recurring forums that manage execution, decisions, status, and escalation."
+      -
+        key: "day-b-1"
+        text: "MON"
+      -
+        key: "cadence-cell-span-1"
+        text: "Delivery standup"
+      -
+        key: "cadence-cell-small-1"
+        text: "15 min · blockers"
+      -
+        key: "day-b-2"
+        text: "TUE"
+      -
+        key: "cadence-cell-span-2"
+        text: "Design + build review"
+      -
+        key: "cadence-cell-small-2"
+        text: "45 min · working decisions"
+      -
+        key: "day-b-3"
+        text: "WED"
+      -
+        key: "cadence-cell-span-3"
+        text: "Delivery standup"
+      -
+        key: "cadence-cell-small-3"
+        text: "15 min · blockers"
+      -
+        key: "day-b-4"
+        text: "THU"
+      -
+        key: "cadence-cell-span-4"
+        text: "Program leadership"
+      -
+        key: "cadence-cell-small-4"
+        text: "45 min · decisions + RAID"
+      -
+        key: "day-b-5"
+        text: "FRI"
+      -
+        key: "cadence-cell-span-5"
+        text: "Demo + retro"
+      -
+        key: "cadence-cell-small-5"
+        text: "60 min · inspect + adapt"
+      -
+        key: "module-visual-cadence-note-1"
+        text: "Monthly · Executive steering converts delivery signals into sponsor decisions."
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Describe the recurring forums as a system of inputs, decisions, and outputs—not just a calendar."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "A weekly rhythm pulses across the calendar, with each forum lighting when its decision cycle comes due."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Governance model"
+      -
+        key: "div-span-4"
+        text: "RACI"
+      -
+        key: "div-span-5"
+        text: "Client Org Chart / Stakeholder map"
+      -
+        key: "div-span-6"
+        text: "calendar constraints"
+      -
+        key: "div-span-7"
+        text: "Engagement Tracker"
+  -
+    module: "ways-of-working"
+    view: "norms"
+    title: "Ways of working / team norms"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 19 · BEHAVIORAL OPERATING SYSTEM"
+      -
+        key: "div-h2-1"
+        text: "Ways of working / team norms"
+      -
+        key: "div-p-1"
+        text: "Sets shared expectations for communication, collaboration, decisions, documentation, and team behavior."
+      -
+        key: "norm-system-one-team-1"
+        text: "ONE"
+      -
+        key: "norm-system-one-team-2"
+        text: "TEAM"
+      -
+        key: "norm-card-b-1"
+        text: "Decide in the room"
+      -
+        key: "norm-card-span-1"
+        text: "Capture the decision before the meeting ends."
+      -
+        key: "norm-card-b-2"
+        text: "Show work early"
+      -
+        key: "norm-card-span-2"
+        text: "Working increments beat polished surprises."
+      -
+        key: "norm-card-b-3"
+        text: "48h escalation"
+      -
+        key: "norm-card-span-3"
+        text: "Blocked decisions do not age silently."
+      -
+        key: "norm-card-b-4"
+        text: "One source of truth"
+      -
+        key: "norm-card-span-4"
+        text: "Artifacts live where the team agreed they live."
+      -
+        key: "norm-card-b-5"
+        text: "Assume positive intent"
+      -
+        key: "norm-card-span-5"
+        text: "Challenge the work, protect the partnership."
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Use a small number of specific, observable norms that reduce friction in communication, decisions, documentation, and escalation."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Norm cards arrive in a steady cadence around a central “one team” anchor, reinforcing shared behavior."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Team charter"
+      -
+        key: "div-span-4"
+        text: "client culture input"
+      -
+        key: "div-span-5"
+        text: "Proposal Decks"
+      -
+        key: "div-span-6"
+        text: "Client Org Chart / Stakeholder map"
+      -
+        key: "div-span-7"
+        text: "delivery methodology"
+  -
+    module: "service-principles"
+    view: "service-principles"
+    title: "Customer experience / service principles"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 20 · EXPERIENCE NORTH STAR"
+      -
+        key: "div-h2-1"
+        text: "Customer experience / service principles"
+      -
+        key: "div-p-1"
+        text: "Captures engagement principles that guide how the team partners with the client and serves end users."
+      -
+        key: "cx-point-b-1"
+        text: "Know me"
+      -
+        key: "cx-point-span-1"
+        text: "Identity + context travel with the member"
+      -
+        key: "cx-point-b-2"
+        text: "Guide me"
+      -
+        key: "cx-point-span-2"
+        text: "Next steps are clear and relevant"
+      -
+        key: "cx-point-b-3"
+        text: "Resolve with me"
+      -
+        key: "cx-point-span-3"
+        text: "Agent and member share the same truth"
+      -
+        key: "cx-point-b-4"
+        text: "Keep me informed"
+      -
+        key: "cx-point-span-4"
+        text: "No silent handoffs or hidden status"
+      -
+        key: "cx-sentiment-span-1"
+        text: "Experience target"
+      -
+        key: "cx-sentiment-strong-1"
+        text: "Effort ↓ · Trust ↑"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Translate desired client and end-user experience into concrete principles that can shape tradeoffs throughout delivery."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "A journey line animates through experience moments while a sentiment signal rises toward the target state."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Proposal Decks"
+      -
+        key: "div-span-4"
+        text: "Salesforce Opportunity info"
+      -
+        key: "div-span-5"
+        text: "customer research"
+      -
+        key: "div-span-6"
+        text: "executive priorities"
+      -
+        key: "div-span-7"
+        text: "s account plan"
+  -
+    module: "project-logistics"
+    view: "logistics"
+    title: "Tools, access, and project logistics"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 21 · READINESS COCKPIT"
+      -
+        key: "div-h2-1"
+        text: "Tools, access, and project logistics"
+      -
+        key: "div-p-1"
+        text: "Covers the practical operating setup needed for a team to begin work safely and efficiently."
+      -
+        key: "tool-node-b-1"
+        text: "Teams"
+      -
+        key: "tool-node-span-1"
+        text: "Project channel + working rooms"
+      -
+        key: "tool-node-small-1"
+        text: "READY"
+      -
+        key: "tool-node-b-2"
+        text: "SharePoint"
+      -
+        key: "tool-node-span-2"
+        text: "Authoritative artifacts"
+      -
+        key: "tool-node-small-2"
+        text: "READY"
+      -
+        key: "tool-node-b-3"
+        text: "Azure DevOps"
+      -
+        key: "tool-node-span-3"
+        text: "Backlog + defects"
+      -
+        key: "tool-node-small-3"
+        text: "READY"
+      -
+        key: "tool-node-b-4"
+        text: "Salesforce sandboxes"
+      -
+        key: "tool-node-span-4"
+        text: "2 Slalom users pending"
+      -
+        key: "tool-node-small-4"
+        text: "WATCH"
+      -
+        key: "tool-node-b-5"
+        text: "Data test feed"
+      -
+        key: "tool-node-span-5"
+        text: "Security review not complete"
+      -
+        key: "tool-node-small-5"
+        text: "BLOCKED"
+      -
+        key: "tool-node-b-6"
+        text: "Working hours"
+      -
+        key: "tool-node-span-6"
+        text: "9–5 ET core overlap"
+      -
+        key: "tool-node-small-6"
+        text: "READY"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Show whether the team can actually start: systems, access, repositories, environments, security, working hours, and owners."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Readiness nodes switch from pending to ready in sequence; blocked items keep a visible attention pulse."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Onboarding checklist"
+      -
+        key: "div-span-4"
+        text: "security requirements"
+      -
+        key: "div-span-5"
+        text: "Original RFP"
+      -
+        key: "div-span-6"
+        text: "MSA"
+      -
+        key: "div-span-7"
+        text: "access plan"
+  -
+    module: "delivery-conditions"
+    view: "conditions"
+    title: "Assumptions, dependencies, risks, and issues"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 22 · CONDITIONS FOR SUCCESS"
+      -
+        key: "div-h2-1"
+        text: "Assumptions, dependencies, risks, and issues"
+      -
+        key: "div-p-1"
+        text: "Summarizes the delivery conditions and uncertainties that need visibility, ownership, and action."
+      -
+        key: "adri-card-span-1"
+        text: "ASSUMPTION"
+      -
+        key: "adri-card-h3-1"
+        text: "Product SMEs available 6 hrs/week"
+      -
+        key: "adri-card-p-1"
+        text: "Validate by Sep 18 · Owner: Rina"
+      -
+        key: "adri-card-span-2"
+        text: "DEPENDENCY"
+      -
+        key: "adri-card-h3-2"
+        text: "Identity API available by Sprint 2"
+      -
+        key: "adri-card-p-2"
+        text: "Required Oct 5 · Owner: Jordan"
+      -
+        key: "adri-card-span-3"
+        text: "RISK"
+      -
+        key: "adri-card-h3-3"
+        text: "Test data may miss consent history"
+      -
+        key: "adri-card-p-3"
+        text: "High impact · Mitigation in progress"
+      -
+        key: "adri-card-span-4"
+        text: "ISSUE"
+      -
+        key: "adri-card-h3-4"
+        text: "2 partner accounts still unprovisioned"
+      -
+        key: "adri-card-p-4"
+        text: "2 days old · Escalate at 48h"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Give leaders a compact view of what must remain true, what can block progress, and where active intervention is already needed."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Four management categories stage as a live board, with severity and validation cues animating to direct attention."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "MSA"
+      -
+        key: "div-span-5"
+        text: "Original RFP"
+      -
+        key: "div-span-6"
+        text: "risk assessment"
+      -
+        key: "div-span-7"
+        text: "dependency list"
+  -
+    module: "raid-log"
+    view: "raid-log"
+    title: "RAID Log"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 23 · MANAGEMENT QUEUE"
+      -
+        key: "div-h2-1"
+        text: "RAID Log"
+      -
+        key: "div-p-1"
+        text: "A central, maintained register for assumptions, risks, issues, dependencies, actions, and decisions that require active management."
+      -
+        key: "raid-row-span-1"
+        text: "ID"
+      -
+        key: "raid-row-span-2"
+        text: "TYPE"
+      -
+        key: "raid-row-span-3"
+        text: "ITEM"
+      -
+        key: "raid-row-span-4"
+        text: "OWNER"
+      -
+        key: "raid-row-span-5"
+        text: "DUE"
+      -
+        key: "raid-row-span-6"
+        text: "STATUS"
+      -
+        key: "raid-row-span-7"
+        text: "R-07"
+      -
+        key: "raid-row-span-8"
+        text: "Risk"
+      -
+        key: "raid-row-span-9"
+        text: "Consent-history test data incomplete"
+      -
+        key: "raid-row-span-10"
+        text: "Jordan"
+      -
+        key: "raid-row-span-11"
+        text: "Sep 18"
+      -
+        key: "raid-row-pill-1"
+        text: "High"
+      -
+        key: "raid-row-span-12"
+        text: "D-03"
+      -
+        key: "raid-row-span-13"
+        text: "Dependency"
+      -
+        key: "raid-row-span-14"
+        text: "Identity API contract confirmed"
+      -
+        key: "raid-row-span-15"
+        text: "Theo"
+      -
+        key: "raid-row-span-16"
+        text: "Sep 22"
+      -
+        key: "raid-row-pill-2"
+        text: "Active"
+      -
+        key: "raid-row-span-17"
+        text: "A-04"
+      -
+        key: "raid-row-span-18"
+        text: "Assumption"
+      -
+        key: "raid-row-span-19"
+        text: "SME allocation remains available"
+      -
+        key: "raid-row-span-20"
+        text: "Rina"
+      -
+        key: "raid-row-span-21"
+        text: "Sep 18"
+      -
+        key: "raid-row-pill-3"
+        text: "Validate"
+      -
+        key: "raid-row-span-22"
+        text: "I-02"
+      -
+        key: "raid-row-span-23"
+        text: "Issue"
+      -
+        key: "raid-row-span-24"
+        text: "Partner access provisioning"
+      -
+        key: "raid-row-span-25"
+        text: "Maya"
+      -
+        key: "raid-row-span-26"
+        text: "Sep 15"
+      -
+        key: "raid-row-pill-4"
+        text: "Resolving"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Prioritize the few items that need action now, preserving owner, response, due date, and escalation status."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "RAID rows enter by severity and active risks carry a restrained pulse so the eye lands on what needs management."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "Original RFP"
+      -
+        key: "div-span-5"
+        text: "MSA"
+      -
+        key: "div-span-6"
+        text: "discovery notes"
+      -
+        key: "div-span-7"
+        text: "stakeholder interviews"
+  -
+    module: "dependency-list"
+    view: "dependencies"
+    title: "Dependency List"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 24 · NETWORK OF PREREQUISITES"
+      -
+        key: "div-h2-1"
+        text: "Dependency List"
+      -
+        key: "div-p-1"
+        text: "A focused inventory of external prerequisites that can affect sequencing, readiness, or delivery outcomes."
+      -
+        key: "dep-node-b-1"
+        text: "Security review"
+      -
+        key: "dep-node-span-1"
+        text: "Client Security"
+      -
+        key: "dep-node-small-1"
+        text: "Sep 18"
+      -
+        key: "dep-node-b-2"
+        text: "Identity API"
+      -
+        key: "dep-node-span-2"
+        text: "Platform Team"
+      -
+        key: "dep-node-small-2"
+        text: "Sep 22"
+      -
+        key: "dep-node-b-3"
+        text: "Sprint 2 build"
+      -
+        key: "dep-node-span-3"
+        text: "Slalom"
+      -
+        key: "dep-node-small-3"
+        text: "Oct 5"
+      -
+        key: "dep-node-b-4"
+        text: "Integrated test"
+      -
+        key: "dep-node-span-4"
+        text: "Joint Team"
+      -
+        key: "dep-node-small-4"
+        text: "Nov 9"
+      -
+        key: "dep-node-b-5"
+        text: "UAT readiness"
+      -
+        key: "dep-node-span-5"
+        text: "Product"
+      -
+        key: "dep-node-small-5"
+        text: "Nov 23"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Show dependencies as relationships, not bullets: what is blocked by what, who controls it, and the required-by date."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Nodes connect with drawn paths and a traveling signal that makes upstream/downstream impact immediately visible."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "SOW"
+      -
+        key: "div-span-4"
+        text: "Original RFP"
+      -
+        key: "div-span-5"
+        text: "MSA"
+      -
+        key: "div-span-6"
+        text: "project schedule"
+      -
+        key: "div-span-7"
+        text: "architecture or integration documentation"
+  -
+    module: "action-log"
+    view: "actions"
+    title: "Action Log"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 25 · COMMITMENT ENGINE"
+      -
+        key: "div-h2-1"
+        text: "Action Log"
+      -
+        key: "div-p-1"
+        text: "A managed list of commitments and follow-ups that converts meeting outcomes into accountable work."
+      -
+        key: "action-item-span-1"
+        text: "A-12"
+      -
+        key: "div-b-1"
+        text: "Confirm SME allocation"
+      -
+        key: "div-small-1"
+        text: "Owner · Rina · Due Sep 15"
+      -
+        key: "action-item-em-1"
+        text: "IN PROGRESS"
+      -
+        key: "action-item-span-2"
+        text: "A-13"
+      -
+        key: "div-b-2"
+        text: "Provision partner sandbox users"
+      -
+        key: "div-small-2"
+        text: "Owner · Jordan · Due Sep 15"
+      -
+        key: "action-item-em-2"
+        text: "IN PROGRESS"
+      -
+        key: "action-item-span-3"
+        text: "A-14"
+      -
+        key: "div-b-3"
+        text: "Publish decision-rights matrix"
+      -
+        key: "div-small-3"
+        text: "Owner · Maya · Due Sep 16"
+      -
+        key: "action-item-em-3"
+        text: "STARTED"
+      -
+        key: "action-item-span-4"
+        text: "A-11"
+      -
+        key: "div-b-4"
+        text: "Create project collaboration spaces"
+      -
+        key: "div-small-4"
+        text: "Owner · Casey · Completed Sep 14"
+      -
+        key: "action-item-em-4"
+        text: "DONE"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Convert discussion into dated commitments, making ownership, due dates, and blockers obvious."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Actions flow through queued → in progress → complete states, with progress bars reinforcing forward motion."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Kickoff notes"
+      -
+        key: "div-span-4"
+        text: "workshops"
+      -
+        key: "div-span-5"
+        text: "status meetings"
+      -
+        key: "div-span-6"
+        text: "Engagement Tracker"
+      -
+        key: "div-span-7"
+        text: "Meeting Notes"
+  -
+    module: "decision-log"
+    view: "decisions"
+    title: "Decision Log"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 26 · TRACEABLE RATIONALE"
+      -
+        key: "div-h2-1"
+        text: "Decision Log"
+      -
+        key: "div-p-1"
+        text: "A traceable record of decisions, approvals, alternatives, and their delivery implications."
+      -
+        key: "decision-item-time-1"
+        text: "SEP 09"
+      -
+        key: "decision-item-decision-stamp-1"
+        text: "DECIDED"
+      -
+        key: "decision-item-h3-1"
+        text: "MVP focuses on two service journeys"
+      -
+        key: "decision-item-p-1"
+        text: "Maximize learning before broader line-of-business expansion."
+      -
+        key: "decision-item-small-1"
+        text: "Decision maker · Avery Morgan"
+      -
+        key: "decision-item-time-2"
+        text: "SEP 11"
+      -
+        key: "decision-item-decision-stamp-2"
+        text: "DECIDED"
+      -
+        key: "decision-item-h3-2"
+        text: "Azure DevOps is the backlog source of truth"
+      -
+        key: "decision-item-p-2"
+        text: "Avoid duplicate action and story tracking across tools."
+      -
+        key: "decision-item-small-2"
+        text: "Decision maker · Maya + Jordan"
+      -
+        key: "decision-item-time-3"
+        text: "SEP 16"
+      -
+        key: "decision-item-decision-stamp-3"
+        text: "OPEN"
+      -
+        key: "decision-item-h3-3"
+        text: "Consent-history data pattern"
+      -
+        key: "decision-item-p-3"
+        text: "Choose masked production extract vs synthetic data generator."
+      -
+        key: "decision-item-small-3"
+        text: "Decision owner · Jordan Lee"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Preserve the decisions that shape delivery—what was decided, by whom, why, and what changed as a result."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "Decision stamps land on a chronological rail, visually creating a durable audit trail."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Governance meetings"
+      -
+        key: "div-span-4"
+        text: "workshops"
+      -
+        key: "div-span-5"
+        text: "SOW"
+      -
+        key: "div-span-6"
+        text: "MSA"
+      -
+        key: "div-span-7"
+        text: "Original RFP"
+  -
+    module: "immediate-next-steps"
+    view: "next-steps"
+    title: "Immediate next steps / asks"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 27 · MOBILIZATION COUNTDOWN"
+      -
+        key: "div-h2-1"
+        text: "Immediate next steps / asks"
+      -
+        key: "div-p-1"
+        text: "Turns kickoff alignment into dated actions that begin mobilization."
+      -
+        key: "launch-count-span-1"
+        text: "NEXT"
+      -
+        key: "launch-count-strong-1"
+        text: "48"
+      -
+        key: "launch-count-b-1"
+        text: "HOURS"
+      -
+        key: "article-i-1"
+        text: "1"
+      -
+        key: "div-b-1"
+        text: "Confirm SME calendar"
+      -
+        key: "div-span-1"
+        text: "Rina · Sep 15"
+      -
+        key: "article-em-1"
+        text: "UNLOCKS DISCOVERY"
+      -
+        key: "article-i-2"
+        text: "2"
+      -
+        key: "div-b-2"
+        text: "Complete sandbox provisioning"
+      -
+        key: "div-span-2"
+        text: "Jordan · Sep 15"
+      -
+        key: "article-em-2"
+        text: "UNLOCKS BUILD"
+      -
+        key: "article-i-3"
+        text: "3"
+      -
+        key: "div-b-3"
+        text: "Resolve test-data pattern"
+      -
+        key: "div-span-3"
+        text: "Jordan + Theo · Sep 16"
+      -
+        key: "article-em-3"
+        text: "UNLOCKS INTEGRATION"
+      -
+        key: "article-i-4"
+        text: "4"
+      -
+        key: "div-b-4"
+        text: "Approve MVP boundary"
+      -
+        key: "div-span-4"
+        text: "Avery · Sep 16"
+      -
+        key: "article-em-4"
+        text: "UNLOCKS DESIGN"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-5"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "Focus on the next 48 hours and first week. Show only the actions required to unlock delivery and the asks leadership must answer."
+      -
+        key: "div-span-6"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "A countdown rail and progressive completion sequence make the transition from kickoff to action tangible."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-7"
+        text: "Kickoff notes"
+      -
+        key: "div-span-8"
+        text: "Project Schedule"
+      -
+        key: "div-span-9"
+        text: "Engagement Tracker"
+      -
+        key: "div-span-10"
+        text: "decision log"
+      -
+        key: "div-span-11"
+        text: "RACI"
+  -
+    module: "closing-discussion"
+    view: "closing"
+    title: "Closing / discussion"
+    layout: "microsite"
+    copy:
+      -
+        key: "div-module-kicker-1"
+        text: "MODULE 28 · COMMITMENT + OPEN SPACE"
+      -
+        key: "div-h2-1"
+        text: "Closing / discussion"
+      -
+        key: "div-p-1"
+        text: "Creates a clear space for remaining questions, confirmation, and a confident handoff into action."
+      -
+        key: "closing-orbit-co-core-1"
+        text: "READY"
+      -
+        key: "closing-orbit-co-core-2"
+        text: "TO"
+      -
+        key: "closing-orbit-co-core-3"
+        text: "START"
+      -
+        key: "closing-orbit-co-1"
+        text: "OUTCOMES"
+      -
+        key: "closing-orbit-co-2"
+        text: "SCOPE"
+      -
+        key: "closing-orbit-co-3"
+        text: "TEAM"
+      -
+        key: "closing-orbit-co-4"
+        text: "RHYTHM"
+      -
+        key: "closing-copy-eyebrow-1"
+        text: "CONFIRM BEFORE WE CLOSE"
+      -
+        key: "closing-copy-h3-1"
+        text: "Four commitments leave the room with us."
+      -
+        key: "ul-li-1"
+        text: "We share the same definition of success."
+      -
+        key: "ul-li-2"
+        text: "We know the MVP boundary."
+      -
+        key: "ul-li-3"
+        text: "We know how decisions get made."
+      -
+        key: "ul-li-4"
+        text: "Every first-week action has an owner."
+      -
+        key: "closing-copy-discussion-prompt-1"
+        text: "What would prevent you from saying “we are ready to start”?"
+      -
+        key: "reference-notes-summary-1"
+        text: "Design notes"
+      -
+        key: "div-span-1"
+        text: "BEST STORY"
+      -
+        key: "div-p-2"
+        text: "End by confirming commitments, surfacing unresolved questions, and showing exactly what happens next."
+      -
+        key: "div-span-2"
+        text: "MOTION PURPOSE"
+      -
+        key: "div-p-3"
+        text: "The closing constellation gathers the project commitments into one view, then settles into a calm discussion state."
+      -
+        key: "source-signals-span-1"
+        text: "SOURCE SIGNALS"
+      -
+        key: "div-span-3"
+        text: "Proposal Decks"
+      -
+        key: "div-span-4"
+        text: "open-questions list"
+      -
+        key: "div-span-5"
+        text: "Engagement Tracker"
+      -
+        key: "div-span-6"
+        text: "Meeting Notes."

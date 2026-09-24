@@ -95,8 +95,8 @@ project.
 
 ## Continue the calling setup
 
-Ask, **"Have you created the Codex project?"** Use `request_user_input` when it
-is available, with short choices for **Yes, it is created** and **Not yet**.
+Ask, **"Have you created the Codex project?"** Use the host's structured-question
+tool when available, with short choices for **Yes, it is created** and **Not yet**.
 Record the answer for the setup-readiness report, but continue the calling
 workflow regardless of the answer. Treat a dismissed prompt or any other answer
 as **not verified** and continue. Do not repeat the instructions unless the user

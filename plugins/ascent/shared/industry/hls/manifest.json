@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "hls",
+  "title": "Health & Life Sciences",
+  "description": "Reference guidance and a consistent fictional client for healthcare provider, payer, pharma, and life-sciences engagements.",
+  "references": {
+    "overview": "references/overview.md",
+    "vocabulary": "references/vocabulary.md",
+    "ingestion_guidance": "references/ingestion-guidance.md",
+    "review_guidance": "references/review-guidance.md",
+    "deliverable_guidance": "references/deliverable-guidance.md"
+  },
+  "examples": {
+    "fictional_client": "examples/fictional-client.md",
+    "static_examples": {
+      "project-kickoff": "examples/project-kickoff-static-example.json"
+    }
+  },
+  "assets": {
+    "illustrations": [
+      { "file": "assets/illustrations/healthcare-molecules-01-horizontal.jpg", "label": "Abstract molecule macro (horizontal)", "vertical": "healthcare" },
+      { "file": "assets/illustrations/healthcare-molecules-01-vertical.jpg", "label": "Abstract molecule macro (vertical)", "vertical": "healthcare" },
+      { "file": "assets/illustrations/healthcare-stethoscope-01-horizontal.jpg", "label": "Stethoscope on scrubs (horizontal)", "vertical": "healthcare" },
+      { "file": "assets/illustrations/healthcare-stethoscope-01-vertical.jpg", "label": "Stethoscope on scrubs (vertical)", "vertical": "healthcare" },
+      { "file": "assets/illustrations/life-sciences-macro-01-horizontal.jpg", "label": "Sea anemone macro (horizontal)", "vertical": "life-sciences: biological/environmental research" },
+      { "file": "assets/illustrations/life-sciences-macro-01-vertical.jpg", "label": "Sea anemone macro (vertical)", "vertical": "life-sciences: biological/environmental research" },
+      { "file": "assets/illustrations/life-sciences-macro-02-horizontal.jpg", "label": "Aerial greenhouse rows (horizontal)", "vertical": "life-sciences: agricultural (agtech/crop science)" },
+      { "file": "assets/illustrations/life-sciences-macro-02-vertical.jpg", "label": "Aerial greenhouse rows (vertical)", "vertical": "life-sciences: agricultural (agtech/crop science)" }
+    ]
+  }
+}
