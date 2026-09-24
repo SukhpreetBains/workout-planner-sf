@@ -450,7 +450,7 @@ def start(root: Path) -> int:
     with open(log, "ab") as output:
         process = subprocess.Popen(
             [sys.executable, str(SCRIPT), "serve", "--root", str(root),
-             "--token", token, "--instance-id", instance_id],
+             f"--token={token}", "--instance-id", instance_id],
             stdin=subprocess.DEVNULL, stdout=output, stderr=output,
             start_new_session=True,
         )

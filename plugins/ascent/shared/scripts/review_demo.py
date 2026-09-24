@@ -3,14 +3,16 @@
 
 Run: python3 plugins/ascent/shared/scripts/review_demo.py
 Use --prepare-only to create the files without starting a browser or server.
-Each run resets only a directory previously marked by this script. The default
-directory is the operating system's temporary directory.
+Each default run creates a fresh directory under the operating system's temporary
+directory, so old browser tabs cannot edit a new session. Pass --root PATH to
+reset a specific directory previously marked by this script.
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+import secrets
 import shutil
 import subprocess
 import sys
@@ -20,7 +22,7 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve()
 SCRIPTS = SCRIPT.parent
-DEFAULT_ROOT = Path(tempfile.gettempdir()) / "ascent-workspace-review-demo"
+DEFAULT_ROOT = Path(tempfile.gettempdir()) / f"ascent-workspace-review-demo-{secrets.token_hex(4)}"
 MARKER = ".ascent-review-demo"
 
 
@@ -152,11 +154,14 @@ def prepare(root: Path) -> None:
     })
 
     updates = [
-        proposal("stakeholder", {"Role": "Service Operations Director",
+        proposal("stakeholder", {"Name": "Maya Torres", "Role": "Service Operations Director",
+                 "Influence": "high",
                  "Engagement Notes": "Approves the regional pilot."},
                  "Maya Torres owns service operations and approves intake process changes.", 3,
                  source, action="update", tracker_id=stakeholder_id),
-        proposal("system", {"Description": "Tracks requests in the current process and provides pilot exports."},
+        proposal("system", {"Name": "QueueBoard", "System Type": "application",
+                 "Status": "active",
+                 "Description": "Tracks requests in the current process and provides pilot exports."},
                  "QueueBoard is the current request tracking application.", 6, source,
                  action="update", tracker_id=system_id),
         proposal("pain_point", {"Statement": "Manual rekeying delays request assignment.",
@@ -179,9 +184,10 @@ def prepare(root: Path) -> None:
         proposal("decision", {"Statement": "Pilot the new intake flow in one region first.",
                  "Status": "decided"},
                  "The team decided to pilot with one region before expanding.", 10, source),
-        proposal("open_question", {"Question": "Who owns category definitions after the pilot?"},
+        proposal("open_question", {"Question": "Who owns category definitions after the pilot?",
+                 "Status": "open"},
                  "Who will own category definitions after the pilot?", 11, source,
-                 review={"state": "flagged", "note": "Confirm an accountable owner."}),
+                 review={"state": "flagged", "clarification_note": "Confirm an accountable owner."}),
         proposal("assumption", {"Statement": "Regional coordinators can spend four hours weekly on the pilot.",
                  "Status": "unvalidated", "Validation Plan": "Confirm with regional managers."},
                  delivery_lines[2], 3, delivery_source),
