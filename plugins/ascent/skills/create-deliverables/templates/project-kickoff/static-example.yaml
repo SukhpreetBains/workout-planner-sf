@@ -1169,104 +1169,116 @@ sections:
     module: "timeline-roadmap"
     view: "timeline"
     title: "Timeline / roadmap"
-    layout: "microsite"
-    copy:
+    time_scale: "month"
+    phases:
       -
-        key: "div-module-kicker-1"
-        text: "MODULE 11 · EXECUTIVE HORIZON"
+        name: "Align"
+        window: "September"
+        start: "2026-09-14"
+        end: "2026-09-25"
+        summary: "Establish shared outcomes, evidence, and working agreements."
+        outcomes: ["Kickoff complete", "Success measures aligned"]
+        activities:
+          -
+            title: "Confirm outcomes"
+            detail: "Align objectives, measures, and decision boundaries."
+          -
+            title: "Mobilize the team"
+            detail: "Confirm access, participants, and working agreements."
+        decision: "Confirm readiness to begin design."
+        milestones:
+          -
+            title: "Kickoff"
+            date: "2026-09-14"
+            detail: "Launch the engagement and confirm the operating model."
       -
-        key: "div-h2-1"
-        text: "Timeline / roadmap"
+        name: "Design"
+        window: "September to October"
+        start: "2026-09-21"
+        end: "2026-10-23"
+        summary: "Turn evidence into experience and solution decisions."
+        outcomes: ["Experience direction approved", "Architecture decisions recorded"]
+        activities:
+          -
+            title: "Shape the experience"
+            detail: "Prototype priority journeys with users and stakeholders."
+          -
+            title: "Resolve architecture"
+            detail: "Confirm the technical direction and delivery constraints."
+        decision: "Approve the MVP direction."
+        milestones:
+          -
+            title: "MVP signoff"
+            date: "2026-10-23"
+            detail: "Approve the experience and solution boundary."
       -
-        key: "div-p-1"
-        text: "Provides a high-level visual of phases, timing, major milestones, and handoffs."
+        name: "Build"
+        window: "October to December"
+        start: "2026-10-12"
+        end: "2026-12-04"
+        summary: "Deliver working increments and retire implementation risk."
+        outcomes: ["Priority capabilities implemented", "Release candidate ready"]
+        activities:
+          -
+            title: "Deliver increments"
+            detail: "Build and demonstrate usable slices every two weeks."
+          -
+            title: "Integrate continuously"
+            detail: "Validate quality, data, and system behavior throughout delivery."
+        decision: "Confirm the release candidate is ready for validation."
+        milestones:
+          -
+            title: "Build ready"
+            date: "2026-12-04"
+            detail: "Complete the agreed MVP scope for formal validation."
       -
-        key: "roadmap-axis-span-1"
-        text: "SEP"
+        name: "Validate"
+        window: "December"
+        start: "2026-12-01"
+        end: "2026-12-23"
+        summary: "Establish business, technical, and operational confidence."
+        outcomes: ["Acceptance criteria met", "Launch readiness confirmed"]
+        activities:
+          -
+            title: "Run acceptance testing"
+            detail: "Validate priority scenarios with business owners."
+          -
+            title: "Assess readiness"
+            detail: "Close critical defects and confirm launch support."
+        decision: "Authorize production launch."
+        milestones:
+          -
+            title: "UAT start"
+            date: "2026-12-01"
+            detail: "Begin formal business acceptance."
+          -
+            title: "Launch decision"
+            date: "2026-12-23"
+            detail: "Confirm readiness to release."
       -
-        key: "roadmap-axis-span-2"
-        text: "OCT"
-      -
-        key: "roadmap-axis-span-3"
-        text: "NOV"
-      -
-        key: "roadmap-axis-span-4"
-        text: "DEC"
-      -
-        key: "roadmap-axis-span-5"
-        text: "JAN"
-      -
-        key: "roadmap-row-label-1"
-        text: "Align"
-      -
-        key: "roadmap-row-roadmap-phase-1"
-        text: "Kickoff + discovery"
-      -
-        key: "roadmap-row-label-2"
-        text: "Design"
-      -
-        key: "roadmap-row-roadmap-phase-2"
-        text: "Experience + architecture"
-      -
-        key: "roadmap-row-label-3"
-        text: "Build"
-      -
-        key: "roadmap-row-roadmap-phase-3"
-        text: "2-week increments"
-      -
-        key: "roadmap-row-label-4"
-        text: "Validate"
-      -
-        key: "roadmap-row-roadmap-phase-4"
-        text: "UAT + readiness"
-      -
-        key: "roadmap-row-label-5"
-        text: "Transition"
-      -
-        key: "roadmap-row-roadmap-phase-5"
-        text: "Launch + hypercare"
-      -
-        key: "milestone-span-1"
-        text: "MVP signoff"
-      -
-        key: "milestone-span-2"
-        text: "UAT start"
-      -
-        key: "milestone-span-3"
-        text: "Go-live"
-      -
-        key: "reference-notes-summary-1"
-        text: "Design notes"
-      -
-        key: "div-span-1"
-        text: "BEST STORY"
-      -
-        key: "div-p-2"
-        text: "Show the shape of the journey at a glance: phases, major handoffs, decision points, and the moments leadership should care about."
-      -
-        key: "div-span-2"
-        text: "MOTION PURPOSE"
-      -
-        key: "div-p-3"
-        text: "Phase bands grow across the horizon while milestone beacons appear in sequence."
-      -
-        key: "source-signals-span-1"
-        text: "SOURCE SIGNALS"
-      -
-        key: "div-span-3"
-        text: "Project Schedule"
-      -
-        key: "div-span-4"
-        text: "SOW"
-      -
-        key: "div-span-5"
-        text: "Original RFP"
-      -
-        key: "div-span-6"
-        text: "Proposal Decks"
-      -
-        key: "div-span-7"
-        text: "Engagement Tracker"
+        name: "Transition"
+        window: "January"
+        start: "2027-01-04"
+        end: "2027-01-15"
+        summary: "Launch the solution and transfer durable ownership."
+        outcomes: ["Solution live", "Operational ownership transferred"]
+        activities:
+          -
+            title: "Launch and stabilize"
+            detail: "Monitor production behavior and resolve launch issues."
+          -
+            title: "Transfer ownership"
+            detail: "Complete enablement, documentation, and handoff."
+        decision: "Accept the transition into steady-state ownership."
+        milestones:
+          -
+            title: "Go-live"
+            date: "2027-01-04"
+            detail: "Release the solution to production."
+          -
+            title: "Handoff complete"
+            date: "2027-01-15"
+            detail: "Close hypercare and transfer ownership."
   -
     module: "project-schedule"
     view: "schedule"

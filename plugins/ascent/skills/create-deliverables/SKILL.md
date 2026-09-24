@@ -21,6 +21,11 @@ date, decision, or answer to fill a gap.
   `update-deliverable-structure`. Do not turn a one-off customization into a
   shared structure without the user's explicit request.
 
+For a reusable module UI iteration, read
+[references/module-ui-iteration.md](references/module-ui-iteration.md) before
+changing the renderer. It defines the isolated-preview and contract-preserving
+workflow.
+
 ## Guided template workflow
 
 ### Draft location and naming
@@ -48,7 +53,7 @@ template from the catalog.
 
 Load the selected template from `templates/<selected-template>/archetype.json`,
 then load its ordered modules, question definitions, and HTML renderers. Present
-the complete ordered list of available modules, including each module's ID,
+the complete ordered list of modules associated with that template, including each module's ID,
 title, and description. Also present the template's recommended modules, as
 defined by its template-owned instructions, separately from the full catalog.
 Before asking the user to choose a final subset, ask whether they would like to
@@ -56,7 +61,8 @@ see one or more available modules rendered with fictional example data. Render
 only the modules they request, using isolated module previews, and give the user
 a preview link for each. Do not automatically render the full template or every
 available module. Then ask which modules to include, retain the template order
-for the selected subset, and confirm that selection before evidence intake,
+for the selected subset, and confirm that selection before
+evidence intake,
 module questions, or drafting. If the manifest declares `instructions`, read
 that template-owned Markdown file and follow it whenever the template is
 selected or resumed. These instructions supplement this workflow; explicit user

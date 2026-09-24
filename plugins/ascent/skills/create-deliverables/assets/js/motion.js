@@ -159,6 +159,16 @@ export const RECIPES = {
     }
   },
 
+  'execution-map-reveal': (el) => {
+    const rows = $(el, '[data-motion-item]');
+    if (!rows.length) return;
+    utils.set(rows, { opacity: 0, x: -12 });
+    animate(rows, {
+      opacity: [0, 1], x: [-12, 0], ease: 'outExpo', duration: D_BASE,
+      delay: stagger(70), autoplay: onScroll({ target: el, once: true }),
+    });
+  },
+
   'scroll-sync': (el) => {
     const fill = el.querySelector('.rail__fill');
     if (!fill) return;
@@ -309,13 +319,52 @@ export function initRail(root = document) {
   }
 }
 
+/** Let readers inspect phases while retaining the map as the primary view. */
+export function initExecutionMaps(root = document) {
+  for (const map of $(root, '[data-component="execution_map"]')) {
+    const scrubber = map.querySelector('.execution-map__scrubber input');
+    const bars = $(map, '.execution-map__bar');
+    const inspector = map.querySelector('.execution-map__inspector');
+    const content = map.querySelector('.execution-map__inspector-content');
+    const prompt = map.querySelector('.execution-map__prompt');
+    const context = map.querySelector('.execution-map__context');
+    let activeBar = null;
+
+    const setPeriod = () => {
+      const period = Number(scrubber?.value ?? 1);
+      map.style.setProperty('--active-period', period);
+      const active = bars.filter((bar) => period >= Number(bar.dataset.phaseStart) && period <= Number(bar.dataset.phaseEnd));
+      for (const bar of bars) bar.classList.toggle('is-current', active.includes(bar));
+      const activeNames = active.map((bar) => bar.querySelector('span')?.textContent).filter(Boolean);
+      if (context) context.textContent = `Period ${String(period).padStart(2, '0')} · ${activeNames.length ? `${activeNames.join(' + ')} in focus.` : 'No phase is scheduled in this period.'}`;
+    };
+    const select = (bar) => {
+      activeBar = bar;
+      for (const item of bars) item.setAttribute('aria-expanded', String(item === bar));
+      const source = bar.parentElement?.querySelector('.execution-map__source .timeline-detail');
+      if (content && source) content.innerHTML = source.outerHTML;
+      if (inspector) inspector.hidden = false;
+      if (prompt) prompt.hidden = true;
+    };
+    scrubber?.addEventListener('input', setPeriod);
+    for (const bar of bars) bar.addEventListener('click', () => select(bar));
+    map.querySelector('.execution-map__collapse')?.addEventListener('click', () => {
+      if (inspector) inspector.hidden = true;
+      if (prompt) prompt.hidden = false;
+      for (const bar of bars) bar.setAttribute('aria-expanded', 'false');
+      activeBar?.focus();
+    });
+    setPeriod();
+  }
+}
+
 if (typeof document !== 'undefined') {
   // Print with every figure at its final value, whether or not the reader ever
   // scrolled past it.
   addEventListener('beforeprint', finaliseMotion);
   matchMedia?.('print')?.addEventListener?.('change', (e) => { if (e.matches) finaliseMotion(); });
 
-  const start = () => { initMotion(document); initRail(document); };
+  const start = () => { initMotion(document); initRail(document); initExecutionMaps(document); };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start, { once: true });
   } else {
