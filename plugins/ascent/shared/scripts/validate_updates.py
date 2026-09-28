@@ -27,7 +27,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from paths import REPO_ROOT, load_schema
+from paths import PROPOSED_UPDATES_DIR, REPO_ROOT, load_schema
 from trackers import id_column, normalize_enum, read_rows
 
 USER_SUBMITTED_SOURCE = "User Submitted"
@@ -48,6 +48,29 @@ def load_updates(path: Path) -> dict:
     if not isinstance(doc, dict) or not isinstance(doc.get("updates"), list):
         raise ValueError("file must be a mapping with an 'updates' list")
     return doc
+
+
+def pending_link_ids(doc: dict, path: Path) -> dict[str, set[str]]:
+    """Proposal IDs a link column may reference until review resolves them.
+
+    Matches what the review inbox accepts: the review swaps a linked
+    proposal ID for the real tracker ID on approval and removes it on
+    rejection. Read-only, unlike the review store's equivalent.
+    """
+    documents = [doc]
+    if PROPOSED_UPDATES_DIR.is_dir():
+        for other in sorted(PROPOSED_UPDATES_DIR.glob("*.y*ml")):
+            if other.is_file() and other.resolve() != path.resolve():
+                try:
+                    documents.append(load_updates(other))
+                except (OSError, ValueError, yaml.YAMLError):
+                    continue
+    ids: dict[str, set[str]] = {}
+    for document in documents:
+        for update in document["updates"]:
+            if isinstance(update, dict) and update.get("category") and update.get("proposal_id"):
+                ids.setdefault(str(update["category"]), set()).add(str(update["proposal_id"]))
+    return ids
 
 
 def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = None) -> list[str]:
@@ -176,7 +199,7 @@ def main() -> int:
     except Exception as exc:  # surface YAML/shape errors plainly
         print(f"INVALID: {exc}")
         return 1
-    problems = validate(doc, load_schema())
+    problems = validate(doc, load_schema(), pending_link_ids(doc, path))
     if problems:
         print(f"INVALID: {len(problems)} problem(s)")
         for p in problems:

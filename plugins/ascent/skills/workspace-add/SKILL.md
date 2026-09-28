@@ -37,7 +37,8 @@ Check `workspace/.system/project.yaml` for an `industry:` key.
   below, no different from this section not existing. Do not ask again.
 - **An id** — read that pack's `references/ingestion-guidance.md`
   (`shared/industry/<id>/manifest.json` names its exact path) and apply it
-  alongside Steps 1–4 below as emphasis and framing. It never adds a
+  alongside Steps 2–4 below as emphasis and framing, including passing it
+  to each curation subagent. It never adds a
   tracker category or column, and it never overrides a direct
   in-conversation instruction for this turn (e.g. "don't apply industry
   flavor here").
@@ -45,41 +46,72 @@ Check `workspace/.system/project.yaml` for an `industry:` key.
 Read [../../shared/industry/README.md](../../shared/industry/README.md) for
 the full contract if anything here is ambiguous.
 
-## Step 1 — Read each inbox file
+## Step 1 — Select a batch of up to three documents
 
-List `workspace/inbox/`. For each file:
+```
+PY <shared-skill-dir>/scripts/select_inbox_batch.py
+```
 
-- Plain text (`.md`, `.txt`, `.csv`, …): read it directly.
-- `.docx`, `.pdf`, `.pptx`, `.xlsx`: convert first —
-  `PY <shared-skill-dir>/scripts/read_document.py "workspace/inbox/<file>" --out "workspace/inbox/<file stem>.md"`
-  and read the Markdown. Keep the converted `.md` next to where the
-  original will be filed; it is the readable copy.
+It returns at most three original sources in `selected` — oldest
+modification time first, filename breaking ties — and how many originals
+`remaining`. A converted `.md` beside its original (`Report.md` next to
+`Report.pdf`) is reported as that original's `converted_copy` and never
+counts as a separate source. Work only on `selected`; everything else stays
+in the inbox until its own batch.
 
-Only ask the user when a file is genuinely ambiguous — including whether something is meeting material or an ordinary document.
+Run Steps 2–4 for this batch, then run the selector again and repeat until
+`selected` comes back empty. Proceed to Step 5 once, after the last batch.
+If the selector returns a document that was already selected earlier in
+this run, stop looping and report it to the user instead of retrying.
 
-### Parallel extraction for multi-document batches
+## Step 2 — Curate each document separately
 
-When the inbox contains two or more independent source documents, group them by
-their lifecycle relationship or subject matter, then delegate each group to one
-subagent. On a host that supports subagent model selection, use
-`gpt-5.6-luna` with `high` reasoning effort for every such subagent. On other
-hosts, use the closest available subagent configuration without claiming that a
-specific model or reasoning setting was applied.
+Before dispatching, convert any selected `.docx`, `.pdf`, `.pptx`, or `.xlsx`
+that has no `converted_copy`:
 
-Give each subagent only its assigned files and the tracker schema. It may read
-or convert those files, classify each as meeting material or ordinary
-reference/current-state/future-state material, and return candidate findings
-with short verbatim evidence. It must not move files, write session notes or
-the source ledger, create or edit proposal YAML, run sync or the review server,
-or write to trackers.
+```
+PY <shared-skill-dir>/scripts/read_document.py "workspace/inbox/<file>" --out "workspace/inbox/<file stem>.md"
+```
 
-The parent agent keeps control of filing, source-ledger updates, duplicate
-resolution against tracker copies, proposal creation and validation, sync, and
-the approval-gated tracker workflow. Consolidate every subagent result before
-creating a batch proposal so related documents produce one coherent, deduped
-set of proposed facts.
+Keep the converted `.md` beside its original; it is the readable copy and
+is filed with it.
 
-## Step 2 — File it
+Give every selected document **its own** curation subagent — one document
+per subagent, never grouped, so each gets undivided attention. Use the
+latest suitable low-cost model the host offers for subagents (for example
+a current GPT Luna or Claude Haiku model), with high reasoning effort when
+the host supports setting it. Never claim a model or reasoning setting the
+host did not actually apply.
+
+Give each subagent only its one document (original plus converted copy),
+`<shared-skill-dir>/schema/trackers.yaml`, and the active industry pack's
+ingestion guidance if one applies. It reads the document, classifies it as
+meeting material or current-state / future-state / reference material, and
+returns:
+
+- the classification;
+- candidate findings, each with its category, proposed field values, and
+  source-linked evidence — the `source_ref` plus a short verbatim
+  `excerpt` (line numbers only when actually known);
+- a `basis` on every finding: `stated` when the excerpt says it directly,
+  or `inferred` when it is a reading between the lines, naming what it was
+  inferred from.
+
+A curation subagent must not move files, write session notes or the source
+ledger, create or edit proposal YAML, run sync or the review server, or
+write to trackers.
+
+**Fallback.** If the host cannot provide suitable subagents, the parent
+curates each selected document itself, one at a time, under exactly the same
+rules and return shape — never reading the batch as one combined pass — and
+tells the user in the handoff that curation ran without subagents.
+
+## Step 3 — File it
+
+Use each subagent's classification. Only ask the user when a document is
+genuinely ambiguous — including whether it is meeting material or an
+ordinary document. If a document cannot be processed, record it in
+`sources.yaml` as `status: skipped` with the reason and tell the user.
 
 ### Meeting or workshop material (transcripts, raw notes)
 
@@ -93,7 +125,7 @@ the client's own vocabulary rather than translating it.
 Move the raw transcript alongside the note in `workspace/meetings/`,
 same date prefix, ` - transcript` suffix, so the note can cite it. Record
 both files in `workspace/.system/sources.yaml` (the transcript as the
-source, `status: extracted` once Step 3 is done for it).
+source, `status: extracted` once Step 4 is done for it).
 
 ### Everything else
 
@@ -116,21 +148,43 @@ sources:
     summary: One line on what the document is.
 ```
 
-## Step 3 — Extract findings
+## Step 4 — Reconcile and propose
 
-Read `<shared-skill-dir>/schema/trackers.yaml`. It defines every
-category (stakeholder, pain_point, system, objective, requirement, risk,
-assumption, constraint, decision, open_question), what belongs in each,
-the bar a finding must clear, and the exact columns and allowed values.
+The parent turns the batch's curated findings into proposals. Read
+`<shared-skill-dir>/schema/trackers.yaml`: it defines every category, what
+belongs in each, the bar a finding must clear, and the exact columns and
+allowed values.
 
-Go through each document — for meeting material, use the session note
-(not the raw transcript) as the primary `source_refs` entry, and check
-the decision, open_question, and stakeholder categories deliberately;
-meetings are the richest source for those three. Collect every finding
-that clears its category's bar. Check `workspace/.system/tracker-copies/`
-for rows that already exist: propose an `update` to enrich an existing
-row rather than an `add` that duplicates it, and use existing row IDs
-when filling `... IDs` link columns.
+Reconcile before proposing:
+
+- **Across documents** — merge findings that describe the same fact into
+  one proposal carrying evidence from each document.
+- **Against existing tracker rows** — check
+  `workspace/.system/tracker-copies/`; propose an `update` to enrich an
+  existing row rather than an `add` that duplicates it, and use existing
+  row IDs when filling `... IDs` link columns.
+- **Against earlier batches in this run** — tracker copies do not show
+  pending proposals, so also check the proposal files already written this
+  run and extend those instead of duplicating them.
+
+**Linking to rows that do not exist yet.** When a finding links to a
+stakeholder, system, or other row that is not in the trackers, propose that
+row as well and put its `proposal_id` in the link column (`;`-separated
+alongside any existing IDs). It may come from this batch or an earlier batch
+in this run. The review inbox swaps it for the real tracker ID when that row
+is approved and removes it if the row is rejected.
+
+Subagents cite `workspace/inbox/...` paths, but Step 3 has since filed those
+documents; rewrite every `source_ref` to the document's filed location (or
+its session note) before writing proposals.
+
+Propose only findings that clear their category's bar, each with its
+evidence. Never propose an `inferred` finding as a stated fact: either
+propose it as an `open_question` citing the excerpt it was inferred from,
+or list it in the handoff as not proposed. For meeting material, cite the
+session note (not the raw transcript) as the primary `source_refs` entry,
+and check the decision, open_question, and stakeholder categories
+deliberately; meetings are the richest source for those three.
 
 Write one file per batch to
 `workspace/.system/proposed-updates/<YYYY-MM-DD>-<short-topic>.yaml`:
@@ -164,9 +218,9 @@ Use a UUID for every `proposal_id`. Increment `revision` whenever an agent
 rewrites a proposal after it has been created. Evidence excerpts must be short,
 verbatim support for the specific proposal. Do not manufacture line numbers.
 
-## Step 4 — Sync and hand off
+## Step 5 — Sync and hand off
 
-Run `PY <shared-skill-dir>/scripts/sync.py`. If validation produced one or more
+Run this once, after the last batch. Run `PY <shared-skill-dir>/scripts/sync.py`. If validation produced one or more
 proposals, run:
 
 ```
@@ -183,8 +237,11 @@ plain-English handoff. Do not merely mention a workflow or leave the next
 step implicit. State:
 
 - that the project trackers have **not** been changed yet;
+- how many documents were processed and in how many batches, and whether
+  curation fell back to running without subagents;
 - the total number of evidence-backed items ready for their review, with
   counts by category;
+- any inferred findings that were not proposed;
 - that these are proposed facts, not yet the project's official working
   record, and need their approval before they are added; and
 - the exact next action in user language: for example, “I have 16 items
@@ -195,8 +252,4 @@ If the user approves, invoke `workspace-review` and walk the
 proposals through its governed review. If they do not approve, leave the
 proposals in place and make clear that they are available for a later
 review. Also report what was filed (including where any session note
-lives). If the trackers are empty of stakeholders/systems that findings
-need to link to, propose those rows in the same batch - order within one
-file does not matter for validation of links to *existing* rows, so link
-only to IDs that are already in the trackers and mention the rest in
-Notes.
+lives).
