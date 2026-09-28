@@ -15,16 +15,17 @@ Place every checklist item under exactly one group, preserving this order:
 Cover these items in this order:
 
 1. Environment, including Python, the cached workspace runtime, and its `.system/.venv-path` pointer.
-2. Storage, including storage mode, applicable shared storage, and the confirmed local Opportunity path.
-3. Workspace structure.
-4. Host project status, when applicable.
-5. Communications, including messaging sources and the project communications record.
-6. Trackers.
-7. Identity metadata for the confirmed Account and Opportunity.
-8. Industry flavor, if any packs were available to offer — which one was selected, or that none was applicable. Omit this item entirely when no packs exist to offer.
-9. Search index.
-10. Workflow guidance, linked to the plugin workflow overview.
-11. Fresh-chat document next step, framed conditionally for users with documents and including the copyable starter prompt without asking whether documents are present.
+2. Background plugin updates: installed and running daily, declined by the user this session, or installed but blocked pending a macOS Full Disk Access grant (report the exact remediation step given by `--install`).
+3. Storage, including storage mode, applicable shared storage, and the confirmed local Opportunity path.
+4. Workspace structure.
+5. Host project status, when applicable.
+6. Communications, including messaging sources and the project communications record.
+7. Trackers.
+8. Identity metadata for the confirmed Account and Opportunity.
+9. Industry flavor, if any packs were available to offer — which one was selected, or that none was applicable. Omit this item entirely when no packs exist to offer.
+10. Search index.
+11. Workflow guidance, linked to the plugin workflow overview.
+12. Fresh-chat document next step, framed conditionally for users with documents and including the copyable starter prompt without asking whether documents are present.
 
 ## Incomplete items
 

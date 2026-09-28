@@ -60,6 +60,34 @@ For a team setup, import `https://github.com/Slalom/ascent` from **Dashboard > S
 
 ## Update
 
+### Automatically (Codex, recommended for business users)
+
+`initial-setup` offers to enable a daily background check the first time it
+runs on a machine. If accepted, it registers a per-user scheduled job (a
+macOS LaunchAgent, Windows Scheduled Task, or Linux crontab entry) that
+fast-forwards the local `main` checkout from `origin/main` once a day and
+refreshes the installed Codex plugin cache whenever that pull changes
+anything. It never prompts and never forces a change — it skips safely
+(logging why, to `~/.codex/ascent-plugin-update.log`) whenever the checkout
+is on another branch or has uncommitted changes. Decline or accept the
+question again at any time by rerunning `initial-setup`, or manage the job
+directly:
+
+```bash
+python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedule.py --status
+python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedule.py --install
+python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedule.py --install --frequency weekly
+python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedule.py --uninstall
+```
+
+`--install --frequency {daily,weekly}` also changes an already-installed
+job's frequency in place — no need to uninstall first.
+
+This only covers Codex. Claude Code, Copilot CLI, and Cursor still need the
+manual steps below.
+
+### Manually
+
 Update the clean repository checkout before refreshing the plugin:
 
 ```bash
