@@ -111,6 +111,16 @@ def bump_cachebuster(plugin_root: Path) -> str:
     return new_version
 
 
+def restore_manifest(root: Path, manifest_path: Path) -> None:
+    """codex plugin add copies the bumped manifest into a version-named
+    cache directory at the moment it runs; the source checkout does not
+    need to keep the bump afterward. Discard it so the working tree stays
+    clean, otherwise every later run would see its own leftover edit as
+    'uncommitted changes' and refuse to check for updates ever again.
+    """
+    git(["checkout", "--", str(manifest_path.relative_to(root))], root)
+
+
 def main() -> int:
     log_lines: list[str] = []
 
@@ -159,6 +169,7 @@ def main() -> int:
                             log("codex CLI not found on PATH; will retry the install on the next scheduled run")
                             exit_code = 1
                         else:
+                            manifest_path = plugin_root / ".codex-plugin" / "plugin.json"
                             version = bump_cachebuster(plugin_root)
                             log(f"codex manifest version: {version}")
                             install = subprocess.run(
@@ -168,6 +179,7 @@ def main() -> int:
                                 capture_output=True,
                                 text=True,
                             )
+                            restore_manifest(root, manifest_path)
                             if install.returncode != 0:
                                 log(f"codex plugin add failed: {install.stderr.strip()}")
                                 exit_code = 1
