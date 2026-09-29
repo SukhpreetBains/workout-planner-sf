@@ -3,8 +3,9 @@
 ## Plugin architecture
 
 - Treat `plugins/ascent/skills/` as the only authoritative skill source.
-- For local Codex plugin development, refresh the installed cache with `python3 scripts/refresh_codex_plugin.py` from the repository root after editing the authoritative source. Do not edit `.codex/plugins/cache/...` as a durable change. This is the developer path; it always refreshes immediately regardless of branch or working-tree state, unlike the end-user daily job below.
-- End users can opt into an unattended daily update job during `initial-setup` (see `plugins/ascent/skills/initial-setup/scripts/check-for-plugin-update.py` and `manage-plugin-update-schedule.py`). That job only fast-forwards a clean `main` checkout, so it intentionally does nothing on a developer's in-progress feature branch.
+- Codex reinstalls a local plugin only when the version in `plugins/ascent/.codex-plugin/plugin.json` differs from its installed copy, and it checks when the Codex app launches. Every change under `plugins/ascent/` must ship with a version bump; without one, existing installs never receive the change.
+- For local Codex plugin development, run `python3 scripts/refresh_codex_plugin.py` from the repository root after editing the authoritative source, then relaunch the Codex app. The script bumps the version and reinstalls; commit that version bump with your change. Do not edit `.codex/plugins/cache/...` as a durable change.
+- End users can opt into an unattended update job during `initial-setup` (see `plugins/ascent/skills/initial-setup/scripts/check-for-plugin-update.py` and `manage-plugin-update-schedule.py`). It only fast-forwards a clean `main` checkout, so it intentionally does nothing on a developer's in-progress feature branch; users receive a pulled update the next time they relaunch Codex.
 - Keep skill discovery flat at `plugins/ascent/skills/<skill-name>/SKILL.md`.
 - Keep the Ascent plugin self-contained under `plugins/ascent/`.
 - Do not add skill-discovery symlinks or host-specific copies of the skill library.

@@ -83,17 +83,6 @@ def run_codex_install(plugin_ref: str, dry_run: bool) -> None:
         raise SystemExit(exc.returncode) from exc
 
 
-def restore_manifest(plugin_root: Path) -> None:
-    """codex plugin add copies the bumped manifest into a version-named
-    cache directory at the moment it runs; the source checkout does not
-    need to keep the cachebuster afterward. Discard it so the working tree
-    stays clean and the meaningless timestamp never has to be committed
-    or manually discarded by hand.
-    """
-    manifest_path = plugin_root / ".codex-plugin" / "plugin.json"
-    subprocess.run(["git", "checkout", "--", str(manifest_path)], cwd=plugin_root, check=False)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Update the local Ascent Codex cachebuster and reinstall the plugin."
@@ -124,15 +113,14 @@ def main() -> int:
     print(f"Plugin source: {plugin_root}")
     version = update_cachebuster(plugin_root, args.dry_run)
     print(f"Codex manifest version: {version}")
-    try:
-        run_codex_install(plugin_ref, args.dry_run)
-    finally:
-        if not args.dry_run:
-            restore_manifest(plugin_root)
+    run_codex_install(plugin_ref, args.dry_run)
     if args.dry_run:
         print("Dry run complete. No files were changed and the plugin was not reinstalled.")
     else:
-        print("Refresh complete. Start a new Codex task to load the updated plugin.")
+        print("Refresh complete. Restart the Codex app to load the updated plugin.")
+        print("Commit the plugin.json version change with your plugin changes: Codex only "
+              "reinstalls a local plugin when its version changes, so this bump is how "
+              "other installs pick the changes up.")
     return 0
 
 
