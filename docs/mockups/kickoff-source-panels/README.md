@@ -2,6 +2,8 @@
 
 The floating layout has been promoted to the shared `create-deliverables` builder. Use `node docs/mockups/kickoff-source-panels/implementation-preview.mjs` for the current implementation and see `plugins/ascent/skills/create-deliverables/references/citations.md` for its authoring contract. The original two-mode study below remains a comparison artifact.
 
+Current implementation captures: [desktop floating panel](../../screenshots/citations-ui/implementation-desktop.png) and [390px mobile disclosure](../../screenshots/citations-ui/implementation-mobile.png). Both use fictional source text and reduced motion.
+
 Two local prototypes layered onto the current Ascent project-kickoff renderer:
 
 - **Floating notes:** section-specific disclosures anchored to the right, opening over the content without resizing it.
