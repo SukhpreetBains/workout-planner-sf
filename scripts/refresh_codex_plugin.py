@@ -117,7 +117,10 @@ def main() -> int:
     if args.dry_run:
         print("Dry run complete. No files were changed and the plugin was not reinstalled.")
     else:
-        print("Refresh complete. Start a new Codex task to load the updated plugin.")
+        print("Refresh complete. Restart the Codex app to load the updated plugin.")
+        print("Commit the plugin.json version change with your plugin changes: Codex only "
+              "reinstalls a local plugin when its version changes, so this bump is how "
+              "other installs pick the changes up.")
     return 0
 
 

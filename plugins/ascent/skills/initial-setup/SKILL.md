@@ -12,6 +12,7 @@ Use the host's structured-question tool when available. Ask one decision at a ti
 ## Resources
 
 - Run `scripts/bootstrap-environment.py` to verify Python 3.10+. Add `--include-node --install-missing` only when a selected workflow requires Node.js and npm and the user approves installation.
+- Run `scripts/manage-plugin-update-schedule.py --status`, then, if not installed, ask about and optionally run `--install`, per **Enable background plugin updates** below.
 - Run `scripts/prepare-opportunity-folder.py` after the user chooses a new or existing Opportunity.
 - Read [the storage decision tree](references/storage-decision-tree.md) when choosing or resolving storage. Read [the SharePoint walkthrough](references/sharepoint-walkthrough.md) only for its SharePoint branch.
 - Read [messaging confirmation](references/messaging-confirmation.md) only when confirming Slack, Microsoft Teams, or the communications record. Read [Slack](references/slack.md), [Microsoft Teams](references/microsoft-teams.md), or [the source-context contract](references/source-context.md) only for the selected branch.
@@ -24,15 +25,16 @@ Explain a script's effect before running it. Obtain approval before package-mana
 ## Workflow
 
 1. Verify Python 3.10+ and any workflow-specific dependencies.
-2. Ask, **"Is there a shared workspace for this opportunity?"** Follow [the storage decision tree](references/storage-decision-tree.md), loading only the selected storage branch.
-3. Ask whether the user is starting a new Opportunity or joining an existing one. Skip this question when a missing SharePoint Account folder was just created, because that path requires a new Opportunity.
-4. Confirm the Account name, Opportunity name, local Account path, storage mode, applicable user-reported access, and local write readiness. Keep host sandbox limits separate from operating-system permissions.
-5. Run a read-only folder preflight, then prepare the Account and Opportunity structure without overwriting existing files.
-6. Invoke an applicable host project-setup workflow with the confirmed names and paths. If none applies, continue without loading host-specific guidance.
-7. Follow [messaging confirmation](references/messaging-confirmation.md) for relevant enterprise storage and messaging locations. Offer to save confirmed locations in the project communications record.
-8. Run the orchestrated workspace setup in [project workspace setup](references/project-workspace-setup.md). It initializes the runtime, trackers, identity, and search index.
-9. Ask whether an available industry flavor applies to this Opportunity, per **Confirm industry flavor** below.
-10. Report readiness from [the authoritative readiness contract](references/setup-readiness.md), then hand document work to a fresh agent chat scoped to the Opportunity.
+2. Check whether the daily plugin-update job is installed; if not, offer to enable it, per **Enable background plugin updates** below.
+3. Ask, **"Is there a shared workspace for this opportunity?"** Follow [the storage decision tree](references/storage-decision-tree.md), loading only the selected storage branch.
+4. Ask whether the user is starting a new Opportunity or joining an existing one. Skip this question when a missing SharePoint Account folder was just created, because that path requires a new Opportunity.
+5. Confirm the Account name, Opportunity name, local Account path, storage mode, applicable user-reported access, and local write readiness. Keep host sandbox limits separate from operating-system permissions.
+6. Run a read-only folder preflight, then prepare the Account and Opportunity structure without overwriting existing files.
+7. Invoke an applicable host project-setup workflow with the confirmed names and paths. If none applies, continue without loading host-specific guidance.
+8. Follow [messaging confirmation](references/messaging-confirmation.md) for relevant enterprise storage and messaging locations. Offer to save confirmed locations in the project communications record.
+9. Run the orchestrated workspace setup in [project workspace setup](references/project-workspace-setup.md). It initializes the runtime, trackers, identity, and search index.
+10. Ask whether an available industry flavor applies to this Opportunity, per **Confirm industry flavor** below.
+11. Report readiness from [the authoritative readiness contract](references/setup-readiness.md), then hand document work to a fresh agent chat scoped to the Opportunity.
 
 ## Prepare the Opportunity folder
 
@@ -51,6 +53,70 @@ If the agent cannot write because of its session boundary, request scoped comman
 Follow [project workspace setup](references/project-workspace-setup.md). Use the already confirmed `account` and `opportunity` values consistently. Never apply proposed tracker updates during setup. `workspace-review` remains the only workflow that writes approved tracker changes.
 
 ## Document boundary
+
+## Enable background plugin updates
+
+Run:
+
+```text
+python3 scripts/manage-plugin-update-schedule.py --status
+```
+
+If it reports `installed`, this Opportunity's setup is not the reason to
+revisit it — skip this section entirely and do not ask.
+
+Otherwise ask once, in the same closed-question style as the storage and
+messaging questions above: **"Would you like Ascent to check for plugin
+updates once a day in the background and install them automatically?"**,
+offering **"Yes, check daily"** and **"No, I'll update manually"**.
+
+If yes, run:
+
+```text
+python3 scripts/manage-plugin-update-schedule.py --install
+```
+
+This registers a per-user scheduled job (a macOS LaunchAgent, Windows
+Scheduled Task, or Linux crontab entry — chosen automatically for the
+detected OS) that runs `scripts/check-for-plugin-update.py` once a day in
+the background. That script only fast-forwards a clean local `main`
+checkout from `origin/main`. It never prompts and never forces a change: it
+skips safely, logging why to `~/.codex/ascent-plugin-update.log` (or under
+`$CODEX_HOME` if relocated), whenever the checkout is on another branch or
+has uncommitted changes.
+
+Codex installs a pulled update the next time the app is relaunched. Tell
+the user this plainly: updates arrive in the background, and quitting and
+reopening Codex is what loads them.
+
+On macOS, `--install` runs the job immediately to verify it and may print an
+`ACTION NEEDED` line if the checkout lives under a privacy-protected or
+cloud-synced folder (Desktop, Documents, iCloud Drive, OneDrive, and similar)
+and macOS blocked the background process from reading it. Relay that message
+to the user verbatim — it names the exact System Settings step and Python
+path needed to grant access. The job stays installed either way and starts
+working as soon as access is granted.
+
+The user can ask, in any later session, to change how often this runs (for
+example, to weekly instead of daily) or to turn it off. Handle either
+request directly with the same script — no need to uninstall first to
+change frequency:
+
+```text
+python3 scripts/manage-plugin-update-schedule.py --install --frequency weekly
+python3 scripts/manage-plugin-update-schedule.py --install --frequency daily
+python3 scripts/manage-plugin-update-schedule.py --uninstall
+```
+
+`--install --frequency <value>` updates an already-installed job in place
+(and is a no-op if it already runs at that frequency).
+
+This currently keeps Codex installations up to date only. Other agent hosts
+(Claude Code, Copilot CLI, Cursor) still need their own manual update
+commands from the repository's installation and updating guide.
+
+If the user declines, do not create the job and do not ask again this
+session.
 
 ## Confirm industry flavor
 
