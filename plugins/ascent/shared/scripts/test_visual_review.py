@@ -420,6 +420,14 @@ class VisualReviewTest(unittest.TestCase):
                 sleep.assert_not_called()
                 self.assertFalse(self.server_module.STARTED_PROCESSES)
 
+    def test_start_passes_dash_prefixed_token_as_one_argument(self):
+        child = mock.Mock()
+        child.poll.return_value = 1
+        with mock.patch.object(self.server_module.secrets, "token_urlsafe", return_value="-demo-token"), \
+                mock.patch.object(self.server_module.subprocess, "Popen", return_value=child) as spawn:
+            self.assertEqual(self.server_module.start(self.root), 1)
+        self.assertIn("--token=-demo-token", spawn.call_args.args[0])
+
     def test_start_reuses_server_and_recovers_stale_state(self):
         stale = self.root / "workspace" / ".system" / "review-server.json"
         stale.write_text(json.dumps({
