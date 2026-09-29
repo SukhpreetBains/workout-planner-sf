@@ -3,7 +3,7 @@
 ## Plugin architecture
 
 - Treat `plugins/ascent/skills/` as the only authoritative skill source.
-- Codex reinstalls a local plugin only when the version in `plugins/ascent/.codex-plugin/plugin.json` differs from its installed copy, and it checks when the Codex app launches. Every change under `plugins/ascent/` must ship with a version bump; without one, existing installs never receive the change.
+- Codex reinstalls a local plugin only when the version in `plugins/ascent/.codex-plugin/plugin.json` differs from its installed copy, and it checks when the Codex app launches. Every change under `plugins/ascent/` must ship with a version bump; without one, existing installs never receive the change. Pull requests into `main` enforce this with `scripts/check_plugin_version_bump.py`, which you can also run locally before pushing.
 - For local Codex plugin development, run `python3 scripts/refresh_codex_plugin.py` from the repository root after editing the authoritative source, then relaunch the Codex app. The script bumps the version and reinstalls; commit that version bump with your change. Do not edit `.codex/plugins/cache/...` as a durable change.
 - End users can opt into an unattended update job during `initial-setup` (see `plugins/ascent/skills/initial-setup/scripts/check-for-plugin-update.py` and `manage-plugin-update-schedule.py`). It only fast-forwards a clean `main` checkout, so it intentionally does nothing on a developer's in-progress feature branch; users receive a pulled update the next time they relaunch Codex.
 - Keep skill discovery flat at `plugins/ascent/skills/<skill-name>/SKILL.md`.
