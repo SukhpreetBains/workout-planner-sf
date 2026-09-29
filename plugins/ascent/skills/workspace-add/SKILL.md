@@ -76,9 +76,24 @@ PY <shared-skill-dir>/scripts/read_document.py "workspace/inbox/<file>" --out "w
 Keep the converted `.md` beside its original; it is the readable copy and
 is filed with it.
 
-Give every selected document **its own** curation subagent — one document
-per subagent, never grouped, so each gets undivided attention. Use the
-latest suitable low-cost model the host offers for subagents (for example
+Give every selected document **its own fresh** curation subagent — one
+document per subagent, never grouped, so each gets undivided attention.
+Start the batch's subagents in parallel, up to three at once.
+
+Every subagent starts clean and handles exactly one document in its
+lifetime:
+
+- Do not give it the parent's conversation history or any other
+  document's content or findings.
+- Never hand a later document to a subagent that already worked on one —
+  no follow-up or continuation messages to reuse it.
+- Close each subagent once its result is back. The next batch gets new
+  subagents.
+
+Connecting findings across documents is the parent's job in Step 4, not
+the subagents'.
+
+Use the latest suitable low-cost model the host offers for subagents (for example
 a current GPT Luna or Claude Haiku model), with high reasoning effort when
 the host supports setting it. Never claim a model or reasoning setting the
 host did not actually apply.
@@ -96,6 +111,9 @@ returns:
 - a `basis` on every finding: `stated` when the excerpt says it directly,
   or `inferred` when it is a reading between the lines, naming what it was
   inferred from.
+
+For meeting material, the subagent checks five categories deliberately:
+decisions, open questions, stakeholders, action items, and risks.
 
 A curation subagent must not move files, write session notes or the source
 ledger, create or edit proposal YAML, run sync or the review server, or
@@ -121,6 +139,11 @@ itself does not state them. Write a session note to
 in `references/session-note-template.md`. Summarize faithfully — capture
 what was said, who said it, and what was decided or left open, keeping
 the client's own vocabulary rather than translating it.
+
+List every distinct action from the source under Follow-ups, each with its
+owner and timing as stated. Do not merge or drop actions, and keep every
+risk the source raises. Proposals cite this note, so anything left out here
+never reaches review.
 
 Move the raw transcript alongside the note in `workspace/meetings/`,
 same date prefix, ` - transcript` suffix, so the note can cite it. Record
@@ -155,6 +178,17 @@ The parent turns the batch's curated findings into proposals. Read
 belongs in each, the bar a finding must clear, and the exact columns and
 allowed values.
 
+Work from what the subagents returned:
+
+- Build proposals from the subagents' findings. Do not re-extract a
+  document yourself unless its subagent failed on it; if you do, say so in
+  the handoff.
+- Every candidate you drop needs a short reason: a duplicate of a named
+  item, superseded by a named later source, or below its category's bar.
+- Never remove proposals in bulk by source document. Judge each item on
+  its own — a document can be partly superseded and still hold open,
+  relevant findings.
+
 Reconcile before proposing:
 
 - **Across documents** — merge findings that describe the same fact into
@@ -166,6 +200,42 @@ Reconcile before proposing:
 - **Against earlier batches in this run** — tracker copies do not show
   pending proposals, so also check the proposal files already written this
   run and extend those instead of duplicating them.
+
+**Stakeholders are named people.** Propose a stakeholder row only for a
+named person. When a source describes a role without naming who fills it
+("Experian technical lead"), propose an `open_question` asking who fills
+it, or an `action_item` to assign someone, instead. When a later document
+names the person behind a role an earlier batch in this run recorded,
+revise that earlier proposal (incrementing its `revision`) rather than
+adding a second row; if the role is already an approved tracker row,
+propose an `update` to it.
+
+**When sources disagree**, the stronger source wins:
+
+1. signed or executed documents over drafts and redlines;
+2. later-dated documents over earlier ones;
+3. delivery-phase documents (kickoff materials, meeting notes) over
+   pre-sale ones (RFQ responses, proposals) for plans, roles, and dates.
+
+When a later document contradicts a signed one with no evidence of a
+formal change, keep the signed value and propose an `open_question` naming
+both sources.
+
+**Classify by what the finding is:**
+
+- Caps and limits are constraints. "Up to" scope limits, fee caps, and
+  contracted date windows are a `constraint` (contractual, budget, or
+  timeline), not a `requirement`; requirements are what the solution or
+  delivery must do.
+- Internal Slalom commercial material stays out of the trackers. Do not
+  propose pricing-tool guidance, rates, margins, contingencies, or internal
+  cost structures. File and log the document as usual and say in the
+  handoff that it was filed without proposals. Commercial terms in a
+  signed client agreement are client-agreed and remain valid budget
+  constraints.
+- Plan items keep the status their source states. Never set `complete` or
+  `delayed` without a source saying so. List milestones whose date has
+  passed with no source confirming the outcome in the handoff instead.
 
 **Linking to rows that do not exist yet.** When a finding links to a
 stakeholder, system, or other row that is not in the trackers, propose that
@@ -183,8 +253,16 @@ evidence. Never propose an `inferred` finding as a stated fact: either
 propose it as an `open_question` citing the excerpt it was inferred from,
 or list it in the handoff as not proposed. For meeting material, cite the
 session note (not the raw transcript) as the primary `source_refs` entry,
-and check the decision, open_question, and stakeholder categories
-deliberately; meetings are the richest source for those three.
+and check decisions, open questions, stakeholders, action items, and risks
+deliberately; meetings are the richest source for those five.
+
+- **Action items** — propose every follow-up that has an owner or a stated
+  need to assign one. Link the owner through `Owner Stakeholder IDs`,
+  using a pending stakeholder's `proposal_id` if needed. Fill `Due Date`
+  only when the source gives a date; keep relative timing such as "before
+  kickoff" in the statement.
+- **Risks** — propose each stated risk that clears the bar, carrying any
+  mitigation the source gives.
 
 Write one file per batch to
 `workspace/.system/proposed-updates/<YYYY-MM-DD>-<short-topic>.yaml`:
@@ -241,7 +319,10 @@ step implicit. State:
   curation fell back to running without subagents;
 - the total number of evidence-backed items ready for their review, with
   counts by category;
-- any inferred findings that were not proposed;
+- how many subagent candidates were dropped, grouped by reason, and any
+  inferred findings that were not proposed;
+- any documents filed without proposals and why, and any milestones whose
+  date has passed with no source confirming the outcome;
 - that these are proposed facts, not yet the project's official working
   record, and need their approval before they are added; and
 - the exact next action in user language: for example, “I have 16 items
