@@ -1,7 +1,7 @@
 import { referenceLayout } from '../shared/reference-layout.mjs';
 import { moduleIndex, typeset } from '../shared/primitives.mjs';
 
-const view = (section) => `<div class="mobilization-countdown" data-motion="stagger-up"><div class="mobilization-countdown__clock"><strong>48</strong><span>hours</span></div><ol>${section.items.map((item, index) => `<li data-motion-item><span>${moduleIndex(index)}</span><p>${typeset(item)}</p></li>`).join('')}</ol></div>`;
+const view = (section) => `<div class="mobilization-countdown" data-motion="stagger-up"><div class="mobilization-countdown__clock"><strong>48</strong><span>hours</span></div><ol>${section.items.map((item, index) => `<li data-motion-item data-citation-anchor="item-${index + 1}"><span>${moduleIndex(index)}</span><p>${typeset(item)}</p></li>`).join('')}</ol></div>`;
 
 const STANDARD_RENDERERS = { 'next-steps': view };
 
@@ -23,7 +23,7 @@ const MICROSITE_LAYOUT = `<div class="module" data-reference-id="m24">
 <b>{{launch-count-b-1}}</b>
 </div>
   <div class="launch-actions">
-    <article>
+    <article data-citation-anchor="item-1">
 <i>{{article-i-1}}</i>
 <div>
 <b>{{div-b-1}}</b>
@@ -31,7 +31,7 @@ const MICROSITE_LAYOUT = `<div class="module" data-reference-id="m24">
 </div>
 <em>{{article-em-1}}</em>
 </article>
-    <article>
+    <article data-citation-anchor="item-2">
 <i>{{article-i-2}}</i>
 <div>
 <b>{{div-b-2}}</b>
@@ -39,7 +39,7 @@ const MICROSITE_LAYOUT = `<div class="module" data-reference-id="m24">
 </div>
 <em>{{article-em-2}}</em>
 </article>
-    <article>
+    <article data-citation-anchor="item-3">
 <i>{{article-i-3}}</i>
 <div>
 <b>{{div-b-3}}</b>
@@ -47,7 +47,7 @@ const MICROSITE_LAYOUT = `<div class="module" data-reference-id="m24">
 </div>
 <em>{{article-em-3}}</em>
 </article>
-    <article>
+    <article data-citation-anchor="item-4">
 <i>{{article-i-4}}</i>
 <div>
 <b>{{div-b-4}}</b>

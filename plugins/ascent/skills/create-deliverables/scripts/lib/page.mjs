@@ -157,3 +157,28 @@ export function renderSection(section, index, ctx, renderer = null) {
     </div>
   </section>`;
 }
+
+/** A source rail overlays the rendered section, so disclosures never resize it. */
+export function renderCitedSection(section, index, ctx, renderer = null) {
+  const content = renderSection(section, index, ctx, renderer);
+  if (!section.citations?.length) return content;
+  const notes = section.citations.map((citation, position) => {
+    const status = {
+      source: 'Source recorded', user: 'Direct user input',
+      changed: 'Needs review after edit', missing: 'No recorded source',
+    }[citation.status];
+    const evidence = citation.source_ref
+      ? `<div class="source-panel__evidence"><p class="source-panel__caption">Source reference</p><p class="source-panel__ref">${esc(citation.source_ref)}</p>${citation.excerpt ? `<blockquote>${esc(citation.excerpt)}</blockquote>` : ''}</div>`
+      : '';
+    return `<details class="source-note" data-citation-target="${esc(citation.target)}">
+      <summary aria-label="Sources for ${esc(citation.label)}"><span>${String(position + 1).padStart(2, '0')}</span><span>Sources</span><span class="source-note__plus" aria-hidden="true">+</span></summary>
+      <div class="source-panel" role="region" aria-label="Evidence for ${esc(citation.label)}">
+        <header class="source-panel__head"><div><p class="source-panel__caption">${esc(railLabel(section))}</p><h3>${esc(citation.label)}</h3></div><button class="source-panel__close" type="button" aria-label="Close sources for ${esc(citation.label)}">×</button></header>
+        <p class="source-panel__status${citation.status === 'changed' || citation.status === 'missing' ? ' source-panel__status--review' : ''}">${status}</p>
+        <div class="source-panel__value"><p class="source-panel__caption">Displayed value</p><p>${esc(citation.value)}</p></div>
+        ${evidence}${citation.note ? `<p class="source-panel__note">${esc(citation.note)}</p>` : ''}
+      </div>
+    </details>`;
+  }).join('');
+  return `<div class="citation-region" data-citation-section="${esc(sectionId(section, index))}"><div class="citation-content">${content}</div><aside class="source-rail" aria-label="Sources for ${esc(railLabel(section))}">${notes}</aside></div>`;
+}

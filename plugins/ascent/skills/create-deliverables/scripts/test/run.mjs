@@ -199,6 +199,17 @@ test('content: the worked minimal example validates', () => {
   ok(check(content()));
 });
 
+test('content: citations require evidence and a matching content target', () => {
+  const doc = content();
+  doc.sections.at(-1).citations = [{ target: 'item-1', label: 'First action', value: 'One', status: 'source', source_ref: 'tracker-copy#REQ-1', excerpt: 'One' }];
+  ok(check(doc));
+  delete doc.sections.at(-1).citations[0].source_ref;
+  contentError(doc, 'source and changed citations need source_ref');
+  doc.sections.at(-1).citations[0].source_ref = 'tracker-copy#REQ-1';
+  doc.sections.at(-1).citations[0].target = 'item-2';
+  contentError(doc, 'has no matching item or phase');
+});
+
 test('content: a missing required meta field names the field', () => {
   const doc = content();
   delete doc.meta.classification;
@@ -732,6 +743,27 @@ test('build: the project-kickoff worked example renders the integrated template'
   includes(result.html, 'agenda-rail');
   includes(result.html, 'gantt-bar');
   includes(result.html, 'org-tree');
+});
+
+test('build: floating citations render and bundle without changing section width', async () => {
+  const doc = parseContentFile(EXAMPLE);
+  const timeline = doc.sections.find(section => section.module === 'timeline-roadmap');
+  timeline.citations = [{ target: 'item-1', label: 'First phase', value: 'September', status: 'source', source_ref: 'tracker-copies/requirements.yaml#REQ-001', excerpt: 'First phase in September.' }];
+  const file = path.join(TMP, 'cited-content.json');
+  writeFileSync(file, JSON.stringify(doc));
+  const result = await build(file, { out: path.join(TMP, 'cited'), bundle: true, intake: COMPLETE_INTAKE });
+  includes(result.html, 'class="citation-region"');
+  includes(result.html, 'data-citation-anchor="item-1"');
+  includes(result.html, 'tracker-copies/requirements.yaml#REQ-001');
+  ok(existsSync(path.join(result.outDir, 'css/citations.css')));
+  ok(existsSync(path.join(result.outDir, 'js/citations.js')));
+  const css = readFileSync(path.join(result.outDir, 'css/citations.css'), 'utf8');
+  includes(css, '.source-rail { position:absolute;');
+  ok(!css.includes('grid-template-columns'), 'opening a source must not change content columns');
+  const bundle = readFileSync(result.bundlePath, 'utf8');
+  includes(bundle, 'Source recorded');
+  ok(!bundle.includes('src="js/citations.js"'));
+  ok(!bundle.includes('href="css/citations.css"'));
 });
 
 test('build: one module can render in isolation with its normal renderer paths', async () => {

@@ -281,6 +281,10 @@ directory. Every resolved
 required answer must be rendered, summarized, or explicitly retained as
 supporting intake context. Author only supported content; never fill a template
 slot just to retain its shape. Do not show raw YAML as the editorial review.
+When a section shows values that benefit from visible provenance, add its
+floating source panels using [references/citations.md](references/citations.md).
+Use accepted tracker-row citations and explicit user answers, and keep any
+unresolved or edited value's status visible. Do not invent an evidence excerpt.
 
 Build a branded draft and give the user a preview link:
 

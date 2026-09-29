@@ -1,0 +1,44 @@
+/* Optional floating source disclosures. The section keeps its normal width. */
+.citation-region { position:relative; }
+.citation-region--open { z-index:30; }
+.citation-content { min-width:0; }
+.source-rail { position:absolute; top:0; right:clamp(12px,2vw,32px); width:96px; height:100%; pointer-events:none; }
+.source-note { position:relative; margin:8px 0; color:var(--on-white-body); font-size:14px; font-weight:400; pointer-events:auto; }
+.citations-ready .source-note { position:absolute; top:var(--source-top,100px); left:0; right:0; margin:0; }
+.source-note[open] { z-index:31; }
+.source-note > summary { display:flex; align-items:center; justify-content:space-between; gap:5px; min-height:42px; padding:9px 7px; list-style:none; border:1px solid var(--light-gray); border-left:3px solid var(--slalom-blue); border-radius:0 9px 0 0; background:var(--surface-white-bg); color:var(--on-white-display); cursor:pointer; font-size:12px; font-weight:700; }
+.source-note > summary::-webkit-details-marker { display:none; }
+.source-note > summary:hover, .source-note[open] > summary { background:var(--surface-blue-bg); color:var(--on-blue-body); border-color:var(--slalom-blue); }
+.source-note > summary:focus-visible, .source-panel__close:focus-visible { outline:2px solid var(--slalom-blue); outline-offset:3px; }
+.source-note__plus { font-size:17px; }
+.source-note[open] .source-note__plus { transform:rotate(45deg); }
+.source-panel { box-sizing:border-box; position:absolute; top:100%; right:0; width:min(370px,calc(100vw - 32px)); margin-top:8px; padding:22px; border:1px solid var(--light-gray); border-top:4px solid var(--slalom-blue); border-radius:0 12px 0 0; background:var(--surface-white-bg); color:var(--on-white-body); box-shadow:0 8px 24px var(--light-gray); }
+.source-panel__head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; }
+.source-panel__head h3 { margin-top:7px; color:var(--on-white-display); font-size:23px; font-weight:700; line-height:1.1; }
+.source-panel__caption { color:var(--on-white-muted); font-size:11px; font-weight:700; letter-spacing:var(--tracking-eyebrow); text-transform:uppercase; }
+.source-panel__close { border:0; padding:0 4px; min-width:28px; min-height:28px; background:var(--surface-white-bg); color:var(--on-white-display); font:inherit; font-size:25px; cursor:pointer; }
+.source-panel__status { display:inline-block; padding:5px 8px; border:1px solid var(--slalom-blue); border-radius:3px; color:var(--on-white-display); font-size:11px; font-weight:700; }
+.source-panel__status--review { border-style:dashed; border-color:var(--on-white-body); color:var(--on-white-body); }
+.source-panel__value { margin:18px 0; padding-left:12px; border-left:3px solid var(--accent); }
+.source-panel__value p + p { margin-top:7px; }
+.source-panel__evidence { border-top:1px solid var(--light-gray); padding-top:16px; }
+.source-panel__ref { margin-top:8px; color:var(--on-white-display); font-size:13px; font-weight:700; overflow-wrap:anywhere; }
+.source-panel__evidence blockquote { margin:12px 0 0; font-size:16px; line-height:1.5; overflow-wrap:anywhere; }
+.source-panel__note { margin-top:16px; line-height:1.5; overflow-wrap:anywhere; }
+.citation-highlight, .reference-kickoff .citation-highlight { outline:2px solid var(--slalom-blue); outline-offset:4px; }
+html:not(.citations-ready) .source-rail { position:static; width:auto; height:auto; margin:16px; }
+html:not(.citations-ready) .source-panel { position:static; width:auto; box-shadow:none; }
+@media (max-width:760px) {
+  .source-rail { position:static; display:grid; gap:8px; width:auto; height:auto; margin:0 16px 28px; }
+  .citations-ready .source-note { position:static; }
+  .source-note > summary { justify-content:flex-start; gap:10px; }
+  .source-note__plus { margin-left:auto; }
+  .source-panel { position:static; width:100%; padding:18px; box-shadow:none; }
+}
+@media (prefers-reduced-motion:reduce) { .source-note__plus { transition:none; } }
+@media print {
+  .source-rail { position:static; width:auto; height:auto; margin:16px; }
+  .source-note, .citations-ready .source-note { position:static; }
+  .source-note > summary, .source-panel__close { display:none; }
+  .source-panel { position:static; width:auto; box-shadow:none; break-inside:avoid; }
+}
