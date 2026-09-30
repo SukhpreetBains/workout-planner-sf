@@ -148,7 +148,7 @@ categories:
       pain already happening and not vague worry.
     columns:
       - {name: Statement, required: true}
-      - {name: Risk Title}
+      - {name: Risk Title, required: true}
       - {name: Description}
       - {name: Calculated Severity, computed: risk_severity}
       - {name: Risk Score, type: number, computed: risk_score}
@@ -180,7 +180,7 @@ categories:
       incidental beliefs nothing depends on stay out.
     columns:
       - {name: Statement, required: true}
-      - {name: Assumption Title}
+      - {name: Assumption Title, required: true}
       - {name: Description}
       - {name: Category}
       - {name: Raised By}
@@ -207,7 +207,7 @@ categories:
       uncertainty and not a general current-state pain point outside delivery.
     columns:
       - {name: Statement, required: true}
-      - {name: Issue Title}
+      - {name: Issue Title, required: true}
       - {name: Description}
       - {name: Status, required: true, default: active,
          enum: [active, cancelled, closed]}
@@ -250,7 +250,7 @@ categories:
       approval) — options still under discussion stay out.
     columns:
       - {name: Statement, required: true}
-      - {name: Decision Title}
+      - {name: Decision Title, required: true}
       - {name: Description}
       - {name: Priority, enum: [low, medium, high]}
       - {name: Category}
@@ -281,7 +281,7 @@ categories:
       consequence and identifiable owner or delivery date.
     columns:
       - {name: Statement, required: true}
-      - {name: Dependency Title}
+      - {name: Dependency Title, required: true}
       - {name: Description}
       - {name: Importance, enum: [low, medium, high]}
       - {name: Status, required: true, default: open, enum: [open, closed]}

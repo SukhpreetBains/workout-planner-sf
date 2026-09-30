@@ -27,10 +27,24 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from paths import REPO_ROOT, load_schema
+from paths import PROPOSED_UPDATES_DIR, REPO_ROOT, load_schema
 from trackers import id_column, normalize_enum, read_rows
 
 USER_SUBMITTED_SOURCE = "User Submitted"
+
+
+def title_problem(category: dict, fields: dict) -> str | None:
+    """Why a written title is not a usable summary, if it isn't."""
+    column = next((c["name"] for c in category.get("columns", []) if c["name"].endswith(" Title")), None)
+    title = " ".join(str(fields.get(column) or "").split()) if column else ""
+    if not title:
+        return None
+    if title.endswith(("…", "...")):
+        return f"'{column}' looks cut off; write a short summary of the item instead"
+    statement = " ".join(str(fields.get("Statement") or "").split())
+    if title.rstrip(". ").lower() == statement.rstrip(". ").lower():
+        return f"'{column}' repeats the statement; write a short summary of the item instead"
+    return None
 
 
 def contained_source(ref: str) -> Path | None:
@@ -48,6 +62,29 @@ def load_updates(path: Path) -> dict:
     if not isinstance(doc, dict) or not isinstance(doc.get("updates"), list):
         raise ValueError("file must be a mapping with an 'updates' list")
     return doc
+
+
+def pending_link_ids(doc: dict, path: Path) -> dict[str, set[str]]:
+    """Proposal IDs a link column may reference until review resolves them.
+
+    Matches what the review inbox accepts: the review swaps a linked
+    proposal ID for the real tracker ID on approval and removes it on
+    rejection. Read-only, unlike the review store's equivalent.
+    """
+    documents = [doc]
+    if PROPOSED_UPDATES_DIR.is_dir():
+        for other in sorted(PROPOSED_UPDATES_DIR.glob("*.y*ml")):
+            if other.is_file() and other.resolve() != path.resolve():
+                try:
+                    documents.append(load_updates(other))
+                except (OSError, ValueError, yaml.YAMLError):
+                    continue
+    ids: dict[str, set[str]] = {}
+    for document in documents:
+        for update in document["updates"]:
+            if isinstance(update, dict) and update.get("category") and update.get("proposal_id"):
+                ids.setdefault(str(update["category"]), set()).add(str(update["proposal_id"]))
+    return ids
 
 
 def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = None) -> list[str]:
@@ -101,6 +138,9 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
                         fields[name] = col["default"]
                     else:
                         problems.append(f"{where}: required column '{name}' is missing")
+        issue = title_problem(cat, fields)
+        if issue:
+            problems.append(f"{where}: {issue}")
         for name, col in cols.items():
             raw_value = fields.get(name, "")
             value = str(raw_value).strip()
@@ -176,7 +216,7 @@ def main() -> int:
     except Exception as exc:  # surface YAML/shape errors plainly
         print(f"INVALID: {exc}")
         return 1
-    problems = validate(doc, load_schema())
+    problems = validate(doc, load_schema(), pending_link_ids(doc, path))
     if problems:
         print(f"INVALID: {len(problems)} problem(s)")
         for p in problems:

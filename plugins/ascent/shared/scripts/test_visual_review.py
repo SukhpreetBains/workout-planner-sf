@@ -57,6 +57,7 @@ class VisualReviewTest(unittest.TestCase):
             "category": "risk",
             "action": "add",
             "fields": {
+                "Risk Title": "Late test data",
                 "Statement": "Test data may arrive late.",
                 "Probability": 0.9,
                 "Impact": "Very High",
@@ -72,7 +73,7 @@ class VisualReviewTest(unittest.TestCase):
         return value
 
     def test_trackers_only_sync_exports_accepted_values_without_document_scan(self):
-        self.proposal([self.risk(), self.risk(fields={"Statement": "Still pending."})])
+        self.proposal([self.risk(), self.risk(fields={"Risk Title": "Pending risk", "Statement": "Still pending."})])
         card = self.store.list_cards()["cards"][0]
         self.store.accept(card["proposal_id"], card["revision"], "snapshot-accept")
         sync_module = importlib.import_module("sync")
@@ -114,7 +115,7 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(inbox["counts"].get("risk", 0), 0)
 
     def test_typed_validation_and_path_containment(self):
-        update = self.risk(fields={"Statement": "Risk", "Probability": 1.2,
+        update = self.risk(fields={"Risk Title": "Bad probability", "Statement": "Risk", "Probability": 1.2,
                                            "Impact": "Very High", "Date Raised": "not-a-date"})
         document = {"source_refs": ["../outside.md"], "updates": [update]}
         problems = self.validation.validate(document, self.paths.load_schema())
@@ -176,7 +177,7 @@ class VisualReviewTest(unittest.TestCase):
     def test_accept_is_item_level_atomic_and_idempotent(self):
         self.proposal([self.risk(), {
             "category": "issue", "action": "add",
-            "fields": {"Statement": "UAT is delayed", "Status": "active"},
+            "fields": {"Issue Title": "UAT delay", "Statement": "UAT is delayed", "Status": "active"},
         }])
         card = next(card for card in self.store.list_cards()["cards"]
                     if card["category"] == "risk")
@@ -217,7 +218,7 @@ class VisualReviewTest(unittest.TestCase):
         }, schema)
         update = {
             "category": "decision", "action": "add",
-            "fields": {"Statement": "Add test capacity", "Status": "decided",
+            "fields": {"Decision Title": "More test capacity", "Statement": "Add test capacity", "Status": "decided",
                        "Linked RAIDD IDs": issue_id},
         }
         problems = self.validation.validate({
@@ -227,7 +228,7 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(problems, [])
 
     def test_reject_never_writes_and_flag_stays_pending(self):
-        self.proposal([self.risk(), self.risk(fields={"Statement": "Second risk"})])
+        self.proposal([self.risk(), self.risk(fields={"Risk Title": "Second risk title", "Statement": "Second risk"})])
         first, second = self.store.list_cards()["cards"]
         self.store.reject(first["proposal_id"], first["revision"], "Duplicate")
         self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
