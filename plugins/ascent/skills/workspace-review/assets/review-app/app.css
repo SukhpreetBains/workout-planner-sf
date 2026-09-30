@@ -66,10 +66,13 @@ button { cursor: pointer; }
 .brand-logo { width: 116px; height: auto; }
 .header-copy { display: flex; align-items: center; gap: .55rem; border-left: 1px solid var(--gray-200); padding-left: 1.5rem; }
 .header-count { color: var(--gray-700); font-size: .9rem; font-weight: 700; }
+.header-controls { flex: 1 1 340px; min-width: 0; }
+.header-controls:empty { display: none; }
 .accepted-button { margin-left: auto; }
 .eyebrow { color: var(--dark-blue); font-size: .78rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 
 main { width: min(1440px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(2rem, 6vw, 5rem) 0; }
+main:has(#review-flow:not([hidden])) { padding-top: 1.5rem; }
 h1, h2, h3, p { margin-top: 0; }
 h1 { max-width: 760px; font-size: clamp(2.25rem, 5vw, 4.5rem); line-height: .96; letter-spacing: -.035em; }
 h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); line-height: 1; }
@@ -149,7 +152,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .category-stakeholder,
 .category-system { --category-accent: var(--purple); --category-tint: var(--purple-light); }
 
-.triage-controls { display: grid; grid-template-columns: minmax(280px, 1fr) auto; gap: .75rem 1rem; align-items: center; margin-bottom: 1rem; padding: 1rem; background: var(--white); border: 1px solid var(--gray-200); }
+.triage-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .35rem .75rem; align-items: center; }
 .triage-search { min-width: 0; }
 .triage-selects { display: flex; flex-wrap: wrap; gap: .6rem; }
 .triage-selects select { width: auto; min-width: 160px; }
@@ -159,20 +162,17 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .filter-toggle svg { width: 18px; height: 18px; }
 .triage-filter-panel { grid-column: 1 / -1; padding-top: .75rem; border-top: 1px solid var(--gray-200); }
 .triage-filter-panel[hidden] { display: none; }
-.filter-count { grid-column: 1 / -1; margin: 0; font-size: .86rem; }
 
-.category-tabs { display: flex; flex-wrap: nowrap; gap: .6rem; margin-bottom: 1.5rem; overflow-x: auto; padding: .2rem .2rem .55rem; scrollbar-width: thin; }
-.category-tab { position: relative; flex: 0 0 auto; }
-.category-tab .category-selector { display: grid; gap: .15rem; min-width: 196px; padding-right: 3.75rem; text-align: left; }
-.category-tab-create { position: absolute; z-index: 1; top: 2px; right: 2px; bottom: 2px; min-width: 42px; padding: .4rem; border: 0; border-left: 2px solid var(--gray-500); border-radius: 0 11px 0 0; background: var(--gray-100); font-size: 1.4rem; line-height: 1; }
-.category-tab-create:hover { background: var(--gray-200); color: var(--dark-blue); }
-.category-tab-label { font-weight: 700; }
-.category-tab-meta { color: var(--gray-700); font-size: .76rem; font-weight: 400; }
-.category-tabs .category-selector[aria-current="true"] {
-  border-color: var(--category-accent, var(--cyan));
-  background: var(--category-tint, var(--white));
-  color: var(--dark-blue);
-}
+.category-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); gap: .6rem; margin-bottom: 1.5rem; padding: .2rem; }
+.category-tab { display: flex; min-width: 0; min-height: 58px; border: 1px solid var(--gray-200); border-radius: 0 12px 0 0; background: var(--white); }
+.category-tab:hover { border-color: var(--gray-500); }
+.category-tab:has(.category-selector[aria-current="true"]) { border-color: var(--category-accent, var(--cyan)); background: var(--category-tint, var(--white)); }
+.category-tab .category-selector { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem; align-items: center; flex: 1; min-width: 0; padding: .55rem .7rem; border: 0; border-radius: 0; background: transparent; text-align: left; }
+.category-tab .category-selector[aria-current="true"] { color: var(--dark-blue); }
+.category-tab-create { flex: 0 0 38px; min-width: 0; min-height: 0; padding: 0; border: 0; border-left: 1px solid var(--gray-200); border-radius: 0 11px 0 0; background: transparent; font-size: 1.3rem; line-height: 1; }
+.category-tab-create:hover { background: rgb(0 47 175 / 8%); color: var(--dark-blue); }
+.category-tab-label { font-weight: 700; line-height: 1.15; }
+.category-tab-meta { display: inline-grid; place-items: center; min-width: 1.65rem; padding: .15rem .25rem; border-radius: 999px; background: var(--gray-100); color: var(--gray-700); font-size: .76rem; font-weight: 700; }
 .review-layout { display: grid; grid-template-columns: minmax(250px, .28fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
 .proposal-list { position: sticky; top: 1rem; display: grid; gap: 0; max-height: calc(100vh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
 .proposal-list-item { position: relative; z-index: 1; background: var(--white); border: 1px solid var(--gray-200); border-left: 5px solid var(--category-accent, var(--blue)); }
@@ -192,7 +192,6 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .empty-category-review { grid-column: 1 / -1; }
 .empty-category-state { margin-top: 0; }
 .expanded-card-content {
-  margin-top: 1.25rem;
   padding: 0;
   background: var(--white);
   border: 1px solid var(--gray-200);
@@ -307,9 +306,10 @@ button.source-ref { padding: 0; border: 0; background: transparent; cursor: poin
 .accepted-layout { grid-template-columns: minmax(220px, .24fr) minmax(0, 1fr) minmax(250px, .34fr); }
 
 @media (max-width: 760px) {
-  .site-header { min-height: 76px; }
+  .site-header { flex-wrap: wrap; min-height: 76px; }
   .brand-logo { width: 96px; }
   .header-copy { font-size: .9rem; }
+  .header-controls { order: 3; flex-basis: 100%; }
   .hero-grid, .review-layout, .comparison-grid, .quick-field-grid { grid-template-columns: 1fr; }
   .count-lockup { border-left: 0; border-top: 5px solid var(--cyan); padding: 1.25rem 0 0; }
   .category-tabs { padding-bottom: .25rem; }
@@ -320,10 +320,9 @@ button.source-ref { padding: 0; border: 0; background: transparent; cursor: poin
   .field-wide { grid-column: auto; }
   .category-actions button { flex: 1 1 140px; }
   .quick-field-grid .field-quick-title, .quick-field-grid .field-quick-status, .quick-field-grid .field-quick-statement { grid-column: auto; }
-  .triage-controls { grid-template-columns: 1fr; }
+  .triage-controls { grid-template-columns: minmax(0, 1fr) auto; }
   .triage-selects { display: grid; grid-template-columns: 1fr; }
   .triage-selects select { width: 100%; }
-  .filter-count { grid-column: auto; }
   .proposal-list { position: static; max-height: none; }
   .review-sticky-header { position: static; grid-template-columns: 1fr; }
   .review-sticky-actions { justify-items: stretch; }
