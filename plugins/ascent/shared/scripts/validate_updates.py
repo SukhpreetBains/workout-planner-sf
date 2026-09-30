@@ -33,6 +33,20 @@ from trackers import id_column, normalize_enum, read_rows
 USER_SUBMITTED_SOURCE = "User Submitted"
 
 
+def title_problem(category: dict, fields: dict) -> str | None:
+    """Why a written title is not a usable summary, if it isn't."""
+    column = next((c["name"] for c in category.get("columns", []) if c["name"].endswith(" Title")), None)
+    title = " ".join(str(fields.get(column) or "").split()) if column else ""
+    if not title:
+        return None
+    if title.endswith(("…", "...")):
+        return f"'{column}' looks cut off; write a short summary of the item instead"
+    statement = " ".join(str(fields.get("Statement") or "").split())
+    if title.rstrip(". ").lower() == statement.rstrip(". ").lower():
+        return f"'{column}' repeats the statement; write a short summary of the item instead"
+    return None
+
+
 def contained_source(ref: str) -> Path | None:
     try:
         path = (REPO_ROOT / ref).resolve()
@@ -124,6 +138,9 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
                         fields[name] = col["default"]
                     else:
                         problems.append(f"{where}: required column '{name}' is missing")
+        issue = title_problem(cat, fields)
+        if issue:
+            problems.append(f"{where}: {issue}")
         for name, col in cols.items():
             raw_value = fields.get(name, "")
             value = str(raw_value).strip()

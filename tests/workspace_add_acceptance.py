@@ -69,6 +69,11 @@ def main() -> None:
     assert positions == sorted(positions), "source authority order changed"
     assert "keep the signed value and propose an `open_question` naming both sources" in flat
 
+    assert "Title every risk, assumption, issue, decision, and dependency" in flat
+    assert "a short summary of three to eight words that names the item" in flat
+    assert "written fresh rather than copied or cut from the statement" in flat
+    assert "validator fills it" not in flat
+
     assert "Caps, limits, and exclusions are constraints" in flat
     assert "returns every stated fee, cap or limit, scope exclusion, dependency, and date as its own finding" in flat
     assert "Drop a candidate as superseded only after confirming the stronger source covers it" in flat

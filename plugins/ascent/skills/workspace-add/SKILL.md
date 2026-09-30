@@ -233,6 +233,16 @@ When a later document contradicts a signed one with no evidence of a
 formal change, keep the signed value and propose an `open_question` naming
 both sources.
 
+**Title every risk, assumption, issue, decision, and dependency.** The
+`… Title` column is required: a short summary of three to eight words that
+names the item, written fresh rather than copied or cut from the statement.
+For example, "Single-point routing through Danielle" for a risk whose
+statement explains how relying on one Experian contact for every request
+could slow decisions, or "Standard data model first" for a decision to
+extend Salesforce's standard model before building a custom one. The
+validator rejects a missing title, a title that repeats the statement, and
+one that ends in "…".
+
 **Classify by what the finding is:**
 
 - Caps, limits, and exclusions are constraints. "Up to" scope limits, fees
