@@ -41,7 +41,18 @@ def main() -> None:
     assert flat.count(five) == 2, "meeting categories must be named in Step 2 and Step 4"
     assert "richest source for those three" not in flat
     assert "propose every follow-up that has an owner or a stated need to assign one" in flat
-    assert "Fill `Due Date` only when the source gives a date" in flat
+    assert "Fill `Due Date` whenever the source gives a calendar date" in flat
+    assert "propose one `session` row for every meeting processed" in flat
+    assert "`Status: completed`" in flat
+
+    assert "a heading or label alone is not evidence" in flat
+    assert "Each excerpt must support the whole claim on its own" in flat
+    assert "only when the source states an owner or a commitment" in flat
+    assert "Never propose notes aimed at the presenter" in flat
+    assert "A RACI becomes one `operating_model` row per activity" in flat
+    assert "record each party's letter in `Activity`" in flat
+    assert "Propose milestones whose date has passed like any others" in flat
+    assert "in the handoff instead" not in flat
     assert "Do not merge or drop actions" in flat
     template = " ".join((SKILL.parent / "references" / "session-note-template.md").read_text(encoding="utf-8").split())
     assert "## Risks raised" in template

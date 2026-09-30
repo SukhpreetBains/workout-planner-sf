@@ -107,7 +107,8 @@ returns:
 - the classification;
 - candidate findings, each with its category, proposed field values, and
   source-linked evidence — the `source_ref` plus a short verbatim
-  `excerpt` (line numbers only when actually known);
+  `excerpt` that on its own supports the whole finding (a heading or label
+  alone is not evidence; line numbers only when actually known);
 - a `basis` on every finding: `stated` when the excerpt says it directly,
   or `inferred` when it is a reading between the lines, naming what it was
   inferred from.
@@ -234,8 +235,20 @@ both sources.
   signed client agreement are client-agreed and remain valid budget
   constraints.
 - Plan items keep the status their source states. Never set `complete` or
-  `delayed` without a source saying so. List milestones whose date has
-  passed with no source confirming the outcome in the handoff instead.
+  `delayed` without a source saying so. Propose milestones whose date has
+  passed like any others, and also list them in the handoff as having no
+  confirmed outcome.
+- A RACI becomes one `operating_model` row per activity (`Model Type:
+  responsibility_assignment`). While its parties are organizations or teams
+  rather than named people, record each party's letter in `Activity` (for
+  example "RACI: ECS Business C; Slalom R"); use the Responsible,
+  Accountable, Consulted, and Informed link columns once a named
+  stakeholder holds the role.
+- Kickoff decks, talk tracks, and agendas describe intentions. Their next
+  steps and agenda topics become `action_item`s only when the source states
+  an owner or a commitment; otherwise propose them as `plan_item`s or not at
+  all. Never propose notes aimed at the presenter or about the document
+  itself.
 
 **Linking to rows that do not exist yet.** When a finding links to a
 stakeholder, system, or other row that is not in the trackers, propose that
@@ -249,7 +262,8 @@ documents; rewrite every `source_ref` to the document's filed location (or
 its session note) before writing proposals.
 
 Propose only findings that clear their category's bar, each with its
-evidence. Never propose an `inferred` finding as a stated fact: either
+evidence. Each excerpt must support the whole claim on its own; a heading,
+label, or one-word cell is not evidence for anything it does not say. Never propose an `inferred` finding as a stated fact: either
 propose it as an `open_question` citing the excerpt it was inferred from,
 or list it in the handoff as not proposed. For meeting material, cite the
 session note (not the raw transcript) as the primary `source_refs` entry,
@@ -259,10 +273,14 @@ deliberately; meetings are the richest source for those five.
 - **Action items** — propose every follow-up that has an owner or a stated
   need to assign one. Link the owner through `Owner Stakeholder IDs`,
   using a pending stakeholder's `proposal_id` if needed. Fill `Due Date`
-  only when the source gives a date; keep relative timing such as "before
-  kickoff" in the statement.
+  whenever the source gives a calendar date ("at the August 17
+  onboarding"); keep relative timing such as "before kickoff" in the
+  statement.
 - **Risks** — propose each stated risk that clears the bar, carrying any
   mitigation the source gives.
+- **Sessions** — propose one `session` row for every meeting processed,
+  with `Status: completed`, `Scheduled Start` set to its date (left empty
+  when the meeting is undated), and its session note as the source.
 
 Write one file per batch to
 `workspace/.system/proposed-updates/<YYYY-MM-DD>-<short-topic>.yaml`:
