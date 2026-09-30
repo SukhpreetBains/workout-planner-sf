@@ -25,8 +25,9 @@ not ready, stop here and tell the user this doesn't look like an initialized
 Opportunity workspace — offer to hand off to `initial-setup` first.
 
 If it also prints an `ascent update:` line, pass that message to the user once, in
-plain words, and carry on. It means a newer Ascent is downloaded and a Codex
-relaunch will load it; it never blocks the current work.
+plain words, and carry on. It is either a downloaded update waiting for a Codex
+relaunch or a note that background updates are stuck; it never blocks the
+current work.
 
 ## Industry flavor
 

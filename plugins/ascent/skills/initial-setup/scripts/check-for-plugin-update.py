@@ -25,6 +25,7 @@ from pathlib import Path
 MARKETPLACE_NAME = "ascent"
 PLUGIN_NAME = "ascent"
 TRACKED_BRANCH = "main"
+MANIFEST = f"plugins/{PLUGIN_NAME}/.codex-plugin/plugin.json"
 
 
 def codex_home() -> Path:
@@ -65,17 +66,33 @@ def git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
 
 
 def plugin_version(root: Path) -> str:
-    manifest = root / "plugins" / PLUGIN_NAME / ".codex-plugin" / "plugin.json"
     try:
-        return str(json.loads(manifest.read_text(encoding="utf-8")).get("version", ""))
+        return str(json.loads((root / MANIFEST).read_text(encoding="utf-8")).get("version", ""))
     except (OSError, json.JSONDecodeError):
         return ""
+
+
+def only_version_edited(root: Path) -> bool:
+    """True when the sole uncommitted change is the manifest's version line.
+
+    An older refresh script left exactly this edit behind on end users'
+    checkouts, which would otherwise block every later update.
+    """
+    status = git(["status", "--porcelain"], root)
+    if status.returncode or status.stdout.strip() != f"M {MANIFEST}":
+        return False
+    diff = git(["diff", "-U0", "--", str(MANIFEST)], root).stdout.splitlines()
+    changed = [line for line in diff if line[:1] in "+-" and not line.startswith(("+++", "---"))]
+    return len(changed) == 2 and all('"version"' in line for line in changed)
 
 
 def check(root: Path, log) -> int:
     if git(["rev-parse", "--abbrev-ref", "HEAD"], root).stdout.strip() != TRACKED_BRANCH:
         log(f"checkout is not on '{TRACKED_BRANCH}'; skipping to avoid disturbing local work")
         return 0
+    if only_version_edited(root):
+        git(["checkout", "--", str(MANIFEST)], root)
+        log("restored a leftover local version edit in plugin.json")
     status = git(["status", "--porcelain"], root)
     if status.returncode != 0 or status.stdout.strip():
         log(f"working tree at {root} has uncommitted changes; skipping")

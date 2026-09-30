@@ -47,7 +47,8 @@ pick them up.
 On a clean `main` checkout — how end users run Ascent — the same command
 only pulls the latest release and asks for a relaunch. It never leaves a
 local version edit behind, so it is safe for Codex to run when an end user
-asks it to "update Ascent".
+asks it to "update Ascent". If an older version of the script already left
+such an edit, both this command and the background job restore it and carry on.
 
 ### Claude Code
 
@@ -88,7 +89,9 @@ fast-forwards the local `main` checkout from `origin/main` once a day. The
 update takes effect the next time Codex is relaunched; there is no need to
 relaunch every time the job runs, since most runs find nothing new and one
 relaunch picks up the latest download. When an update is waiting, Ascent's
-workspace skills say so at the start of their next run. It never prompts and
+workspace skills say so at the start of their next run. They also speak up
+when background updates are stuck — blocked by macOS privacy settings, or no
+successful check in ten days — and say why in plain words. It never prompts and
 never forces a change — it skips safely (logging why, to
 `~/.codex/ascent-plugin-update.log`) whenever the checkout is on another
 branch or has uncommitted changes. The log also notes when a pull changed

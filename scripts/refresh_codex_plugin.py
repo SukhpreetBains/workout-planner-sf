@@ -94,11 +94,30 @@ def git(cwd: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=False)
 
 
+def on_main(plugin_root: Path) -> bool:
+    return git(plugin_root, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip() == "main"
+
+
 def is_release_checkout(plugin_root: Path) -> bool:
     """A clean checkout of `main`: an end user's install, not a developer's work in progress."""
-    branch = git(plugin_root, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
     status = git(plugin_root, "status", "--porcelain")
-    return branch == "main" and status.returncode == 0 and not status.stdout.strip()
+    return on_main(plugin_root) and status.returncode == 0 and not status.stdout.strip()
+
+
+def only_version_edited(plugin_root: Path) -> bool:
+    """True when the sole uncommitted change is the manifest's version line.
+
+    Older versions of this script left exactly this edit on end users' main
+    checkouts, where it blocks every later pull.
+    """
+    manifest = plugin_root / ".codex-plugin" / "plugin.json"
+    top = Path(git(plugin_root, "rev-parse", "--show-toplevel").stdout.strip()).resolve()
+    status = git(plugin_root, "status", "--porcelain")
+    if status.returncode or status.stdout.strip() != f"M {manifest.resolve().relative_to(top).as_posix()}":
+        return False
+    diff = git(plugin_root, "diff", "-U0", "--", str(manifest)).stdout.splitlines()
+    changed = [line for line in diff if line[:1] in "+-" and not line.startswith(("+++", "---"))]
+    return len(changed) == 2 and all('"version"' in line for line in changed)
 
 
 def pull_latest_release(plugin_root: Path, dry_run: bool) -> int:
@@ -145,6 +164,11 @@ def main() -> int:
     plugin_ref = f"{args.plugin}@{marketplace_name}"
     print(f"Marketplace: {marketplace_name} ({marketplace_path})")
     print(f"Plugin source: {plugin_root}")
+    if on_main(plugin_root) and only_version_edited(plugin_root):
+        print("Restoring a leftover local version edit in plugin.json.")
+        if args.dry_run:
+            return pull_latest_release(plugin_root, dry_run=True)
+        git(plugin_root, "checkout", "--", str(plugin_root / ".codex-plugin" / "plugin.json"))
     if is_release_checkout(plugin_root):
         return pull_latest_release(plugin_root, args.dry_run)
     version = update_cachebuster(plugin_root, args.dry_run)

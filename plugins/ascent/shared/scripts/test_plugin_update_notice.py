@@ -12,7 +12,9 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent
@@ -60,6 +62,47 @@ class PluginUpdateNoticeTest(unittest.TestCase):
 
     def test_no_codex_registration_is_silent(self):
         self.assertIsNone(self.notice.update_notice())
+
+    def job_log(self, text: str, age_days: float = 0) -> float:
+        log = self.codex_home / "ascent-plugin-update.log"
+        log.write_text(text, encoding="utf-8")
+        now = time.time()
+        os.utime(log, (now - age_days * 86400, now - age_days * 86400))
+        return now
+
+    @staticmethod
+    def run_at(days_ago: float, *lines: str) -> str:
+        stamp = datetime.fromtimestamp(time.time() - days_ago * 86400, timezone.utc).isoformat(timespec="seconds")
+        return f"=== {stamp} ===\n" + "".join(f"{line}\n" for line in lines)
+
+    def test_no_job_log_is_silent(self):
+        self.assertIsNone(self.notice.job_notice())
+
+    def test_macos_permission_block_explains_the_fix(self):
+        now = self.job_log("python3: can't open file '/x/check.py': [Errno 1] Operation not permitted\n")
+        message = self.notice.job_notice(now)
+        self.assertIn("blocked by macOS privacy settings", message)
+        self.assertIn("Full Disk Access", message)
+
+    def test_recent_successful_check_is_silent(self):
+        now = self.job_log(self.run_at(1, "already up to date at abc123"))
+        self.assertIsNone(self.notice.job_notice(now))
+
+    def test_long_paused_job_explains_why_in_plain_words(self):
+        now = self.job_log(self.run_at(20, "already up to date at abc123")
+                           + self.run_at(1, "working tree at /x has uncommitted changes; skipping"))
+        message = self.notice.job_notice(now)
+        self.assertIn("paused since", message)
+        self.assertIn("local changes", message)
+        self.assertNotIn("working tree", message)
+
+    def test_job_that_never_succeeded_is_reported(self):
+        now = self.job_log(self.run_at(1, "git fetch failed: could not resolve host"))
+        self.assertIn("since they were set up: it couldn't reach GitHub", self.notice.job_notice(now))
+
+    def test_job_that_stopped_running_is_silent(self):
+        now = self.job_log(self.run_at(30, "git fetch failed: offline"), age_days=30)
+        self.assertIsNone(self.notice.job_notice(now))
 
     def test_setup_check_prints_the_notice(self):
         self.register(self.checkout, "0.1.0+codex.local-99999999-999999")

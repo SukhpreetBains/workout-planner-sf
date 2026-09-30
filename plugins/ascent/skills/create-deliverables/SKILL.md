@@ -106,8 +106,9 @@ against an uninitialized workspace; the scripts it runs assume the standard
 structure exists.
 
 If it also prints an `ascent update:` line, pass that message to the user once, in
-plain words, and carry on. It means a newer Ascent is downloaded and a Codex
-relaunch will load it; it never blocks the current work.
+plain words, and carry on. It is either a downloaded update waiting for a Codex
+relaunch or a note that background updates are stuck; it never blocks the
+current work.
 
 Then check whether unprocessed material exists:
 

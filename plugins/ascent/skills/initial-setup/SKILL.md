@@ -88,7 +88,8 @@ has uncommitted changes.
 Codex installs a pulled update the next time the app is relaunched. Tell
 the user this plainly: updates arrive in the background, and quitting and
 reopening Codex is what loads them. They don't need to relaunch after
-every check; Ascent's workspace skills tell them when an update is waiting.
+every check; Ascent's workspace skills tell them when an update is waiting,
+and when background updates are stuck.
 
 On macOS, `--install` runs the job immediately to verify it and may print an
 `ACTION NEEDED` line if the checkout lives under a privacy-protected or

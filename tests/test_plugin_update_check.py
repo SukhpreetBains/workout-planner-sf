@@ -72,6 +72,29 @@ class PluginUpdateCheckTest(unittest.TestCase):
         out = self.run_check()
         self.assertIn("plugin files changed but the version is still 0.1.0+codex.local-1", out)
 
+    def manifest(self, version: str, description: str = "Ascent") -> str:
+        return json.dumps({"name": "ascent", "version": version, "description": description}, indent=2) + "\n"
+
+    def test_leftover_version_edit_is_restored_and_update_proceeds(self):
+        self.write(MANIFEST, self.manifest("0.1.0+codex.local-1"))
+        self.publish("multi-line manifest")
+        self.run_check()
+        (self.clone / MANIFEST).write_text(self.manifest("0.1.0+codex.local-LOCAL"), encoding="utf-8")
+        self.write(SKILL, "second")
+        self.write(MANIFEST, self.manifest("0.1.0+codex.local-2"))
+        self.publish("release 2")
+        out = self.run_check()
+        self.assertIn("restored a leftover local version edit", out)
+        self.assertIn("plugin version 0.1.0+codex.local-1 -> 0.1.0+codex.local-2", out)
+        self.assertEqual(git(self.clone, "status", "--porcelain"), "")
+
+    def test_other_local_manifest_edits_still_block_updates(self):
+        self.write(MANIFEST, self.manifest("0.1.0+codex.local-1"))
+        self.publish("multi-line manifest")
+        self.run_check()
+        (self.clone / MANIFEST).write_text(self.manifest("0.1.0+codex.local-1", "edited locally"), encoding="utf-8")
+        self.assertIn("uncommitted changes; skipping", self.run_check())
+
     def test_skips_dirty_tree_and_other_branches(self):
         (self.clone / SKILL).write_text("local edit", encoding="utf-8")
         self.assertIn("uncommitted changes; skipping", self.run_check())
