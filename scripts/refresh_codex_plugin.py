@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Refresh the installed Codex cache for the local Ascent plugin."""
+"""Refresh the local Ascent plugin for Codex.
+
+On a clean `main` checkout (how end users run Ascent) this only pulls the
+latest release; relaunching Codex then installs it. On any other branch, or
+with uncommitted changes (a developer iterating), it gives the plugin a new
+version and reinstalls it so the local edits load; commit that version bump
+with the change.
+"""
 
 from __future__ import annotations
 
@@ -83,10 +90,37 @@ def run_codex_install(plugin_ref: str, dry_run: bool) -> None:
         raise SystemExit(exc.returncode) from exc
 
 
+def git(cwd: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=False)
+
+
+def is_release_checkout(plugin_root: Path) -> bool:
+    """A clean checkout of `main`: an end user's install, not a developer's work in progress."""
+    branch = git(plugin_root, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    status = git(plugin_root, "status", "--porcelain")
+    return branch == "main" and status.returncode == 0 and not status.stdout.strip()
+
+
+def pull_latest_release(plugin_root: Path, dry_run: bool) -> int:
+    print("Clean main checkout: pulling the latest release without changing the local version.")
+    print("+ git pull --ff-only origin main")
+    if dry_run:
+        print("Dry run complete. Nothing was pulled.")
+        return 0
+    before = git(plugin_root, "rev-parse", "HEAD").stdout.strip()
+    pull = git(plugin_root, "pull", "--ff-only", "origin", "main")
+    if pull.returncode:
+        raise SystemExit(f"git pull failed: {pull.stderr.strip()}")
+    after = git(plugin_root, "rev-parse", "HEAD").stdout.strip()
+    if before == after:
+        print("Already up to date.")
+    else:
+        print(f"Updated {before[:12]} -> {after[:12]}. Quit and relaunch the Codex app to start using it.")
+    return 0
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Update the local Ascent Codex cachebuster and reinstall the plugin."
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plugin", default=DEFAULT_PLUGIN, help="Marketplace plugin name")
     parser.add_argument(
         "--marketplace",
@@ -111,6 +145,8 @@ def main() -> int:
     plugin_ref = f"{args.plugin}@{marketplace_name}"
     print(f"Marketplace: {marketplace_name} ({marketplace_path})")
     print(f"Plugin source: {plugin_root}")
+    if is_release_checkout(plugin_root):
+        return pull_latest_release(plugin_root, args.dry_run)
     version = update_cachebuster(plugin_root, args.dry_run)
     print(f"Codex manifest version: {version}")
     run_codex_install(plugin_ref, args.dry_run)

@@ -35,6 +35,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from plugin_update_notice import update_notice
 from paths import (
     INBOX,
     INDEXED_FOLDERS,
@@ -143,6 +144,10 @@ def check_setup() -> int:
         print("ready: this looks like an initialized Opportunity workspace")
     else:
         print("not ready: this does not look like an initialized Opportunity workspace — run initial-setup first")
+
+    notice = update_notice()
+    if notice:
+        print(f"ascent update: {notice}")
     return 0
 
 
