@@ -80,11 +80,16 @@ This registers a per-user scheduled job (a macOS LaunchAgent, Windows
 Scheduled Task, or Linux crontab entry — chosen automatically for the
 detected OS) that runs `scripts/check-for-plugin-update.py` once a day in
 the background. That script only fast-forwards a clean local `main`
-checkout from `origin/main`, then refreshes the installed Codex plugin
-cache when the pull actually changed something. It never prompts and never
-forces a change: it skips safely, logging why to
-`~/.codex/ascent-plugin-update.log` (or under `$CODEX_HOME` if relocated),
-whenever the checkout is on another branch or has uncommitted changes.
+checkout from `origin/main`. It never prompts and never forces a change: it
+skips safely, logging why to `~/.codex/ascent-plugin-update.log` (or under
+`$CODEX_HOME` if relocated), whenever the checkout is on another branch or
+has uncommitted changes.
+
+Codex installs a pulled update the next time the app is relaunched. Tell
+the user this plainly: updates arrive in the background, and quitting and
+reopening Codex is what loads them. They don't need to relaunch after
+every check; Ascent's workspace skills tell them when an update is waiting,
+and when background updates are stuck.
 
 On macOS, `--install` runs the job immediately to verify it and may print an
 `ACTION NEEDED` line if the checkout lives under a privacy-protected or
@@ -108,7 +113,7 @@ python3 scripts/manage-plugin-update-schedule.py --uninstall
 `--install --frequency <value>` updates an already-installed job in place
 (and is a no-op if it already runs at that frequency).
 
-This currently refreshes the Codex plugin cache only. Other agent hosts
+This currently keeps Codex installations up to date only. Other agent hosts
 (Claude Code, Copilot CLI, Cursor) still need their own manual update
 commands from the repository's installation and updating guide.
 

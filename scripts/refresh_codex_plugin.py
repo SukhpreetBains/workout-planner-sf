@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Refresh the installed Codex cache for the local Ascent plugin."""
+"""Refresh the local Ascent plugin for Codex.
+
+On a clean `main` checkout (how end users run Ascent) this only pulls the
+latest release; relaunching Codex then installs it. On any other branch, or
+with uncommitted changes (a developer iterating), it gives the plugin a new
+version and reinstalls it so the local edits load; commit that version bump
+with the change.
+"""
 
 from __future__ import annotations
 
@@ -83,21 +90,56 @@ def run_codex_install(plugin_ref: str, dry_run: bool) -> None:
         raise SystemExit(exc.returncode) from exc
 
 
-def restore_manifest(plugin_root: Path) -> None:
-    """codex plugin add copies the bumped manifest into a version-named
-    cache directory at the moment it runs; the source checkout does not
-    need to keep the cachebuster afterward. Discard it so the working tree
-    stays clean and the meaningless timestamp never has to be committed
-    or manually discarded by hand.
+def git(cwd: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=False)
+
+
+def on_main(plugin_root: Path) -> bool:
+    return git(plugin_root, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip() == "main"
+
+
+def is_release_checkout(plugin_root: Path) -> bool:
+    """A clean checkout of `main`: an end user's install, not a developer's work in progress."""
+    status = git(plugin_root, "status", "--porcelain")
+    return on_main(plugin_root) and status.returncode == 0 and not status.stdout.strip()
+
+
+def only_version_edited(plugin_root: Path) -> bool:
+    """True when the sole uncommitted change is the manifest's version line.
+
+    Older versions of this script left exactly this edit on end users' main
+    checkouts, where it blocks every later pull.
     """
-    manifest_path = plugin_root / ".codex-plugin" / "plugin.json"
-    subprocess.run(["git", "checkout", "--", str(manifest_path)], cwd=plugin_root, check=False)
+    manifest = plugin_root / ".codex-plugin" / "plugin.json"
+    top = Path(git(plugin_root, "rev-parse", "--show-toplevel").stdout.strip()).resolve()
+    status = git(plugin_root, "status", "--porcelain")
+    if status.returncode or status.stdout.strip() != f"M {manifest.resolve().relative_to(top).as_posix()}":
+        return False
+    diff = git(plugin_root, "diff", "-U0", "--", str(manifest)).stdout.splitlines()
+    changed = [line for line in diff if line[:1] in "+-" and not line.startswith(("+++", "---"))]
+    return len(changed) == 2 and all('"version"' in line for line in changed)
+
+
+def pull_latest_release(plugin_root: Path, dry_run: bool) -> int:
+    print("Clean main checkout: pulling the latest release without changing the local version.")
+    print("+ git pull --ff-only origin main")
+    if dry_run:
+        print("Dry run complete. Nothing was pulled.")
+        return 0
+    before = git(plugin_root, "rev-parse", "HEAD").stdout.strip()
+    pull = git(plugin_root, "pull", "--ff-only", "origin", "main")
+    if pull.returncode:
+        raise SystemExit(f"git pull failed: {pull.stderr.strip()}")
+    after = git(plugin_root, "rev-parse", "HEAD").stdout.strip()
+    if before == after:
+        print("Already up to date.")
+    else:
+        print(f"Updated {before[:12]} -> {after[:12]}. Quit and relaunch the Codex app to start using it.")
+    return 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Update the local Ascent Codex cachebuster and reinstall the plugin."
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plugin", default=DEFAULT_PLUGIN, help="Marketplace plugin name")
     parser.add_argument(
         "--marketplace",
@@ -122,17 +164,23 @@ def main() -> int:
     plugin_ref = f"{args.plugin}@{marketplace_name}"
     print(f"Marketplace: {marketplace_name} ({marketplace_path})")
     print(f"Plugin source: {plugin_root}")
+    if on_main(plugin_root) and only_version_edited(plugin_root):
+        print("Restoring a leftover local version edit in plugin.json.")
+        if args.dry_run:
+            return pull_latest_release(plugin_root, dry_run=True)
+        git(plugin_root, "checkout", "--", str(plugin_root / ".codex-plugin" / "plugin.json"))
+    if is_release_checkout(plugin_root):
+        return pull_latest_release(plugin_root, args.dry_run)
     version = update_cachebuster(plugin_root, args.dry_run)
     print(f"Codex manifest version: {version}")
-    try:
-        run_codex_install(plugin_ref, args.dry_run)
-    finally:
-        if not args.dry_run:
-            restore_manifest(plugin_root)
+    run_codex_install(plugin_ref, args.dry_run)
     if args.dry_run:
         print("Dry run complete. No files were changed and the plugin was not reinstalled.")
     else:
-        print("Refresh complete. Start a new Codex task to load the updated plugin.")
+        print("Refresh complete. Restart the Codex app to load the updated plugin.")
+        print("Commit the plugin.json version change with your plugin changes: Codex only "
+              "reinstalls a local plugin when its version changes, so this bump is how "
+              "other installs pick the changes up.")
     return 0
 
 

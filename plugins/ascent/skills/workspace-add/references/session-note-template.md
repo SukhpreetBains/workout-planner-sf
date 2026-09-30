@@ -23,6 +23,12 @@ terms.]
 
 - [Question — who should answer it, and why it matters]
 
+## Risks raised
+
+- [Risk — how it could happen and what it would affect — stated mitigation, if any]
+
 ## Follow-ups
 
-- [Action — owner — when]
+One line per distinct action in the source; do not merge or drop any.
+
+- [Action — owner, or "owner not assigned" — timing as stated]

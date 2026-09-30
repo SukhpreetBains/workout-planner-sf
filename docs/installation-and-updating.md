@@ -20,15 +20,35 @@ codex plugin marketplace add .
 codex plugin add ascent@ascent
 ```
 
-If `codex plugin marketplace list` already includes `ascent`, skip the marketplace-add command. Start a new Codex task after installation so the plugin skills are loaded.
+If `codex plugin marketplace list` already includes `ascent`, skip the marketplace-add command. Relaunch the Codex app after installation so the plugin skills are loaded.
 
-While iterating on the local checkout, refresh the installed Codex cache with:
+#### How Codex picks up changes
+
+Codex keeps its own copy of the plugin. When the app launches, it compares
+the version in `plugins/ascent/.codex-plugin/plugin.json` with that copy and
+reinstalls only if the two differ. It does not look at file contents. So:
+
+- a change reaches an installation only when it comes with a new version;
+- an installation picks it up the next time the Codex app is relaunched —
+  starting a new task is not enough.
+
+While iterating on the local checkout, run:
 
 ```bash
 python3 scripts/refresh_codex_plugin.py
 ```
 
-This updates the Codex manifest cachebuster, reinstalls `ascent@ascent` from the local marketplace, and reminds you to start a new Codex task.
+On a feature branch, or with uncommitted changes, this gives the plugin a
+new version, reinstalls `ascent@ascent` from the local marketplace, and
+reminds you to relaunch Codex. Commit the version change together with your
+plugin changes: that new version is what makes everyone else's installation
+pick them up.
+
+On a clean `main` checkout — how end users run Ascent — the same command
+only pulls the latest release and asks for a relaunch. It never leaves a
+local version edit behind, so it is safe for Codex to run when an end user
+asks it to "update Ascent". If an older version of the script already left
+such an edit, both this command and the background job restore it and carry on.
 
 ### Claude Code
 
@@ -65,11 +85,18 @@ For a team setup, import `https://github.com/Slalom/ascent` from **Dashboard > S
 `initial-setup` offers to enable a daily background check the first time it
 runs on a machine. If accepted, it registers a per-user scheduled job (a
 macOS LaunchAgent, Windows Scheduled Task, or Linux crontab entry) that
-fast-forwards the local `main` checkout from `origin/main` once a day and
-refreshes the installed Codex plugin cache whenever that pull changes
-anything. It never prompts and never forces a change — it skips safely
-(logging why, to `~/.codex/ascent-plugin-update.log`) whenever the checkout
-is on another branch or has uncommitted changes. Decline or accept the
+fast-forwards the local `main` checkout from `origin/main` once a day. The
+update takes effect the next time Codex is relaunched; there is no need to
+relaunch every time the job runs, since most runs find nothing new and one
+relaunch picks up the latest download. When an update is waiting, Ascent's
+workspace skills say so at the start of their next run. They also speak up
+when background updates are stuck — blocked by macOS privacy settings, or no
+successful check in ten days — and say why in plain words. It never prompts and
+never forces a change — it skips safely (logging why, to
+`~/.codex/ascent-plugin-update.log`) whenever the checkout is on another
+branch or has uncommitted changes. The log also notes when a pull changed
+plugin files without a new version, since Codex will not load those
+changes. Decline or accept the
 question again at any time by rerunning `initial-setup`, or manage the job
 directly:
 
@@ -88,13 +115,13 @@ manual steps below.
 
 ### Manually
 
-Update the clean repository checkout before refreshing the plugin:
+Update the clean repository checkout, then load the update in your host:
 
 ```bash
 git pull --ff-only
 
-# Codex
-python3 scripts/refresh_codex_plugin.py
+# Codex: relaunch the Codex app. Nothing else is needed when the pull
+# brought a new plugin version.
 
 # Claude Code
 claude plugin marketplace update ascent
@@ -105,4 +132,4 @@ copilot plugin marketplace update ascent
 copilot plugin update ascent
 ```
 
-Start a new task or session after updating when the host does not reload plugin contents automatically. In Cursor, refresh the imported marketplace and update Ascent from the Plugins panel.
+For the other hosts, start a new task or session after updating when the host does not reload plugin contents automatically. In Cursor, refresh the imported marketplace and update Ascent from the Plugins panel.
