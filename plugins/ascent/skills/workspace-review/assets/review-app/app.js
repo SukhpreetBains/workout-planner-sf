@@ -21,6 +21,7 @@ const toast = document.querySelector("#toast");
 const acceptedButton = document.querySelector("#view-accepted");
 const headerTitle = document.querySelector("#header-title");
 const headerCount = document.querySelector("#header-count");
+const headerControls = document.querySelector("#header-controls");
 const acceptedPage = location.pathname === "/accepted";
 let cards = [];
 let categories = [];
@@ -270,7 +271,7 @@ function scheduleFilterRender(options = {}) {
   filterTimer = setTimeout(() => renderCategory(options), 140);
 }
 
-function triageControls(matchCount) {
+function triageControls() {
   const search = el("input", { class: "triage-search", type: "search", value: searchQuery,
     placeholder: "Search titles, fields, sources, or evidence", "aria-label": "Search pending proposals" });
   search.addEventListener("input", () => {
@@ -298,7 +299,7 @@ function triageControls(matchCount) {
   } }, "Reset");
   const filterButton = el("button", {
     class: "quiet filter-toggle", type: "button", "aria-expanded": String(filtersExpanded),
-    onclick: () => { filtersExpanded = !filtersExpanded; renderCategory(); },
+    onclick: () => { filtersExpanded = !filtersExpanded; renderCategory({ focusFilter: true }); },
   }, [filterIcon(), "Filters"]);
   const filterPanel = el("div", { class: "triage-filter-panel", hidden: filtersExpanded ? undefined : "" }, [
     el("div", { class: "triage-selects" }, [review.control, completeness.control, sort.control, reset]),
@@ -307,7 +308,6 @@ function triageControls(matchCount) {
     search,
     filterButton,
     filterPanel,
-    el("p", { class: "filter-count", role: "status" }, `${matchCount} of ${cards.length} pending proposals match`),
   ]);
   return controls;
 }
@@ -895,7 +895,8 @@ function renderCategory(options = {}) {
   const card = categoryCards.includes(cards[currentIndex]) ? cards[currentIndex] : categoryCards[0] || null;
   if (card) activeCategory = card.category;
   setHeaderCount(progressSummary.pending ?? cards.length);
-  flow.replaceChildren(triageControls(matches.length), categoryNavigation());
+  headerControls.replaceChildren(triageControls());
+  flow.replaceChildren(categoryNavigation());
   const list = el("aside", { class: "proposal-list", "aria-label": `${label(activeCategory)} proposals` });
   categoryCards.forEach(item => list.append(renderProposalListItem(item, item === card)));
   const review = el("div", { class: `category-review${card ? "" : " empty-category-review"}` }, card ? [] : [categoryToolbar(card)]);
@@ -909,15 +910,16 @@ function renderCategory(options = {}) {
   ]));
   flow.append(el("div", { class: "review-layout" }, card ? [list, review] : [review]));
   if (options.focusSearch) {
-    const search = flow.querySelector(".triage-search");
+    const search = headerControls.querySelector(".triage-search");
     search?.focus();
     search?.setSelectionRange(search.value.length, search.value.length);
   }
+  if (options.focusFilter) headerControls.querySelector(".filter-toggle")?.focus();
   if (!card) return;
   riskDerived(card, card.fields);
   updateFieldGroupStatus();
   animateStack(flow.querySelector(".expanded-card-content"));
-  if (!options.focusSearch) flow.querySelector("#proposal-form .quick-field-grid input, #proposal-form .quick-field-grid select, #proposal-form .quick-field-grid textarea, #proposal-form .field-group input, #proposal-form .field-group select, #proposal-form .field-group textarea")?.focus({ preventScroll: true });
+  if (!options.focusSearch && !options.focusFilter) flow.querySelector("#proposal-form .quick-field-grid input, #proposal-form .quick-field-grid select, #proposal-form .quick-field-grid textarea, #proposal-form .field-group input, #proposal-form .field-group select, #proposal-form .field-group textarea")?.focus({ preventScroll: true });
 }
 
 function renderEmptyReview() {
