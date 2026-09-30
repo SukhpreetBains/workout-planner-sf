@@ -116,6 +116,12 @@ returns:
 For meeting material, the subagent checks five categories deliberately:
 decisions, open questions, stakeholders, action items, and risks.
 
+For a contract, statement of work, or services schedule, the subagent
+returns every stated fee, cap or limit, scope exclusion, dependency, and
+date as its own finding, not just the headline ones. Lists of limits and
+exclusions are easy to skim past, and each item is what the team later
+checks scope against.
+
 A curation subagent must not move files, write session notes or the source
 ledger, create or edit proposal YAML, run sync or the review server, or
 write to trackers.
@@ -186,6 +192,11 @@ Work from what the subagents returned:
   the handoff.
 - Every candidate you drop needs a short reason: a duplicate of a named
   item, superseded by a named later source, or below its category's bar.
+- Drop a candidate as superseded only after confirming the stronger source
+  covers it. If that source's findings do not include the term, check the
+  source's text yourself. When the term is there, keep the finding and cite
+  the stronger source. When it is not, drop the candidate with the reason
+  "not in <source>".
 - Never remove proposals in bulk by source document. Judge each item on
   its own — a document can be partly superseded and still hold open,
   relevant findings.
@@ -224,10 +235,10 @@ both sources.
 
 **Classify by what the finding is:**
 
-- Caps and limits are constraints. "Up to" scope limits, fee caps, and
-  contracted date windows are a `constraint` (contractual, budget, or
-  timeline), not a `requirement`; requirements are what the solution or
-  delivery must do.
+- Caps, limits, and exclusions are constraints. "Up to" scope limits, fees
+  and fee caps, contracted date windows, and scope exclusions are a
+  `constraint` (contractual, budget, or timeline), not a `requirement`;
+  requirements are what the solution or delivery must do.
 - Internal Slalom commercial material stays out of the trackers. Do not
   propose pricing-tool guidance, rates, margins, contingencies, or internal
   cost structures. File and log the document as usual and say in the

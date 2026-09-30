@@ -69,7 +69,11 @@ def main() -> None:
     assert positions == sorted(positions), "source authority order changed"
     assert "keep the signed value and propose an `open_question` naming both sources" in flat
 
-    assert "Caps and limits are constraints" in flat
+    assert "Caps, limits, and exclusions are constraints" in flat
+    assert "returns every stated fee, cap or limit, scope exclusion, dependency, and date as its own finding" in flat
+    assert "Drop a candidate as superseded only after confirming the stronger source covers it" in flat
+    assert "check the source's text yourself" in flat
+    assert 'drop the candidate with the reason "not in <source>"' in flat
     assert "not a `requirement`" in flat
     assert "Internal Slalom commercial material stays out of the trackers" in flat
     assert "Commercial terms in a signed client agreement are client-agreed" in flat
