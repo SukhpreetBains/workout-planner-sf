@@ -1,16 +1,18 @@
 /** Reproducible review render of the shared floating citation implementation. */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseContentFile } from '../../../plugins/ascent/skills/create-deliverables/scripts/lib/content.mjs';
 import { build } from '../../../plugins/ascent/skills/create-deliverables/scripts/build.mjs';
 import { validateBuild } from '../../../plugins/ascent/skills/create-deliverables/scripts/validate-brand.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '../../..');
 const output = path.join(root, 'build/citations-implementation-preview');
 mkdirSync(output, { recursive: true });
 const content = parseContentFile(path.join(root, 'plugins/ascent/skills/create-deliverables/templates/project-kickoff/static-example.yaml'));
 content.meta.classification = 'Internal mockup · Fictional example';
+for (const copy of content.meta.copy ?? []) if (copy.key === 'hero-meta-span-3') copy.text = content.meta.classification;
 const objective = content.sections.find(section => section.module === 'objectives-and-success');
 const timeline = content.sections.find(section => section.module === 'timeline-roadmap');
 const actions = content.sections.find(section => section.module === 'immediate-next-steps');
@@ -20,16 +22,12 @@ objective.citations = [{
   excerpt: 'Target a 30% reduction in avoidable contacts by resolving more issues in the digital journey before agent escalation.',
   note: 'Illustrative source text for UI review.',
 }];
-timeline.citations = [
-  { target: 'item-1', label: 'First phase', value: 'Mobilize', status: 'source',
-    source_ref: 'Fictional fixture · delivery-schedule.md · REQ-001',
-    excerpt: 'The first phase begins with mobilization and the kickoff sequence.',
-    note: 'Illustrative source text for UI review.' },
-  { target: 'item-2', label: 'Second phase', value: 'Discovery', status: 'source',
-    source_ref: 'Fictional fixture · delivery-schedule.md · REQ-002',
-    excerpt: 'The second phase continues the planned delivery sequence.',
-    note: 'Illustrative source text for UI review.' },
-];
+timeline.citations = timeline.phases.slice(0, 2).map((phase, index) => ({
+  target: `item-${index + 1}`, label: phase.name, value: `${phase.start} to ${phase.end}`,
+  status: 'source', source_ref: `Fictional fixture · delivery-schedule.md · REQ-00${index + 1}`,
+  excerpt: `${phase.name} is scheduled from ${phase.start} to ${phase.end}. ${phase.summary}`,
+  note: 'Illustrative source text for UI review.',
+}));
 actions.citations = [
   { target: 'item-3', label: 'Test-data pattern', value: 'Updated target date', status: 'changed',
     source_ref: 'Fictional fixture · kickoff-notes.md · REQ-007',
@@ -42,6 +40,14 @@ const contentFile = path.join(output, 'content.json');
 writeFileSync(contentFile, `${JSON.stringify(content, null, 2)}\n`);
 const full = await build(contentFile, { out: path.join(output, 'site'), structurePreview: true, bundle: true });
 const isolated = await build(contentFile, { out: path.join(output, 'timeline-isolated'), structurePreview: true, previewModule: 'timeline-roadmap', bundle: true });
+if (process.argv.includes('--update-example')) {
+  // This PR preview stays standalone without copying bundled Slalom Sans fonts.
+  const bundle = readFileSync(isolated.bundlePath, 'utf8');
+  const example = bundle.replace(/@font-face\s*\{[^}]*\}/g, '')
+    .replace('<head>', '<head>\n<!-- Internal UI example. Slalom Sans font data is omitted from this review copy. -->')
+    .replace(/[ \t]+$/gm, '');
+  writeFileSync(path.join(here, 'example-timeline.html'), example);
+}
 const baseline = parseContentFile(contentFile);
 for (const section of baseline.sections) delete section.citations;
 const baselineFile = path.join(output, 'baseline-content.json');

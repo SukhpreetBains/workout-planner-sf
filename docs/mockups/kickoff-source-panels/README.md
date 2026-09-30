@@ -4,6 +4,8 @@ The floating layout has been promoted to the shared `create-deliverables` builde
 
 Current implementation captures: [desktop floating panel](../../screenshots/citations-ui/implementation-desktop.png) and [390px mobile disclosure](../../screenshots/citations-ui/implementation-mobile.png). Both use fictional source text and reduced motion.
 
+[Open the standalone timeline HTML example](example-timeline.html) after downloading or checking out the PR, then scroll to the timeline and open either Sources tab. It is generated from the shared builder with fictional citations. This review copy omits embedded Slalom Sans font data and uses the browser's fallback font. Regenerate it with `node docs/mockups/kickoff-source-panels/implementation-preview.mjs --update-example`.
+
 Two local prototypes layered onto the current Ascent project-kickoff renderer:
 
 - **Floating notes:** section-specific disclosures anchored to the right, opening over the content without resizing it.
