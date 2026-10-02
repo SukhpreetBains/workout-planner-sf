@@ -48,6 +48,8 @@ Setup copies the canonical workspace template bundled with `initial-setup` into 
 
 The operation is resumable. Existing files and tracker rows are preserved, while missing template files and folders are created. All agent-created project work stays inside `workspace/`. A person can promote reviewed material into `Deliverables/`.
 
+After the folder exists, setup follows the [host workspace-access guide](../plugins/ascent/skills/initial-setup/references/host-workspace-access.md) to make the confirmed Opportunity folder available to future conversations. Host-specific controls live in separate references under `initial-setup`.
+
 ## 3. Record Opportunity identity
 
 Machine-readable project data goes into `workspace/.system/project.yaml`:
@@ -106,11 +108,13 @@ The trackers are:
 
 Initial setup does not ask about documents, inspect `workspace/inbox/`, or process source material. Existing documents remain untouched.
 
-When documents are ready, finish setup and open a fresh agent chat scoped to the Opportunity. Fresh context gives the agent maximum room to inspect, organize, extract, and reason over the source material. Use this starter prompt:
+After the final setup checklist, place the first source document in the confirmed absolute `<Opportunity folder>/workspace/inbox/` path. If it is already there, leave it in place. Then open a fresh agent chat with the same Opportunity folder open. Start that new chat before ingestion so setup history does not consume the context needed to inspect and reason over source material. Use this starter prompt:
 
 ```text
 Use workspace-add to process the documents in this Opportunity workspace inbox.
 ```
+
+`workspace-add` files the document and prepares evidence-backed proposals. If it finds proposals, the review inbox comes afterward for approving them; the trackers change only through `workspace-review`.
 
 ## 7. Ingest documents and capture meetings
 

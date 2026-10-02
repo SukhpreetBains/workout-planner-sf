@@ -58,6 +58,18 @@ def main() -> int:
     print("\nSetup workspace readiness: READY")
     print(f"Opportunity: {root}")
     print("Trackers, identity, tracker copies, search index, and sync state are ready.")
+    print("\nAfter the final setup checklist, add your first source document:")
+    print(f"Place it in: {root / 'workspace' / 'inbox'}")
+    print("If it is already there, leave it in place.")
+    print(
+        "Then start a fresh conversation with this Opportunity folder open, "
+        "so setup history does not fill the ingestion context."
+    )
+    print("Use workspace-add to process the documents in this Opportunity workspace inbox.")
+    print(
+        "If ingestion proposes updates, review them in the review inbox "
+        "before they enter the trackers."
+    )
     return 0
 
 
