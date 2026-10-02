@@ -25,6 +25,8 @@ INITIAL_SETUP = SKILLS_ROOT / "initial-setup" / "SKILL.md"
 WORKSPACE_SETUP = SKILLS_ROOT / "initial-setup" / "references" / "project-workspace-setup.md"
 STORAGE_DECISIONS = SKILLS_ROOT / "initial-setup" / "references" / "storage-decision-tree.md"
 SETUP_READINESS = SKILLS_ROOT / "initial-setup" / "references" / "setup-readiness.md"
+HOST_ACCESS = SKILLS_ROOT / "initial-setup" / "references" / "host-workspace-access.md"
+CODEX_ACCESS = SKILLS_ROOT / "initial-setup" / "references" / "hosts" / "codex.md"
 PLUGIN_OVERVIEW = ROOT / "plugins" / "ascent" / "README.md"
 REPOSITORY_README = ROOT / "README.md"
 WALKTHROUGH = ROOT / "docs" / "opportunity-workspace-walkthrough.md"
@@ -52,6 +54,9 @@ def assert_workflow_contract() -> None:
     assert RECORD_IDENTITY.is_file()
     assert STORAGE_DECISIONS.is_file()
     assert SETUP_READINESS.is_file()
+    assert HOST_ACCESS.is_file()
+    assert CODEX_ACCESS.is_file()
+    assert not (SKILLS_ROOT / "project-setup").exists()
     assert "setup-workspace.py" in workspace_setup
 
     removed_intake = ("engagement type", "short engagement summary", "key dates", "current focus")
@@ -80,6 +85,12 @@ def assert_workflow_contract() -> None:
 
     assert "storage-decision-tree.md" in initial_setup
     assert "setup-readiness.md" in initial_setup
+    assert "host-workspace-access.md" in initial_setup
+    assert "hosts/codex.md" in HOST_ACCESS.read_text(encoding="utf-8")
+    assert "File > Open Folder" in CODEX_ACCESS.read_text(encoding="utf-8")
+    readiness = SETUP_READINESS.read_text(encoding="utf-8")
+    assert readiness.index("## First-document action") > readiness.index("## Checklist")
+    assert "review inbox" in readiness
 
 
 def main() -> None:
@@ -102,6 +113,8 @@ def main() -> None:
         assert "managed by a sync client" in output
         assert "OneDrive will sync" not in output
         assert (opportunity / "workspace" / "inbox").is_dir()
+        first_document = opportunity / "workspace" / "inbox" / "First Brief.md"
+        first_document.write_text("First source remains untouched during setup.\n", encoding="utf-8")
         assert (opportunity / "workspace" / "trackers" / "stakeholders.xlsx").is_file()
         raid = load_workbook(opportunity / "workspace" / "trackers" / "raid.xlsx", read_only=True)
         assert "Issues" in raid.sheetnames
@@ -211,6 +224,12 @@ def main() -> None:
         )
         assert setup.returncode == 0, f"{setup.stdout}\n{setup.stderr}"
         assert "Setup workspace readiness: READY" in setup.stdout
+        assert str(opportunity / "workspace" / "inbox") in setup.stdout
+        assert setup.stdout.index("After the final setup checklist") > setup.stdout.index("Setup workspace readiness: READY")
+        assert "fresh conversation" in setup.stdout
+        assert "Use workspace-add to process the documents in this Opportunity workspace inbox." in setup.stdout
+        assert "review inbox" in setup.stdout
+        assert first_document.read_text(encoding="utf-8") == "First source remains untouched during setup.\n"
 
         pointer = opportunity / "workspace" / ".system" / ".venv-path"
         assert pointer.read_text(encoding="utf-8").strip() == str(venv)

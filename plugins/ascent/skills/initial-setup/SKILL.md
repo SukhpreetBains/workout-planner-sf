@@ -17,6 +17,7 @@ Use the host's structured-question tool when available. Ask one decision at a ti
 - Read [the storage decision tree](references/storage-decision-tree.md) when choosing or resolving storage. Read [the SharePoint walkthrough](references/sharepoint-walkthrough.md) only for its SharePoint branch.
 - Read [messaging confirmation](references/messaging-confirmation.md) only when confirming Slack, Microsoft Teams, or the communications record. Read [Slack](references/slack.md), [Microsoft Teams](references/microsoft-teams.md), or [the source-context contract](references/source-context.md) only for the selected branch.
 - Read [project workspace setup](references/project-workspace-setup.md) before initializing trackers, identity, and the search index.
+- Read [host workspace access](references/host-workspace-access.md) after preparing the Opportunity folder. Load only the guide for the active host, when one exists.
 - Use [setup readiness](references/setup-readiness.md) as the only checklist and status-definition source.
 - Use the plugin [workflow overview](../../README.md) for workflow handoffs.
 
@@ -30,11 +31,11 @@ Explain a script's effect before running it. Obtain approval before package-mana
 4. Ask whether the user is starting a new Opportunity or joining an existing one. Skip this question when a missing SharePoint Account folder was just created, because that path requires a new Opportunity.
 5. Confirm the Account name, Opportunity name, local Account path, storage mode, applicable user-reported access, and local write readiness. Keep host sandbox limits separate from operating-system permissions.
 6. Run a read-only folder preflight, then prepare the Account and Opportunity structure without overwriting existing files.
-7. Invoke an applicable host project-setup workflow with the confirmed names and paths. If none applies, continue without loading host-specific guidance.
+7. Follow the applicable host workspace-access guide with the confirmed Opportunity path. Record whether the folder is open for future conversations; continue setup if that user action is still pending.
 8. Follow [messaging confirmation](references/messaging-confirmation.md) for relevant enterprise storage and messaging locations. Offer to save confirmed locations in the project communications record.
 9. Run the orchestrated workspace setup in [project workspace setup](references/project-workspace-setup.md). It initializes the runtime, trackers, identity, and search index.
 10. Ask whether an available industry flavor applies to this Opportunity, per **Confirm industry flavor** below.
-11. Report readiness from [the authoritative readiness contract](references/setup-readiness.md), then hand document work to a fresh agent chat scoped to the Opportunity.
+11. Report readiness and end with the first-document action from [the authoritative readiness contract](references/setup-readiness.md). Hand document work to a fresh agent chat scoped to the Opportunity.
 
 ## Prepare the Opportunity folder
 
@@ -51,8 +52,6 @@ If the agent cannot write because of its session boundary, request scoped comman
 ## Initialize project knowledge
 
 Follow [project workspace setup](references/project-workspace-setup.md). Use the already confirmed `account` and `opportunity` values consistently. Never apply proposed tracker updates during setup. `workspace-review` remains the only workflow that writes approved tracker changes.
-
-## Document boundary
 
 ## Enable background plugin updates
 
@@ -148,12 +147,8 @@ full contract.
 
 Do not inspect `workspace/inbox/`, ask about documents, or process documents during setup. Leave existing documents untouched.
 
-At handoff, tell users with documents to place documents, exports, meeting notes, transcripts, or other source files in the confirmed `<Opportunity folder>/workspace/inbox/`, then open a fresh agent chat scoped to the Opportunity. Include this prompt:
-
-```text
-Use workspace-add to process the documents in this Opportunity workspace inbox.
-```
+At handoff, follow [the first-document action](references/setup-readiness.md#first-document-action) after the readiness checklist. Do not ingest documents in this setup conversation.
 
 ## Output contract
 
-End with the compact **Setup readiness** report defined in [setup readiness](references/setup-readiness.md). Cover every required item under exactly one defined status group and give an actionable next step for anything incomplete.
+End with the compact **Setup readiness** report defined in [setup readiness](references/setup-readiness.md). Cover every required checklist item under exactly one defined status group, give an actionable next step for anything incomplete, then print the first-document action after the checklist.
