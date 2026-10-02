@@ -72,6 +72,12 @@ class VisualReviewTest(unittest.TestCase):
         value.update(overrides)
         return value
 
+    def test_temporary_uv_python_cannot_start_review_server(self):
+        temporary_python = "/Users/reviewer/.cache/uv/builds-v0/.tmpnZemgc/bin/python"
+        with mock.patch.object(self.server_module.sys, "executable", temporary_python), \
+                mock.patch.object(self.server_module, "read_state", side_effect=AssertionError("read state")):
+            self.assertEqual(self.server_module.start(self.root), 2)
+
     def test_trackers_only_sync_exports_accepted_values_without_document_scan(self):
         self.proposal([self.risk(), self.risk(fields={"Risk Title": "Pending risk", "Statement": "Still pending."})])
         card = self.store.list_cards()["cards"][0]

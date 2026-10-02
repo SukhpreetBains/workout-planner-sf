@@ -60,9 +60,20 @@ Start or reuse the loopback-only inbox with:
 PY <plugin-root>/shared/scripts/review_server.py start --root "$ASCENT_OPPORTUNITY_ROOT"
 ```
 
+Always use `shared/scripts/py` or `py.cmd` for review server commands. A server
+started with `uv run` can inherit a temporary Python path that disappears while
+the inbox is open, causing approval to fail during tracker sync. Startup rejects
+that interpreter and restarts an older server whose interpreter is missing or
+unverified. Use the new URL after a restart because its session token changes.
+
 Post the returned URL in chat and let the user open it. Never open the browser
 automatically. The server assigns an ephemeral port, recovers from stale state,
 and requires its session token for every mutation.
+
+If an approval reports a missing Python executable, stop and start the inbox
+through the launcher above. Before retrying the approval, check the proposal,
+`workspace/.system/applied-updates/`, and the affected tracker row to determine
+whether the earlier action persisted. Never infer that from the error alone.
 
 ### Runtime permissions
 
