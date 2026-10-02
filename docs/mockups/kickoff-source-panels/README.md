@@ -1,19 +1,19 @@
-# Kickoff source-panel UI study
+# Kickoff citation UI study
 
-The floating layout has been promoted to the shared `create-deliverables` builder. Use `node docs/mockups/kickoff-source-panels/implementation-preview.mjs` for the current implementation and see `plugins/ascent/skills/create-deliverables/references/citations.md` for its authoring contract. The original two-mode study below remains a comparison artifact.
+The shared `create-deliverables` builder now uses one Sources disclosure per cited module. Use `node docs/mockups/kickoff-source-panels/implementation-preview.mjs` for the current implementation, the [citation contract](../../../plugins/ascent/skills/create-deliverables/references/citations.md) for authoring, and the [real-scenario checklist](real-scenario-checklist.md) when source material is available. The original two-mode study below remains a comparison artifact.
 
 Current implementation captures: [desktop floating panel](../../screenshots/citations-ui/implementation-desktop.png) and [390px mobile disclosure](../../screenshots/citations-ui/implementation-mobile.png). Both use fictional source text and reduced motion.
 
-[Open the standalone timeline HTML example](example-timeline.html) after downloading or checking out the PR, then scroll to the timeline and open either Sources tab. It is generated from the shared builder with fictional citations. This review copy omits embedded Slalom Sans font data and uses the browser's fallback font. Regenerate it with `node docs/mockups/kickoff-source-panels/implementation-preview.mjs --update-example`.
+[Open the standalone timeline HTML example](example-timeline.html) after downloading or checking out the PR, then scroll to the timeline and open Sources. It is generated from the shared builder with fictional citations. This review copy omits embedded Slalom Sans font data and uses the browser's fallback font. Regenerate it with `node docs/mockups/kickoff-source-panels/implementation-preview.mjs --update-example`.
 
 Two local prototypes layered onto the current Ascent project-kickoff renderer:
 
 - **Floating notes:** section-specific disclosures anchored to the right, opening over the content without resizing it.
 - **Margin notes:** the same disclosures expand a right column, retaining the content alongside the evidence.
 
-Each source tab maps to one objective, timeline phase, or next-step action. Panels are collapsed initially. One panel per module can be open; different modules retain their own open panels. Mobile places the disclosures below their module. Escape and the close button return focus to the source tab. Sources can be hidden globally.
+The current implementation has one control per module, collapsed initially, listing the displayed value, original document, source locator, exact excerpt, and accepted review record for each citation. Mobile places the disclosure below its module. Escape returns focus to the control. The original comparison prototypes below used individual tabs and DOM highlighting; those are no longer part of the shared builder.
 
-The deck uses the actual template examples, module renderers, self-hosted Slalom Sans, wordmarks, and styles from main. Source documents and approval records are **fictional fixtures**. The examples also show direct user input, a changed date requiring review, and absent provenance. No production approval or citation functionality is implemented by this study.
+The deck uses the actual template examples, module renderers, self-hosted Slalom Sans, wordmarks, and styles from main. Source documents and approval records are **fictional fixtures**. The examples also show direct user input, a changed date requiring review, and absent provenance. This study data does not represent production approval or evidence.
 
 ## Build and review
 

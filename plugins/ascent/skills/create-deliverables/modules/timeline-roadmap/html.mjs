@@ -88,7 +88,7 @@ function executionMap(section) {
     const end = scale.dated ? Math.min(horizon.length, Math.ceil((((parseDay(phase.end) + DAY) - scale.start) / scale.duration) * horizon.length)) : index + 1;
     const span = Math.max(1, end - start + 1);
     return `
-        <li class="execution-map__row" data-motion-item data-citation-anchor="item-${index + 1}">
+        <li class="execution-map__row" data-motion-item>
           <div class="execution-map__label">
             <span>${String(index + 1).padStart(2, '0')}</span>
             <strong>${typeset(phase.name)}</strong>

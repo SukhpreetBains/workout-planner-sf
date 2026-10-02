@@ -2591,49 +2591,39 @@ a { color: var(--on-white-emphasis); text-underline-offset: 0.15em; }
 
   </style>
   <style data-from="css/citations.css">
-/* Optional floating source disclosures. The section keeps its normal width. */
+/* One source disclosure per module. The panel overlays the section on desktop. */
 .citation-region { position:relative; }
-.citation-region--open { z-index:30; }
+.citation-region:has(.source-disclosure[open]) { z-index:30; }
 .citation-content { min-width:0; }
-.source-rail { position:absolute; top:0; right:clamp(12px,2vw,32px); width:96px; height:100%; pointer-events:none; }
-.source-note { position:relative; margin:8px 0; color:var(--on-white-body); font-size:14px; font-weight:400; pointer-events:auto; }
-.citations-ready .source-note { position:absolute; top:var(--source-top,100px); left:0; right:0; margin:0; }
-.source-note[open] { z-index:31; }
-.source-note > summary { display:flex; align-items:center; justify-content:space-between; gap:5px; min-height:42px; padding:9px 7px; list-style:none; border:1px solid var(--light-gray); border-left:3px solid var(--slalom-blue); border-radius:0 9px 0 0; background:var(--surface-white-bg); color:var(--on-white-display); cursor:pointer; font-size:12px; font-weight:700; }
-.source-note > summary::-webkit-details-marker { display:none; }
-.source-note > summary:hover, .source-note[open] > summary { background:var(--surface-blue-bg); color:var(--on-blue-body); border-color:var(--slalom-blue); }
-.source-note > summary:focus-visible, .source-panel__close:focus-visible { outline:2px solid var(--slalom-blue); outline-offset:3px; }
-.source-note__plus { font-size:17px; }
-.source-note[open] .source-note__plus { transform:rotate(45deg); }
-.source-panel { box-sizing:border-box; position:absolute; top:100%; right:0; width:min(370px,calc(100vw - 32px)); margin-top:8px; padding:22px; border:1px solid var(--light-gray); border-top:4px solid var(--slalom-blue); border-radius:0 12px 0 0; background:var(--surface-white-bg); color:var(--on-white-body); box-shadow:0 8px 24px var(--light-gray); }
-.source-panel__head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:16px; }
-.source-panel__head h3 { margin-top:7px; color:var(--on-white-display); font-size:23px; font-weight:700; line-height:1.1; }
-.source-panel__caption { color:var(--on-white-muted); font-size:11px; font-weight:700; letter-spacing:var(--tracking-eyebrow); text-transform:uppercase; }
-.source-panel__close { border:0; padding:0 4px; min-width:28px; min-height:28px; background:var(--surface-white-bg); color:var(--on-white-display); font:inherit; font-size:25px; cursor:pointer; }
-.source-panel__status { display:inline-block; padding:5px 8px; border:1px solid var(--slalom-blue); border-radius:3px; color:var(--on-white-display); font-size:11px; font-weight:700; }
-.source-panel__status--review { border-style:dashed; border-color:var(--on-white-body); color:var(--on-white-body); }
-.source-panel__value { margin:18px 0; padding-left:12px; border-left:3px solid var(--accent); }
-.source-panel__value p + p { margin-top:7px; }
-.source-panel__evidence { border-top:1px solid var(--light-gray); padding-top:16px; }
-.source-panel__ref { margin-top:8px; color:var(--on-white-display); font-size:13px; font-weight:700; overflow-wrap:anywhere; }
-.source-panel__evidence blockquote { margin:12px 0 0; font-size:16px; line-height:1.5; overflow-wrap:anywhere; }
-.source-panel__note { margin-top:16px; line-height:1.5; overflow-wrap:anywhere; }
-.citation-highlight, .reference-kickoff .citation-highlight { outline:2px solid var(--slalom-blue); outline-offset:4px; }
-html:not(.citations-ready) .source-rail { position:static; width:auto; height:auto; margin:16px; }
-html:not(.citations-ready) .source-panel { position:static; width:auto; box-shadow:none; }
+.source-disclosure { position:absolute; top:16px; right:clamp(12px,2vw,32px); width:min(360px,calc(100% - 24px)); color:var(--on-white-body); }
+.source-disclosure > summary { box-sizing:border-box; display:block; width:max-content; min-height:44px; margin-left:auto; padding:11px 15px; border:1px solid var(--slalom-blue); border-radius:4px; background:var(--surface-white-bg); color:var(--on-white-display); cursor:pointer; font-size:13px; font-weight:700; list-style:none; }
+.source-disclosure > summary::-webkit-details-marker { display:none; }
+.source-disclosure > summary:hover, .source-disclosure[open] > summary { background:var(--surface-blue-bg); color:var(--on-blue-body); }
+.source-disclosure > summary:focus-visible, .source-panel a:focus-visible { outline:2px solid var(--slalom-blue); outline-offset:3px; }
+.source-panel { box-sizing:border-box; max-height:min(70vh,650px); overflow:auto; margin-top:8px; padding:20px; border:1px solid var(--light-gray); border-top:4px solid var(--slalom-blue); border-radius:4px; background:var(--surface-white-bg); color:var(--on-white-body); box-shadow:0 8px 24px var(--light-gray); }
+.source-panel h3 { margin:0 0 16px; color:var(--on-white-display); font-size:20px; }
+.source-panel ol { margin:0; padding:0; list-style:none; }
+.source-entry { padding:16px 0; border-top:1px solid var(--light-gray); overflow-wrap:anywhere; }
+.source-entry h4 { display:inline; margin:0 8px 0 0; color:var(--on-white-display); font-size:16px; }
+.source-entry__status { display:inline; color:var(--on-white-muted); font-size:12px; }
+.source-entry__status--review { color:var(--on-white-body); font-weight:700; }
+.source-entry__value { margin:10px 0; }
+.source-entry__value span { font-weight:700; }
+.source-panel__evidence { padding-left:12px; border-left:3px solid var(--accent); }
+.source-panel__ref { margin:0 0 6px; font-weight:700; }
+.source-panel__locator, .source-panel__trail { margin:8px 0; color:var(--on-white-muted); font-size:12px; }
+.source-panel__evidence blockquote { margin:10px 0; font-size:15px; line-height:1.45; }
+.source-panel__note { margin:10px 0 0; line-height:1.45; }
 @media (max-width:760px) {
-  .source-rail { position:static; display:grid; gap:8px; width:auto; height:auto; margin:0 16px 28px; }
-  .citations-ready .source-note { position:static; }
-  .source-note > summary { justify-content:flex-start; gap:10px; }
-  .source-note__plus { margin-left:auto; }
-  .source-panel { position:static; width:100%; padding:18px; box-shadow:none; }
+  .source-disclosure { position:static; width:auto; margin:0 16px 28px; }
+  .source-disclosure > summary { margin-left:0; }
+  .source-panel { max-height:none; box-shadow:none; }
 }
-@media (prefers-reduced-motion:reduce) { .source-note__plus { transition:none; } }
 @media print {
-  .source-rail { position:static; width:auto; height:auto; margin:16px; }
-  .source-note, .citations-ready .source-note { position:static; }
-  .source-note > summary, .source-panel__close { display:none; }
-  .source-panel { position:static; width:auto; box-shadow:none; break-inside:avoid; }
+  .source-disclosure { position:static; width:auto; margin:16px; }
+  .source-disclosure > summary { display:none; }
+  .source-panel { display:block; max-height:none; overflow:visible; box-shadow:none; }
+  .source-entry { break-inside:avoid; }
 }
 
   </style>
@@ -2712,7 +2702,7 @@ html:not(.citations-ready) .source-panel { position:static; width:auto; box-shad
       <script class="rail__entries" type="application/json">[{"id":"s1-timeline-roadmap","label":"Timeline / roadmap"}]</script>
     </nav>
     <main id="main">
-<div class="citation-region" data-citation-section="s1-timeline-roadmap"><div class="citation-content">
+<div class="citation-region"><div class="citation-content">
   <section class="section surface-white" id="s1-timeline-roadmap" aria-labelledby="s1-timeline-roadmap-title" data-preview-module="timeline-roadmap">
     <div class="section__inner"><p class="eyebrow">Module: Timeline / roadmap</p>
       <div class="section__head">
@@ -2728,7 +2718,7 @@ html:not(.citations-ready) .source-panel { position:static; width:auto; box-shad
       <div class="execution-map__grid">
         <div class="execution-map__periods" aria-hidden="true"><span>01<small>Sep 14</small></span><span>02<small>Oct 15</small></span><span>03<small>Nov 15</small></span><span>04<small>Dec 16</small></span><span>05<small>Jan 16</small></span></div>
         <ol class="execution-map__rows">
-        <li class="execution-map__row" data-motion-item data-citation-anchor="item-1">
+        <li class="execution-map__row" data-motion-item>
           <div class="execution-map__label">
             <span>01</span>
             <strong>Align</strong>
@@ -2772,7 +2762,7 @@ html:not(.citations-ready) .source-panel { position:static; width:auto; box-shad
             </div></div>
           </div>
         </li>
-        <li class="execution-map__row" data-motion-item data-citation-anchor="item-2">
+        <li class="execution-map__row" data-motion-item>
           <div class="execution-map__label">
             <span>02</span>
             <strong>Design</strong>
@@ -2816,7 +2806,7 @@ html:not(.citations-ready) .source-panel { position:static; width:auto; box-shad
             </div></div>
           </div>
         </li>
-        <li class="execution-map__row" data-motion-item data-citation-anchor="item-3">
+        <li class="execution-map__row" data-motion-item>
           <div class="execution-map__label">
             <span>03</span>
             <strong>Build</strong>
@@ -2860,7 +2850,7 @@ html:not(.citations-ready) .source-panel { position:static; width:auto; box-shad
             </div></div>
           </div>
         </li>
-        <li class="execution-map__row" data-motion-item data-citation-anchor="item-4">
+        <li class="execution-map__row" data-motion-item>
           <div class="execution-map__label">
             <span>04</span>
             <strong>Validate</strong>
@@ -2908,7 +2898,7 @@ html:not(.citations-ready) .source-panel { position:static; width:auto; box-shad
             </div></div>
           </div>
         </li>
-        <li class="execution-map__row" data-motion-item data-citation-anchor="item-5">
+        <li class="execution-map__row" data-motion-item>
           <div class="execution-map__label">
             <span>05</span>
             <strong>Transition</strong>
@@ -2965,23 +2955,15 @@ html:not(.citations-ready) .source-panel { position:static; width:auto; box-shad
       </section>
     </div>
     </div>
-  </section></div><aside class="source-rail" aria-label="Sources for Timeline / roadmap"><details class="source-note" data-citation-target="item-1">
-      <summary aria-label="Sources for Align"><span>01</span><span>Sources</span><span class="source-note__plus" aria-hidden="true">+</span></summary>
-      <div class="source-panel" role="region" aria-label="Evidence for Align">
-        <header class="source-panel__head"><div><p class="source-panel__caption">Timeline / roadmap</p><h3>Align</h3></div><button class="source-panel__close" type="button" aria-label="Close sources for Align">×</button></header>
-        <p class="source-panel__status">Source recorded</p>
-        <div class="source-panel__value"><p class="source-panel__caption">Displayed value</p><p>2026-09-14 to 2026-09-25</p></div>
-        <div class="source-panel__evidence"><p class="source-panel__caption">Source reference</p><p class="source-panel__ref">Fictional fixture · delivery-schedule.md · REQ-001</p><blockquote>Align is scheduled from 2026-09-14 to 2026-09-25. Establish shared outcomes, evidence, and working agreements.</blockquote></div><p class="source-panel__note">Illustrative source text for UI review.</p>
-      </div>
-    </details><details class="source-note" data-citation-target="item-2">
-      <summary aria-label="Sources for Design"><span>02</span><span>Sources</span><span class="source-note__plus" aria-hidden="true">+</span></summary>
-      <div class="source-panel" role="region" aria-label="Evidence for Design">
-        <header class="source-panel__head"><div><p class="source-panel__caption">Timeline / roadmap</p><h3>Design</h3></div><button class="source-panel__close" type="button" aria-label="Close sources for Design">×</button></header>
-        <p class="source-panel__status">Source recorded</p>
-        <div class="source-panel__value"><p class="source-panel__caption">Displayed value</p><p>2026-09-21 to 2026-10-23</p></div>
-        <div class="source-panel__evidence"><p class="source-panel__caption">Source reference</p><p class="source-panel__ref">Fictional fixture · delivery-schedule.md · REQ-002</p><blockquote>Design is scheduled from 2026-09-21 to 2026-10-23. Turn evidence into experience and solution decisions.</blockquote></div><p class="source-panel__note">Illustrative source text for UI review.</p>
-      </div>
-    </details></aside></div>
+  </section></div><details class="source-disclosure"><summary>Sources <span aria-hidden="true">(2)</span></summary><div class="source-panel"><h3>Sources for Timeline / roadmap</h3><ol><li class="source-entry">
+      <h4>Align</h4><p class="source-entry__status">Source</p>
+      <p class="source-entry__value"><span>Displayed value:</span> 2026-09-14 to 2026-09-25</p>
+      <div class="source-panel__evidence"><p class="source-panel__ref">delivery-schedule.md</p><p class="source-panel__locator">REQ-001</p><blockquote>Align is scheduled from 2026-09-14 to 2026-09-25. Establish shared outcomes, evidence, and working agreements.</blockquote><p class="source-panel__trail">Review record: Fictional fixture · delivery-schedule.md · REQ-001</p></div><p class="source-panel__note">Illustrative source text for UI review.</p>
+    </li><li class="source-entry">
+      <h4>Design</h4><p class="source-entry__status">Source</p>
+      <p class="source-entry__value"><span>Displayed value:</span> 2026-09-21 to 2026-10-23</p>
+      <div class="source-panel__evidence"><p class="source-panel__ref">delivery-schedule.md</p><p class="source-panel__locator">REQ-002</p><blockquote>Design is scheduled from 2026-09-21 to 2026-10-23. Turn evidence into experience and solution decisions.</blockquote><p class="source-panel__trail">Review record: Fictional fixture · delivery-schedule.md · REQ-002</p></div><p class="source-panel__note">Illustrative source text for UI review.</p>
+    </li></ol></div></details></div>
     </main>
 
     <footer class="footer">
@@ -3409,69 +3391,15 @@ for (const root of document.querySelectorAll('.reference-kickoff')) {
   </script>
   <script>
 (() => {
-  const regions = [...document.querySelectorAll('.citation-region')];
-  if (!regions.length) return;
-  const mobile = () => matchMedia('(max-width:760px)').matches;
-  let frame;
-
-  function layout() {
-    cancelAnimationFrame(frame);
-    frame = requestAnimationFrame(() => {
-      if (mobile()) return;
-      for (const region of regions) {
-        const top = region.getBoundingClientRect().top;
-        let previousBottom = 0;
-        for (const note of region.querySelectorAll('.source-note')) {
-          const target = note.dataset.citationTarget;
-          const anchor = target === 'section' ? region.querySelector('.section') : region.querySelector(`[data-citation-anchor="${target}"]`);
-          if (!anchor) continue;
-          const y = Math.max(24, anchor.getBoundingClientRect().top - top, previousBottom + 10);
-          note.style.setProperty('--source-top', `${Math.round(y)}px`);
-          previousBottom = y + note.querySelector('summary').offsetHeight;
-        }
-      }
-    });
-  }
-
-  function highlight(region) {
-    region.querySelectorAll('.citation-highlight').forEach(el => el.classList.remove('citation-highlight'));
-    for (const note of region.querySelectorAll('.source-note[open]')) {
-      const target = note.dataset.citationTarget;
-      const anchor = target === 'section' ? region.querySelector('.section') : region.querySelector(`[data-citation-anchor="${target}"]`);
-      anchor?.classList.add('citation-highlight');
-    }
-    region.classList.toggle('citation-region--open', Boolean(region.querySelector('.source-note[open]')));
-  }
-
-  for (const region of regions) {
-    for (const note of region.querySelectorAll('.source-note')) {
-      note.addEventListener('toggle', () => {
-        if (note.open) {
-          region.querySelectorAll('.source-note[open]').forEach(other => { if (other !== note) other.open = false; });
-        }
-        highlight(region);
-        layout();
-      });
-      note.querySelector('.source-panel__close').addEventListener('click', () => {
-        note.open = false;
-        note.querySelector('summary').focus();
-      });
-    }
-    new ResizeObserver(layout).observe(region.querySelector('.citation-content'));
-  }
+  // Native details provides keyboard and no-JavaScript access. Escape closes
+  // the active module's source list and restores focus to its control.
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
-    const note = document.activeElement.closest('.source-note');
-    if (note?.open) {
-      note.open = false;
-      note.querySelector('summary').focus();
-    }
+    const disclosure = document.activeElement?.closest('.source-disclosure');
+    if (!disclosure?.open) return;
+    disclosure.open = false;
+    disclosure.querySelector('summary').focus();
   });
-  document.documentElement.classList.add('citations-ready');
-  window.addEventListener('resize', layout);
-  document.fonts.ready.then(layout);
-  window.addEventListener('load', layout);
-  layout();
 })();
 
   </script>

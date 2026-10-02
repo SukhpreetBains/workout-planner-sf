@@ -37,6 +37,9 @@ const CITATIONS = { type: 'list', min: 1, of: {
   value: { type: 'string', required: true },
   status: { type: 'string', required: true, enum: ['source', 'user', 'changed', 'missing'] },
   source_ref: { type: 'string' },
+  source_document: { type: 'string' },
+  source_locator: { type: 'string' },
+  source_url: { type: 'string' },
   excerpt: { type: 'string' },
   note: { type: 'string' },
 } };
@@ -389,11 +392,14 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
           targets.add(citation.target);
           if (citation.status === 'source' || citation.status === 'changed') {
             if (!citation.source_ref) problems.push(`${at}: source and changed citations need source_ref`);
+            if (!citation.source_document) problems.push(`${at}: source and changed citations need source_document`);
+            if (!citation.source_locator && !citation.excerpt) problems.push(`${at}: source and changed citations need a source_locator or exact excerpt`);
             if (citation.status === 'changed' && !citation.note) problems.push(`${at}: changed citations need a note explaining the unreviewed edit`);
           } else if (citation.status === 'user' || citation.status === 'missing') {
             if (!citation.note) problems.push(`${at}: user and missing citations need a note`);
-            if (citation.source_ref || citation.excerpt) problems.push(`${at}: user and missing citations cannot claim source evidence`);
+            if (citation.source_ref || citation.source_document || citation.source_locator || citation.source_url || citation.excerpt) problems.push(`${at}: user and missing citations cannot claim source evidence`);
           }
+          if (citation.source_url && !/^https?:\/\//i.test(citation.source_url)) problems.push(`${at}: source_url must be an HTTP(S) URL`);
           if (typeof citation.target === 'string' && citation.target !== 'section') {
             const items = section.items ?? section.phases ?? (section.layout === 'microsite' && section.module === 'objectives-and-success' ? Array(3) : section.layout === 'microsite' && section.module === 'immediate-next-steps' ? Array(4) : null);
             const index = Number(citation.target.slice(5));

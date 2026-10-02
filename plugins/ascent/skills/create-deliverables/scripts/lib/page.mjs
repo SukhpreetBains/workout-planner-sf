@@ -158,27 +158,26 @@ export function renderSection(section, index, ctx, renderer = null) {
   </section>`;
 }
 
-/** A source rail overlays the rendered section, so disclosures never resize it. */
+/** One disclosure per module keeps evidence available without marking up the content. */
 export function renderCitedSection(section, index, ctx, renderer = null) {
   const content = renderSection(section, index, ctx, renderer);
   if (!section.citations?.length) return content;
-  const notes = section.citations.map((citation, position) => {
+  const notes = section.citations.map((citation) => {
     const status = {
-      source: 'Source recorded', user: 'Direct user input',
+      source: 'Source', user: 'Direct user input',
       changed: 'Needs review after edit', missing: 'No recorded source',
     }[citation.status];
-    const evidence = citation.source_ref
-      ? `<div class="source-panel__evidence"><p class="source-panel__caption">Source reference</p><p class="source-panel__ref">${esc(citation.source_ref)}</p>${citation.excerpt ? `<blockquote>${esc(citation.excerpt)}</blockquote>` : ''}</div>`
+    const sourceLink = citation.source_url
+      ? `<a href="${esc(citation.source_url)}" target="_blank" rel="noopener noreferrer">Open original document</a>`
       : '';
-    return `<details class="source-note" data-citation-target="${esc(citation.target)}">
-      <summary aria-label="Sources for ${esc(citation.label)}"><span>${String(position + 1).padStart(2, '0')}</span><span>Sources</span><span class="source-note__plus" aria-hidden="true">+</span></summary>
-      <div class="source-panel" role="region" aria-label="Evidence for ${esc(citation.label)}">
-        <header class="source-panel__head"><div><p class="source-panel__caption">${esc(railLabel(section))}</p><h3>${esc(citation.label)}</h3></div><button class="source-panel__close" type="button" aria-label="Close sources for ${esc(citation.label)}">×</button></header>
-        <p class="source-panel__status${citation.status === 'changed' || citation.status === 'missing' ? ' source-panel__status--review' : ''}">${status}</p>
-        <div class="source-panel__value"><p class="source-panel__caption">Displayed value</p><p>${esc(citation.value)}</p></div>
-        ${evidence}${citation.note ? `<p class="source-panel__note">${esc(citation.note)}</p>` : ''}
-      </div>
-    </details>`;
+    const evidence = citation.source_ref
+      ? `<div class="source-panel__evidence"><p class="source-panel__ref">${esc(citation.source_document)}</p>${sourceLink}<p class="source-panel__locator">${esc(citation.source_locator ?? citation.source_ref)}</p>${citation.excerpt ? `<blockquote>${esc(citation.excerpt)}</blockquote>` : ''}<p class="source-panel__trail">Review record: ${esc(citation.source_ref)}</p></div>`
+      : '';
+    return `<li class="source-entry">
+      <h4>${esc(citation.label)}</h4><p class="source-entry__status${citation.status === 'changed' || citation.status === 'missing' ? ' source-entry__status--review' : ''}">${status}</p>
+      <p class="source-entry__value"><span>Displayed value:</span> ${esc(citation.value)}</p>
+      ${evidence}${citation.note ? `<p class="source-panel__note">${esc(citation.note)}</p>` : ''}
+    </li>`;
   }).join('');
-  return `<div class="citation-region" data-citation-section="${esc(sectionId(section, index))}"><div class="citation-content">${content}</div><aside class="source-rail" aria-label="Sources for ${esc(railLabel(section))}">${notes}</aside></div>`;
+  return `<div class="citation-region"><div class="citation-content">${content}</div><details class="source-disclosure"><summary>Sources <span aria-hidden="true">(${section.citations.length})</span></summary><div class="source-panel"><h3>Sources for ${esc(railLabel(section))}</h3><ol>${notes}</ol></div></details></div>`;
 }

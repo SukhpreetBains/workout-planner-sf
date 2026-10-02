@@ -19,18 +19,21 @@ const actions = content.sections.find(section => section.module === 'immediate-n
 objective.citations = [{
   target: 'item-1', label: 'Contact deflection', value: '30% reduction in avoidable contacts',
   status: 'source', source_ref: 'Fictional fixture · success-measures.md · OBJ-001',
+  source_document: 'success-measures.md', source_locator: 'OBJ-001',
   excerpt: 'Target a 30% reduction in avoidable contacts by resolving more issues in the digital journey before agent escalation.',
   note: 'Illustrative source text for UI review.',
 }];
 timeline.citations = timeline.phases.slice(0, 2).map((phase, index) => ({
   target: `item-${index + 1}`, label: phase.name, value: `${phase.start} to ${phase.end}`,
   status: 'source', source_ref: `Fictional fixture · delivery-schedule.md · REQ-00${index + 1}`,
+  source_document: 'delivery-schedule.md', source_locator: `REQ-00${index + 1}`,
   excerpt: `${phase.name} is scheduled from ${phase.start} to ${phase.end}. ${phase.summary}`,
   note: 'Illustrative source text for UI review.',
 }));
 actions.citations = [
   { target: 'item-3', label: 'Test-data pattern', value: 'Updated target date', status: 'changed',
     source_ref: 'Fictional fixture · kickoff-notes.md · REQ-007',
+    source_document: 'kickoff-notes.md', source_locator: 'REQ-007',
     excerpt: 'Jordan and Theo will resolve the test-data pattern by September 18.',
     note: 'The displayed date was edited after the source text was recorded. Confirm support before treating it as reviewed.' },
   { target: 'item-4', label: 'MVP boundary', value: 'Approval action', status: 'missing',
