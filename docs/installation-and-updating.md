@@ -27,11 +27,10 @@ change — starting a new task is not enough.
 This is confirmed against Codex's own source (`core-plugins/src/loader.rs`):
 the same automatic, launch-time refresh that applies to a local-source plugin
 also runs for a Git-sourced one, using a fresh clone each time rather than
-reading a local path. A manual install and an idempotent relaunch (no changes
-upstream, nothing reinstalled) are both verified directly; picking up a real
-upstream change through nothing but a plain relaunch — the scenario this is
-meant to replace manual updates for — is expected from the same code path but
-not yet separately confirmed end to end.
+reading a local path. Verified directly, end to end: a manual install, an
+idempotent relaunch (no changes upstream, nothing reinstalled), and picking up
+a real upstream version bump through nothing but a plain relaunch — no manual
+install command involved.
 
 ### Other hosts, and local development
 
