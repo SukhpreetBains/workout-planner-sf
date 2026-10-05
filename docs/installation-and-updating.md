@@ -1,56 +1,80 @@
 # Installing and updating Ascent
 
-Ascent is installed from a clean local checkout of the repository. Keep that checkout in your normal project `repos/` directory, not in an agent host's managed plugin, cache, or skills directory. Reuse an existing checkout instead of cloning another copy.
+How Ascent is installed depends on the agent host. Codex can install it directly from GitHub, with no local checkout and no further action to stay current. Claude Code, Copilot CLI, and Cursor still install from a clean local checkout of the repository — keep that checkout in your normal project `repos/` directory, not in an agent host's managed plugin, cache, or skills directory, and reuse an existing checkout instead of cloning another copy.
 
-## Get the repository
+## Install
+
+### Codex (recommended)
+
+```bash
+codex plugin marketplace add Slalom/ascent
+codex plugin add ascent@ascent
+```
+
+No local checkout is needed. Codex clones `plugins/ascent` from this repository on GitHub directly (a `git-subdir` marketplace source — see `.agents/plugins/marketplace.json`). Relaunch the Codex app after installation so the plugin skills are loaded.
+
+#### How Codex picks up changes
+
+For a Git-sourced plugin — the install above — Codex re-clones the source and
+compares its version every time the app launches, automatically, with nothing
+to run and nothing to configure. It does not look at file contents, only the
+`version` field in `plugins/ascent/.codex-plugin/plugin.json`, so a change
+reaches an installation only once it ships with a version bump (every change
+under `plugins/ascent/` must include one; `scripts/check_plugin_version_bump.py`
+enforces this on pull requests into `main`). Relaunch the app to pick up a
+change — starting a new task is not enough.
+
+This is confirmed against Codex's own source (`core-plugins/src/loader.rs`):
+the same automatic, launch-time refresh that applies to a local-source plugin
+also runs for a Git-sourced one, using a fresh clone each time rather than
+reading a local path. A manual install and an idempotent relaunch (no changes
+upstream, nothing reinstalled) are both verified directly; picking up a real
+upstream change through nothing but a plain relaunch — the scenario this is
+meant to replace manual updates for — is expected from the same code path but
+not yet separately confirmed end to end.
+
+### Other hosts, and local development
+
+Claude Code, Copilot CLI, and Cursor install from a checkout, and so does
+anyone editing the authoritative source. Get one first:
 
 ```bash
 gh repo clone Slalom/ascent
 cd ascent
 ```
 
-## Install
+Run the commands below for your agent host from the repository root.
 
-Run the commands for your agent host from the repository root.
+#### Codex, from a local checkout
 
-### Codex
+Register the local-source marketplace (`ascent-dev`, not the `ascent`
+marketplace real end users install from):
 
 ```bash
-codex plugin marketplace add .
-codex plugin add ascent@ascent
+codex plugin marketplace add ./.agents/plugins/marketplace.local.json
+codex plugin add ascent@ascent-dev
 ```
 
-If `codex plugin marketplace list` already includes `ascent`, skip the marketplace-add command. Relaunch the Codex app after installation so the plugin skills are loaded.
-
-#### How Codex picks up changes
-
-Codex keeps its own copy of the plugin. When the app launches, it compares
-the version in `plugins/ascent/.codex-plugin/plugin.json` with that copy and
-reinstalls only if the two differ. It does not look at file contents. So:
-
-- a change reaches an installation only when it comes with a new version;
-- an installation picks it up the next time the Codex app is relaunched —
-  starting a new task is not enough.
-
-While iterating on the local checkout, run:
+While iterating, run:
 
 ```bash
 python3 scripts/refresh_codex_plugin.py
 ```
 
 On a feature branch, or with uncommitted changes, this gives the plugin a
-new version, reinstalls `ascent@ascent` from the local marketplace, and
-reminds you to relaunch Codex. Commit the version change together with your
-plugin changes: that new version is what makes everyone else's installation
-pick them up.
+new version and reinstalls `ascent@ascent-dev` from the local marketplace,
+then reminds you to relaunch Codex. Commit the version change together with
+your plugin changes: that new version is what makes everyone else's
+installation — Git-sourced or local — pick them up.
 
-On a clean `main` checkout — how end users run Ascent — the same command
-only pulls the latest release and asks for a relaunch. It never leaves a
-local version edit behind, so it is safe for Codex to run when an end user
-asks it to "update Ascent". If an older version of the script already left
-such an edit, both this command and the background job restore it and carry on.
+On a clean `main` checkout the same command only pulls the latest release
+and asks for a relaunch, rather than bumping a version itself. It never
+leaves a local version edit behind, so it is safe to run when someone asks
+Codex to "update Ascent" on a local-source install. If an older version of
+the script already left such an edit, both this command and the background
+job restore it and carry on.
 
-### Claude Code
+#### Claude Code
 
 ```bash
 claude plugin marketplace add .
@@ -59,7 +83,7 @@ claude plugin install ascent@ascent
 
 If `claude plugin marketplace list` already includes `ascent`, skip the marketplace-add command. Start a new Claude Code session after installation.
 
-### GitHub Copilot CLI
+#### GitHub Copilot CLI
 
 ```bash
 copilot plugin marketplace add .
@@ -68,7 +92,7 @@ copilot plugin install ascent@ascent
 
 If `copilot plugin marketplace list` already includes `ascent`, skip the marketplace-add command. Start a new Copilot CLI session after installation.
 
-### Cursor
+#### Cursor
 
 For a personal setup, run the following command in Cursor and select Ascent:
 
@@ -80,7 +104,20 @@ For a team setup, import `https://github.com/Slalom/ascent` from **Dashboard > S
 
 ## Update
 
-### Automatically (Codex, recommended for business users)
+### Codex, Git-sourced install
+
+Nothing to do. Relaunch the Codex app; it re-clones `plugins/ascent` and
+compares versions on its own, every launch. See
+[How Codex picks up changes](#how-codex-picks-up-changes) above.
+
+### Codex, local-source install
+
+A local-source install — a developer's own checkout, or an end-user install
+from before the Git-sourced marketplace existed — does not get Codex's
+automatic Git refresh, since there is no Git source to compare. Use one of
+the paths below instead.
+
+#### Automatically, with the background job
 
 `initial-setup` offers to enable a daily background check the first time it
 runs on a machine. If accepted, it registers a per-user scheduled job (a
@@ -110,18 +147,18 @@ python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedul
 `--install --frequency {daily,weekly}` also changes an already-installed
 job's frequency in place — no need to uninstall first.
 
-This only covers Codex. Claude Code, Copilot CLI, and Cursor still need the
-manual steps below.
+This only covers a local-source Codex install. Claude Code, Copilot CLI,
+and Cursor still need the manual steps below.
 
-### Manually
+#### Manually
 
 Update the clean repository checkout, then load the update in your host:
 
 ```bash
 git pull --ff-only
 
-# Codex: relaunch the Codex app. Nothing else is needed when the pull
-# brought a new plugin version.
+# Codex, local-source install: relaunch the Codex app. Nothing else is
+# needed when the pull brought a new plugin version.
 
 # Claude Code
 claude plugin marketplace update ascent
