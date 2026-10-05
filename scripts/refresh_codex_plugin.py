@@ -21,7 +21,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PLUGIN = "ascent"
-DEFAULT_MARKETPLACE = REPO_ROOT / ".agents" / "plugins" / "marketplace.json"
+# marketplace.json (the canonical catalog) is git-subdir sourced for end users and is not
+# readable as a local path edit-and-reload loop. marketplace.local.json keeps a local-source
+# entry under a distinct marketplace name ("ascent-dev") for iterating on this checkout.
+DEFAULT_MARKETPLACE = REPO_ROOT / ".agents" / "plugins" / "marketplace.local.json"
 CODEX_VERSION = re.compile(r"^(?P<base>[^+]+)(?:\+codex\.[a-z0-9-]+)?$")
 
 
