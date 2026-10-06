@@ -116,6 +116,24 @@ from before the Git-sourced marketplace existed — does not get Codex's
 automatic Git refresh, since there is no Git source to compare. Use one of
 the paths below instead.
 
+#### Migrate to the Git-sourced install (recommended)
+
+An end-user install from before the Git-sourced marketplace existed can
+switch over directly, with no need to keep a local checkout updated ever
+again:
+
+```bash
+codex plugin remove ascent@ascent
+codex plugin marketplace remove ascent
+codex plugin marketplace add Slalom/ascent
+codex plugin add ascent@ascent
+```
+
+Relaunch the Codex app afterward. The local checkout is no longer needed
+once this is done — delete it if nothing else uses it. This only applies to
+Codex; Claude Code, Copilot CLI, and Cursor still install from a checkout
+(see [Install](#install) above).
+
 #### Automatically, with the background job
 
 `initial-setup` offers to enable a daily background check the first time it
