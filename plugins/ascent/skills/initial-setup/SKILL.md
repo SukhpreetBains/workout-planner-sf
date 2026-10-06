@@ -64,6 +64,12 @@ python3 scripts/manage-plugin-update-schedule.py --status
 If it reports `installed`, this Opportunity's setup is not the reason to
 revisit it — skip this section entirely and do not ask.
 
+If it reports `not applicable`, this is a Git-sourced Codex install: Codex
+already re-clones and version-checks `ascent` on every relaunch, with
+nothing to schedule. Tell the user once, plainly: Ascent updates itself:
+relaunching Codex is what loads a new version, whenever one is published.
+Skip the question below — there is no job to offer.
+
 Otherwise ask once, in the same closed-question style as the storage and
 messaging questions above: **"Would you like Ascent to check for plugin
 updates once a day in the background and install them automatically?"**,
