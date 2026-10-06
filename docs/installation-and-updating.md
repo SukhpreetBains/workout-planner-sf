@@ -62,9 +62,13 @@ python3 scripts/refresh_codex_plugin.py
 
 On a feature branch, or with uncommitted changes, this gives the plugin a
 new version and reinstalls `ascent@ascent-dev` from the local marketplace,
-then reminds you to relaunch Codex. Commit the version change together with
-your plugin changes: that new version is what makes everyone else's
-installation — Git-sourced or local — pick them up.
+then reminds you to relaunch Codex. It also removes the real `ascent@ascent`
+plugin if it is installed (quietly, so it is not an error when it already
+is not): Codex loads every enabled plugin, and the real plugin and the
+sandbox copy expose identically-named skills, so having both active at once
+means whichever one gets used is not something to rely on. Commit the
+version change together with your plugin changes: that new version is what
+makes everyone else's installation — Git-sourced or local — pick them up.
 
 On a clean `main` checkout the same command only pulls the latest release
 and asks for a relaunch, rather than bumping a version itself. It never
@@ -72,6 +76,15 @@ leaves a local version edit behind, so it is safe to run when someone asks
 Codex to "update Ascent" on a local-source install. If an older version of
 the script already left such an edit, both this command and the background
 job restore it and carry on.
+
+Once you are done developing, switch back:
+
+```bash
+python3 scripts/refresh_codex_plugin.py --release
+```
+
+This removes `ascent@ascent-dev` and reinstalls the real `ascent@ascent`
+from its own registered marketplace.
 
 #### Claude Code
 
