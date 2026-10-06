@@ -70,21 +70,22 @@ means whichever one gets used is not something to rely on. Commit the
 version change together with your plugin changes: that new version is what
 makes everyone else's installation — Git-sourced or local — pick them up.
 
-On a clean `main` checkout the same command only pulls the latest release
-and asks for a relaunch, rather than bumping a version itself. It never
-leaves a local version edit behind, so it is safe to run when someone asks
-Codex to "update Ascent" on a local-source install. If an older version of
-the script already left such an edit, both this command and the background
-job restore it and carry on.
+Once your change is committed and merged, bring your checkout back to a
+clean `main` (for example `git checkout main && git pull --ff-only`) and run
+the same command again. On a clean `main` checkout there is no pending edit
+to preview, so it pulls the latest release and switches back on its own:
+removes `ascent@ascent-dev`, reinstalls the real `ascent@ascent` from its
+own registered marketplace, and asks for a relaunch. Nothing else to run or
+remember. It never leaves a local version edit behind either, so it is also
+safe to run when someone asks Codex to "update Ascent" on a local-source
+install; if an older version of the script already left such an edit, both
+this command and the background job restore it and carry on.
 
-Once you are done developing, switch back:
+To switch back immediately instead, with edits still pending:
 
 ```bash
 python3 scripts/refresh_codex_plugin.py --release
 ```
-
-This removes `ascent@ascent-dev` and reinstalls the real `ascent@ascent`
-from its own registered marketplace.
 
 #### Claude Code
 

@@ -1,4 +1,4 @@
-"""The refresh script only pulls on an end user's clean main checkout."""
+"""The refresh script pulls and auto-switches back to the real plugin on a clean main checkout."""
 
 from __future__ import annotations
 
@@ -75,21 +75,27 @@ class RefreshCodexPluginTest(unittest.TestCase):
     def fake_codex_env(self, bin_dir: Path) -> dict:
         return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"}
 
-    def test_clean_main_pulls_the_release_without_a_local_version(self):
+    def test_clean_main_pulls_the_release_and_auto_switches_back(self):
         self.write(str(MANIFEST), json.dumps({"version": "0.1.0+codex.local-2"}, indent=2) + "\n")
         self.publish("release 2")
-        out = self.refresh()
+        bin_dir, log_path = self.install_fake_codex()
+        out = self.refresh(env=self.fake_codex_env(bin_dir))
         self.assertIn("Quit and relaunch the Codex app", out)
+        self.assertIn("Switching back to the real plugin: ascent@ascent", out)
         self.assertEqual(self.version(), "0.1.0+codex.local-2")
         self.assertEqual(git(self.clone, "status", "--porcelain"), "")
-        self.assertIn("Already up to date.", self.refresh())
+        calls = log_path.read_text(encoding="utf-8").splitlines()
+        self.assertIn("plugin remove ascent@ascent-dev", calls)
+        self.assertIn("plugin add ascent@ascent", calls)
+        self.assertIn("Already up to date.", self.refresh(env=self.fake_codex_env(bin_dir)))
 
     def test_leftover_version_edit_on_main_is_restored_then_pulled(self):
         (self.clone / MANIFEST).write_text(
             json.dumps({"version": "0.1.0+codex.local-LOCAL"}, indent=2) + "\n", encoding="utf-8")
         self.write(str(MANIFEST), json.dumps({"version": "0.1.0+codex.local-2"}, indent=2) + "\n")
         self.publish("release 2")
-        out = self.refresh()
+        bin_dir, _ = self.install_fake_codex()
+        out = self.refresh(env=self.fake_codex_env(bin_dir))
         self.assertIn("Restoring a leftover local version edit", out)
         self.assertIn("Quit and relaunch the Codex app", out)
         self.assertEqual(self.version(), "0.1.0+codex.local-2")

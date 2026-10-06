@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Refresh the local Ascent plugin for Codex.
+"""Preview an in-progress Ascent change in a Codex sandbox install.
 
-On a clean `main` checkout (how end users run Ascent) this only pulls the
-latest release; relaunching Codex then installs it. On any other branch, or
-with uncommitted changes (a developer iterating), it gives the plugin a new
-version and reinstalls it so the local edits load; commit that version bump
-with the change.
+This script only ever operates on the sandbox (ascent@ascent-dev); it is a
+developer tool, not something an end user runs. On a feature branch, or with
+uncommitted changes, it gives the plugin a new version and reinstalls the
+sandbox copy so the edit loads, then removes the real ascent@ascent plugin
+if it is installed: Codex loads every enabled plugin, and two plugins with
+the same skill names loaded together is confusing with no benefit, so only
+one is ever active at a time. Commit that version bump with the change.
 
-Previewing an edit also removes the real ascent@ascent plugin if it is
-installed, so only the sandbox copy is ever active at once: Codex loads
-every enabled plugin, and two plugins with the same skill names loaded
-together is confusing with no benefit. Run with --release to switch back,
-removing the sandbox copy and reinstalling the real plugin from its
-registered marketplace.
+On a clean `main` checkout, there is no pending edit to preview, so it pulls
+the latest release and switches back to the real plugin automatically:
+removes the sandbox copy, reinstalls the real one. Pass --release to switch
+back immediately instead, even with edits still pending.
 """
 
 from __future__ import annotations
@@ -169,6 +169,16 @@ def pull_latest_release(plugin_root: Path, dry_run: bool) -> int:
     return 0
 
 
+def switch_to_real_plugin(sandbox_ref: str, real_ref: str, dry_run: bool) -> None:
+    print(f"Switching back to the real plugin: {real_ref}")
+    run_codex_remove(sandbox_ref, dry_run, best_effort=True)
+    run_codex_install(real_ref, dry_run)
+    if dry_run:
+        print("Dry run complete. Nothing was changed.")
+    else:
+        print("Restart the Codex app to load the real plugin.")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plugin", default=DEFAULT_PLUGIN, help="Marketplace plugin name")
@@ -196,13 +206,7 @@ def main() -> int:
     real_ref = f"{args.plugin}@{REAL_MARKETPLACE_NAME}"
 
     if args.release:
-        print(f"Switching back to the real plugin: {real_ref}")
-        run_codex_remove(sandbox_ref, args.dry_run, best_effort=True)
-        run_codex_install(real_ref, args.dry_run)
-        if args.dry_run:
-            print("Dry run complete. Nothing was changed.")
-        else:
-            print("Restart the Codex app to load the real plugin.")
+        switch_to_real_plugin(sandbox_ref, real_ref, args.dry_run)
         return 0
 
     entry = find_marketplace_entry(marketplace, args.plugin)
@@ -218,7 +222,13 @@ def main() -> int:
             return pull_latest_release(plugin_root, dry_run=True)
         git(plugin_root, "checkout", "--", str(plugin_root / ".codex-plugin" / "plugin.json"))
     if is_release_checkout(plugin_root):
-        return pull_latest_release(plugin_root, args.dry_run)
+        pull_latest_release(plugin_root, args.dry_run)
+        # A clean main checkout, in this script's sandbox-only context, means
+        # there is no pending edit to preview: switch back automatically
+        # instead of leaving the sandbox copy active with nothing to show for it.
+        if marketplace_name != REAL_MARKETPLACE_NAME:
+            switch_to_real_plugin(sandbox_ref, real_ref, args.dry_run)
+        return 0
     version = update_cachebuster(plugin_root, args.dry_run)
     print(f"Codex manifest version: {version}")
     run_codex_install(sandbox_ref, args.dry_run)
