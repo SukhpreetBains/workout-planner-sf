@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-"""Refresh the local Ascent plugin for Codex.
+"""Preview an in-progress Ascent change in a Codex sandbox install.
 
-On a clean `main` checkout (how end users run Ascent) this only pulls the
-latest release; relaunching Codex then installs it. On any other branch, or
-with uncommitted changes (a developer iterating), it gives the plugin a new
-version and reinstalls it so the local edits load; commit that version bump
-with the change.
+This script only ever operates on the sandbox (ascent@ascent-dev); it is a
+developer tool, not something an end user runs. On a feature branch, or with
+uncommitted changes, it gives the plugin a new version and reinstalls the
+sandbox copy so the edit loads, then removes the real ascent@ascent plugin
+if it is installed: Codex loads every enabled plugin, and two plugins with
+the same skill names loaded together is confusing with no benefit, so only
+one is ever active at a time. Commit that version bump with the change.
+
+On a clean `main` checkout, there is no pending edit to preview, so it pulls
+the latest release and switches back to the real plugin automatically:
+removes the sandbox copy, reinstalls the real one. Pass --release to switch
+back immediately instead, even with edits still pending.
 """
 
 from __future__ import annotations
@@ -25,6 +32,8 @@ DEFAULT_PLUGIN = "ascent"
 # readable as a local path edit-and-reload loop. marketplace.local.json keeps a local-source
 # entry under a distinct marketplace name ("ascent-dev") for iterating on this checkout.
 DEFAULT_MARKETPLACE = REPO_ROOT / ".agents" / "plugins" / "marketplace.local.json"
+# The marketplace name every real install (end users, and this repo's own real install) uses.
+REAL_MARKETPLACE_NAME = "ascent"
 CODEX_VERSION = re.compile(r"^(?P<base>[^+]+)(?:\+codex\.[a-z0-9-]+)?$")
 
 
@@ -93,6 +102,25 @@ def run_codex_install(plugin_ref: str, dry_run: bool) -> None:
         raise SystemExit(exc.returncode) from exc
 
 
+def run_codex_remove(plugin_ref: str, dry_run: bool, *, best_effort: bool = False) -> None:
+    command = ["codex", "plugin", "remove", plugin_ref]
+    print("+ " + " ".join(command))
+    if dry_run:
+        return
+    try:
+        subprocess.run(command, check=True)
+    except FileNotFoundError:
+        if best_effort:
+            print("codex CLI was not found on PATH; skipping.")
+            return
+        raise SystemExit("codex CLI was not found on PATH") from None
+    except subprocess.CalledProcessError as exc:
+        if best_effort:
+            print(f"Nothing to remove for {plugin_ref} (not installed, or already removed).")
+            return
+        raise SystemExit(exc.returncode) from exc
+
+
 def git(cwd: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=False)
 
@@ -141,6 +169,16 @@ def pull_latest_release(plugin_root: Path, dry_run: bool) -> int:
     return 0
 
 
+def switch_to_real_plugin(sandbox_ref: str, real_ref: str, dry_run: bool) -> None:
+    print(f"Switching back to the real plugin: {real_ref}")
+    run_codex_remove(sandbox_ref, dry_run, best_effort=True)
+    run_codex_install(real_ref, dry_run)
+    if dry_run:
+        print("Dry run complete. Nothing was changed.")
+    else:
+        print("Restart the Codex app to load the real plugin.")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plugin", default=DEFAULT_PLUGIN, help="Marketplace plugin name")
@@ -148,7 +186,12 @@ def main() -> int:
         "--marketplace",
         type=Path,
         default=DEFAULT_MARKETPLACE,
-        help="Path to the Codex marketplace.json file",
+        help="Path to the Codex marketplace.json file for the sandbox install",
+    )
+    parser.add_argument(
+        "--release",
+        action="store_true",
+        help="Switch back to the real plugin, removing the sandbox install",
     )
     parser.add_argument("--dry-run", action="store_true", help="Show actions without changing files")
     args = parser.parse_args()
@@ -159,12 +202,18 @@ def main() -> int:
     if not marketplace_name:
         raise SystemExit(f"{marketplace_path} is missing marketplace name")
 
+    sandbox_ref = f"{args.plugin}@{marketplace_name}"
+    real_ref = f"{args.plugin}@{REAL_MARKETPLACE_NAME}"
+
+    if args.release:
+        switch_to_real_plugin(sandbox_ref, real_ref, args.dry_run)
+        return 0
+
     entry = find_marketplace_entry(marketplace, args.plugin)
     plugin_root = resolve_plugin_root(marketplace_path, entry)
     if not plugin_root.is_dir():
         raise SystemExit(f"plugin source folder does not exist: {plugin_root}")
 
-    plugin_ref = f"{args.plugin}@{marketplace_name}"
     print(f"Marketplace: {marketplace_name} ({marketplace_path})")
     print(f"Plugin source: {plugin_root}")
     if on_main(plugin_root) and only_version_edited(plugin_root):
@@ -173,10 +222,18 @@ def main() -> int:
             return pull_latest_release(plugin_root, dry_run=True)
         git(plugin_root, "checkout", "--", str(plugin_root / ".codex-plugin" / "plugin.json"))
     if is_release_checkout(plugin_root):
-        return pull_latest_release(plugin_root, args.dry_run)
+        pull_latest_release(plugin_root, args.dry_run)
+        # A clean main checkout, in this script's sandbox-only context, means
+        # there is no pending edit to preview: switch back automatically
+        # instead of leaving the sandbox copy active with nothing to show for it.
+        if marketplace_name != REAL_MARKETPLACE_NAME:
+            switch_to_real_plugin(sandbox_ref, real_ref, args.dry_run)
+        return 0
     version = update_cachebuster(plugin_root, args.dry_run)
     print(f"Codex manifest version: {version}")
-    run_codex_install(plugin_ref, args.dry_run)
+    run_codex_install(sandbox_ref, args.dry_run)
+    if marketplace_name != REAL_MARKETPLACE_NAME:
+        run_codex_remove(real_ref, args.dry_run, best_effort=True)
     if args.dry_run:
         print("Dry run complete. No files were changed and the plugin was not reinstalled.")
     else:

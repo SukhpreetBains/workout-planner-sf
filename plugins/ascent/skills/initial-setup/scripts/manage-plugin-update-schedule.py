@@ -62,6 +62,18 @@ def resolve_source_root() -> Path | None:
     return root if (root / ".git").is_dir() else None
 
 
+def is_git_sourced_install() -> bool:
+    """True when this install's plugin content comes from Codex's own
+    Git-subdir marketplace refresh rather than a local checkout this job
+    could pull. Checked by walking up from this script's own location,
+    since that is exactly where Codex loaded the running plugin from: a
+    Git-subdir clone (codex-rs/core-plugins/src/loader.rs) has no `.git` of
+    its own anywhere above it, while a local-source install's `__file__`
+    sits inside the registered checkout.
+    """
+    return not any((parent / ".git").is_dir() for parent in Path(__file__).resolve().parents)
+
+
 def check_script_path(root: Path) -> Path:
     return root / "plugins" / "ascent" / "skills" / "initial-setup" / "scripts" / "check-for-plugin-update.py"
 
@@ -320,7 +332,12 @@ def main() -> int:
         return 0
 
     if not args.install:
-        if status_fn():
+        if is_git_sourced_install():
+            print(
+                "not applicable (Git-sourced install; Codex refreshes this plugin "
+                "automatically on relaunch, no job needed)"
+            )
+        elif status_fn():
             current = frequency_fn()
             print(f"installed ({current})" if current else "installed")
         else:
@@ -334,6 +351,14 @@ def main() -> int:
         if current == requested:
             print(f"Plugin-update check is already installed ({requested}); nothing to do.")
             return 0
+
+    if is_git_sourced_install():
+        print(
+            "This is a Git-sourced install: Codex already refreshes the plugin "
+            "automatically on relaunch, so there is nothing for this job to do.",
+            file=sys.stderr,
+        )
+        return 1
 
     root = resolve_source_root()
     if root is None:

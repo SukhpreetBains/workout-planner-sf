@@ -11,7 +11,7 @@ See [Installing and updating Ascent](docs/installation-and-updating.md) to add t
 Copy and paste this prompt into Codex, Claude Code, Cursor, or GitHub Copilot CLI:
 
 ```text
-Install the Ascent plugin from https://github.com/Slalom/ascent for the agent host I am currently using. Reuse an existing clean local checkout if one is available. Otherwise, clone the repository into my normal project repos directory, not into an agent-managed plugin, cache, or skills directory. Follow docs/installation-and-updating.md from the checkout for the host-specific installation steps. Verify that the Ascent marketplace and plugin are installed, then tell me whether I need to start a new task or session so the skills load. Preserve unrelated files and existing work.
+Install the Ascent plugin from https://github.com/Slalom/ascent for the agent host I am currently using. If the host is Codex, install it directly from GitHub with no local checkout: see docs/installation-and-updating.md for the exact commands. For any other host, reuse an existing clean local checkout if one is available; otherwise clone the repository into my normal project repos directory, not into an agent-managed plugin, cache, or skills directory, then follow docs/installation-and-updating.md from that checkout for the host-specific installation steps. Verify that the Ascent marketplace and plugin are installed, then tell me whether I need to start a new task or session so the skills load. Preserve unrelated files and existing work.
 ```
 
 See the plugin-local [Ascent Workflow Overview](plugins/ascent/README.md) for the current setup handoff, knowledge lifecycle, and executable workflow boundaries. That overview is the shared workflow source for installed agents and repository readers.
