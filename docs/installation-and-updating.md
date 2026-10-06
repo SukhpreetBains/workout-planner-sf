@@ -183,3 +183,47 @@ copilot plugin update ascent
 ```
 
 For the other hosts, start a new task or session after updating when the host does not reload plugin contents automatically. In Cursor, refresh the imported marketplace and update Ascent from the Plugins panel.
+
+## The full picture
+
+Everything above, end to end: an edit in your own sandbox, through commit
+and merge, to how it reaches every real user automatically once Codex is
+Git-sourced.
+
+```mermaid
+flowchart TD
+    subgraph DEV["Your own sandbox, only visible to you, never seen by anyone else"]
+        A1["You edit something in the plugin,<br/> &nbsp;a skill or any other plugin file"] --> A2{"Want to preview it<br/> &nbsp;in your own Codex first?"}
+        A2 -->|"Yes"| A3["You, or your AI agent, run:<br/> &nbsp;scripts/refresh_codex_plugin.py"]
+        A3 --> A4["It gives your sandbox copy a throwaway<br/> &nbsp;test version number, reinstalls it,<br/> &nbsp;and removes the real Ascent plugin<br/> &nbsp;if it is currently installed"]
+        A4 --> A5["Why remove the real one:<br/> &nbsp;Codex loads every enabled plugin, and<br/> &nbsp;both expose identically-named skills,<br/> &nbsp;so only one is ever active at a time"]
+        A5 --> A6["You relaunch Codex<br/> &nbsp;to see your own edit"]
+        A6 -.->|"keep tweaking"| A1
+        A2 -->|"Looks good, ready to ship"| B1
+    end
+
+    A4 -.->|"when ready, commit that<br/> &nbsp;version-number file too"| B1["Commit your plugin update<br/> &nbsp;plus a real version number"]
+    B1 --> B2["Open a Pull Request"]
+    B2 --> B3{"Automated checks:<br/> &nbsp;is everything valid, and<br/> &nbsp;did the version number change?"}
+    B3 -->|"No, fix it and try again"| B1
+    B3 -->|"Yes"| B4["Merge to main on GitHub"]
+
+    B4 --> D1["Bring your own checkout back to<br/> &nbsp;a clean main, for example git pull"]
+    D1 --> D2["Run scripts/refresh_codex_plugin.py<br/> &nbsp;again, same as before"]
+    D2 --> D3["Clean main, nothing left to preview:<br/> &nbsp;switches back automatically.<br/> &nbsp;Removes the sandbox copy,<br/> &nbsp;reinstalls the real plugin.<br/> &nbsp;No flag to remember"]
+    ESC["Anytime, edits still pending:<br/> &nbsp;run with --release instead<br/> &nbsp;to switch back immediately"] -.-> D3
+
+    B4 --> C0["main now has your update,<br/> &nbsp;under a new version number"]
+
+    subgraph ENDUSER["Every real user's computer, next time they open their agent host"]
+        C0 --> C1{"Which agent host is this?"}
+        C1 -->|"Codex"| C2["Codex quietly checks its<br/> &nbsp;plugins in the background on launch"]
+        C1 -->|"Claude Code, Cursor,<br/> &nbsp;or Copilot CLI"| C9["Manual install or update today,<br/> &nbsp;see the docs for host-specific steps"]
+        C2 --> C3["Codex downloads just the plugin's folder<br/> &nbsp;from GitHub, a quick partial download,<br/> &nbsp;not a full clone"]
+        C3 --> C4["Codex reads the version number<br/> &nbsp;in that downloaded copy"]
+        C4 --> C5{"Is that the same version<br/> &nbsp;Codex already has installed?"}
+        C5 -->|"Yes, same version"| C6["Nothing to do,<br/> &nbsp;already current"]
+        C5 -->|"No, it's newer"| C7["Codex saves the new version in its own<br/> &nbsp;storage and switches this install over to it"]
+        C7 --> C8["Your update is now live<br/> &nbsp;for this user, from this relaunch on"]
+    end
+```
