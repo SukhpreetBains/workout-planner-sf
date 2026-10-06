@@ -2,7 +2,7 @@
 
 The shared `create-deliverables` builder now uses one Sources disclosure per cited module. Use `node docs/mockups/kickoff-source-panels/implementation-preview.mjs` for the current implementation, the [citation contract](../../../plugins/ascent/skills/create-deliverables/references/citations.md) for authoring, and the [real-scenario checklist](real-scenario-checklist.md) when source material is available. The original two-mode study below remains a comparison artifact.
 
-Current implementation captures: [desktop floating panel](../../screenshots/citations-ui/implementation-desktop.png) and [390px mobile disclosure](../../screenshots/citations-ui/implementation-mobile.png). Both use fictional source text and reduced motion.
+Current implementation captures: [objectives in the full template](../../screenshots/citations-ui/module-sources-in-template.png), [isolated timeline with Sources open](../../screenshots/citations-ui/module-sources-desktop.png), and [390px mobile source list](../../screenshots/citations-ui/module-sources-mobile.png). The images frame the cited modules from generated previews and use fictional source text. Earlier floating-tab screenshots in the same folder document the superseded UI study.
 
 [Open the standalone timeline HTML example](example-timeline.html) after downloading or checking out the PR, then scroll to the timeline and open Sources. It is generated from the shared builder with fictional citations. This review copy omits embedded Slalom Sans font data and uses the browser's fallback font. Regenerate it with `node docs/mockups/kickoff-source-panels/implementation-preview.mjs --update-example`.
 
