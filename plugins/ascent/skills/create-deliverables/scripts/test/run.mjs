@@ -754,7 +754,7 @@ test('build: the project-kickoff worked example renders the integrated template'
 test('build: module sources preserve the original passage and bundle without changing section width', async () => {
   const doc = parseContentFile(EXAMPLE);
   const timeline = doc.sections.find(section => section.module === 'timeline-roadmap');
-  timeline.citations = [{ target: 'item-1', label: 'First phase', value: 'September', status: 'source', source_ref: 'tracker-copies/requirements.yaml#REQ-001', source_document: 'schedule.md', source_locator: 'line 4', excerpt: 'First phase in September.' }];
+  timeline.citations = [{ target: 'item-1', label: 'First phase', value: 'September', status: 'source', source_ref: 'tracker-copies/requirements.yaml#REQ-001', source_document: 'schedule.md', source_locator: 'line 4', excerpt: 'First phase in September.', source_url: 'https://example.com/schedule.md' }];
   const file = path.join(TMP, 'cited-content.json');
   writeFileSync(file, JSON.stringify(doc));
   const result = await build(file, { out: path.join(TMP, 'cited'), bundle: true, intake: COMPLETE_INTAKE });
@@ -763,6 +763,9 @@ test('build: module sources preserve the original passage and bundle without cha
   includes(result.html, 'schedule.md');
   includes(result.html, 'line 4');
   includes(result.html, 'First phase in September.');
+  includes(result.html, 'data-source-document-link="true" href="https://example.com/schedule.md"');
+  const gate = validateBuild(result.outDir);
+  ok(!gate.errors.some(error => ['rule 22', 'rule 23'].includes(error.rule)), 'the explicit source link must pass the external-resource gate');
   ok(!result.html.includes('data-citation-anchor='));
   includes(result.html, 'tracker-copies/requirements.yaml#REQ-001');
   ok(existsSync(path.join(result.outDir, 'css/citations.css')));
@@ -1165,6 +1168,10 @@ brokenFixture('an external image', 'rule 22', (dir) =>
 brokenFixture('a CDN stylesheet', 'rule 22', (dir) =>
   replace(dir, 'index.html', '<link rel="stylesheet" href="css/tokens.css">',
     '<link rel="stylesheet" href="//cdn.example.com/reset.css"><link rel="stylesheet" href="css/tokens.css">'));
+
+brokenFixture('an unrelated external link', 'rule 22', (dir) =>
+  replace(dir, 'index.html', '<main id="main">',
+    '<main id="main"><a href="https://example.com">External link</a>'));
 
 brokenFixture('an external font import in CSS', 'rule 22', (dir) =>
   append(dir, 'css/base.css', '\n@font-face { font-family: X; src: url(https://fonts.example.com/x.woff2); }\n'));

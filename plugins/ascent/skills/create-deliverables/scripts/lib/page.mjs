@@ -168,7 +168,7 @@ export function renderCitedSection(section, index, ctx, renderer = null) {
       changed: 'Needs review after edit', missing: 'No recorded source',
     }[citation.status];
     const sourceLink = citation.source_url
-      ? `<a href="${esc(citation.source_url)}" target="_blank" rel="noopener noreferrer">Open original document</a>`
+      ? `<a data-source-document-link="true" href="${esc(citation.source_url)}" target="_blank" rel="noopener noreferrer">Open original document</a>`
       : '';
     const evidence = citation.source_ref
       ? `<div class="source-panel__evidence"><p class="source-panel__ref">${esc(citation.source_document)}</p>${sourceLink}<p class="source-panel__locator">${esc(citation.source_locator ?? citation.source_ref)}</p>${citation.excerpt ? `<blockquote>${esc(citation.excerpt)}</blockquote>` : ''}<p class="source-panel__trail">Review record: ${esc(citation.source_ref)}</p></div>`

@@ -17,7 +17,7 @@ citations:
 
 `target` identifies the content: `section` or a one-based `item-N`. Item targets are available for objectives, timeline, and immediate next steps. Targets remain in the authoring record, but the renderer does not inspect or highlight DOM elements. Each target occurs at most once in a section.
 
-`label` names the displayed content; `value` is its exact displayed value. Keep both synchronized with the authored content. For `source` and `changed`, record the accepted tracker row and field in `source_ref`, the original document in `source_document`, and either its `source_locator` or an exact `excerpt`. Include both when available. `source_url` is optional and must be an HTTP(S) URL that the deliverable's readers can reach. A local workspace path stays visible as text because it will not resolve from a bundled deliverable.
+`label` names the displayed content; `value` is its exact displayed value. Keep both synchronized with the authored content. For `source` and `changed`, record the accepted tracker row and field in `source_ref`, the original document in `source_document`, and either its `source_locator` or an exact `excerpt`. Include both when available. `source_url` is optional and must be an HTTP(S) URL that the deliverable's readers can reach. It renders as a reader-selected link in the Sources panel. A local workspace path stays visible as text because it will not resolve from a bundled deliverable.
 
 Statuses:
 

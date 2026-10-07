@@ -15,10 +15,10 @@ node scripts/validate-brand.mjs build/client-readout
 Two rules have commercial teeth. Neither is allowed to become a warning that
 scrolls past unread.
 
-- **Rule 22 — zero external references.** No `http(s)://` in any `src`, `href`,
-  `url()`, or import specifier. No CDN, no font service, no analytics, no
-  tracking pixel. A deliverable that phones home is a data question the client
-  did not agree to, and it is an error, not a warning.
+- **Rule 22 — zero external resources.** No `http(s)://` in any asset URL or
+  import specifier. No CDN, font service, analytics, or tracking pixel. The
+  only external `href` allowed is the explicit original-document link inside
+  a citation's Sources panel; it opens only when a reader selects it.
 - **Rule 28 — the Slalom Sans files are in the output.** This one is a warning,
   because whether it is acceptable is a licensing decision, not a technical one.
   See below.
