@@ -25,7 +25,6 @@ EXPECTED_SKILLS = {
     "interview-me",
     "investigate-project",
     "update-deliverable-structure",
-    "project-setup",
     "recursive-improvement",
     "utilities-ui-generation",
     "workspace-add",
@@ -168,40 +167,60 @@ def validate_manifests() -> list[str]:
     return errors
 
 
+DEV_MARKETPLACE_NAME = "ascent-dev"
+CODEX_POLICY = {"installation": "AVAILABLE", "authentication": "ON_INSTALL"}
+
+
+def validate_marketplace_entry(path: Path, expected_name: str, expected_source: dict | str,
+                               check_codex_fields: bool) -> list[str]:
+    errors: list[str] = []
+    marketplace = load_json(path, errors)
+    if not marketplace:
+        return errors
+    label = path.relative_to(REPO_ROOT)
+    if marketplace.get("name") != expected_name:
+        errors.append(f"{label}: marketplace name must be {expected_name}")
+    plugins = marketplace.get("plugins", [])
+    if len(plugins) != 1 or plugins[0].get("name") != PLUGIN_NAME:
+        errors.append(f"{label}: marketplace must contain only the Ascent plugin")
+        return errors
+    entry = plugins[0]
+    if entry.get("source") != expected_source:
+        errors.append(f"{label}: plugin source must be {expected_source}")
+    if check_codex_fields:
+        if entry.get("policy") != CODEX_POLICY:
+            errors.append(f"{label}: Codex policy fields are invalid")
+        if entry.get("category") != "Productivity":
+            errors.append(f"{label}: Codex category must be Productivity")
+    return errors
+
+
 def validate_marketplaces() -> list[str]:
     errors: list[str] = []
-    paths = [
-        REPO_ROOT / ".agents" / "plugins" / "marketplace.json",
+    for path in (
         REPO_ROOT / ".claude-plugin" / "marketplace.json",
         REPO_ROOT / ".github" / "plugin" / "marketplace.json",
         REPO_ROOT / ".cursor-plugin" / "marketplace.json",
-    ]
-    for path in paths:
-        marketplace = load_json(path, errors)
-        if not marketplace:
-            continue
-        label = path.relative_to(REPO_ROOT)
-        if marketplace.get("name") != PLUGIN_NAME:
-            errors.append(f"{label}: marketplace name must be {PLUGIN_NAME}")
-        plugins = marketplace.get("plugins", [])
-        if len(plugins) != 1 or plugins[0].get("name") != PLUGIN_NAME:
-            errors.append(f"{label}: marketplace must contain only the Ascent plugin")
-            continue
-        entry = plugins[0]
-        source = entry.get("source")
-        source_path = source.get("path") if isinstance(source, dict) else source
-        if source_path != "./plugins/ascent":
-            errors.append(f"{label}: plugin source must be ./plugins/ascent")
-        if path.parts[-3:-1] == (".agents", "plugins"):
-            if source.get("source") != "local":
-                errors.append(f"{label}: Codex source must be local")
-            if entry.get("policy") != {
-                "installation": "AVAILABLE",
-                "authentication": "ON_INSTALL",
-            }:
-                errors.append(f"{label}: Codex policy fields are invalid")
-            if entry.get("category") != "Productivity":
-                errors.append(f"{label}: Codex category must be Productivity")
+    ):
+        errors += validate_marketplace_entry(path, PLUGIN_NAME, "./plugins/ascent", check_codex_fields=False)
+
+    # The canonical Codex marketplace is Git-sourced: this is what real end-user installs
+    # discover (`codex plugin marketplace add Slalom/ascent`), re-cloned and version-checked
+    # by Codex itself on every launch. It intentionally does not read this local checkout.
+    errors += validate_marketplace_entry(
+        REPO_ROOT / ".agents" / "plugins" / "marketplace.json",
+        PLUGIN_NAME,
+        {"source": "git-subdir", "url": "Slalom/ascent", "path": "plugins/ascent", "ref": "main"},
+        check_codex_fields=True,
+    )
+    # The dev-only marketplace stays local-sourced so `refresh_codex_plugin.py` and local
+    # iteration keep reading this checkout directly, uncommitted edits included.
+    errors += validate_marketplace_entry(
+        REPO_ROOT / ".agents" / "plugins" / "marketplace.local.json",
+        DEV_MARKETPLACE_NAME,
+        {"source": "local", "path": "./plugins/ascent"},
+        check_codex_fields=True,
+    )
     return errors
 
 

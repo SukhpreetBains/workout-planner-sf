@@ -41,6 +41,16 @@ PERMISSION_HINT = (
     "Retry this same command with scoped host access using the agent's permission mechanism. "
     "Keep the server bound to 127.0.0.1; do not change filesystem permissions or disable the sandbox."
 )
+RUNTIME_HINT = (
+    "The review inbox needs a persistent Python environment. "
+    "Run review_server.py through shared/scripts/py (or py.cmd), not uv run or a temporary interpreter."
+)
+
+
+def disposable_python(executable: str) -> bool:
+    """uv build interpreters can disappear while a review server is running."""
+    normalized = executable.replace("\\", "/")
+    return "/uv/builds-v0/.tmp" in normalized or not Path(executable).is_file()
 
 
 class LocalServerPermissionError(PermissionError):
@@ -412,6 +422,9 @@ class ReviewHandler(BaseHTTPRequestHandler):
 
 
 def serve(root: Path, token: str, instance_id: str) -> int:
+    if disposable_python(sys.executable):
+        print(RUNTIME_HINT, file=sys.stderr)
+        return 2
     configure_root(root)
     try:
         server = ReviewServer(("127.0.0.1", 0), token, root, instance_id)
@@ -424,6 +437,7 @@ def serve(root: Path, token: str, instance_id: str) -> int:
         "token": token,
         "instance_id": instance_id,
         "root": str(root),
+        "python_executable": sys.executable,
         "started_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
     }
     write_state(root, state)
@@ -438,10 +452,18 @@ def serve(root: Path, token: str, instance_id: str) -> int:
 
 
 def start(root: Path) -> int:
+    if disposable_python(sys.executable):
+        print(RUNTIME_HINT, file=sys.stderr)
+        return 2
     state = read_state(root)
     if healthy(state):
-        print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
-        return 0
+        previous_python = state.get("python_executable", "")
+        if previous_python and not disposable_python(previous_python):
+            print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
+            return 0
+        print("restarting review inbox with a persistent Python environment", file=sys.stderr)
+        if stop(root):
+            return 1
     state_path(root).unlink(missing_ok=True)
     token = secrets.token_urlsafe(32)
     instance_id = str(secrets.token_hex(16))
@@ -450,7 +472,7 @@ def start(root: Path) -> int:
     with open(log, "ab") as output:
         process = subprocess.Popen(
             [sys.executable, str(SCRIPT), "serve", "--root", str(root),
-             "--token", token, "--instance-id", instance_id],
+             f"--token={token}", "--instance-id", instance_id],
             stdin=subprocess.DEVNULL, stdout=output, stderr=output,
             start_new_session=True,
         )

@@ -23,7 +23,7 @@ The command runs the full sequence:
 3. Create or preserve the tracker workbooks and tabs.
 4. Reconcile `workspace/.system/project.yaml` and `workspace/project/Project Overview.md` with the confirmed Account and Opportunity, preserving all other content.
 5. Refresh the workspace search index.
-6. Print the readiness report defined by [the setup readiness contract](setup-readiness.md).
+6. Print the workspace readiness check and a first-document reminder. The agent gives the final readiness report after the industry-flavor step, following [the setup readiness contract](setup-readiness.md).
 
 The launcher must not silently install dependencies. If dependencies are missing, explain what is required and obtain approval before rerunning with `--install-dependencies`.
 
@@ -54,4 +54,4 @@ to offer.
 
 Do not inspect `workspace/inbox/`, ask about documents, or invoke a document-processing workflow during setup. Existing documents remain untouched.
 
-At handoff, follow [the setup readiness contract](setup-readiness.md). Users with documents should place them in the confirmed `<Opportunity folder>/workspace/inbox/` and open a fresh agent chat scoped to that Opportunity for `workspace-add`.
+At handoff, follow [the setup readiness contract](setup-readiness.md). Its first-document action follows the final checklist.

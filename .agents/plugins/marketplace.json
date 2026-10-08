@@ -4,7 +4,7 @@
   "plugins": [
     {
       "name": "ascent",
-      "source": {"source": "local", "path": "./plugins/ascent"},
+      "source": {"source": "git-subdir", "url": "Slalom/ascent", "path": "plugins/ascent", "ref": "main"},
       "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
       "category": "Productivity"
     }

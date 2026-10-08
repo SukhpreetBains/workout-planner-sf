@@ -1,6 +1,0 @@
-interface:
-  display_name: "Project Setup"
-  short_description: "Guide users through creating a local Codex project"
-  icon_small: "./assets/skill-icon.svg"
-  icon_large: "./assets/skill-icon.svg"
-  default_prompt: "Use $project-setup to create a Codex project for my confirmed Opportunity folder."
