@@ -754,7 +754,10 @@ test('build: the project-kickoff worked example renders the integrated template'
 test('build: module sources preserve the original passage and bundle without changing section width', async () => {
   const doc = parseContentFile(EXAMPLE);
   const timeline = doc.sections.find(section => section.module === 'timeline-roadmap');
-  timeline.citations = [{ target: 'item-1', label: 'First phase', value: 'September', status: 'source', source_ref: 'tracker-copies/requirements.yaml#REQ-001', source_document: 'schedule.md', source_locator: 'line 4', excerpt: 'First phase in September.', source_url: 'https://example.com/schedule.md' }];
+  timeline.citations = [
+    { target: 'item-1', label: 'First phase', value: 'September', status: 'source', source_ref: 'tracker-copies/requirements.yaml#REQ-001', source_document: 'schedule.md', source_locator: 'line 4', excerpt: 'First phase in September.', source_url: 'https://example.com/schedule.md' },
+    { target: 'item-2', label: 'Second phase', value: 'October', status: 'changed', source_ref: 'tracker-copies/requirements.yaml#REQ-002', source_document: 'schedule.md', source_locator: 'line 5', excerpt: 'Second phase in late September.', note: 'The approved value changed after source review.' },
+  ];
   const file = path.join(TMP, 'cited-content.json');
   writeFileSync(file, JSON.stringify(doc));
   const result = await build(file, { out: path.join(TMP, 'cited'), bundle: true, intake: COMPLETE_INTAKE });
@@ -763,6 +766,9 @@ test('build: module sources preserve the original passage and bundle without cha
   includes(result.html, 'schedule.md');
   includes(result.html, 'line 4');
   includes(result.html, 'First phase in September.');
+  includes(result.html, 'Needs review after edit');
+  includes(result.html, 'Second phase in late September.');
+  includes(result.html, 'The approved value changed after source review.');
   includes(result.html, 'data-source-document-link="true" href="https://example.com/schedule.md"');
   const gate = validateBuild(result.outDir);
   ok(!gate.errors.some(error => ['rule 22', 'rule 23'].includes(error.rule)), 'the explicit source link must pass the external-resource gate');
@@ -775,6 +781,7 @@ test('build: module sources preserve the original passage and bundle without cha
   ok(!css.includes('grid-template-columns'), 'opening a source must not change content columns');
   const bundle = readFileSync(result.bundlePath, 'utf8');
   includes(bundle, 'Sources for');
+  includes(bundle, 'The approved value changed after source review.');
   ok(!bundle.includes('src="js/citations.js"'));
   ok(!bundle.includes('href="css/citations.css"'));
 });

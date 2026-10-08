@@ -2,7 +2,7 @@ import { referenceLayout } from '../shared/reference-layout.mjs';
 import { typeset } from '../shared/primitives.mjs';
 
 const view = (section) => `<div class="outcome-rings" data-motion="count-up">
-  ${section.items.map((item, index) => {
+  ${section.items.map((item) => {
     const numeric = typeof item.value === 'number';
     const amount = numeric ? Math.max(0, Math.min(100, Math.abs(item.value))) : 100;
     return `<article class="outcome-ring" data-motion-item>
