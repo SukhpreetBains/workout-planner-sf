@@ -13,8 +13,9 @@ Update file format:
         action: add                # add | update
         # id: PAIN-003             # required when action is update
         fields:
-          Statement: "..."
-          Severity: high
+          Name: "..."
+          Description: "..."
+          Relationships: "raised_by: PER-001"
         # source_refs: [...]       # optional per-update override
 """
 
@@ -28,22 +29,21 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from paths import PROPOSED_UPDATES_DIR, REPO_ROOT, load_schema
-from trackers import id_column, normalize_enum, read_rows
+from trackers import id_column, is_relationships, normalize_enum, parse_relationships, read_rows
 
 USER_SUBMITTED_SOURCE = "User Submitted"
 
 
-def title_problem(category: dict, fields: dict) -> str | None:
-    """Why a written title is not a usable summary, if it isn't."""
-    column = next((c["name"] for c in category.get("columns", []) if c["name"].endswith(" Title")), None)
-    title = " ".join(str(fields.get(column) or "").split()) if column else ""
-    if not title:
+def name_problem(fields: dict) -> str | None:
+    """Why a written Name is not a usable summary, if it isn't."""
+    name = " ".join(str(fields.get("Name") or "").split())
+    if not name:
         return None
-    if title.endswith(("…", "...")):
-        return f"'{column}' looks cut off; write a short summary of the item instead"
-    statement = " ".join(str(fields.get("Statement") or "").split())
-    if title.rstrip(". ").lower() == statement.rstrip(". ").lower():
-        return f"'{column}' repeats the statement; write a short summary of the item instead"
+    if name.endswith(("…", "...")):
+        return "'Name' looks cut off; write a short summary of the item instead"
+    description = " ".join(str(fields.get("Description") or "").split())
+    if name.rstrip(". ").lower() == description.rstrip(". ").lower():
+        return "'Name' repeats the description; write a short summary of the item instead"
     return None
 
 
@@ -99,8 +99,14 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
             existing_ids[category] = {r.get(col, "") for r in read_rows(category, schema)}
         return existing_ids[category]
 
-    def linkable_ids_for(category: str) -> set[str]:
-        return ids_for(category) | pending_ids.get(category, set())
+    linkable: set[str] = set()
+
+    def linkable_ids() -> set[str]:
+        if not linkable:
+            for category in schema["categories"]:
+                linkable.update(ids_for(category) | pending_ids.get(category, set()))
+            linkable.discard("")
+        return linkable
 
     for i, upd in enumerate(doc["updates"], 1):
         where = f"update {i}"
@@ -138,7 +144,7 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
                         fields[name] = col["default"]
                     else:
                         problems.append(f"{where}: required column '{name}' is missing")
-        issue = title_problem(cat, fields)
+        issue = name_problem(fields)
         if issue:
             problems.append(f"{where}: {issue}")
         for name, col in cols.items():
@@ -169,19 +175,17 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
                         datetime.fromisoformat(value)
                 except ValueError:
                     problems.append(f"{where}: '{name}' must be an ISO date")
-            if "links_to" in col:
-                for linked in [v.strip() for v in value.split(";") if v.strip()]:
-                    if linked not in linkable_ids_for(col["links_to"]):
-                        problems.append(f"{where}: '{name}' points at '{linked}' "
-                                        f"which is not an existing {col['links_to']} ID")
-            if "links_to_any" in col:
-                valid_ids = set()
-                for linked_category in col["links_to_any"]:
-                    valid_ids.update(linkable_ids_for(linked_category))
-                for linked in [v.strip() for v in value.split(";") if v.strip()]:
-                    if linked not in valid_ids:
-                        problems.append(f"{where}: '{name}' points at '{linked}' which is not "
-                                        "an existing RAIDD ID")
+            if is_relationships(col):
+                own_ids = {str(upd.get("proposal_id") or ""), str(upd.get("id") or "")} - {""}
+                for meaning, target in parse_relationships(value):
+                    if meaning not in schema["relationships"]:
+                        problems.append(f"{where}: '{name}' entry '{meaning}: {target}' needs a "
+                                        f"meaning from: {', '.join(schema['relationships'])}")
+                    elif target in own_ids:
+                        problems.append(f"{where}: '{name}' cannot relate an item to itself")
+                    elif target not in linkable_ids():
+                        problems.append(f"{where}: '{name}' points at '{target}' which is not "
+                                        "an existing row ID or pending proposal")
 
         refs = upd.get("source_refs") or default_refs
         if not refs:

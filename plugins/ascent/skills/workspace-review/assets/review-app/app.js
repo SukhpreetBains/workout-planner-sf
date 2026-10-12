@@ -25,6 +25,8 @@ const headerControls = document.querySelector("#header-controls");
 const acceptedPage = location.pathname === "/accepted";
 let cards = [];
 let categories = [];
+let groups = [];
+let relationshipTypes = [];
 let progressSummary = { pending: 0, accepted: 0, rejected: 0, flagged: 0, completed: 0, total: 0, categories: {} };
 let currentIndex = 0;
 let activeCategory = "";
@@ -35,27 +37,25 @@ let sortMode = "queue";
 let saveTimer = null;
 let filterTimer = null;
 let scope = null;
-let acceptedOrganizations = [];
-let acceptedOwners = [];
 let filtersExpanded = false;
 let linkableAcceptedItems = null;
 let linkOptionsLoading = null;
 
 const label = value => String(value || "").replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
-const longTextField = name => /description|statement|question|why it matters|answer|mitigation|rationale|notes|actions|resolution|impact if|quantified impact|contingency|plan/i.test(name);
+const categoryLabel = id => categories.find(category => category.id === id)?.label || label(id);
+const fieldLabel = definition => definition.label || definition.name;
+const longTextField = name => /description/i.test(name);
 const percentValue = value => {
   const decimal = Number(value);
   return Number.isFinite(decimal) && value !== "" ? String(decimal * 100) : "";
 };
 const percentInput = (attrs, value) => el("input", { ...attrs, type: "number", value: percentValue(value), step: "1", min: "10", max: "90", inputmode: "numeric" });
-const pickerFields = {
-  stakeholder: ["Name", "Role", "Organization"], pain_point: ["Statement", "Severity", "Status"],
-  system: ["Name", "System Type", "Description"], objective: ["Statement", "Success Measure"],
-  requirement: ["Statement", "Requirement Type"], risk: ["Risk Title", "Statement", "Calculated Severity", "Status"],
-  assumption: ["Assumption Title", "Statement", "Status", "Validation Plan"], issue: ["Issue Title", "Statement", "Priority", "Status"],
-  decision: ["Decision Title", "Statement", "Status", "Selected Decision"], dependency: ["Dependency Title", "Statement", "Importance", "Status", "Owning Team"],
-  constraint: ["Statement", "Constraint Type", "Status"], open_question: ["Question", "Why It Matters", "Status"],
-};
+
+function applyCatalog(result) {
+  categories = result.categories || [];
+  groups = result.groups || [];
+  relationshipTypes = result.relationships || [];
+}
 
 async function api(path, options = {}) {
   const headers = { Accept: "application/json", ...(options.headers || {}) };
@@ -107,11 +107,7 @@ function showToast(message) {
 }
 
 function acceptedItemTitle(item) {
-  const fields = item.fields || {};
-  const title = item.field_schema?.find(definition => definition.name.endsWith(" Title"));
-  const candidates = [item.title, fields[title?.name], fields.Name, fields.Statement, fields.Question,
-    fields[item.category_label], fields.Description, item.title];
-  return candidates.map(value => String(value || "").trim()).find(Boolean) || "Untitled";
+  return [item.title, item.fields?.Name].map(value => String(value || "").trim()).find(Boolean) || "Untitled";
 }
 
 function renderAcceptedPage(items) {
@@ -122,15 +118,21 @@ function renderAcceptedPage(items) {
   const render = () => {
     content.replaceChildren();
     if (!selected) { content.append(el("p", {}, "No tracker values have been accepted yet.")); return; }
-    const groups = items.reduce((result, item) => { (result[item.category] ||= []).push(item); return result; }, {});
-    if (!groups[activeCategory]) {
-      activeCategory = Object.keys(groups)[0];
-      selected = groups[activeCategory][0];
+    const byCategory = items.reduce((result, item) => { (result[item.category] ||= []).push(item); return result; }, {});
+    if (!byCategory[activeCategory]) {
+      activeCategory = Object.keys(byCategory)[0];
+      selected = byCategory[activeCategory][0];
     }
-    const tabs = el("nav", { class: "category-tabs", "aria-label": "Accepted categories" });
-    Object.entries(groups).forEach(([category, group]) => tabs.append(el("button", { class: `quiet category-${category}`, type: "button", "aria-current": category === activeCategory ? "true" : undefined, onclick: () => { activeCategory = category; selected = group[0]; render(); } }, `${label(category)} (${group.length})`)));
+    const tabs = el("div", { class: "category-groups" });
+    groups.forEach(group => {
+      const groupCategories = categories.filter(category => category.group === group.id && byCategory[category.id]);
+      if (!groupCategories.length) return;
+      const nav = el("nav", { class: "category-tabs", "aria-label": `Accepted ${group.label.toLowerCase()}` });
+      groupCategories.forEach(category => nav.append(el("button", { class: `quiet category-${category.id}`, type: "button", "aria-current": category.id === activeCategory ? "true" : undefined, onclick: () => { activeCategory = category.id; selected = byCategory[category.id][0]; render(); } }, `${category.label} (${byCategory[category.id].length})`)));
+      tabs.append(el("section", { class: "category-group" }, [el("h2", { class: "eyebrow category-group-label" }, group.label), nav]));
+    });
     const list = el("aside", { class: "proposal-list", "aria-label": "Accepted values" });
-    groups[activeCategory].forEach(item => {
+    byCategory[activeCategory].forEach(item => {
       const row = el("article", { class: `proposal-list-item category-${item.category}${item === selected ? " is-selected" : ""}` });
       row.append(el("button", { class: "proposal-list-title", type: "button", onclick: () => { selected = item; render(); } }, acceptedItemTitle(item)));
       list.append(row);
@@ -139,32 +141,22 @@ function renderAcceptedPage(items) {
     const schema = selected.field_schema || Object.keys(selected.fields)
       .filter(name => !/(^.* ID$|Source Refs|Notes|Created At|Updated At)/.test(name))
       .map(name => ({ name: name, type: /date/i.test(name) ? "date" : "text" }));
-    const orderedSchema = [...schema];
-    const titleIndex = orderedSchema.findIndex(definition => definition.name.endsWith(" Title"));
-    if (titleIndex >= 0) orderedSchema.unshift(orderedSchema.splice(titleIndex, 1)[0]);
-    const statementIndex = orderedSchema.findIndex(definition => definition.name === "Statement");
-    if (statementIndex >= 0) orderedSchema.splice(1, 0, orderedSchema.splice(statementIndex, 1)[0]);
-    orderedSchema.forEach(definition => {
-      if (definition.computed) return;
+    schema.forEach(definition => {
+      if (definition.computed || isRelationshipField(definition)) return;
       const value = selected.fields[definition.name] ?? "";
-      let input;
       let control;
       let labelFor = definition.name;
-      if (isLinkField(definition)) {
-        input = linkPickerControl(selected, definition, value);
-        control = input;
-      } else if (definition.enum) {
+      if (definition.enum) {
         const picker = enumPicker(`accepted-${definition.name.replace(/[^a-z0-9]/gi, "-")}`, definition.name, definition.enum, value);
-        input = picker.input;
         control = picker.control;
         labelFor = picker.labelFor;
       } else {
-        input = definition.name === "Probability" ? percentInput({ name: definition.name }, value) : definition.name === "Organization" || definition.name === "Owner" ? suggestionInput({ name: definition.name }, value) : longTextField(definition.name) ? el("textarea", { name: definition.name }, value) : el("input", { name: definition.name, type: definition.type === "date" ? "date" : definition.type === "number" ? "number" : "text", value });
-        control = input;
+        control = definition.name === "Probability" ? percentInput({ name: definition.name }, value) : longTextField(definition.name) ? el("textarea", { name: definition.name }, value) : el("input", { name: definition.name, type: definition.type === "date" ? "date" : definition.type === "number" ? "number" : "text", value });
       }
-      const suggestions = definition.name === "Organization" ? acceptedOrganizations : definition.name === "Owner" ? acceptedOwners : null;
-      form.append(el("div", { class: `field${longTextField(definition.name) ? " field-wide" : ""}` }, [el("label", { for: labelFor }, definition.name === "Probability" ? "Probability (%)" : isLinkField(definition) ? linkFieldName(definition.name) : definition.name), control, ...(suggestions ? [textSuggestions(input, suggestions)] : [])]));
+      form.append(el("div", { class: `field${longTextField(definition.name) ? " field-wide" : ""}` }, [el("label", { for: labelFor }, definition.name === "Probability" ? "Probability (%)" : fieldLabel(definition)), control]));
     });
+    const relationshipDefinition = schema.find(isRelationshipField);
+    if (relationshipDefinition) form.append(relationshipsSection([selected.tracker_id], relationshipDefinition, selected.fields[relationshipDefinition.name] ?? ""));
     const status = el("span", { class: "save-state", role: "status" }, "");
     form.append(el("div", { class: "modal-actions" }, [
       el("button", { class: "quiet", type: "button", onclick: () => moveAcceptedToPending(selected) }, "Move to pending"),
@@ -175,8 +167,7 @@ function renderAcceptedPage(items) {
       event.preventDefault(); status.textContent = "Saving";
       const fields = Object.fromEntries(new FormData(form).entries());
       if (fields.Probability !== undefined && fields.Probability !== "") fields.Probability = Number(fields.Probability) / 100;
-      form.querySelectorAll(".link-picker-button").forEach(input => { fields[input.name] = input.value; });
-      try { await api("/api/accepted/update", { method: "POST", body: JSON.stringify({ category: selected.category, tracker_id: selected.tracker_id, fields }) }); invalidateLinkOptions(); Object.assign(selected.fields, fields); selected.title = fields[`${selected.category_label} Title`] || fields.Statement || selected.title; status.textContent = "Saved"; }
+      try { await api("/api/accepted/update", { method: "POST", body: JSON.stringify({ category: selected.category, tracker_id: selected.tracker_id, fields }) }); invalidateLinkOptions(); Object.assign(selected.fields, fields); selected.title = fields.Name || selected.title; status.textContent = "Saved"; }
       catch (error) { status.textContent = error.message || "Could not save"; }
     });
     content.append(tabs, el("div", { class: "review-layout accepted-layout" }, [list, form, evidence(selected)]));
@@ -337,39 +328,24 @@ function normalizeDate(value) {
   return match ? match[0] : "";
 }
 
-function linkableCategories(definition) { return definition.links_to ? [definition.links_to] : definition.links_to_any || []; }
-function isLinkField(definition) { return Boolean(definition.links_to || definition.links_to_any); }
-function linkValues(value) { return String(value || "").split(";").map(item => item.trim()).filter(Boolean); }
-const linkFieldLabels = {
-  "Reports To IDs": "Reports to",
-  "Raised By Stakeholder IDs": "Raised By Stakeholder(s)",
-  "Affects System IDs": "Affects System(s)",
-  "Related System IDs": "Related System(s)",
-  "Addresses Pain Point IDs": "Addresses Pain Point(s)",
-  "Supports Objective IDs": "Supports Objective(s)",
-  "Linked RAIDD IDs": "Linked Risk(s), Assumption(s), Issue(s), Decision(s), or Dependency(ies)",
-};
-const linkSelectorLabels = {
-  "Reports To IDs": "Stakeholder(s)",
-  "Raised By Stakeholder IDs": "Stakeholder(s)",
-  "Affects System IDs": "System(s)",
-  "Related System IDs": "System(s)",
-  "Addresses Pain Point IDs": "Pain Point(s)",
-  "Supports Objective IDs": "Objective(s)",
-  "Linked RAIDD IDs": "Risk(s), Assumption(s), Issue(s), Decision(s), or Dependency(ies)",
-};
-function linkFieldName(name) { return linkFieldLabels[name] || name.replace(/ IDs$/, ""); }
-function linkSelectorName(name) { return linkSelectorLabels[name] || linkFieldName(name); }
-function pickerSummary(value, name) { const values = linkValues(value); return values.length ? `${values.length} selected` : `Select ${linkSelectorName(name)}`; }
+function isRelationshipField(definition) { return definition.type === "relationships"; }
 
-function setAcceptedOrganizations(items) {
-  const uniqueValues = field => {
-    const seen = new Set();
-    return (items || []).map(item => String(item.fields?.[field] || "").trim())
-      .filter(value => value && !seen.has(value.toLocaleLowerCase()) && seen.add(value.toLocaleLowerCase()));
-  };
-  acceptedOrganizations = uniqueValues("Organization");
-  acceptedOwners = uniqueValues("Owner");
+function parseRelationships(value) {
+  return String(value || "").split(";").map(part => part.trim()).filter(Boolean).map(part => {
+    const index = part.indexOf(":");
+    return index < 0 ? { meaning: "", target: part } : { meaning: part.slice(0, index).trim(), target: part.slice(index + 1).trim() };
+  });
+}
+
+function formatRelationships(entries) {
+  return [...new Set(entries.map(entry => `${entry.meaning}: ${entry.target}`))].join("; ");
+}
+
+function relationshipType(id) { return relationshipTypes.find(type => type.id === id); }
+
+function relationshipsValue(category, fields) {
+  const definition = categories.find(item => item.id === category)?.field_schema?.find(isRelationshipField);
+  return definition ? fields?.[definition.name] : "";
 }
 
 async function linkOptions() {
@@ -377,7 +353,6 @@ async function linkOptions() {
   if (!linkOptionsLoading) {
     linkOptionsLoading = api("/api/link-options").then(result => {
       linkableAcceptedItems = result.items || [];
-      setAcceptedOrganizations(linkableAcceptedItems);
       return linkableAcceptedItems;
     }).finally(() => { linkOptionsLoading = null; });
   }
@@ -388,34 +363,117 @@ function invalidateLinkOptions() {
   linkableAcceptedItems = null;
 }
 
-function suggestionInput(attrs, value) {
-  return el("input", { ...attrs, type: "text", value, autocomplete: "off" });
+function knownRecords() {
+  return [
+    ...(linkableAcceptedItems || []).map(item => ({ id: item.tracker_id, title: item.title, category: item.category,
+      category_label: item.category_label, state: "Accepted", fields: item.fields || {} })),
+    ...cards.map(card => ({ id: card.proposal_id, title: cardTitle(card), category: card.category,
+      category_label: card.category_label, state: "Pending", fields: card.fields || {} })),
+  ];
 }
 
-function textSuggestions(input, values) {
-  const list = el("div", { class: "text-suggestions", role: "listbox", hidden: "" });
+function relationshipRow(meaningLabel, targetId, action) {
+  const record = knownRecords().find(item => item.id === targetId);
+  return el("li", { class: "relationship-item" }, [
+    el("span", { class: "relationship-meaning" }, meaningLabel),
+    el("span", { class: "relationship-target" }, [
+      el("strong", {}, record?.title || targetId),
+      el("small", {}, record ? `${record.category_label} · ${record.state}` : "Not found in the trackers or the inbox"),
+    ]),
+    ...(action ? [action] : []),
+  ]);
+}
+
+function openRelationshipPicker(ownIds, trigger, onPick) {
+  const modal = el("div", { class: "review-note-modal link-picker-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "relationship-picker-title" });
+  const meaning = enumPicker("relationship-meaning", "relationship-meaning",
+    relationshipTypes.map(type => ({ value: type.id, text: type.label })), "", { ariaLabel: "Relationship meaning" });
+  const hint = el("p", { class: "relationship-hint" }, "Choose what the relationship means, then the record it points to.");
+  meaning.input.addEventListener("input", () => { hint.textContent = relationshipType(meaning.input.value)?.definition || ""; });
+  const search = el("input", { type: "search", placeholder: "Search records", "aria-label": "Search records to relate" });
+  const list = el("div", { class: "link-picker-list", role: "radiogroup", "aria-label": "Related record" });
+  const problem = el("p", { class: "validation", role: "alert", hidden: "" });
   const render = () => {
-    const query = input.value.trim().toLocaleLowerCase();
-    const matches = values.filter(value => !query || value.toLocaleLowerCase().includes(query));
+    const query = search.value.trim().toLowerCase();
+    const records = knownRecords().filter(record => record.id && !ownIds.includes(record.id))
+      .filter(record => !query || `${record.title} ${record.category_label} ${record.state} ${Object.values(record.fields).join(" ")}`.toLowerCase().includes(query));
     list.replaceChildren();
-    if (!matches.length) {
-      list.hidden = true;
+    if (!records.length) list.append(el("p", {}, "No matching records."));
+    categories.forEach(category => {
+      const matching = records.filter(record => record.category === category.id);
+      if (!matching.length) return;
+      list.append(el("h3", { class: "link-picker-category" }, category.label));
+      matching.forEach(record => {
+        const details = [record.fields.Status && label(record.fields.Status), String(record.fields.Description || "").slice(0, 160)].filter(Boolean).join(" · ");
+        list.append(el("label", { class: "link-picker-item" }, [
+          el("input", { type: "radio", name: "relationship-target", value: record.id }),
+          el("span", {}, [el("strong", {}, record.title), el("small", {}, `${record.category_label} · ${record.state}`), el("span", {}, details)]),
+        ]));
+      });
+    });
+  };
+  const form = el("form", {});
+  form.append(el("p", { class: "eyebrow" }, "Relationship"), el("h2", { id: "relationship-picker-title" }, "Add relationship"),
+    el("div", { class: "field" }, [el("label", { for: meaning.labelFor }, "Meaning"), meaning.control]), hint,
+    el("div", { class: "field" }, [el("label", {}, "Related record"), search]), list, problem,
+    el("div", { class: "modal-actions" }, [
+      el("button", { class: "quiet", type: "button", onclick: () => closeModal(modal, trigger) }, "Cancel"),
+      el("button", { class: "primary", type: "submit" }, "Add relationship"),
+    ]));
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const target = form.querySelector("input[name='relationship-target']:checked")?.value;
+    if (!meaning.input.value || !target) {
+      problem.textContent = "Choose a meaning and a related record.";
+      problem.hidden = false;
       return;
     }
-    matches.forEach(value => list.append(el("button", {
-      type: "button", role: "option", onclick: () => {
-        input.value = value;
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        list.hidden = true;
-        input.focus();
-      }, onmousedown: event => event.preventDefault(),
-    }, value)));
-    list.hidden = false;
+    onPick(meaning.input.value, target);
+    closeModal(modal, trigger);
+  });
+  search.addEventListener("input", render);
+  modal.append(form);
+  showModal(modal, meaning.control.querySelector("button"), trigger);
+  render();
+  linkOptions().then(render).catch(error => { list.replaceChildren(el("p", {}, error.message || "Could not load records.")); });
+}
+
+function relationshipsSection(ownIds, definition, value, onChange) {
+  const input = el("input", { type: "hidden", name: definition.name, value });
+  if (onChange) input.addEventListener("input", onChange);
+  const outgoing = el("ul", { class: "relationship-list" });
+  const incoming = el("ul", { class: "relationship-list" });
+  const add = el("button", { class: "quiet relationship-add", type: "button" }, "Add relationship");
+  const change = entries => {
+    input.value = formatRelationships(entries);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    render();
   };
-  input.addEventListener("focus", render);
-  input.addEventListener("input", render);
-  input.addEventListener("blur", () => setTimeout(() => { list.hidden = true; }, 120));
-  return list;
+  const render = () => {
+    const entries = parseRelationships(input.value);
+    outgoing.replaceChildren(...(entries.length ? entries.map((entry, index) => {
+      const meaningLabel = relationshipType(entry.meaning)?.label || entry.meaning || "Unspecified meaning";
+      return relationshipRow(meaningLabel, entry.target, el("button", {
+        class: "quiet relationship-remove", type: "button", "aria-label": `Remove ${meaningLabel} relationship`,
+        onclick: () => change(entries.filter((_, position) => position !== index)),
+      }, "Remove"));
+    }) : [el("li", { class: "relationship-empty" }, "This record does not point to any other record yet.")]));
+    const pointing = knownRecords().flatMap(record => parseRelationships(relationshipsValue(record.category, record.fields))
+      .filter(entry => ownIds.includes(entry.target)).map(entry => ({ record, meaning: entry.meaning })));
+    incoming.replaceChildren(...(pointing.length ? pointing.map(({ record, meaning }) =>
+      relationshipRow(relationshipType(meaning)?.inverse_label || meaning, record.id))
+      : [el("li", { class: "relationship-empty" }, "No other record points to this one yet.")]));
+  };
+  add.addEventListener("click", () => openRelationshipPicker(ownIds, add,
+    (meaning, target) => change([...parseRelationships(input.value), { meaning, target }])));
+  render();
+  linkOptions().then(render).catch(() => {});
+  return el("section", { class: "relationships-section field-wide", "aria-label": "Relationships" }, [
+    input,
+    el("h3", {}, "Relationships"),
+    el("p", { class: "relationship-subheading" }, "From this record"), outgoing, add,
+    el("p", { class: "relationship-subheading" }, "Pointing to this record"), incoming,
+  ]);
 }
 
 function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true } = {}) {
@@ -445,45 +503,6 @@ function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true }
   return { input, control: el("div", { class: "field-picker" }, [input, button, list]), labelFor: button.id };
 }
 
-function openLinkPicker(card, definition, control) {
-  const modal = el("div", { class: "review-note-modal link-picker-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "link-picker-title" });
-  const search = el("input", { type: "search", placeholder: "Search linked items", "aria-label": "Search linked items" });
-  const list = el("div", { class: "link-picker-list" });
-  const selected = new Set(linkValues(control.value));
-  const allowed = new Set(linkableCategories(definition));
-  const render = items => {
-    const query = search.value.trim().toLowerCase(); list.replaceChildren();
-    const matching = items.filter(item => allowed.has(item.category) && item.id !== card?.proposal_id)
-      .filter(item => !query || item.search.includes(query));
-    const renderItem = item => {
-        const checkbox = el("input", { type: "checkbox", value: item.id }); checkbox.checked = selected.has(item.id);
-        checkbox.addEventListener("change", () => { checkbox.checked ? selected.add(item.id) : selected.delete(item.id); });
-        list.append(el("label", { class: "link-picker-item" }, [checkbox, el("span", {}, [el("strong", {}, item.title), el("small", {}, `${item.category_label} · ${item.state}`), el("span", {}, item.details)]) ]));
-    };
-    if (definition.links_to_any) {
-      linkableCategories(definition).forEach(category => {
-        const categoryItems = matching.filter(item => item.category === category);
-        if (!categoryItems.length) return;
-        list.append(el("h3", { class: "link-picker-category" }, label(category)));
-        categoryItems.forEach(renderItem);
-      });
-    } else matching.forEach(renderItem);
-  };
-  const form = el("form", {}); form.append(el("p", { class: "eyebrow" }, linkFieldName(definition.name)), el("h2", { id: "link-picker-title" }, "Link items"), search, list, el("div", { class: "modal-actions" }, [el("button", { class: "quiet", type: "button", onclick: () => closeModal(modal, control) }, "Cancel"), el("button", { class: "primary", type: "submit" }, "Apply selections")]));
-  form.addEventListener("submit", event => { event.preventDefault(); control.value = [...selected].join("; "); control.textContent = pickerSummary(control.value, definition.name); control.dispatchEvent(new Event("input", { bubbles: true })); closeModal(modal, control, false); });
-  search.addEventListener("input", () => render(modal.items)); modal.append(form); showModal(modal, search, control);
-  linkOptions().then(accepted => {
-    modal.items = [...accepted.map(item => ({ ...item, id: item.tracker_id, state: "Accepted" })), ...cards.map(item => ({ ...item, id: item.proposal_id, title: cardTitle(item), state: "Pending" }))].map(item => ({ ...item, details: (pickerFields[item.category] || []).map(name => item.fields?.[name]).filter(Boolean).join(" · "), search: `${item.title} ${item.category_label} ${item.state} ${Object.values(item.fields || {}).join(" ")}`.toLowerCase() }));
-    render(modal.items);
-  }).catch(error => { list.replaceChildren(el("p", {}, error.message || "Could not load linkable items.")); });
-}
-
-function linkPickerControl(card, definition, value) {
-  const control = el("button", { class: "link-picker-button", type: "button", name: definition.name, value, "aria-label": `Select ${linkSelectorName(definition.name)}` }, pickerSummary(value, definition.name));
-  control.addEventListener("click", () => openLinkPicker(card, definition, control));
-  return control;
-}
-
 function fieldControl(card, definition) {
   const name = definition.name;
   const id = `field-${card.proposal_id}-${name.replace(/[^a-z0-9]/gi, "-")}`;
@@ -491,10 +510,7 @@ function fieldControl(card, definition) {
   let input;
   let control;
   let labelFor = id;
-  if (isLinkField(definition)) {
-    input = linkPickerControl(card, definition, value);
-    control = input;
-  } else if (definition.enum) {
+  if (definition.enum) {
     const picker = enumPicker(id, name, definition.enum, value);
     input = picker.input;
     control = picker.control;
@@ -512,9 +528,6 @@ function fieldControl(card, definition) {
     input = el("input", { id, name, type: "number", value, step: "0.1",
       min: definition.minimum, max: definition.maximum, inputmode: "decimal" });
     control = input;
-  } else if (name === "Organization" || name === "Owner") {
-    input = suggestionInput({ id, name }, value);
-    control = input;
   } else if (longTextField(name)) {
     input = el("textarea", { id, name }, value);
     control = input;
@@ -527,7 +540,7 @@ function fieldControl(card, definition) {
     scheduleSave(card);
     updateFieldGroupStatus();
   });
-  const labelChildren = [name === "Probability" ? "Probability (%)" : isLinkField(definition) ? linkFieldName(name) : name];
+  const labelChildren = [name === "Probability" ? "Probability (%)" : fieldLabel(definition)];
   if (definition.required) {
     labelChildren.push(
       el("span", { class: "required-marker", "aria-hidden": "true" }, " *"),
@@ -535,34 +548,18 @@ function fieldControl(card, definition) {
     );
   }
   const fieldName = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  const quickClass = name.endsWith(" Title") ? "field-quick-title" : name === "Status" ? "field-quick-status" : name === "Statement" ? "field-quick-statement" : "";
+  const quickClass = name === "Name" ? "field-quick-title" : name === "Status" ? "field-quick-status" : name === "Description" ? "field-quick-statement" : "";
   const wrapper = el("div", { class: `field field-${fieldName} ${quickClass} ${control.tagName === "TEXTAREA" ? "field-wide" : ""}`,
     "data-required": definition.required ? "true" : "false" }, [
     el("label", { for: labelFor }, labelChildren), control,
-    ...(name === "Organization" ? [textSuggestions(input, acceptedOrganizations)] : name === "Owner" ? [textSuggestions(input, acceptedOwners)] : []),
   ]);
   if (definition.computed) wrapper.append(el("small", { id: `${id}-hint` }, "Calculated from the proposal inputs."));
   return wrapper;
 }
 
-function orderedFieldSchema(card) {
-  const fields = [...card.field_schema];
-  const titleIndex = fields.findIndex(definition => definition.name.endsWith(" Title"));
-  if (titleIndex < 0) return fields;
-  const [title] = fields.splice(titleIndex, 1);
-  const statementIndex = fields.findIndex(definition => definition.name === "Statement");
-  if (statementIndex < 0) return [title, ...fields];
-  const [statement] = fields.splice(statementIndex, 1);
-  return [title, statement, ...fields];
-}
-
 function fieldSection(definition) {
-  const name = definition.name.toLowerCase();
-  if (definition.type === "date" || /date/.test(name)) return "Dates";
-  if (/owner|raised by|responsible|accountable/.test(name)) return "Ownership";
-  if (/linked|relationship|dependency/.test(name)) return "Relationships";
-  if (/probability|likelihood|severity|score|priority/.test(name)) return "Assessment";
-  if (/mitigation|response|contingency|validation|action|plan|resolution|impact if/.test(name)) return "Response planning";
+  if (definition.type === "date") return "Dates";
+  if (definition.computed || definition.weights || definition.name === "Probability") return "Assessment";
   return "Details";
 }
 
@@ -594,14 +591,16 @@ function collectFields(card) {
 }
 
 function riskDerived(card, fields) {
-  if (card.category !== "risk") return;
-  const weights = { very_low: .05, low: .1, moderate: .2, medium: .2, high: .4, very_high: .8, critical: .8 };
-  const score = Number(fields.Probability) * weights[fields.Impact];
+  const impact = card.field_schema.find(definition => definition.weights);
+  const scoreField = card.field_schema.find(definition => definition.computed === "risk_score");
+  const severityField = card.field_schema.find(definition => definition.computed === "risk_severity");
+  if (!impact || !scoreField || !severityField) return;
+  const score = Number(fields.Probability) * impact.weights[fields[impact.name]];
   if (!Number.isFinite(score)) return;
-  fields["Risk Score"] = Number(score.toFixed(3));
-  fields["Calculated Severity"] = score >= .5 ? "Sev 1" : score >= .2 ? "Sev 2" : "Sev 3";
+  fields[scoreField.name] = Number(score.toFixed(3));
+  fields[severityField.name] = score >= .5 ? "Sev 1" : score >= .2 ? "Sev 2" : "Sev 3";
   const form = document.querySelector("#proposal-form");
-  for (const name of ["Risk Score", "Calculated Severity"]) {
+  for (const name of [scoreField.name, severityField.name]) {
     const input = form.elements.namedItem(name);
     if (input) input.value = fields[name];
   }
@@ -716,43 +715,39 @@ async function decide(card, decision, note = "") {
 }
 
 function categoryNavigation() {
-  const nav = el("nav", { class: "category-tabs", "aria-label": "Proposal categories" });
-  Object.entries(groupedCards()).forEach(([category, items]) => {
-    const summary = progressSummary.categories?.[category] || { completed: 0, total: items.length, pending: items.length };
-    const remaining = summary.pending ?? items.length;
-    nav.append(el("div", { class: `category-tab category-${category}` }, [
-      el("button", { class: "quiet category-selector", type: "button",
-      "aria-current": category === activeCategory ? "true" : "false",
-      "aria-label": `${label(category)}, ${remaining} remaining`,
-      onclick: () => openFlow(category),
-    }, [
-      el("span", { class: "category-tab-label" }, label(category)),
-      el("span", { class: "category-tab-meta" }, String(remaining)),
-    ]),
-      el("button", { class: "quiet category-tab-create", type: "button", title: `Create ${label(category)} proposal`,
-        "aria-label": `Create ${label(category)} proposal`, onclick: () => createManualProposal(category) }, "+"),
-    ]));
+  const container = el("div", { class: "category-groups" });
+  const grouped = groupedCards();
+  groups.forEach(group => {
+    const nav = el("nav", { class: "category-tabs", "aria-label": `${group.label} categories` });
+    categories.filter(category => category.group === group.id).forEach(category => {
+      const items = grouped[category.id] || [];
+      const summary = progressSummary.categories?.[category.id] || { completed: 0, total: items.length, pending: items.length };
+      const remaining = summary.pending ?? items.length;
+      nav.append(el("div", { class: `category-tab category-${category.id}` }, [
+        el("button", { class: "quiet category-selector", type: "button", title: category.definition,
+          "aria-current": category.id === activeCategory ? "true" : "false",
+          "aria-label": `${category.label}, ${remaining} remaining`,
+          onclick: () => openFlow(category.id),
+        }, [
+          el("span", { class: "category-tab-label" }, category.label),
+          el("span", { class: "category-tab-meta" }, String(remaining)),
+        ]),
+        el("button", { class: "quiet category-tab-create", type: "button", title: `Create ${category.label} proposal`,
+          "aria-label": `Create ${category.label} proposal`, onclick: () => createManualProposal(category.id) }, "+"),
+      ]));
+    });
+    container.append(el("section", { class: "category-group" }, [el("h2", { class: "eyebrow category-group-label" }, group.label), nav]));
   });
-  return nav;
-}
-
-function titleDefinition(card) {
-  return card.field_schema.find(definition => definition.name.endsWith(" Title"));
+  return container;
 }
 
 function quickDefinitions(card) {
-  const preferred = [titleDefinition(card), card.field_schema.find(definition => definition.name === "Status"),
-    card.field_schema.find(definition => definition.name === "Statement"),
-    card.field_schema.find(definition => definition.name === "Priority")];
-  return preferred.filter((definition, index) => definition && preferred.indexOf(definition) === index);
+  return ["Name", "Status", "Description"]
+    .map(name => card.field_schema.find(definition => definition.name === name)).filter(Boolean);
 }
 
 function cardTitle(card) {
-  if (["stakeholder", "system"].includes(card.category)) {
-    return String(card.fields.Name || "").trim() || "No name found";
-  }
-  const title = titleDefinition(card);
-  return card.fields[title?.name] || card.fields.Statement || `${card.category_label} proposal`;
+  return String(card.fields.Name || "").trim() || `${card.category_label} proposal`;
 }
 
 function animateStack(target) {
@@ -808,16 +803,16 @@ function expandedCardContent(card, position, categoryTotal) {
   form.append(quickGrid);
 
   const quickNames = new Set(quick.map(definition => definition.name));
-  const advanced = orderedFieldSchema(card).filter(definition => !quickNames.has(definition.name));
+  const advanced = card.field_schema.filter(definition => !quickNames.has(definition.name) && !isRelationshipField(definition));
   if (advanced.length) {
-    const groups = new Map();
+    const sections = new Map();
     advanced.forEach(definition => {
       const section = fieldSection(definition);
-      if (!groups.has(section)) groups.set(section, []);
-      groups.get(section).push(definition);
+      if (!sections.has(section)) sections.set(section, []);
+      sections.get(section).push(definition);
     });
     const groupContainer = el("div", { class: "field-groups" });
-    groups.forEach((definitions, section) => {
+    sections.forEach((definitions, section) => {
       const fields = el("div", { class: "field-grid" });
       definitions.forEach(definition => fields.append(fieldControl(card, definition)));
       groupContainer.append(el("details", { class: "field-group", open: "" }, [
@@ -829,6 +824,12 @@ function expandedCardContent(card, position, categoryTotal) {
       ]));
     });
     form.append(el("section", { class: "advanced-section", "aria-label": "Additional fields" }, groupContainer));
+  }
+  const relationshipDefinition = card.field_schema.find(isRelationshipField);
+  if (relationshipDefinition) {
+    const ownIds = [card.proposal_id, card.tracker_id].filter(Boolean);
+    form.append(relationshipsSection(ownIds, relationshipDefinition, card.fields[relationshipDefinition.name] ?? "",
+      () => scheduleSave(card)));
   }
 
   const formPane = el("div", { class: "form-pane" }, [
@@ -884,7 +885,7 @@ function showModal(modal, initialFocus, trigger) {
 }
 
 function categoryToolbar(card) {
-  return el("section", { class: "category-toolbar", "aria-label": `${label(activeCategory)} review actions` });
+  return el("section", { class: "category-toolbar", "aria-label": `${categoryLabel(activeCategory)} review actions` });
 }
 
 function renderCategory(options = {}) {
@@ -897,13 +898,13 @@ function renderCategory(options = {}) {
   setHeaderCount(progressSummary.pending ?? cards.length);
   headerControls.replaceChildren(triageControls());
   flow.replaceChildren(categoryNavigation());
-  const list = el("aside", { class: "proposal-list", "aria-label": `${label(activeCategory)} proposals` });
+  const list = el("aside", { class: "proposal-list", "aria-label": `${categoryLabel(activeCategory)} proposals` });
   categoryCards.forEach(item => list.append(renderProposalListItem(item, item === card)));
   const review = el("div", { class: `category-review${card ? "" : " empty-category-review"}` }, card ? [] : [categoryToolbar(card)]);
   if (card) review.append(expandedCardContent(card, categoryCards.indexOf(card) + 1, categoryCards.length));
   else review.append(el("section", { class: "state-panel empty-category-state" }, [
-    el("p", { class: "eyebrow" }, `${label(activeCategory)} results`),
-    el("h2", {}, `No ${label(activeCategory).toLowerCase()} proposals match.`),
+    el("p", { class: "eyebrow" }, `${categoryLabel(activeCategory)} results`),
+    el("h2", {}, `No ${categoryLabel(activeCategory).toLowerCase()} proposals match.`),
     el("p", {}, cards.some(item => item.category === activeCategory)
       ? "Adjust the search or filters to see more proposals."
       : "No proposals in this category are pending."),
@@ -949,7 +950,7 @@ async function createManualProposal(category) {
 
 function applyInboxResult(result) {
   cards = result.cards || [];
-  categories = result.categories || [];
+  applyCatalog(result);
   progressSummary = result.progress || {
     pending: cards.length,
     accepted: 0,
@@ -970,8 +971,9 @@ async function refreshInbox() {
 async function loadInbox() {
   try {
     if (acceptedPage) {
-      const result = await api("/api/accepted");
-      setAcceptedOrganizations(result.items);
+      const [result, inbox] = await Promise.all([api("/api/accepted"), api("/api/inbox")]);
+      applyCatalog(result);
+      cards = inbox.cards || [];
       loading.hidden = true;
       renderAcceptedPage(result.items || []);
       return;
