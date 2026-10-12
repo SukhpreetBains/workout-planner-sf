@@ -68,6 +68,11 @@ export function writeBundle(outDir, filename = 'bundle.html') {
     /[ \t]*<script type="module" src="js\/motion\.js"><\/script>/,
     `  <script type="module">\n${motion}\n  </script>`,
   );
+  if (html.includes('<script src="js/citations.js" defer></script>')) {
+    const citations = read('js/citations.js');
+    if (citations.includes('</script')) throw new Error('bundle: citations.js contains a closing script tag');
+    html = html.replace('<script src="js/citations.js" defer></script>', `<script>\n${citations}\n  </script>`);
+  }
 
   // --- Images ------------------------------------------------------------
   html = html.replace(/(\ssrc=")(assets\/[^"]+)(")/g, (_, before, rel, after) =>

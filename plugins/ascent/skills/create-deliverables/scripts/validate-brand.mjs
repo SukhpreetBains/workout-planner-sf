@@ -776,7 +776,7 @@ export function validateBuild(dir) {
       if (value === undefined || value === '') continue;
       if (value.startsWith('#')) continue;
       const bad = value.startsWith('/') || /^[a-z]+:/i.test(value) || /^[A-Za-z]:[\\/]/.test(value);
-      report.check(!bad, 'rule 23',
+      report.check(!bad || (attr === 'href' && allowedSourceDocumentLink(el)), 'rule 23',
         `<${el.tag} ${attr}="${value}"> is not a relative path. Everything a deliverable loads travels with it.`);
     }
   }
@@ -881,13 +881,31 @@ export function validateBuild(dir) {
 
 function externalReferences(text) {
   const hits = [];
-  const attrRe = /\b(?:src|href|poster|action|srcset)\s*=\s*["']\s*((?:https?:)?\/\/[^"']*)/gi;
+  const attrRe = /\b(?:src|poster|action|srcset)\s*=\s*["']\s*((?:https?:)?\/\/[^"']*)/gi;
   const urlRe = /url\(\s*["']?\s*((?:https?:)?\/\/[^"')]*)/gi;
   const importRe = /\bfrom\s*["']((?:https?:)?\/\/[^"']*)|\bimport\s*\(\s*["']((?:https?:)?\/\/[^"']*)/gi;
   for (const re of [attrRe, urlRe, importRe]) {
     for (const m of text.matchAll(re)) hits.push((m[1] ?? m[2]).slice(0, 60));
   }
+  if (/<[a-z][^>]*\bhref\s*=/i.test(text)) {
+    for (const el of parseHtml(text)) {
+      const href = el.attrs.href;
+      if (href && /^(?:https?:)?\/\//i.test(href) && !allowedSourceDocumentLink(el)) {
+        hits.push(href.slice(0, 60));
+      }
+    }
+  }
   return [...new Set(hits)];
+}
+
+function allowedSourceDocumentLink(el) {
+  return el.tag === 'a'
+    && el.attrs['data-source-document-link'] === 'true'
+    && el.attrs.target === '_blank'
+    && (el.attrs.rel ?? '').split(/\s+/).includes('noopener')
+    && (el.attrs.rel ?? '').split(/\s+/).includes('noreferrer')
+    && el.parents.some(parent => hasClass(parent, 'source-panel'))
+    && /^https?:\/\//i.test(el.attrs.href ?? '');
 }
 
 function lengthToPx(value) {
