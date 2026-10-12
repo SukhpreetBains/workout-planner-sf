@@ -29,6 +29,30 @@ def header(category: str, schema: dict) -> list[str]:
     return cols
 
 
+def is_relationships(column: dict) -> bool:
+    return column.get("type") == "relationships"
+
+
+def parse_relationships(value: object) -> list[tuple[str, str]]:
+    """Split a Relationships cell into (meaning, target ID) pairs.
+
+    An entry without a colon is returned with an empty meaning so validation
+    can report it rather than silently dropping it.
+    """
+    entries = []
+    for part in str(value or "").split(";"):
+        part = part.strip()
+        if not part:
+            continue
+        meaning, separator, target = part.partition(":")
+        entries.append((meaning.strip(), target.strip()) if separator else ("", part))
+    return entries
+
+
+def format_relationships(entries: list[tuple[str, str]]) -> str:
+    return "; ".join(dict.fromkeys(f"{meaning}: {target}" for meaning, target in entries))
+
+
 def normalize_enum(value: object) -> str:
     """Normalize human labels such as ``Very High`` to schema enum keys."""
     return str(value).strip().lower().replace("-", "_").replace(" ", "_")
@@ -53,14 +77,14 @@ def coerce_value(column: dict, value: object) -> object:
 
 def apply_computed_fields(category: str, fields: dict, schema: dict) -> None:
     """Fill computed fields only when all inputs are supplied on this write."""
-    if category != "risk":
+    columns = schema["categories"][category]["columns"]
+    if not any(c.get("computed") == "risk_score" for c in columns):
         return
     probability = fields.get("Probability")
     impact = fields.get("Impact")
     if probability in (None, "") or impact in (None, ""):
         return
-    impact_col = next(c for c in schema["categories"]["risk"]["columns"]
-                      if c["name"] == "Impact")
+    impact_col = next(c for c in columns if c["name"] == "Impact")
     weight = impact_col["weights"].get(normalize_enum(impact))
     if weight is None:
         return

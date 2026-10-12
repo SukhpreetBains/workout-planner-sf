@@ -2,7 +2,7 @@
 
 Read alongside `workspace-add`'s normal instructions. This
 never introduces a new tracker category or column — every finding still
-goes through the same `risk` / `issue` / `stakeholder` / etc. categories
+goes through the same `risk` / `issue` / `person` / etc. categories
 defined in `shared/schema/trackers.yaml`. It only shapes what to weight
 and how to phrase what gets extracted.
 
@@ -15,7 +15,7 @@ and how to phrase what gets extracted.
   the whole point of the finding.
 - **PHI/PII sensitivity.** If a source document contains or references
   actual patient- or member-identifiable information, do not copy it
-  into a proposed row's `Statement` or evidence excerpt. Summarize the
+  into a proposed item's `Name`, `Description`, or evidence excerpt. Summarize the
   nature of the finding without reproducing the identifying detail, and
   say plainly in the proposal that the source contains PHI so a
   reviewer knows to handle it carefully.
@@ -23,7 +23,7 @@ and how to phrase what gets extracted.
   version, or integration engine (HL7 v2 vs. FHIR R4, a named HIE) is
   usually more useful to a downstream reader than "systems don't talk to
   each other" — extract the specific detail when the source gives one.
-- **Payer/provider/pharma distinction.** When a stakeholder or system is
+- **Payer/provider/pharma distinction.** When a person, organization, or system is
   described, note which side of the payer/provider/pharma relationship
   it sits on if the document makes that clear — it changes who owns a
   decision or risk.

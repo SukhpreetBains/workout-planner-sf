@@ -1,4 +1,4 @@
-"""Acceptance coverage for the visual review inbox and RAIDD migration."""
+"""Acceptance coverage for the visual review inbox and tracker migration."""
 
 from __future__ import annotations
 
@@ -57,8 +57,8 @@ class VisualReviewTest(unittest.TestCase):
             "category": "risk",
             "action": "add",
             "fields": {
-                "Risk Title": "Late test data",
-                "Statement": "Test data may arrive late.",
+                "Name": "Late test data",
+                "Description": "Test data may arrive late.",
                 "Probability": 0.9,
                 "Impact": "Very High",
                 "Status": "Active",
@@ -79,7 +79,7 @@ class VisualReviewTest(unittest.TestCase):
             self.assertEqual(self.server_module.start(self.root), 2)
 
     def test_trackers_only_sync_exports_accepted_values_without_document_scan(self):
-        self.proposal([self.risk(), self.risk(fields={"Risk Title": "Pending risk", "Statement": "Still pending."})])
+        self.proposal([self.risk(), self.risk(fields={"Name": "Pending risk", "Description": "Still pending."})])
         card = self.store.list_cards()["cards"][0]
         self.store.accept(card["proposal_id"], card["revision"], "snapshot-accept")
         sync_module = importlib.import_module("sync")
@@ -93,7 +93,7 @@ class VisualReviewTest(unittest.TestCase):
             self.assertEqual(sync_module.main(), 0)
         snapshot = yaml.safe_load(copy_path.read_text(encoding="utf-8"))
         self.assertEqual(snapshot["count"], 1)
-        self.assertEqual(snapshot["rows"][0]["Statement"], card["fields"]["Statement"])
+        self.assertEqual(snapshot["rows"][0]["Description"], card["fields"]["Description"])
         self.assertTrue(snapshot["rows"][0]["Risk ID"])
         self.assertIn("Source Refs", snapshot["rows"][0])
         self.assertEqual(self.paths.SEARCH_DB.read_bytes(), index_before)
@@ -121,8 +121,8 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(inbox["counts"].get("risk", 0), 0)
 
     def test_typed_validation_and_path_containment(self):
-        update = self.risk(fields={"Risk Title": "Bad probability", "Statement": "Risk", "Probability": 1.2,
-                                           "Impact": "Very High", "Date Raised": "not-a-date"})
+        update = self.risk(fields={"Name": "Bad probability", "Description": "Risk", "Probability": 1.2,
+                                           "Impact": "Very High", "Target Date": "not-a-date"})
         document = {"source_refs": ["../outside.md"], "updates": [update]}
         problems = self.validation.validate(document, self.paths.load_schema())
         self.assertTrue(any("at most 0.9" in problem for problem in problems))
@@ -163,8 +163,8 @@ class VisualReviewTest(unittest.TestCase):
         migrated = load_workbook(path, data_only=False)
         sheet = migrated["Risks"]
         headers = [cell.value for cell in sheet[1]]
-        self.assertIn("Issue Title", [cell.value for cell in migrated["Issues"][1]])
-        self.assertIn("Delivery Date", [cell.value for cell in migrated["Dependencies"][1]])
+        self.assertIn("Name", [cell.value for cell in migrated["Issues"][1]])
+        self.assertIn("Target Date", [cell.value for cell in migrated["Dependencies"][1]])
         self.assertEqual(sheet.cell(2, headers.index("Custom Score") + 1).value, "=LEN(B2)")
         self.assertEqual(sheet.cell(2, headers.index("Notes") + 1).value, "Keep me")
 
@@ -172,7 +172,7 @@ class VisualReviewTest(unittest.TestCase):
         self.proposal([self.risk()])
         card = next(card for card in self.store.list_cards()["cards"]
                     if card["category"] == "risk")
-        fields = dict(card["fields"], Owner="Sam")
+        fields = dict(card["fields"], Description="Test data may arrive two weeks late.")
         saved = self.store.autosave(card["proposal_id"], card["revision"], fields)
         self.assertEqual(saved["revision"], 2)
         with self.assertRaises(self.store.RevisionConflict):
@@ -183,7 +183,7 @@ class VisualReviewTest(unittest.TestCase):
     def test_accept_is_item_level_atomic_and_idempotent(self):
         self.proposal([self.risk(), {
             "category": "issue", "action": "add",
-            "fields": {"Issue Title": "UAT delay", "Statement": "UAT is delayed", "Status": "active"},
+            "fields": {"Name": "UAT delay", "Description": "UAT is delayed", "Status": "open"},
         }])
         card = next(card for card in self.store.list_cards()["cards"]
                     if card["category"] == "risk")
@@ -216,16 +216,20 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
         self.assertEqual(len(self.store.list_cards()["cards"]), 1)
 
-    def test_cross_category_raidd_links(self):
+    def test_relationships_connect_any_categories(self):
         schema = self.paths.load_schema()
+        system_id = self.trackers.upsert_row("system", {
+            "Name": "UAT sandbox", "Status": "active",
+            "Source Refs": "workspace/meetings/2026-08-27 - Review.md",
+        }, schema)
         issue_id = self.trackers.upsert_row("issue", {
-            "Statement": "UAT is delayed", "Status": "active",
+            "Name": "UAT delayed", "Description": "UAT is delayed", "Status": "open",
             "Source Refs": "workspace/meetings/2026-08-27 - Review.md",
         }, schema)
         update = {
             "category": "decision", "action": "add",
-            "fields": {"Decision Title": "More test capacity", "Statement": "Add test capacity", "Status": "decided",
-                       "Linked RAIDD IDs": issue_id},
+            "fields": {"Name": "More test capacity", "Description": "Add test capacity", "Status": "decided",
+                       "Relationships": f"addresses: {issue_id}; applies_to: {system_id}"},
         }
         problems = self.validation.validate({
             "source_refs": ["workspace/meetings/2026-08-27 - Review.md"],
@@ -234,7 +238,7 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(problems, [])
 
     def test_reject_never_writes_and_flag_stays_pending(self):
-        self.proposal([self.risk(), self.risk(fields={"Risk Title": "Second risk title", "Statement": "Second risk"})])
+        self.proposal([self.risk(), self.risk(fields={"Name": "Second risk title", "Description": "Second risk"})])
         first, second = self.store.list_cards()["cards"]
         self.store.reject(first["proposal_id"], first["revision"], "Duplicate")
         self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
@@ -312,7 +316,7 @@ class VisualReviewTest(unittest.TestCase):
         pending = self.store.list_cards()["cards"]
         self.assertEqual(len(pending), 1)
         self.assertEqual(pending[0]["proposal_id"], result["proposal_id"])
-        self.assertEqual(pending[0]["fields"]["Statement"], card["fields"]["Statement"])
+        self.assertEqual(pending[0]["fields"]["Description"], card["fields"]["Description"])
         self.assertEqual(pending[0]["evidence"], card["evidence"])
         self.assertEqual(self.store.list_cards()["progress"]["accepted"], 0)
         self.assertEqual(self.store.list_cards()["progress"]["pending"], 1)
@@ -321,33 +325,46 @@ class VisualReviewTest(unittest.TestCase):
         self.paths.APPLIED_UPDATES_DIR.mkdir(parents=True, exist_ok=True)
         archive = self.paths.APPLIED_UPDATES_DIR / "batch.yaml"
         archive.write_text(yaml.safe_dump({"updates": [
-            {"category": "risk", "fields": {"Statement": "First risk"},
+            {"category": "risk", "fields": {"Description": "First risk"},
              "evidence": [{"source_ref": "workspace/first.md", "excerpt": "First evidence"}]},
-            {"category": "risk", "fields": {"Statement": "Second risk"},
+            {"category": "risk", "fields": {"Description": "Second risk"},
              "evidence": [{"source_ref": "workspace/second.md", "excerpt": "Second evidence"}]},
         ]}, sort_keys=False), encoding="utf-8")
 
         evidence = self.store.accepted_evidence(
-            "risk", "R002", {"Statement": "Second risk"}, ["workspace/second.md"],
+            "risk", "R002", {"Description": "Second risk"}, ["workspace/second.md"],
             self.store.applied_evidence_index())
         self.assertEqual(evidence[0]["source_ref"], "workspace/second.md")
 
-    def test_display_label_covers_non_statement_categories(self):
+    def test_display_label_uses_name_then_id(self):
         schema = self.paths.load_schema()
-        cases = [
-            ("stakeholder", {"Name": "Executive Sponsor"}, "Executive Sponsor"),
-            ("system", {"Name": "Customer Portal"}, "Customer Portal"),
-            ("open_question", {"Question": "Who approves the budget?"}, "Who approves the budget?"),
-            ("session", {"Name": "Kickoff workshop"}, "Kickoff workshop"),
-            ("operating_model", {"Name": "Delivery governance"}, "Delivery governance"),
-            ("plan_item", {"Name": "Confirm ownership"}, "Confirm ownership"),
-            ("workflow_stage", {"Workflow Name": "Intake", "Stage Name": "Assess"}, "Intake: Assess"),
-        ]
-        for category, fields, expected in cases:
-            with self.subTest(category=category):
-                self.assertEqual(self.store.display_label(category, fields, schema), expected)
-
+        self.assertEqual(self.store.display_label("person", {"Name": "Maria Chen"}, schema), "Maria Chen")
         self.assertEqual(self.store.display_label("session", {"Session ID": "SES-001"}, schema), "SES-001")
+        self.assertEqual(self.store.display_label("risk", {}, schema), "Untitled")
+
+    def test_inbox_serves_grouped_catalog_with_readable_labels(self):
+        inbox = self.store.list_cards()
+        self.assertEqual([group["id"] for group in inbox["groups"]], ["entity", "signal"])
+        categories = {category["id"]: category for category in inbox["categories"]}
+        self.assertEqual(categories["out_of_scope_item"]["label"], "Out of Scope Item")
+        self.assertEqual(categories["person"]["group"], "entity")
+        self.assertEqual(categories["risk"]["group"], "signal")
+        meanings = {meaning["id"]: meaning for meaning in inbox["relationships"]}
+        self.assertEqual(meanings["blocks"]["inverse_label"], "Blocked by")
+        self.assertIn("holds_role", meanings)
+
+    def test_accepting_a_target_swaps_its_id_and_rejecting_removes_it(self):
+        person = {"category": "person", "action": "add", "fields": {"Name": "Sam Lee"}}
+        owner = {"category": "person", "action": "add", "fields": {"Name": "Priya Anand"}}
+        self.proposal([person, owner], name="people.yaml")
+        people = {card["fields"]["Name"]: card for card in self.store.list_cards()["cards"]}
+        sam, priya = people["Sam Lee"]["proposal_id"], people["Priya Anand"]["proposal_id"]
+        self.proposal([self.risk(fields={"Name": "Late test data", "Description": "Test data may arrive late.",
+                                         "Relationships": f"owned_by: {sam}; raised_by: {priya}"})])
+        accepted = self.store.accept(sam, people["Sam Lee"]["revision"], "accept-sam")
+        self.store.reject(priya, people["Priya Anand"]["revision"], "Not a stakeholder")
+        risk = next(card for card in self.store.list_cards()["cards"] if card["category"] == "risk")
+        self.assertEqual(risk["fields"]["Relationships"], f"owned_by: {accepted['tracker_id']}")
 
     def test_concurrent_revision_allows_only_one_edit(self):
         self.proposal([self.risk()])
@@ -357,7 +374,7 @@ class VisualReviewTest(unittest.TestCase):
         def edit(owner: str):
             try:
                 outcomes.append(self.store.autosave(card["proposal_id"], 1,
-                                                     dict(card["fields"], Owner=owner)))
+                                                     dict(card["fields"], Description=owner)))
             except self.store.RevisionConflict:
                 outcomes.append("conflict")
 

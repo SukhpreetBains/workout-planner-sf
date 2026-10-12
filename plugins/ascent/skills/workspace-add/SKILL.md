@@ -110,20 +110,39 @@ meeting material or current-state / future-state / reference material, and
 returns:
 
 - the classification;
-- candidate findings, each with its category, proposed field values, and
-  source-linked evidence — the `source_ref` plus a short verbatim
-  `excerpt` that on its own supports the whole finding (a heading or label
-  alone is not evidence; line numbers only when actually known);
+- candidate findings, each with its category, proposed field values,
+  any relationships the source states (meaning plus the other finding or
+  record it points to), and source-linked evidence — the `source_ref` plus
+  a short verbatim `excerpt` that on its own supports the whole finding (a
+  heading or label alone is not evidence; line numbers only when actually
+  known);
 - a `basis` on every finding: `stated` when the excerpt says it directly,
   or `inferred` when it is a reading between the lines, naming what it was
   inferred from.
 
+The subagent classifies with the schema's definitions, not by keyword.
+Each category has a `group` (entity: who or what the project is about;
+signal: what we learned), a `definition`, a `bar_to_clear`, `lookalikes`
+that say how it differs from the categories it is most often confused
+with, and `examples`. Pick the category whose definition the excerpt fits;
+when two compete, apply the lookalike distinction the schema states. One
+statement becomes one finding in one category; split a passage only when
+it states independent things. `ontology.dropped` lists kinds of content
+Ascent does not track and where that content goes instead.
+
+Fill only the fields the excerpt supports and leave the rest empty for the
+reviewer: no guessed owners, dates, statuses, probabilities, impacts, or
+sentiment. A finding whose category cannot be decided from the source is
+not proposed; it is listed in the handoff with the categories it could be.
+
 For meeting material, the subagent checks five categories deliberately:
-decisions, open questions, stakeholders, action items, and risks.
+decisions, open questions, people, action items, and risks. It records
+roles as well as the people named in them.
 
 For a contract, statement of work, or services schedule, the subagent
-returns every stated fee, cap or limit, scope exclusion, dependency, and
-date as its own finding, not just the headline ones. Lists of limits and
+returns every stated fee, cap or limit, commercial term, scope inclusion
+and exclusion, dependency, and date as its own finding, not just the
+headline ones. Lists of limits and
 exclusions are easy to skim past, and each item is what the team later
 checks scope against.
 
@@ -186,9 +205,9 @@ sources:
 ## Step 4 — Reconcile and propose
 
 The parent turns the batch's curated findings into proposals. Read
-`<shared-skill-dir>/schema/trackers.yaml`: it defines every category, what
-belongs in each, the bar a finding must clear, and the exact columns and
-allowed values.
+`<shared-skill-dir>/schema/trackers.yaml`: it defines every category (its
+group, definition, bar to clear, lookalikes, and examples), every
+relationship meaning, and the exact columns and allowed values.
 
 Work from what the subagents returned:
 
@@ -212,20 +231,21 @@ Reconcile before proposing:
   one proposal carrying evidence from each document.
 - **Against existing tracker rows** — check
   `workspace/.system/tracker-copies/`; propose an `update` to enrich an
-  existing row rather than an `add` that duplicates it, and use existing
-  row IDs when filling `... IDs` link columns.
+  existing row rather than an `add` that duplicates it, and point
+  relationships at existing row IDs.
 - **Against earlier batches in this run** — tracker copies do not show
   pending proposals, so also check the proposal files already written this
   run and extend those instead of duplicating them.
 
-**Stakeholders are named people.** Propose a stakeholder row only for a
-named person. When a source describes a role without naming who fills it
-("Experian technical lead"), propose an `open_question` asking who fills
-it, or an `action_item` to assign someone, instead. When a later document
-names the person behind a role an earlier batch in this run recorded,
-revise that earlier proposal (incrementing its `revision`) rather than
-adding a second row; if the role is already an approved tracker row,
-propose an `update` to it.
+**People are named individuals; roles are positions.** Propose a
+`person` only for a named individual. When a source describes a role
+without naming who fills it ("Experian technical lead"), propose the
+`role`, plus an `open_question` asking who fills it when the team needs to
+know. Record who fills a role with a `holds_role` relationship from the
+person to the role. When a later document names the person behind a role,
+propose (or update) that person with the `holds_role` relationship rather
+than recording the person as the role. Never propose the same person,
+team, or system twice under different categories.
 
 **When sources disagree**, the stronger source wins:
 
@@ -238,50 +258,62 @@ When a later document contradicts a signed one with no evidence of a
 formal change, keep the signed value and propose an `open_question` naming
 both sources.
 
-**Title every risk, assumption, issue, decision, and dependency.** The
-`… Title` column is required: a short summary of three to eight words that
-names the item, written fresh rather than copied or cut from the statement.
+**Name every item.** `Name` is required in every category. For an
+entity, it is the thing's own name ("Maria Chen", "QueueBoard"). For a
+signal, it is a short summary of three to eight words written fresh rather
+than copied or cut from the Description, which carries the full statement.
 For example, "Single-point routing through Danielle" for a risk whose
-statement explains how relying on one Experian contact for every request
+description explains how relying on one Experian contact for every request
 could slow decisions, or "Standard data model first" for a decision to
 extend Salesforce's standard model before building a custom one. The
-validator rejects a missing title, a title that repeats the statement, and
+validator rejects a missing name, a name that repeats the description, and
 one that ends in "…".
 
 **Classify by what the finding is:**
 
-- Caps, limits, and exclusions are constraints. "Up to" scope limits, fees
-  and fee caps, contracted date windows, and scope exclusions are a
-  `constraint` (contractual, budget, or timeline), not a `requirement`;
-  requirements are what the solution or delivery must do.
+- Caps, limits, and commercial terms are constraints. "Up to" limits,
+  fees and fee caps, payment and invoicing terms, acceptance windows, and
+  contracted date windows are a `constraint`, not a `requirement`; name the
+  authority and quote the contract wording. Excluded or deferred work is an
+  `out_of_scope_item`, and included work is a `scope_item`. Requirements
+  are what the solution or delivery must do.
 - Internal Slalom commercial material stays out of the trackers. Do not
   propose pricing-tool guidance, rates, margins, contingencies, or internal
   cost structures. File and log the document as usual and say in the
   handoff that it was filed without proposals. Commercial terms in a
   signed client agreement are client-agreed and remain valid budget
   constraints.
-- Plan items keep the status their source states. Never set `complete` or
-  `delayed` without a source saying so. Propose milestones whose date has
+- Phases, milestones, deliverables, and action items keep the status their
+  source states. Never set `completed`, `achieved`, `missed`, or
+  `delivered` without a source saying so. Propose milestones whose date has
   passed like any others, and also list them in the handoff as having no
   confirmed outcome.
-- A RACI becomes one `operating_model` row per activity (`Model Type:
-  responsibility_assignment`). While its parties are organizations or teams
-  rather than named people, record each party's letter in `Activity` (for
-  example "RACI: ECS Business C; Slalom R"); use the Responsible,
-  Accountable, Consulted, and Informed link columns once a named
-  stakeholder holds the role.
+- A RACI becomes one `governance_rule` per activity. Link the Responsible
+  parties with `owned_by` and the Accountable party with `accountable_to`
+  (a person, role, or organization), and list the Consulted and Informed
+  parties in the Description (for example "Consulted: ECS Business;
+  Informed: Finance").
 - Kickoff decks, talk tracks, and agendas describe intentions. Their next
   steps and agenda topics become `action_item`s only when the source states
-  an owner or a commitment; otherwise propose them as `plan_item`s or not at
-  all. Never propose notes aimed at the presenter or about the document
-  itself.
+  an owner or a commitment; otherwise propose them as a `phase`,
+  `milestone`, or `deliverable` when the content fits that definition, or
+  not at all. Never propose notes aimed at the presenter or about the
+  document itself.
 
-**Linking to rows that do not exist yet.** When a finding links to a
-stakeholder, system, or other row that is not in the trackers, propose that
-row as well and put its `proposal_id` in the link column (`;`-separated
-alongside any existing IDs). It may come from this batch or an earlier batch
-in this run. The review inbox swaps it for the real tracker ID when that row
-is approved and removes it if the row is rejected.
+**Relationships.** Connect records through the `Relationships` column:
+`<meaning>: <ID>` entries separated by `; `, where the meaning is a key of
+`relationships` in trackers.yaml (for example `owned_by: PER-003;
+impacts: MIL-002`). Store each relationship once, on its source record —
+the action carries `owned_by`, not the person — following the direction
+each meaning's definition gives. Add a relationship only when the source
+states the connection; appearing in the same document is not one. Use the
+most specific meaning that fits and `related_to` only when none does.
+
+When a relationship points to a person, system, or other record that is
+not in the trackers, propose that record as well and use its
+`proposal_id` as the ID. It may come from this batch or an earlier batch
+in this run. The review inbox swaps it for the real tracker ID when that
+record is approved and removes the relationship if it is rejected.
 
 Subagents cite `workspace/inbox/...` paths, but Step 3 has since filed those
 documents; rewrite every `source_ref` to the document's filed location (or
@@ -293,20 +325,20 @@ label, or one-word cell is not evidence for anything it does not say. Never prop
 propose it as an `open_question` citing the excerpt it was inferred from,
 or list it in the handoff as not proposed. For meeting material, cite the
 session note (not the raw transcript) as the primary `source_refs` entry,
-and check decisions, open questions, stakeholders, action items, and risks
+and check decisions, open questions, people, action items, and risks
 deliberately; meetings are the richest source for those five.
 
 - **Action items** — propose every follow-up that has an owner or a stated
-  need to assign one. Link the owner through `Owner Stakeholder IDs`,
-  using a pending stakeholder's `proposal_id` if needed. Fill `Due Date`
-  whenever the source gives a calendar date ("at the August 17
-  onboarding"); keep relative timing such as "before kickoff" in the
-  statement.
-- **Risks** — propose each stated risk that clears the bar, carrying any
-  mitigation the source gives.
-- **Sessions** — propose one `session` row for every meeting processed,
-  with `Status: completed`, `Scheduled Start` set to its date (left empty
-  when the meeting is undated), and its session note as the source.
+  need to assign one. Link the owner with `owned_by`, using a pending
+  person's `proposal_id` if needed. Fill `Target Date` whenever the source
+  gives a calendar date ("at the August 17 onboarding"); keep relative
+  timing such as "before kickoff" in the Description.
+- **Risks** — propose each stated risk that clears the bar, with any
+  mitigation the source gives in its Description. Leave `Probability` and
+  `Impact` empty unless the source supports them.
+- **Sessions** — propose one `session` for every meeting processed, with
+  `Status: completed`, `Date` set to its date (left empty when the meeting
+  is undated), and its session note as the source.
 
 Write one file per batch to
 `workspace/.system/proposed-updates/<YYYY-MM-DD>-<short-topic>.yaml`:
@@ -319,9 +351,10 @@ updates:
     revision: 1
     action: add            # or: update (then also give `id: PAIN-003`)
     fields:
-      Statement: Invoice approvals take 9 days because the handoff is manual.
-      Pain Type: process
-      Severity: high
+      Name: Slow manual invoice approvals
+      Description: Invoice approvals take 9 days because the handoff is manual.
+      Status: active
+      Relationships: "raised_by: PER-002; impacts: SYS-004"
     evidence:
       - source_ref: workspace/meetings/2026-08-14 - Kickoff.md
         excerpt: "Invoice approvals take 9 days because the handoff is manual."
@@ -362,9 +395,10 @@ step implicit. State:
 - how many documents were processed and in how many batches, and whether
   curation fell back to running without subagents;
 - the total number of evidence-backed items ready for their review, with
-  counts by category;
-- how many subagent candidates were dropped, grouped by reason, and any
-  inferred findings that were not proposed;
+  counts by category, entities first and then signals;
+- how many subagent candidates were dropped, grouped by reason, any
+  inferred findings that were not proposed, and any finding whose category
+  could not be decided;
 - any documents filed without proposals and why, and any milestones whose
   date has passed with no source confirming the outcome;
 - that these are proposed facts, not yet the project's official working

@@ -103,6 +103,7 @@ The trackers are:
 - `current-state.xlsx`
 - `future-state.xlsx`
 - `raid.xlsx`
+- `delivery.xlsx`
 
 ## 6. Hand documents to a fresh chat
 
@@ -125,7 +126,7 @@ The skill:
 1. Reads or converts each document.
 2. For a meeting transcript or raw notes, writes a structured session note under `workspace/meetings/` and files the transcript beside it. For everything else, files it into `current-state/`, `future-state/`, or `reference/`.
 3. Records it in `workspace/.system/sources.yaml`.
-4. Extracts evidence-backed stakeholders, pain points, systems, objectives, requirements, risks, assumptions, issues, decisions, dependencies, constraints, and open questions.
+4. Extracts evidence-backed entities (people, roles, organizations, systems, phases, and more) and signals (pain points, requirements, risks, decisions, action items, and more), classified with the category definitions in `shared/schema/trackers.yaml`, and the relationships the sources state between them.
 5. Writes proposed changes into `workspace/.system/proposed-updates/`.
 6. Validates the proposals and refreshes the search index.
 

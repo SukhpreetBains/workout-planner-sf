@@ -1,438 +1,1269 @@
 # Tracker schema — the single source of truth for what the project trackers
-# contain and what the agent may extract from documents.
+# contain, what the agent may extract from documents, and how the review inbox
+# presents it.
 #
 # Plain-English model:
 #   Documents produce FINDINGS. Each finding belongs to one CATEGORY below.
-#   Approved findings become rows in one of four Excel TRACKERS in
-#   workspace/trackers/. Every row cites the document(s) it came from in its
-#   "Source Refs" column (workspace-relative paths, "; "-separated).
+#   Categories are grouped as ENTITIES (who or what the project is about) or
+#   SIGNALS (what we learned). Approved findings become rows in one of five
+#   Excel TRACKERS in workspace/trackers/. Every row cites the document(s) it
+#   came from in its "Source Refs" column (workspace-relative paths,
+#   "; "-separated).
+#
+# Category vocabulary is adapted from "Ascent Ontology v1.1" (Joe's team,
+# revision of October 6, 2026). Where several ontology types were combined
+# into one category, `ontology_types` lists them and `merge_reason` records
+# why. Types left out entirely are listed under `ontology.dropped`.
 #
 # Column conventions:
 #   - The first column of every tab is the row ID: <prefix> + zero-padded
 #     number (e.g. PAIN-007). IDs are assigned by apply_updates.py, never by
 #     the agent.
 #   - required: true columns must be supplied when adding a row.
-#   - Columns whose name ends in " IDs" hold "; "-separated row IDs from
-#     another tab — that is how rows link to each other.
-#   - "Source Refs", "Created At", "Updated At" exist on every tab and are
-#     managed by apply_updates.py ("Source Refs" comes from the update file).
+#   - Every category has Name, Description, Status, and Relationships. A few
+#     add dates or risk scoring where deliverables depend on them.
+#   - The Relationships column holds "; "-separated "<meaning>: <ID>" entries,
+#     e.g. "owned_by: PER-001; depends_on: DEP-004". The meaning is a key of
+#     `relationships` below; the ID is any row ID or pending proposal_id. A
+#     relationship is stored once, on its source record; the target shows it
+#     under the relationship's inverse label.
+#   - "Source Refs", "Notes", "Created At", "Updated At" exist on every tab and
+#     are managed by apply_updates.py ("Source Refs" comes from the update
+#     file).
+#   - A column's optional `label` replaces its name in the review inbox.
 
-schema_version: "1.2"
+schema_version: "2.0"
 list_delimiter: "; "
+
+ontology:
+  source: Ascent Ontology v1.1 (Joe's team), quality-assurance revision of October 6, 2026
+  dropped:
+    artifact: >-
+      Source documents are already recorded in sources.yaml and cited as
+      evidence on every item, and the ontology itself says not to create
+      artifact entities just to carry provenance. A promised document is a
+      deliverable.
+    location: >-
+      Rarely a subject of review on its own. Name the geography in the scope
+      item, constraint, or description it applies to.
+    milestone (entity): >-
+      Kept as a signal only. The ontology pairs an entity with a signal so a
+      new date can supersede an old one while the event keeps its identity;
+      Ascent updates records in place, so the pair would show reviewers the
+      same item twice.
+    deliverable (entity): >-
+      Kept as a signal only, for the same reason as milestone.
+    context_fact: >-
+      A fact about one thing belongs in that entity's Description, and role
+      occupancy ("Maria is the Executive Sponsor") is a holds_role
+      relationship. The ontology warns that context_fact must not become a
+      fallback for unclear evidence.
+    status_update: >-
+      A lifecycle report about a tracked item ("CR-12 was approved",
+      "design signoff happened") becomes an update to that item's Status.
+      Standalone progress and health snapshots are not tracked; revisit for
+      the weekly status report.
+    uncategorized: >-
+      The review inbox cannot move an item between categories. A finding that
+      cannot be classified is listed in the handoff instead of proposed.
+  dropped_relationships:
+    duplicates: Duplicates are merged into one proposal before review.
+    supersedes: Records are updated in place, so there is no replaced record to point at.
+    contradicts: >-
+      When sources conflict, the stronger source wins; an unresolved conflict
+      becomes an open_question naming both sources.
+
+groups:
+  entity:
+    label: Entities
+    definition: >-
+      A stable, noun-like project referent that answers "who or what is this
+      about?" An entity keeps its identity when facts about it change. Create
+      one entity per referent: never the same person, team, or system twice
+      under different categories, and never two entities merely because two
+      things share a name.
+  signal:
+    label: Signals
+    definition: >-
+      An evidence-backed proposition that answers "what did we learn?" — a
+      commitment, condition, choice, problem, question, or other project
+      knowledge. Each signal states one thing and belongs to exactly one
+      category. Split a passage into several signals only when it states
+      independent things; never record one statement under several categories.
+
+relationships:
+  owned_by:
+    label: Owned by
+    inverse_label: Owns
+    definition: >-
+      Any record → the person, role, or organization that directly carries out
+      or maintains it. Ownership is execution responsibility, not approval
+      authority and not who raised it.
+    lookalikes:
+      - accountable_to — who the work answers to for its outcome.
+      - raised_by — who surfaced it; the person who raises an issue often does not own it.
+    examples:
+      - '"David will send the data dictionary by Thursday." → action owned_by David.'
+      - '"The migration team owns the runbook." → runbook deliverable owned_by Migration Team.'
+      - Being mentioned in a meeting, authoring an email, or attending does not establish ownership.
+  accountable_to:
+    label: Accountable to
+    inverse_label: Accountable for
+    definition: >-
+      Any record → the person, role, or organization it is answerable to for
+      its outcome, including a reporting line between people.
+    lookalikes:
+      - owned_by — who does the work.
+      - decided_by — who made a particular choice.
+    examples:
+      - '"The migration team owns the runbook and is answerable to the sponsor for it." → runbook owned_by Migration Team; runbook accountable_to Sponsor.'
+      - '"Jordan reports to Dana." → Jordan accountable_to Dana.'
+  raised_by:
+    label: Raised by
+    inverse_label: Raised
+    definition: >-
+      A signal → the person, role, or organization that first surfaced the
+      concern, request, question, suggestion, or opinion.
+    lookalikes:
+      - owned_by — who will act on it.
+    examples:
+      - '"Maria raised the access issue; the support team will resolve it." → issue raised_by Maria; the resolution task is owned_by Support Team.'
+      - '"John suggested moving the demo to Friday." → proposal raised_by John.'
+  decided_by:
+    label: Decided or approved by
+    inverse_label: Decided or approved
+    definition: >-
+      A decision, change request, or other record → the person, role, or
+      organization that actually made the choice or granted the approval.
+    ontology_types: [decided_by, approved_by]
+    merge_reason: >-
+      Both name the party with authority over a specific item; the item's
+      category (decision or change request) already says which act it was.
+    lookalikes:
+      - A rule that someone must approve (a governance_rule) is not evidence that anything was approved.
+      - A pending or requested approval gets no decided_by link until approval happens.
+    examples:
+      - '"The sponsor selected Option B and approved CR-12." → decision decided_by Sponsor; CR-12 decided_by Sponsor.'
+      - '"The sponsor must approve CR-12 before it proceeds." → no decided_by link.'
+  holds_role:
+    label: Holds role
+    inverse_label: Held by
+    definition: >-
+      A person or organization → the role it fills.
+    ontology_types: []
+    merge_reason: >-
+      Added beyond the ontology to record role occupancy, which the ontology
+      kept as a context_fact.
+    lookalikes:
+      - part_of — membership in an organization or team, not a position.
+    examples:
+      - '"Maria is the Executive Sponsor." → Maria holds_role Executive Sponsor.'
+      - '"Slalom is the delivery partner." → Slalom holds_role Delivery Partner, when the role is tracked.'
+  depends_on:
+    label: Depends on
+    inverse_label: Prerequisite for
+    definition: >-
+      Dependent work or outcome → its prerequisite, whether still pending or
+      already satisfied. The source must establish a hard prerequisite
+      ("cannot start until", "requires").
+    lookalikes:
+      - blocks — the prerequisite is preventing progress right now.
+      - impacts — possible influence without a hard prerequisite.
+    examples:
+      - '"UAT requires test data next week; work can proceed today." → UAT milestone depends_on test data; no blocks link.'
+      - Do not point depends_on at a dependency signal as a stand-in for an unidentified prerequisite; describe the prerequisite in the dependency instead.
+  blocks:
+    label: Blocks
+    inverse_label: Blocked by
+    definition: >-
+      A current blocker → the work it presently prevents from progressing.
+      Requires evidence of present prevention, not a future plan. Store it on
+      the blocker; the blocked record shows it as "Blocked by".
+    ontology_types: [blocks, blocked_by]
+    lookalikes:
+      - depends_on — a prerequisite that is not necessarily blocking now.
+    examples:
+      - '"The sandbox outage prevents UAT from proceeding today." → outage issue blocks UAT milestone.'
+  impacts:
+    label: Impacts
+    inverse_label: Impacted by
+    definition: >-
+      A cause or influence → a target it materially affects, without claiming
+      a hard prerequisite or a current block.
+    lookalikes:
+      - depends_on and blocks — stronger claims that need their own evidence.
+    examples:
+      - '"If credentials arrive late, UAT may slip one week." → risk impacts UAT milestone.'
+      - '"The new tax rule changes how invoices are calculated." → constraint impacts Billing System.'
+  addresses:
+    label: Addresses
+    inverse_label: Addressed by
+    definition: >-
+      A measure, action, requirement, or decision → the problem, need, risk,
+      question, or dependency it acts on, whether or not it has worked yet.
+      Record the outcome in the target's Status (an issue becomes resolved, a
+      risk mitigated), not in the link.
+    ontology_types: [addresses, mitigates, resolves]
+    merge_reason: >-
+      The ontology needs five rules to separate these from supports and
+      satisfies; whether the measure worked is better carried by the target's
+      Status than by a different link.
+    lookalikes:
+      - supports — contributes to an outcome or claim rather than acting on a problem.
+    examples:
+      - '"Maria will investigate the outage." → action addresses outage issue.'
+      - '"A backup supplier would reduce the risk of vendor delay." → proposal addresses vendor-delay risk.'
+      - '"The SSO requirement removes the double login agents complain about." → requirement addresses pain point.'
+  supports:
+    label: Supports
+    inverse_label: Supported by
+    definition: >-
+      A contributing or corroborating record → the outcome or claim it
+      strengthens, including work that fulfils a requirement or acceptance
+      condition. Say in the source record's Description when fulfilment is
+      proven.
+    ontology_types: [supports, satisfies]
+    merge_reason: >-
+      Fulfilment is a stronger form of contribution; the requirement's Status
+      (satisfied) records when it is proven.
+    lookalikes:
+      - addresses — acts on a problem rather than contributing to an outcome.
+    examples:
+      - '"Self-service onboarding supports the goal of cutting onboarding to five days." → requirement supports objective.'
+      - '"Acceptance testing confirmed the SSO feature meets the SSO requirement." → SSO capability supports SSO requirement.'
+      - '"Several agents said the same thing about copying data." → feedback supports the pain point.'
+  part_of:
+    label: Part of
+    inverse_label: Includes
+    definition: >-
+      A part → the whole that structurally contains it: a feature within a
+      solution, a stage within a process, a milestone within a phase, a team
+      within a department, a person within an organization. Store it on the
+      part; the whole shows it as "Includes".
+    ontology_types: [parent_of, child_of]
+    merge_reason: >-
+      The ontology stores one canonical direction and exposes the other as an
+      inverse; this keeps that with the part as the stored side.
+    lookalikes:
+      - applies_to — a proposition about a subject, not a structural part of it.
+      - related_to — association without containment.
+    examples:
+      - '"Design signoff is the checkpoint at the end of Discovery." → milestone part_of Discovery phase.'
+      - '"Sam works for Acme Hosting." → Sam part_of Acme Hosting.'
+      - A workstream that overlaps a phase is not part of it.
+  applies_to:
+    label: Applies to
+    inverse_label: Covered by
+    definition: >-
+      A signal → the subject or delivery boundary it is about: the system a
+      requirement governs, the phase a scope item falls in, the deliverable a
+      piece of feedback evaluates. Link the actual subject, not every noun
+      mentioned.
+    lookalikes:
+      - part_of — structural containment between things.
+    examples:
+      - '"The SSO requirement is for the portal." → requirement applies_to Portal.'
+      - '"Phase 1 includes migration of active accounts." → scope item applies_to Phase 1.'
+  related_to:
+    label: Related to
+    inverse_label: Related to
+    definition: >-
+      An evidenced association for which no more specific meaning applies,
+      including derivation (a decision that came from a proposal, an issue
+      that came from a risk). Say why in the source record's Description.
+    ontology_types: [related_to, derived_from]
+    merge_reason: >-
+      Derivation is lineage reviewers rarely act on; recording it as an
+      explained association keeps the meaning list short.
+    lookalikes:
+      - Use a specific meaning whenever one fits.
+    examples:
+      - '"Decision D4 was derived from proposal P7." → decision related_to proposal.'
+      - A requirement and an unrelated risk that appear in the same meeting get no relationship.
 
 trackers:
   stakeholders:
     file: workspace/trackers/stakeholders.xlsx
-    tabs: [stakeholder]
+    tabs: [person, role, organization, feedback]
   current-state:
     file: workspace/trackers/current-state.xlsx
-    tabs: [pain_point, system]
+    tabs: [system, data_asset, capability, business_process, pain_point]
   future-state:
     file: workspace/trackers/future-state.xlsx
-    tabs: [objective, requirement]
+    tabs: [objective, requirement, scope_item, out_of_scope_item, proposal]
   raid:
     file: workspace/trackers/raid.xlsx
     tabs: [risk, assumption, issue, decision, dependency, constraint, open_question]
   delivery:
     file: workspace/trackers/delivery.xlsx
-    tabs: [session, operating_model, plan_item, workflow_stage, working_agreement, action_item]
+    tabs: [phase, workstream, milestone, deliverable, session, action_item,
+           change_request, governance_rule, working_agreement]
 
+# Category order is the order the review inbox shows within each group.
 categories:
-  stakeholder:
-    tab: Stakeholders
-    id_prefix: STK-
-    what_belongs: >
-      A person, group, team, committee, vendor, or external party that
-      influences, delivers, depends on, or is materially affected by the work.
-    bar_to_clear: >
-      Named actor with an identity-and-role signal (owns, approves, sponsors,
-      operates, escalates) — not a passing mention.
-    columns:
-      - {name: Name, required: true}
-      - {name: Role}
-      - {name: Organization}
-      - {name: Influence, enum: [low, medium, high]}
-      - {name: Interest Areas}
-      - {name: Reports To IDs, links_to: stakeholder}
-      - {name: Engagement Notes}
 
-  pain_point:
-    tab: Pain Points
-    id_prefix: PAIN-
-    what_belongs: >
-      A current-state problem materially affecting delivery, operations,
-      users, or governance.
-    bar_to_clear: >
-      Concrete friction happening today (delays, errors, workarounds, manual
-      effort, visibility gaps) with a material effect — not a passing gripe.
+  # ---------------------------------------------------------------- entities
+
+  person:
+    group: entity
+    label: Person
+    tab: People
+    id_prefix: PER-
+    ontology_types: [person, stakeholder]
+    merge_reason: >-
+      The ontology's stakeholder type is a placeholder for a party whose kind
+      is unknown. A named individual is always a person; their stakeholder
+      standing goes in the Description and their positions in holds_role links.
+    definition: >-
+      A natural person named in the source, whatever their employer,
+      affiliation, or role: client staff, Slalom team members, vendor
+      contacts, and other external parties alike.
+    bar_to_clear: >-
+      A named individual with a project signal (owns, approves, sponsors,
+      decides, raises, attends with a stated role, or is materially affected),
+      not a passing mention or a signature line. Describe what they do on the
+      engagement and any stated stance or interests.
+    lookalikes:
+      - role — the position itself ("Executive Sponsor"). A named person who holds a role is a person linked to the role with holds_role; never record the person as the role.
+      - organization — a company, department, team, or vendor. A person who works for a vendor is still a person, part_of that organization.
+      - An unnamed party ("the Experian technical lead") is not a person. Record the role, plus an open_question if the team needs to know who fills it.
+    examples:
+      - '"Maria, our executive sponsor, attended." → person Maria; role Executive Sponsor; Maria holds_role Executive Sponsor.'
+      - '"Sam works for Acme Hosting." → person Sam, part_of organization Acme Hosting. Sam is not a vendor.'
+      - '"Thanks, everyone." → nothing.'
     columns:
-      - {name: Statement, required: true}
-      - {name: Functional Area}
-      - {name: Pain Type, required: true,
-         enum: [process, technology, data, people, policy, integration,
-                reporting, governance, change_adoption, other]}
-      - {name: Severity, required: true, enum: [low, medium, high, critical]}
-      - {name: Quantified Impact}
-      - {name: Status, required: true, default: active,
-         enum: [active, monitoring, mitigated, resolved, archived]}
-      - {name: Raised By Stakeholder IDs, links_to: stakeholder}
-      - {name: Affects System IDs, links_to: system}
+      - &name {name: Name, required: true}
+      - &entity_description {name: Description}
+      - {name: Status, required: true, default: active, enum: [active, inactive]}
+      - &relationships {name: Relationships, type: relationships}
+
+  role:
+    group: entity
+    label: Role
+    tab: Roles
+    id_prefix: ROL-
+    ontology_types: [role]
+    definition: >-
+      A named position or set of duties, independent of whoever fills it:
+      sponsor, product owner, technical lead, data steward, approver, change
+      champion.
+    bar_to_clear: >-
+      The source names the position and ties it to the engagement through
+      duties, decision rights, or a seat in governance. A job title mentioned
+      only to identify a person goes in that person's Description unless the
+      role matters on its own.
+    lookalikes:
+      - person — the individual who fills the role, linked with holds_role (person → role).
+      - governance_rule — an approval, decision, or escalation right or a standing duty attached to the role. "The sponsor approves scope changes" is a governance rule owned_by the role.
+      - organization — a group, even one named by function ("the migration squad").
+    examples:
+      - '"We still need an Experian technical lead." → role Experian Technical Lead, with no holds_role link yet.'
+      - '"Maria is the Executive Sponsor." → role Executive Sponsor; person Maria holds_role it.'
+      - '"The data steward maintains the data dictionary." → role Data Steward; the standing duty is a governance_rule.'
+    columns:
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: active, enum: [active, retired]}
+      - *relationships
+
+  organization:
+    group: entity
+    label: Organization
+    tab: Organizations
+    id_prefix: ORG-
+    ontology_types: [organization, vendor, team, stakeholder]
+    merge_reason: >-
+      "Vendor" describes a party's relationship to the engagement rather than
+      a different kind of thing; the ontology notes one institution can be
+      client in one context and supplier in another. The line between a team
+      and an organizational unit is too thin for reviewers to apply
+      consistently. A distinctly described but unnamed group is recorded here
+      by its description instead of as an unresolved stakeholder.
+    definition: >-
+      A company, institution, department, business unit, vendor, partner,
+      regulator, governance body, or working team that acts as a party on the
+      engagement.
+    bar_to_clear: >-
+      A named party, or a distinctly described group, that sponsors,
+      supplies, delivers, governs, depends on, or is materially affected by
+      the work. Say in the Description whether it is client, Slalom, vendor or
+      supplier, partner, or regulator, and link a team to its parent
+      organization with part_of.
+    lookalikes:
+      - person — an individual, even one who represents the organization.
+      - role — a position, not a group.
+      - system — a vendor's product ("Workday") is a system; the company that sells or hosts it is an organization.
+    examples:
+      - '"Acme Hosting is our contracted infrastructure provider." → organization Acme Hosting, described as a contracted vendor.'
+      - '"Finance is the client''s department; the migration squad performs the build." → organizations Finance and Migration Squad.'
+      - '"The architecture review board approves new integrations." → organization Architecture Review Board; the approval right is a governance_rule.'
+    columns:
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: active, enum: [active, inactive]}
+      - *relationships
 
   system:
+    group: entity
+    label: System
     tab: Systems
     id_prefix: SYS-
-    what_belongs: >
-      A named application, platform, data store, integration, reporting
-      surface, manual tool, or external service the client operates or
-      depends on.
-    bar_to_clear: >
-      A distinct operated, administered, or integrated surface — modules,
-      scripts, and config mechanisms inside a platform stay out.
+    ontology_types: [system, application, platform, environment, integration]
+    merge_reason: >-
+      The ontology itself falls back to system whenever the narrower kind is
+      not established and refines it later. Asking reviewers to decide
+      between application, platform, and system adds work without changing
+      what the team does with the record. Environments and integrations are
+      technical surfaces the client operates; name the kind in the
+      Description.
+    definition: >-
+      A named technical surface the client operates, administers, integrates,
+      or depends on: an application, platform, suite, environment (UAT
+      sandbox, production), integration or interface (CRM-to-billing sync),
+      reporting tool, manual tool, or external service.
+    bar_to_clear: >-
+      A distinct operated, administered, or integrated surface. Modules,
+      screens, scripts, and configuration settings inside a system stay out;
+      describe them in the system's Description or as requirements. Describe
+      the kind of system from the source, not from a brand-name guess.
+    lookalikes:
+      - data_asset — the information (dataset, table, dictionary), not the software that stores or moves it.
+      - capability — what the organization or solution can do, regardless of which system does it.
+      - organization — the vendor that sells or hosts the system.
+    examples:
+      - '"Workday is our HR system." → system Workday, described as the HR system.'
+      - '"The portal application runs on our shared platform in UAT." → systems Portal (application), Shared Platform (platform), and UAT (environment), when the source treats them as distinct.'
+      - '"The CRM-to-billing synchronization exchanges the customer master dataset." → system CRM-to-Billing Sync (integration) and data_asset Customer Master Dataset.'
     columns:
-      - {name: Name, required: true}
-      - {name: System Type, required: true,
-         enum: [application, platform, data_store, integration, reporting,
-                manual_tool, infrastructure, external_service]}
-      - {name: Description}
-      - {name: Owner}
-      - {name: Status, required: true, default: active,
-         enum: [active, planned, retiring, retired]}
-      - {name: Related System IDs, links_to: system}
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: active, enum: [active, planned, retiring, retired]}
+      - *relationships
+
+  data_asset:
+    group: entity
+    label: Data Asset
+    tab: Data Assets
+    id_prefix: DAT-
+    ontology_types: [data_asset]
+    definition: >-
+      An identifiable dataset, table, schema, data product, data dictionary,
+      or other managed collection of information.
+    bar_to_clear: >-
+      Named information the work creates, migrates, cleans, governs, or
+      depends on. Do not create a data asset for every file or report
+      mentioned.
+    lookalikes:
+      - system — the software that stores or moves the data.
+      - deliverable — a promised documentation output ("deliver a data dictionary by October 8") is a deliverable; the maintained dataset itself is the data asset. Split them only when the source establishes both.
+    examples:
+      - '"The data dictionary is a maintained metadata dataset." → data asset Data Dictionary; no deliverable is implied.'
+      - '"Billing reads from the customer master dataset." → data asset Customer Master Dataset.'
+    columns:
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: active, enum: [active, planned, retiring, retired]}
+      - *relationships
+
+  capability:
+    group: entity
+    label: Capability
+    tab: Capabilities
+    id_prefix: CAP-
+    ontology_types: [capability, feature]
+    merge_reason: >-
+      The ontology warns against generating a business process, capability,
+      and feature from the same noun phrase. A required behavior is already a
+      requirement, and the remaining difference between an ability and a
+      named function does not change how the team reviews it. Name a feature
+      as a capability, part_of the broader capability or system it belongs to.
+    definition: >-
+      An ability the organization or solution has or needs (what can be
+      accomplished), including a named feature or function of a solution
+      that the source treats as a thing in its own right.
+    bar_to_clear: >-
+      A named ability the work builds, changes, or relies on, referred to as a
+      thing (for example in a capability map or feature list). Set Status to
+      needed when the source says the organization lacks it.
+    lookalikes:
+      - requirement — "The app must support SSO" is a requirement; "identity verification" named as an ability is a capability.
+      - business_process — how work flows step by step; a capability is what can be done.
+      - system — the software that provides the capability.
+    examples:
+      - '"The claims adjudication process uses the identity verification capability, exposed through the Verify Identity feature." → business process Claims Adjudication; capability Identity Verification; capability Verify Identity, part_of Identity Verification.'
+      - '"We have no way to forecast demand today." → capability Demand Forecasting, needed (and possibly a pain point if friction is stated).'
+    columns:
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: existing, enum: [existing, needed, retired]}
+      - *relationships
+
+  business_process:
+    group: entity
+    label: Business Process
+    tab: Business Processes
+    id_prefix: BPR-
+    ontology_types: [business_process]
+    merge_reason: >-
+      Also replaces Ascent's former workflow stage category: a stage is
+      recorded as its own business process, part_of the process it belongs
+      to, with entry and exit criteria in its Description.
+    definition: >-
+      An ordered or recurring business workflow that produces a business
+      result, or a named stage of such a workflow.
+    bar_to_clear: >-
+      A named workflow or stage the client runs today or will run in the
+      future state (intake, claims adjudication, month-end close). A one-time
+      project task is an action item.
+    lookalikes:
+      - capability — what can be accomplished, not how the work flows.
+      - pain_point — friction in the process; the process itself is neutral.
+      - action_item and phase — project work and delivery periods, not business workflows.
+    examples:
+      - '"Claims adjudication" described as the client''s workflow → business process Claims Adjudication, current.'
+      - '"Intake moves to Assess once the form is complete, then to Approve." → business process Intake, plus stages Assess and Approve each part_of Intake.'
+    columns:
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: current, enum: [current, future, retired]}
+      - *relationships
+
+  phase:
+    group: entity
+    label: Phase
+    tab: Phases
+    id_prefix: PHS-
+    ontology_types: [phase, release, sprint]
+    merge_reason: >-
+      All three are time-bounded containers for delivery work, and the
+      ontology admits that "MVP" alone can mean any of them. Ascent's former
+      plan item already grouped them. Name the kind (phase, release, sprint)
+      in the Description.
+    definition: >-
+      A time-bounded stage of delivery that groups work by purpose or
+      sequence: a lifecycle phase (Discovery, Build), a release (MVP Release
+      1), or an iteration (Sprint 4).
+    bar_to_clear: >-
+      A named delivery period with a timing, sequencing, or scope signal. Fill
+      Start Date and End Date only from calendar dates in the source; keep
+      relative timing ("weeks 1–3") in the Description.
+    lookalikes:
+      - workstream — groups work by discipline or outcome and often spans phases.
+      - milestone — a checkpoint event (design signoff), not a period.
+      - deliverable — the output, not the period that produces it.
+    examples:
+      - '"Discovery runs weeks 1–3, then Build." → phases Discovery and Build, with the week ranges in their Descriptions.'
+      - '"Sprint 4 starts September 21." → phase Sprint 4, described as a sprint, Start Date 2026-09-21.'
+      - '"MVP missed its committed date." with no context on what MVP is → do not guess its kind; ask an open_question.'
+    columns:
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: planned, enum: [planned, active, complete, cancelled]}
+      - {name: Start Date, type: date}
+      - {name: End Date, type: date}
+      - *relationships
+
+  workstream:
+    group: entity
+    label: Workstream
+    tab: Workstreams
+    id_prefix: WST-
+    ontology_types: [workstream]
+    definition: >-
+      An ongoing grouping of work by discipline or outcome (data migration,
+      integration, change management), often spanning several phases.
+    bar_to_clear: >-
+      A named stream of work with its own scope, lead, or reporting line.
+    lookalikes:
+      - phase — groups work by time, not discipline. A workstream is not part_of a phase merely because they overlap.
+      - organization — the team doing the work, which may or may not match the workstream.
+      - scope_item — a statement of included work, not the stream it sits in.
+    examples:
+      - '"The migration workstream spans the Discovery and Build phases." → workstream Data Migration; no part_of link to either phase.'
+    columns:
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: planned, enum: [planned, active, complete, cancelled]}
+      - *relationships
+
+  session:
+    group: entity
+    label: Session
+    tab: Sessions
+    id_prefix: SES-
+    ontology_types: []
+    merge_reason: >-
+      Not in ontology v1.1. Retained from Ascent's current catalog because
+      every processed meeting produces one and the weekly status report reads
+      them; raised with Joe's team.
+    definition: >-
+      A meeting, workshop, ceremony, review, kickoff, or training, one-time or
+      recurring, with a purpose, participants, and timing.
+    bar_to_clear: >-
+      A named or dated interaction. Propose one session for every meeting
+      processed, citing its session note, with Status completed and Date set
+      to the meeting date (left empty when the meeting is undated). Put
+      purpose, frequency, and agenda in the Description.
+    lookalikes:
+      - milestone — a checkpoint event such as a signoff, even if a meeting is held for it.
+      - action_item — a task to schedule or prepare a meeting.
+    examples:
+      - '"Kickoff workshop, August 14, with Finance and IT leads." → session Kickoff Workshop, completed, Date 2026-08-14.'
+      - '"Weekly RAID review every Tuesday." → session Weekly RAID Review, planned, described as recurring weekly.'
+    columns:
+      - *name
+      - *entity_description
+      - {name: Status, required: true, default: planned, enum: [planned, completed, cancelled]}
+      - {name: Date, type: date}
+      - *relationships
+
+  # ----------------------------------------------------------------- signals
 
   objective:
+    group: signal
+    label: Objective
     tab: Objectives
     id_prefix: OBJ-
-    what_belongs: >
-      A future-state result the engagement is trying to achieve — leadership
-      intent, desired outcomes, and success criteria.
-    bar_to_clear: >
-      Stated intent for a future result (goal, target, "success looks like"),
-      ideally with a measure — not solution features and not current
-      complaints.
+    ontology_types: [objective, success_metric, value_signal]
+    merge_reason: >-
+      Ascent's objective already carries its success measure. The ontology
+      often creates an objective and a metric from one sentence, which gives
+      reviewers two items saying the same thing, and expected or realized
+      benefits read to reviewers as part of the same goal. Keep the measure,
+      target, and any expected or realized benefit in the Description.
+    definition: >-
+      A desired business, customer, operational, or delivery outcome the
+      engagement is trying to achieve, with how success is measured and any
+      stated expected or realized benefit.
+    bar_to_clear: >-
+      Stated intent for a future result ("our goal", "target", "success looks
+      like"), or a stated benefit claim tied to the work. State whether a
+      benefit is expected or realized and what it is based on. Solution
+      features are requirements; current complaints are pain points.
+    lookalikes:
+      - requirement — what the solution must do; the objective is the result it serves (requirement supports objective).
+      - pain_point — today's problem; the objective is the improvement sought.
+      - requirement (acceptance criterion) — a pass/fail gate for accepting specific work, not a business success measure.
+      - Ordinary progress ("18 of 24 stories are complete") is not an objective and is not tracked.
+    examples:
+      - '"Reduce average onboarding time." → objective.'
+      - '"Reduce onboarding time from ten days to five." → one objective with the ten-to-five measure in its Description, not two items.'
+      - '"Success means 90% user adoption within 60 days." → objective with that measure.'
+      - '"Automation is expected to save approximately 600 hours annually." → objective stating the expected benefit.'
+      - '"Automation has saved 200 staff hours this quarter." → update the objective it serves (realized benefit), or propose one naming the realized benefit if none exists.'
     columns:
-      - {name: Statement, required: true}
-      - {name: Success Measure}
-      - {name: Priority, enum: [low, medium, high]}
-      - {name: Status, required: true, default: active,
-         enum: [active, achieved, dropped]}
+      - *name
+      - &signal_description {name: Description, required: true}
+      - {name: Status, required: true, default: active, enum: [active, achieved, dropped]}
+      - *relationships
+
+  pain_point:
+    group: signal
+    label: Pain Point
+    tab: Pain Points
+    id_prefix: PAIN-
+    ontology_types: [pain_point]
+    definition: >-
+      Persistent current-state friction, inefficiency, or poor experience in
+      the business or its processes that motivates change.
+    bar_to_clear: >-
+      Concrete friction happening today with a material effect (delays,
+      errors, workarounds, manual effort, visibility gaps), not a passing
+      gripe and not a neutral description of how work is done.
+    lookalikes:
+      - issue — a bounded failure, defect, or delivery obstacle that needs resolving now ("the UAT environment is down").
+      - feedback — an attributed opinion. It becomes a pain point only when it describes real, material friction.
+      - risk — a possible future problem.
+      - business_process — a neutral description of the work. Manual work is not automatically a pain point.
+    examples:
+      - '"Agents spend two hours daily copying customer details between three systems, slowing service." → pain point.'
+      - '"Manual reconciliation consumes two days every month." (described as an inefficiency) → pain point.'
+      - '"Today''s reconciliation failed and invoices cannot be issued until it succeeds." → issue plus dependency, not a pain point.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: active, enum: [active, mitigated, resolved]}
+      - *relationships
 
   requirement:
+    group: signal
+    label: Requirement
     tab: Requirements
     id_prefix: REQ-
-    what_belongs: >
-      A condition, capability, or rule the solution or delivery approach must
-      satisfy.
-    bar_to_clear: >
-      Stated as necessary ("must", "shall", "needs the ability to",
-      acceptance criteria) — suggestions and nice-to-haves are not
-      requirements.
+    ontology_types: [requirement, acceptance_criterion]
+    merge_reason: >-
+      Ascent's requirement already included acceptance criteria, and both
+      state a condition the delivered work must meet. Say in the Description
+      when the condition is an acceptance test and which work it accepts.
+    definition: >-
+      A condition, capability, behavior, interface, or quality the delivered
+      solution or business process must have, including an explicit pass/fail
+      condition used to accept a deliverable, feature, or release.
+    bar_to_clear: >-
+      Stated as necessary ("must", "shall", "needs the ability to", "accepted
+      only if"). Classify a stated need even when it is not yet approved:
+      Status stays proposed until confirmation is evidenced, and "must" alone
+      does not confirm it. Suggestions and nice-to-haves are proposals.
+    lookalikes:
+      - constraint — an imposed boundary or prohibition ("hosting outside the US is prohibited"), including commercial acceptance terms such as acceptance windows and deemed acceptance.
+      - governance_rule — a project rule about who approves or which gate must occur. Product approval logic ("managers approve purchases over $10,000") stays a requirement.
+      - scope_item — work included in a delivery boundary, not how the solution behaves.
+      - proposal — an optional approach being advocated.
+      - objective — a business success measure, not acceptance of specific work.
+    examples:
+      - '"The solution must support SAML-based SSO." → requirement, proposed.'
+      - '"The migration is accepted only if reconciliation reaches 99.9%." → requirement (acceptance criterion).'
+      - '"The API must respond within two seconds at p95." → requirement.'
+      - '"All integrations must use REST APIs." → requirement. "The architecture board mandated REST-only integration; other protocols are prohibited." → constraint.'
+      - '"Finance needs access." → requirement, proposed. "We think Finance may need access." → not proposed; intent is unclear.'
     columns:
-      - {name: Statement, required: true}
-      - {name: Requirement Type, required: true,
-         enum: [functional, non_functional, data, integration, reporting,
-                security, compliance, other]}
-      - {name: Priority, enum: [must, should, could, wont]}
+      - *name
+      - *signal_description
       - {name: Status, required: true, default: proposed,
-         enum: [proposed, confirmed, deferred, dropped]}
-      - {name: Addresses Pain Point IDs, links_to: pain_point}
-      - {name: Supports Objective IDs, links_to: objective}
+         enum: [proposed, confirmed, deferred, rejected, satisfied, superseded]}
+      - *relationships
+
+  scope_item:
+    group: signal
+    label: Scope Item
+    tab: In Scope
+    id_prefix: SCP-
+    ontology_types: [scope_item]
+    definition: >-
+      Work included in a stated delivery boundary (the engagement, a phase,
+      release, workstream, or sprint), including work committed for an
+      identified later phase.
+    bar_to_clear: >-
+      The source says the work is included, or committed for a named later
+      boundary. Link the boundary with applies_to when it is a tracked phase
+      or workstream; when no boundary is stated, say so in the Description.
+    lookalikes:
+      - out_of_scope_item — excluded or deferred work. Never record exclusions here.
+      - deliverable — a promised, named output.
+      - requirement — how the solution must behave.
+      - Do not create scope items for every requirement or deliverable.
+    examples:
+      - '"Invoice migration is included in Phase 1." → scope item applies_to Phase 1; no deliverable or requirement from the inclusion alone.'
+      - '"Discovery includes interview facilitation. The team will deliver an interview findings report." → scope item plus deliverable.'
+      - '"Phase 1 is limited to North America." → scope item stating the geography.'
+      - '"Closed-case migration is excluded from Phase 1 and committed for Phase 2." → out_of_scope_item for Phase 1 plus scope item for Phase 2.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: proposed, enum: [proposed, confirmed]}
+      - *relationships
+
+  out_of_scope_item:
+    group: signal
+    label: Out of Scope Item
+    tab: Out of Scope
+    id_prefix: OOS-
+    ontology_types: [out_of_scope_item]
+    definition: >-
+      Work explicitly excluded from a stated delivery boundary, whether
+      permanently excluded or deferred with no later commitment.
+    bar_to_clear: >-
+      The source states the exclusion or deferral. Never assume that exclusion
+      from Phase 1 means inclusion in Phase 2; a later commitment is a
+      separate scope item. When no boundary is stated, keep the exclusion,
+      say in the Description that the boundary is unstated, and do not treat
+      it as project-wide.
+    lookalikes:
+      - scope_item — included work.
+      - constraint — a binding limit on how the work is done (fee cap, "up to" limit, residency), rather than which work is excluded.
+    examples:
+      - '"Historical transaction migration is excluded from Phase 1." → out of scope item, excluded, applies_to Phase 1.'
+      - '"Closed-case migration is deferred; no later release is committed." → out of scope item, deferred.'
+      - '"Historical migration is out of scope." with no boundary → out of scope item, excluded, boundary unstated.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: excluded, enum: [excluded, deferred]}
+      - *relationships
 
   risk:
+    group: signal
+    label: Risk
     tab: Risks
     id_prefix: RSK-
-    what_belongs: >
-      A future adverse possibility or uncertain dependency that could
-      threaten objectives, scope, schedule, or delivery.
-    bar_to_clear: >
-      Future uncertainty with a plausible mechanism and delivery effect — not
-      pain already happening and not vague worry.
+    ontology_types: [risk]
+    definition: >-
+      A possible future event or condition, together with its potential
+      negative impact on delivery or outcomes.
+    bar_to_clear: >-
+      Future uncertainty with a plausible mechanism and a stated effect. Never
+      invent probability, impact, or severity: leave Probability and Impact
+      empty unless the source supports them. Propose a risk with no stated
+      impact only when the adverse event is clear, and say in the Description
+      that the impact is unstated. Put any stated mitigation in the
+      Description; a separate mitigating task is an action_item that
+      addresses the risk.
+    lookalikes:
+      - issue — the event has already happened or is happening now.
+      - dependency — a hard prerequisite; a possible delay is not proof of one.
+      - assumption — a premise the plan treats as true.
+      - pain_point — current friction.
+    examples:
+      - '"If the sandbox is not available Monday, UAT may slip." → risk impacts UAT; no dependency.'
+      - '"Limited SME availability may delay design validation." → risk; no probability inferred.'
+      - '"Security approval might not arrive before Friday." in a risk register with no consequence → risk with the impact stated as unknown.'
     columns:
-      - {name: Statement, required: true}
-      - {name: Risk Title, required: true}
-      - {name: Description}
-      - {name: Calculated Severity, computed: risk_severity}
-      - {name: Risk Score, type: number, computed: risk_score}
-      - {name: Status, default: open,
-         enum: [new, open, active, monitoring, mitigated, cancelled, closed]}
-      - {name: Category}
-      - {name: Raised By}
-      - {name: Date Raised, type: date}
-      - {name: Date Closed, type: date}
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: identified,
+         enum: [identified, active, mitigated, realized, closed]}
+      - &target_date {name: Target Date, type: date}
       - {name: Probability, type: number, minimum: 0.1, maximum: 0.9}
-      - {name: Likelihood, enum: [low, medium, high]}
       - {name: Impact, enum: [very_low, low, moderate, medium, high, very_high, critical],
          weights: {very_low: 0.05, low: 0.1, moderate: 0.2, medium: 0.2,
                    high: 0.4, very_high: 0.8, critical: 0.8}}
-      - {name: Impact Date, type: date}
-      - {name: Mitigation}
-      - {name: Owner}
-      - {name: Response, enum: [avoid, transfer, mitigate, accept]}
-      - {name: Response Description}
-      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
+      - {name: Risk Score, type: number, computed: risk_score}
+      - {name: Calculated Severity, computed: risk_severity}
+      - *relationships
 
   assumption:
+    group: signal
+    label: Assumption
     tab: Assumptions
     id_prefix: ASM-
-    what_belongs: >
-      A provisional belief the plan depends on but has not yet validated.
-    bar_to_clear: >
-      The plan actually leans on the belief and validation is still pending —
-      incidental beliefs nothing depends on stay out.
+    ontology_types: [assumption]
+    definition: >-
+      A premise the plan explicitly treats as true for planning or execution
+      even though it has not been validated.
+    bar_to_clear: >-
+      The source adopts the premise ("assume", "for sizing we will treat") and
+      the plan leans on it. Uncertainty alone is not an assumption. When later
+      evidence validates or invalidates it, update this item's Status rather
+      than proposing a new one.
+    lookalikes:
+      - requirement — a required condition, not a premise.
+      - risk — what might go wrong if the premise is false.
+      - open_question — an unresolved question with no adopted premise.
+      - A descriptive fact belongs in the relevant entity's Description.
+    examples:
+      - '"We assume all customer records have a unique enterprise ID." → assumption, unvalidated.'
+      - '"For planning, assume billing timestamps are UTC until we inspect the export." → assumption, unvalidated.'
+      - '"The export inspection confirmed the UTC assumption." → update that assumption to validated.'
+      - '"We think Finance may need access." → not an assumption; not proposed.'
     columns:
-      - {name: Statement, required: true}
-      - {name: Assumption Title, required: true}
-      - {name: Description}
-      - {name: Category}
-      - {name: Raised By}
-      - {name: Date Raised, type: date}
-      - {name: Action Due Date, type: date}
-      - {name: Owner}
-      - {name: Reason for Assumption}
-      - {name: Validation Plan}
-      - {name: Action to Validate}
-      - {name: Impact if Incorrect}
-      - {name: Contingency}
+      - *name
+      - *signal_description
       - {name: Status, required: true, default: unvalidated,
-         enum: [unvalidated, under_investigation, validated, invalidated]}
-      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
+         enum: [unvalidated, validated, invalidated, superseded]}
+      - *target_date
+      - *relationships
 
   issue:
+    group: signal
+    label: Issue
     tab: Issues
     id_prefix: ISS-
-    what_belongs: >
-      An event or condition that is happening now and is negatively affecting
-      delivery, operations, scope, schedule, cost, quality, or outcomes.
-    bar_to_clear: >
-      A current, material problem with a concrete impact, not a future
-      uncertainty and not a general current-state pain point outside delivery.
+    ontology_types: [issue]
+    definition: >-
+      A current or already realized problem requiring resolution: a failure,
+      defect, breach, overdue obligation, or active obstacle to delivery.
+    bar_to_clear: >-
+      A current, material problem with a concrete effect. A concrete reported
+      failure ("Save returns error 500") is an issue even before it is
+      independently verified. A pending approval is not an issue unless it is
+      overdue or blocking work.
+    lookalikes:
+      - risk — a possible future problem.
+      - pain_point — persistent business friction that motivates change, rather than a bounded failure to fix.
+      - feedback — an opinion without a concrete failure.
+    examples:
+      - '"The UAT environment is unavailable and testing has stopped." → issue that blocks UAT.'
+      - '"Security approval was due yesterday and has not been received." → issue.'
+      - '"The security review is late, but UAT does not require it." → issue; no dependency or block.'
+      - '"Security approval is pending." → not an issue.'
     columns:
-      - {name: Statement, required: true}
-      - {name: Issue Title, required: true}
-      - {name: Description}
-      - {name: Status, required: true, default: active,
-         enum: [active, cancelled, closed]}
-      - {name: Priority, enum: [low, medium, high]}
-      - {name: Impact, enum: [low, medium, high]}
-      - {name: Category}
-      - {name: Raised By}
-      - {name: Date Raised, type: date}
-      - {name: Owner}
-      - {name: Due Date, type: date}
-      - {name: Resolution Date, type: date}
-      - {name: Resolution}
-      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
-
-  constraint:
-    tab: Constraints
-    id_prefix: CST-
-    what_belongs: >
-      A binding boundary or authoritative guardrail that limits feasible
-      options.
-    bar_to_clear: >
-      The authority is nameable (regulation, policy, contract, budget or
-      timeline cap, mandate) and the boundary actually binds choices.
-    columns:
-      - {name: Statement, required: true}
-      - {name: Authority}
-      - {name: Constraint Type,
-         enum: [regulatory, policy, contractual, budget, timeline, technical,
-                other]}
-      - {name: Status, required: true, default: active, enum: [active, lifted]}
-
-  decision:
-    tab: Decisions
-    id_prefix: DEC-
-    what_belongs: >
-      A committed or explicitly proposed choice with enough authority to shape
-      delivery, design, scope, governance, or operations.
-    bar_to_clear: >
-      Authority or commitment is visible (who decided, decisive language, an
-      approval) — options still under discussion stay out.
-    columns:
-      - {name: Statement, required: true}
-      - {name: Decision Title, required: true}
-      - {name: Description}
-      - {name: Priority, enum: [low, medium, high]}
-      - {name: Category}
-      - {name: Owner}
-      - {name: Date Raised, type: date}
-      - {name: Date Required, type: date}
-      - {name: Decided By}
-      - {name: Decision Date, type: date}
-      - {name: Options Considered}
-      - {name: Selected Decision}
-      - {name: Rationale}
-      - {name: Follow-up Actions}
-      - {name: Action Owner}
-      - {name: Action Due Date, type: date}
-      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
-      - {name: Stakeholders Informed}
-      - {name: Status, required: true, default: decided,
-         enum: [open, proposed, decided, deferred, escalated, superseded, reversed]}
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: open, enum: [open, in_progress, resolved, closed]}
+      - *target_date
+      - *relationships
 
   dependency:
+    group: signal
+    label: Dependency
     tab: Dependencies
     id_prefix: DEP-
-    what_belongs: >
-      A plan, process, team, or delivery event whose completion relies on the
-      completion or outcome of another event.
-    bar_to_clear: >
-      A named external or cross-team prerequisite with a meaningful delivery
-      consequence and identifiable owner or delivery date.
+    ontology_types: [dependency]
+    definition: >-
+      A prerequisite: a dependent activity, output, checkpoint, or outcome
+      that requires something else to be available, completed, or satisfied
+      first.
+    bar_to_clear: >-
+      An explicit hard prerequisite ("cannot start until", "requires"). Name
+      the prerequisite and the dependent work in the Description. When both
+      are tracked records, also link the dependent work to the prerequisite
+      with depends_on. A pending prerequisite is not automatically a blocker
+      or an issue.
+    lookalikes:
+      - risk — a possible delay or adverse effect without a hard prerequisite.
+      - constraint — a boundary that stays in force, rather than something to obtain or complete.
+      - issue — when the prerequisite is missing and work cannot proceed now, record the issue as well.
+    examples:
+      - '"UAT cannot start until the sandbox is provisioned." → dependency.'
+      - '"UAT requires the sandbox. The sandbox has not been provisioned, so UAT is blocked now." → dependency plus an issue that blocks UAT.'
+      - '"If the sandbox is not available Monday, UAT may slip." → risk, not a dependency.'
     columns:
-      - {name: Statement, required: true}
-      - {name: Dependency Title, required: true}
-      - {name: Description}
-      - {name: Importance, enum: [low, medium, high]}
-      - {name: Status, required: true, default: open, enum: [open, closed]}
-      - {name: Category}
-      - {name: Raised By}
-      - {name: Date Raised, type: date}
-      - {name: Owning Team}
-      - {name: Delivery Date, type: date}
-      - {name: Linked RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: pending, enum: [pending, satisfied, blocked, waived]}
+      - *target_date
+      - *relationships
+
+  constraint:
+    group: signal
+    label: Constraint
+    tab: Constraints
+    id_prefix: CST-
+    ontology_types: [constraint, contract_clause]
+    merge_reason: >-
+      Ascent already files fees, fee caps, contracted date windows, and other
+      client-agreed commercial terms as contractual constraints, and teams
+      check scope against that one list. Splitting commercial clauses out
+      would divide the list without changing how it is used. Keep exact
+      clause wording in the Description.
+    definition: >-
+      A binding boundary that limits acceptable solution or delivery options
+      (regulatory, policy, contractual, budget, timeline, or technical),
+      including client-agreed commercial terms such as fees, fee caps, payment
+      and invoicing terms, acceptance windows, and deemed acceptance.
+    bar_to_clear: >-
+      The authority is nameable (regulation, policy, contract or SOW, budget,
+      mandate, fixed external date) and the boundary actually binds choices.
+      Name the authority in the Description, quote contract wording verbatim,
+      and use Status proposed for a draft term and active for an executed or
+      otherwise binding one. Internal Slalom commercial material (rates,
+      margins, contingencies, pricing-tool guidance) is never proposed.
+    lookalikes:
+      - requirement — a required behavior or quality. Every requirement narrows options, but it is a constraint only when it functions as an imposed limit or prohibition.
+      - dependency — something to obtain or complete.
+      - out_of_scope_item — excluded work.
+      - change_request — a request to amend an established term.
+      - proposal — a negotiation approach ("I suggest negotiating an early-payment discount").
+    examples:
+      - '"Customer data cannot be hosted outside the United States." → constraint (residency).'
+      - '"The delivery budget may not exceed $500,000." → constraint (budget).'
+      - '"The SOW grants ten business days for acceptance; silence then counts as acceptance." → constraint (contractual).'
+      - '"Invoices will be submitted monthly." → constraint (contractual).'
+      - '"Proposed commercial term: a 2% discount for payment within ten days." → constraint, proposed.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: active, enum: [proposed, active, lifted]}
+      - *relationships
+
+  decision:
+    group: signal
+    label: Decision
+    tab: Decisions
+    id_prefix: DEC-
+    ontology_types: [decision]
+    definition: >-
+      A resolved choice: an option was selected, rejected, authorized, or
+      otherwise settled.
+    bar_to_clear: >-
+      Authority or commitment is visible: who decided, decisive language
+      ("selected", "agreed", "approved the approach"). Link the decision maker
+      with decided_by. Options still under discussion are open questions;
+      recommendations are proposals. Put rationale and options considered in
+      the Description.
+    lookalikes:
+      - proposal — a suggested choice not yet made.
+      - open_question — a choice still to be made.
+      - change_request — approval of a change request is tracked on that request; record a separate decision only for a distinct choice with its own rationale.
+      - governance_rule — a standing right to decide, not a choice made.
+    examples:
+      - '"The sponsor selected a queue for invoice events." → decision decided_by Sponsor.'
+      - '"We still need to decide whether to migrate closed cases." → open_question, not a decision.'
+      - '"I recommend using a queue for invoice events." → proposal, not a decision.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: decided, enum: [decided, superseded, reversed]}
+      - *target_date
+      - *relationships
 
   open_question:
+    group: signal
+    label: Open Question
     tab: Open Questions
     id_prefix: QST-
-    what_belongs: >
-      An explicitly unresolved issue that blocks or materially affects
-      decisions, requirements, or future-state clarity.
-    bar_to_clear: >
-      Material and left unresolved with a downstream effect — casual
-      brainstorming and rhetorical questions stay out.
+    ontology_types: [open_question]
+    definition: >-
+      A materially unresolved request for information, clarification, or a
+      choice among options.
+    bar_to_clear: >-
+      Material and unresolved with a downstream effect. Judge by intent and
+      context, not punctuation: a polite request that assigns a task is an
+      action item. Casual brainstorming and rhetorical questions stay out.
+      Put the answer in the Description when it arrives; an answer does not
+      automatically make a decision.
+    lookalikes:
+      - proposal — advocates an approach. "Could we use Okta?" can be either; if context cannot tell, do not propose it.
+      - action_item — "Could you send the access list by noon?" recorded as an assignment.
+      - decision — a choice already made.
+    examples:
+      - '"Which identity provider should we choose?" → open question.'
+      - '"Could Finance get access?" (an unanswered feasibility question) → open question.'
+      - '"Who fills the Experian technical lead role?" → open question about that role.'
     columns:
-      - {name: Question, required: true}
-      - {name: Why It Matters}
-      - {name: Directed To}
-      - {name: Answer}
-      - {name: Status, required: true, default: open,
-         enum: [open, answered, parked]}
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: open, enum: [open, answered, deferred, superseded]}
+      - *target_date
+      - *relationships
 
-  session:
-    tab: Sessions
-    id_prefix: SES-
-    what_belongs: >
-      A planned one-time or recurring interaction with a defined purpose,
-      participants, owner, and timing.
-    bar_to_clear: >
-      A named meeting, workshop, ceremony, review, or kickoff with enough
-      detail to schedule or facilitate it.
+  proposal:
+    group: signal
+    label: Proposal
+    tab: Proposals
+    id_prefix: PRP-
+    ontology_types: [proposal]
+    definition: >-
+      A suggested approach, option, improvement, or course of action that has
+      not yet been chosen or adopted.
+    bar_to_clear: >-
+      Someone advocates an approach ("recommend", "suggest", "propose", "we
+      should"). Link the proposer with raised_by. A suggestion that revises an
+      agreed baseline is a change request. When a proposal is adopted, keep it
+      (Status accepted) and record the resulting choice as a separate
+      decision.
+    lookalikes:
+      - decision — a settled choice.
+      - change_request — a requested change to an established baseline.
+      - requirement — an explicit required condition, even if approval is pending.
+      - working_agreement — a norm the team has agreed to.
+      - constraint — a stated draft commercial term rather than a negotiation approach.
+    examples:
+      - '"John suggested moving the demo to Friday." (no agreed schedule) → proposal raised_by John.'
+      - '"We should post standup notes by noon." → proposal.'
+      - '"I suggest negotiating an early-payment discount." → proposal.'
+      - '"The client says the screen is confusing and suggests grouping the fields." → feedback plus a proposal.'
     columns:
-      - {name: Name, required: true}
-      - {name: Session Type, required: true,
-         enum: [kickoff, workshop, governance, delivery_ceremony, review, training, other]}
-      - {name: Purpose}
-      - {name: Owner Stakeholder IDs, links_to: stakeholder}
-      - {name: Participant Stakeholder IDs, links_to: stakeholder}
-      - {name: Frequency}
-      - {name: Scheduled Start, type: date}
-      - {name: Duration}
-      - {name: Agenda}
-      - {name: Status, required: true, default: planned,
-         enum: [planned, active, completed, cancelled]}
-
-  operating_model:
-    tab: Operating Model
-    id_prefix: OPM-
-    what_belongs: >
-      A governance or delivery grouping, responsibility assignment, decision
-      right, or escalation arrangement that defines how work is led or delivered.
-    bar_to_clear: >
-      A stated structure or activity assignment with named roles or decision
-      accountability, not merely a list of people.
-    columns:
-      - {name: Name, required: true}
-      - {name: Model Type, required: true,
-         enum: [governance, leadership, delivery, adoption, responsibility_assignment, other]}
-      - {name: Purpose}
-      - {name: Activity}
-      - {name: Member Stakeholder IDs, links_to: stakeholder}
-      - {name: Responsible Stakeholder IDs, links_to: stakeholder}
-      - {name: Accountable Stakeholder IDs, links_to: stakeholder}
-      - {name: Consulted Stakeholder IDs, links_to: stakeholder}
-      - {name: Informed Stakeholder IDs, links_to: stakeholder}
-      - {name: Decision Rights}
-      - {name: Escalation Path}
-      - {name: Status, required: true, default: active,
-         enum: [proposed, active, retired]}
-
-  plan_item:
-    tab: Delivery Plan
-    id_prefix: PLN-
-    what_belongs: >
-      A dated unit of planned work, outcome, release, or decision point in a
-      delivery plan.
-    bar_to_clear: >
-      A named phase, workstream, iteration, task, milestone, or release with a
-      timing, sequencing, ownership, or outcome signal.
-    columns:
-      - {name: Name, required: true}
-      - {name: Plan Item Type, required: true,
-         enum: [phase, workstream, iteration, task, milestone, release]}
-      - {name: Parent Item}
-      - {name: Start Date, type: date}
-      - {name: End Date, type: date}
-      - {name: Owner Stakeholder IDs, links_to: stakeholder}
-      - {name: Planned Outcome}
-      - {name: Dependency IDs, links_to_any: [plan_item, dependency]}
-      - {name: Status, required: true, default: planned,
-         enum: [planned, active, complete, delayed, cancelled]}
-
-  workflow_stage:
-    tab: Workflow Stages
-    id_prefix: WFS-
-    what_belongs: >
-      A defined stage in a repeatable work process, including entry criteria,
-      exit criteria, participating roles, and permitted next stages.
-    bar_to_clear: >
-      A named state or transition in a workflow, not a one-time project task.
-    columns:
-      - {name: Workflow Name, required: true}
-      - {name: Stage Name, required: true}
-      - {name: Sequence}
-      - {name: Description}
-      - {name: Participating Stakeholder IDs, links_to: stakeholder}
-      - {name: Entry Criteria}
-      - {name: Exit Criteria}
-      - {name: Allowed Next Stages}
-      - {name: Rework Stages}
-      - {name: Status, required: true, default: active,
-         enum: [draft, active, retired]}
-
-  working_agreement:
-    tab: Working Agreements
-    id_prefix: WAG-
-    what_belongs: >
-      A shared expectation for communication, availability, documentation,
-      responsiveness, decision making, or collaboration behavior.
-    bar_to_clear: >
-      An explicit team norm or operating convention intended to guide recurring
-      delivery behavior.
-    columns:
-      - {name: Statement, required: true}
-      - {name: Agreement Type, required: true,
-         enum: [availability, communication, documentation, decision_making, collaboration, other]}
-      - {name: Applies To Stakeholder IDs, links_to: stakeholder}
-      - {name: Owner Stakeholder IDs, links_to: stakeholder}
+      - *name
+      - *signal_description
       - {name: Status, required: true, default: proposed,
-         enum: [proposed, agreed, retired]}
+         enum: [proposed, under_review, accepted, rejected, withdrawn, superseded]}
+      - *relationships
+
+  change_request:
+    group: signal
+    label: Change Request
+    tab: Change Requests
+    id_prefix: CHG-
+    ontology_types: [change_request]
+    definition: >-
+      A requested or tracked modification to an established baseline: agreed
+      scope, requirement, deliverable, date, cost, resource plan, rule, or
+      contract term.
+    bar_to_clear: >-
+      The requested change and the baseline it changes are both evidenced, in
+      the source or in existing tracker rows. Put the from and to values in
+      the Description. Track review, approval, and implementation in this
+      item's Status; approval does not prove implementation. Add decided_by
+      only when approval actually happened. A later report about the same
+      request ("CR-12 was approved") updates this item.
+    lookalikes:
+      - proposal — a suggestion with no established baseline.
+      - decision — a distinct choice with its own rationale; don't duplicate the request's approval as a decision.
+      - A changed value reported with no request behind it updates the underlying item instead.
+    examples:
+      - '"CR-12 requests moving the approved go-live from October 15 to October 22." → change request, proposed, from October 15 to October 22.'
+      - '"We would like to add SMS notifications to Phase 1." with an approved Phase 1 scope excluding SMS → change request.'
+      - '"The sponsor approved CR-12." → update CR-12 to approved; CR-12 decided_by Sponsor.'
+      - '"Contract rule: approval within ten days. Proposal: shorten that to five days." → the ten-day constraint stays; change request from ten to five days.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: proposed,
+         enum: [proposed, under_review, approved, rejected, implemented, withdrawn]}
+      - *relationships
 
   action_item:
+    group: signal
+    label: Action Item
     tab: Action Items
     id_prefix: ACT-
-    what_belongs: >
-      A specific owned follow-up action needed to progress work, resolve a
-      blocker, or prepare for a future event.
-    bar_to_clear: >
-      A concrete verb-led commitment with an owner, or with a clearly stated
-      need to assign one.
+    ontology_types: [action_item]
+    definition: >-
+      A discrete task assigned, requested, or committed to, with an
+      identifiable completion point.
+    bar_to_clear: >-
+      A concrete, verb-led task with an owner, or with a clearly stated need
+      to assign one. Link the owner with owned_by. Fill Target Date only when
+      the source gives a calendar date; keep relative timing ("by Thursday",
+      "before kickoff") in the Description.
+    lookalikes:
+      - governance_rule — a standing, repeated duty.
+      - deliverable — naming a due output does not create an action to deliver it; propose an action only for a distinct activity such as preparing, reviewing, or sending it.
+      - proposal — a casual suggestion with no assignment.
+      - milestone — an event, not a task.
+    examples:
+      - '"David will send the data dictionary by Thursday." → action owned_by David, committed, "by Thursday" in the Description.'
+      - '"Maria will correct this dictionary entry Friday." → action owned_by Maria.'
+      - '"Could you send the access list by noon?" recorded as an assignment to David → action owned_by David, assigned.'
     columns:
-      - {name: Statement, required: true}
-      - {name: Owner Stakeholder IDs, links_to: stakeholder}
-      - {name: Due Date, type: date}
-      - {name: Related Plan Item IDs, links_to: plan_item}
-      - {name: Related RAIDD IDs, links_to_any: [risk, assumption, issue, decision, dependency]}
-      - {name: Next Event}
-      - {name: Status, required: true, default: open,
-         enum: [open, in_progress, blocked, complete, cancelled]}
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: assigned,
+         enum: [assigned, committed, in_progress, completed, cancelled]}
+      - *target_date
+      - *relationships
+
+  milestone:
+    group: signal
+    label: Milestone
+    tab: Milestones
+    id_prefix: MIL-
+    ontology_types: [milestone]
+    definition: >-
+      A significant event or checkpoint (signoff, go-live, kickoff, handover)
+      with its target date when stated.
+    bar_to_clear: >-
+      The source identifies the event as a checkpoint or schedules it. A task
+      or deliverable due date alone does not create a milestone. Never set
+      achieved or missed without a source saying so; a past date alone proves
+      neither.
+    lookalikes:
+      - phase — a period, not an event.
+      - deliverable — an output, not an event.
+      - action_item — a task.
+    examples:
+      - '"Design approval is scheduled for October 15." → milestone, planned, Target Date October 15 when the year is known.'
+      - '"Security approval was due yesterday." → milestone with achievement unknown; Status stays planned.'
+      - '"Design signoff is the checkpoint at the end of Discovery." → milestone part_of the Discovery phase.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: planned, enum: [planned, achieved, missed, cancelled]}
+      - *target_date
+      - *relationships
+
+  deliverable:
+    group: signal
+    label: Deliverable
+    tab: Deliverables
+    id_prefix: DLV-
+    ontology_types: [deliverable]
+    definition: >-
+      A committed, identifiable output promised for handover or acceptance: a
+      document, design, build, report, or other named product of the work.
+    bar_to_clear: >-
+      The source commits to producing it ("we will deliver"). A document
+      merely mentioned or a heading is not a deliverable; a suggested output
+      without commitment is a proposal. Put the due date in Target Date.
+    lookalikes:
+      - action_item — an activity, not an output.
+      - milestone — an event such as the signoff of the deliverable.
+      - scope_item — an inclusion boundary.
+      - data_asset — a maintained dataset rather than a promised output.
+    examples:
+      - '"The team will deliver the solution architecture by October 8." → deliverable; no separate action or milestone.'
+      - '"The runbook is a committed output; Maria will review it Friday." → deliverable plus an action.'
+      - '"Solution Architecture" appearing as a heading → not a deliverable.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: committed,
+         enum: [committed, in_progress, delivered, accepted, cancelled]}
+      - *target_date
+      - *relationships
+
+  governance_rule:
+    group: signal
+    label: Governance Rule
+    tab: Governance
+    id_prefix: GOV-
+    ontology_types: [governance_rule, role_responsibility]
+    merge_reason: >-
+      Both describe how the engagement is run: who must approve, decide,
+      escalate, or carry a standing duty. Ascent's former operating model
+      already held RACI rows, decision rights, and escalation paths together.
+      Who holds the rule is expressed with owned_by and accountable_to links.
+    definition: >-
+      A standing project rule about authority or responsibility: approval and
+      decision rights, escalation paths, required gates or reviews, governance
+      bodies and their remit, and standing duties assigned to a role, person,
+      team, or organization, including RACI assignments.
+    bar_to_clear: >-
+      A stated rule or assignment that governs repeated work or a defined
+      area. For a RACI, propose one rule per activity: link Responsible
+      parties with owned_by and the Accountable party with accountable_to, and
+      list Consulted and Informed parties in the Description. A rule that
+      someone must approve is not evidence that anything was approved.
+    lookalikes:
+      - working_agreement — an agreed collaboration norm without formal authority.
+      - action_item — a one-time task.
+      - requirement — approval logic inside the delivered product or business process.
+      - role — the position itself.
+      - decision — a specific choice that was made.
+    examples:
+      - '"Project scope changes above $50,000 require executive sponsor approval." → governance rule owned_by Executive Sponsor.'
+      - '"The release policy requires Security validation signoff before go-live." → governance rule.'
+      - '"The data steward maintains the data dictionary." → governance rule owned_by Data Steward.'
+      - '"The application requires a manager to approve purchases over $10,000." → requirement, not governance.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: active, enum: [proposed, active, retired]}
+      - *relationships
+
+  working_agreement:
+    group: signal
+    label: Working Agreement
+    tab: Working Agreements
+    id_prefix: WAG-
+    ontology_types: [working_agreement]
+    definition: >-
+      An agreed team collaboration behavior or working norm: communication,
+      availability, documentation, responsiveness, or meeting conduct.
+    bar_to_clear: >-
+      The team agreed to it. Informal does not mean optional. "We should…"
+      without agreement is a proposal.
+    lookalikes:
+      - governance_rule — a formal approval gate or decision right.
+      - proposal — a norm suggested but not yet agreed.
+    examples:
+      - '"The team agreed that all decisions will be documented in the decision log." → working agreement.'
+      - '"We agree to post standup notes by noon." → working agreement.'
+      - '"We should post standup notes by noon." → proposal.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, required: true, default: agreed, enum: [agreed, retired]}
+      - *relationships
+
+  feedback:
+    group: signal
+    label: Feedback
+    tab: Feedback
+    id_prefix: FBK-
+    ontology_types: [feedback]
+    definition: >-
+      Attributed evaluative input (an opinion, reaction, or recognition) about
+      the solution, a deliverable, the current state, or the team's work.
+    bar_to_clear: >-
+      Attributed to a named person or group (link with raised_by) and about
+      something specific (link with applies_to when it is tracked).
+      Pleasantries and generic thanks are skipped. Leave out remarks about an
+      individual's performance or personality unless they are explicit
+      recognition. Set Sentiment only when the source supports it.
+    lookalikes:
+      - pain_point — record the friction as a pain point only when it is real and material, not merely disliked.
+      - issue — a concrete reported failure ("Save returns error 500") is an issue, not feedback.
+      - proposal — a suggestion embedded in feedback is a separate proposal.
+      - objective — a quantified realized benefit.
+    examples:
+      - '"The client said the new workflow is much easier to use." → feedback, positive, raised_by the client organization.'
+      - '"Jane dislikes the prototype''s visual design." → feedback, negative, raised_by Jane.'
+      - '"The sponsor praised Priya''s facilitation of the workshop." → feedback, recognition.'
+      - '"Thanks, everyone." → nothing.'
+    columns:
+      - *name
+      - *signal_description
+      - {name: Status, label: Sentiment, enum: [positive, negative, neutral, recognition]}
+      - *relationships
