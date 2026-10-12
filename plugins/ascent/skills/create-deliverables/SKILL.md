@@ -170,6 +170,14 @@ for each section. If refresh fails, stop and report the failure rather than
 use stale copies. If there are no supporting rows, report a gap, not a reason
 to search elsewhere.
 
+Owners, raisers, decision makers, role holders, and other connections live in
+each row's `Relationships` cell as `<meaning>: <ID>` entries (for example an
+action's owner is its `owned_by` target, and a person's role is their
+`holds_role` target). Resolve each ID to its row in the matching category copy
+and cite both rows. Meanings are defined under `relationships` in
+`shared/schema/trackers.yaml`; a relationship stored on another row that points
+at this one counts too.
+
 Do not search `sources.yaml`, extracted documents, `project-context/`, the mixed
 document search index, external systems, or pending, flagged, or rejected
 proposals to populate answers. Retain existing row source references as

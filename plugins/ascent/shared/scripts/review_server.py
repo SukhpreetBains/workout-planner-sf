@@ -159,7 +159,7 @@ def accepted_items(server: ReviewServer) -> list[dict]:
             title = review_store.display_label(category, row, schema)
             items.append({
                 "category": category,
-                "category_label": category.replace("_", " ").title(),
+                "category_label": review_store.category_label(category, schema),
                 "tracker_id": tracker_id,
                 "title": title,
                 "status": row.get("Status", ""),
@@ -191,7 +191,7 @@ def accepted_link_options(server: ReviewServer) -> list[dict]:
     for category, definition in schema["categories"].items():
         for row in read_rows(category, schema):
             title = review_store.display_label(category, row, schema)
-            items.append({"category": category, "category_label": category.replace("_", " ").title(),
+            items.append({"category": category, "category_label": review_store.category_label(category, schema),
                           "tracker_id": row.get(id_column(category, schema), ""), "title": title, "fields": row})
     server.link_options_cache = {"signature": signature, "items": items}
     return items
@@ -280,7 +280,10 @@ class ReviewHandler(BaseHTTPRequestHandler):
             self.json(200, review_store.list_cards())
             return
         if path == "/api/accepted":
-            self.json(200, {"items": accepted_items(self.server)})
+            from paths import load_schema
+
+            self.json(200, {"items": accepted_items(self.server),
+                            **review_store.catalog(load_schema())})
             return
         if path == "/api/link-options":
             self.json(200, {"items": accepted_link_options(self.server)})

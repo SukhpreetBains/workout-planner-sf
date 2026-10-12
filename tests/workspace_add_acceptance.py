@@ -37,20 +37,20 @@ def main() -> None:
     assert "curates each selected document itself, one at a time" in flat
     assert "curation ran without subagents" in flat
 
-    five = "decisions, open questions, stakeholders, action items, and risks"
+    five = "decisions, open questions, people, action items, and risks"
     assert flat.count(five) == 2, "meeting categories must be named in Step 2 and Step 4"
     assert "richest source for those three" not in flat
     assert "propose every follow-up that has an owner or a stated need to assign one" in flat
-    assert "Fill `Due Date` whenever the source gives a calendar date" in flat
-    assert "propose one `session` row for every meeting processed" in flat
+    assert "Fill `Target Date` whenever the source gives a calendar date" in flat
+    assert "propose one `session` for every meeting processed" in flat
     assert "`Status: completed`" in flat
 
     assert "a heading or label alone is not evidence" in flat
     assert "Each excerpt must support the whole claim on its own" in flat
     assert "only when the source states an owner or a commitment" in flat
     assert "Never propose notes aimed at the presenter" in flat
-    assert "A RACI becomes one `operating_model` row per activity" in flat
-    assert "record each party's letter in `Activity`" in flat
+    assert "A RACI becomes one `governance_rule` per activity" in flat
+    assert "list the Consulted and Informed parties in the Description" in flat
     assert "Propose milestones whose date has passed like any others" in flat
     assert "in the handoff instead" not in flat
     assert "Do not merge or drop actions" in flat
@@ -58,8 +58,9 @@ def main() -> None:
     assert "## Risks raised" in template
     assert "One line per distinct action in the source" in template
 
-    assert "Propose a stakeholder row only for a named person" in flat
-    assert "revise that earlier proposal (incrementing its `revision`)" in flat
+    assert "Propose a `person` only for a named individual" in flat
+    assert "rather than recording the person as the role" in flat
+    assert "Never propose the same person, team, or system twice under different categories" in flat
     authority = [
         "signed or executed documents over drafts and redlines",
         "later-dated documents over earlier ones",
@@ -69,20 +70,21 @@ def main() -> None:
     assert positions == sorted(positions), "source authority order changed"
     assert "keep the signed value and propose an `open_question` naming both sources" in flat
 
-    assert "Title every risk, assumption, issue, decision, and dependency" in flat
-    assert "a short summary of three to eight words that names the item" in flat
-    assert "written fresh rather than copied or cut from the statement" in flat
+    assert "`Name` is required in every category" in flat
+    assert "a short summary of three to eight words written fresh" in flat
+    assert "rather than copied or cut from the Description" in flat
     assert "validator fills it" not in flat
 
-    assert "Caps, limits, and exclusions are constraints" in flat
-    assert "returns every stated fee, cap or limit, scope exclusion, dependency, and date as its own finding" in flat
+    assert "Caps, limits, and commercial terms are constraints" in flat
+    assert "Excluded or deferred work is an `out_of_scope_item`" in flat
+    assert "returns every stated fee, cap or limit, commercial term, scope inclusion and exclusion, dependency, and date as its own finding" in flat
     assert "Drop a candidate as superseded only after confirming the stronger source covers it" in flat
     assert "check the source's text yourself" in flat
     assert 'drop the candidate with the reason "not in <source>"' in flat
     assert "not a `requirement`" in flat
     assert "Internal Slalom commercial material stays out of the trackers" in flat
     assert "Commercial terms in a signed client agreement are client-agreed" in flat
-    assert "Never set `complete` or `delayed` without a source saying so" in flat
+    assert "Never set `completed`, `achieved`, `missed`, or `delivered` without a source saying so" in flat
     assert "date has passed with no source confirming the outcome" in flat
     assert "any documents filed without proposals and why" in flat
 
@@ -99,8 +101,15 @@ def main() -> None:
     assert "**Against earlier batches in this run**" in text
 
     assert "mention the rest in Notes" not in flat
-    assert "put its `proposal_id` in the link column" in flat
-    assert "removes it if the row is rejected" in flat
+    assert "use its `proposal_id` as the ID" in flat
+    assert "removes the relationship if it is rejected" in flat
+    assert "Store each relationship once, on its source record" in flat
+    assert "appearing in the same document is not one" in flat
+
+    assert "classifies with the schema's definitions, not by keyword" in flat
+    assert "apply the lookalike distinction the schema states" in flat
+    assert "leave the rest empty for the reviewer" in flat
+    assert "A finding whose category cannot be decided from the source is not proposed" in flat
 
     assert "must not move files" in flat
     assert "write to trackers" in flat

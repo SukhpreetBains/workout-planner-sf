@@ -125,7 +125,7 @@ entries without changing proposal fields.
 ## Step 2, Walk the updates
 
 When the visual inbox cannot run, fall back to presenting updates in small
-batches grouped by category.
+batches grouped by category, entities before signals.
 For every update show:
 
 - What it says (the key fields, in plain language)
@@ -133,6 +133,7 @@ For every update show:
   supporting line(s)
 - Whether it is an `add` or an `update` to an existing row (show the
   current row from `workspace/.system/tracker-copies/` for updates)
+- Its relationships, each as the meaning plus the related item's name
 
 Let the user approve, edit, or reject each one. Apply their edits and
 delete rejected updates directly in the YAML file. If the user says
@@ -148,12 +149,13 @@ PY <plugin-root>/shared/scripts/validate_updates.py workspace/.system/proposed-u
 PY <plugin-root>/shared/scripts/apply_updates.py workspace/.system/proposed-updates/<file>.yaml
 ```
 
-Fix validation problems before applying (usually enum values or link IDs).
+Fix validation problems before applying (usually enum values or relationship
+meanings and IDs).
 `apply_updates.py` prints the assigned row IDs, moves the file to
 `workspace/.system/applied-updates/`, and re-syncs automatically.
 
 ## Step 4, Report
 
 Tell the user what was written (IDs per category), what was rejected, and
-anything worth following up, for example a pain point with no linked
-stakeholder, or an open question nobody owns.
+anything worth following up, for example a pain point nobody raised, or an
+open question with no owner.

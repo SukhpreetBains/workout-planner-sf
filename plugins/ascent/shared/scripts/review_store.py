@@ -31,7 +31,15 @@ from paths import (
     TRACKER_COPIES_DIR,
     load_schema,
 )
-from trackers import delete_row, id_column, read_rows, upsert_row
+from trackers import (
+    delete_row,
+    format_relationships,
+    id_column,
+    is_relationships,
+    parse_relationships,
+    read_rows,
+    upsert_row,
+)
 from validate_updates import validate
 
 USER_SUBMITTED_SOURCE = "User Submitted"
@@ -186,18 +194,30 @@ def current_row(update: dict, schema: dict) -> dict | None:
 
 def display_label(category: str, fields: dict, schema: dict) -> str:
     """Return one consistent human label for tracker rows and proposals."""
-    title_field = f"{category.replace('_', ' ').title()} Title"
-    for value in (fields.get(title_field), fields.get("Name"), fields.get("Statement"), fields.get("Question")):
+    for value in (fields.get("Name"), fields.get(id_column(category, schema))):
         if str(value or "").strip():
             return str(value).strip()
-    if category == "workflow_stage":
-        workflow = str(fields.get("Workflow Name") or "").strip()
-        stage = str(fields.get("Stage Name") or "").strip()
-        if workflow and stage:
-            return f"{workflow}: {stage}"
-        if workflow or stage:
-            return workflow or stage
-    return str(fields.get(id_column(category, schema)) or "").strip() or "Untitled"
+    return "Untitled"
+
+
+def category_label(category: str, schema: dict) -> str:
+    return schema["categories"].get(category, {}).get("label") or category.replace("_", " ").title()
+
+
+def catalog(schema: dict) -> dict:
+    """The configurable vocabulary the review interface renders."""
+    return {
+        "groups": [{"id": key, "label": group["label"], "definition": group["definition"]}
+                   for key, group in schema["groups"].items()],
+        "categories": [{"id": key, "label": definition["label"], "group": definition["group"],
+                        "definition": definition["definition"],
+                        "field_schema": definition.get("columns", [])}
+                       for key, definition in schema["categories"].items()],
+        "relationships": [{"id": key, "label": meaning["label"],
+                           "inverse_label": meaning["inverse_label"],
+                           "definition": meaning["definition"]}
+                          for key, meaning in schema["relationships"].items()],
+    }
 
 
 def archived_counts(directory: Path, excluded_tracker_ids: set[tuple[str, str]] | None = None) -> dict[str, int]:
@@ -306,7 +326,7 @@ def list_cards() -> dict:
                     "proposal_id": update["proposal_id"],
                     "revision": update["revision"],
                     "category": category,
-                    "category_label": category.replace("_", " ").title(),
+                    "category_label": category_label(category, schema),
                     "action": update.get("action", "add"),
                     "tracker_id": update.get("id"),
                     "fields": update.get("fields") or {},
@@ -325,14 +345,7 @@ def list_cards() -> dict:
     return {
         "cards": cards,
         "counts": counts,
-        "categories": [
-            {
-                "id": category,
-                "label": category.replace("_", " ").title(),
-                "field_schema": definition.get("columns", []),
-            }
-            for category, definition in schema["categories"].items()
-        ],
+        **catalog(schema),
         "remaining": len(cards),
         "progress": progress_summary(cards, schema),
     }
@@ -438,11 +451,17 @@ def remove_and_archive(path: Path, document: dict, index: int, update: dict,
         path.unlink()
 
 
-def replace_link_value(value: object, old: str, new: str) -> str:
-    values = [part.strip() for part in str(value or "").split(";") if part.strip() and part.strip() != old]
-    if new and old in [part.strip() for part in str(value or "").split(";") if part.strip()]:
-        values.append(new)
-    return "; ".join(dict.fromkeys(values))
+def references(value: object, target: str) -> bool:
+    return any(linked == target for _meaning, linked in parse_relationships(value))
+
+
+def replace_relationship_target(value: object, old: str, new: str) -> str:
+    """Point relationships at a new ID, or drop them when there is none."""
+    return format_relationships([
+        (meaning, new if linked == old else linked)
+        for meaning, linked in parse_relationships(value)
+        if linked != old or new
+    ])
 
 
 def resolve_links(old: str, new: str, schema: dict) -> list[str]:
@@ -456,11 +475,11 @@ def resolve_links(old: str, new: str, schema: dict) -> list[str]:
             definition = schema["categories"].get(update.get("category"), {})
             fields = update.get("fields") or {}
             for column in definition.get("columns", []):
-                if "links_to" not in column and "links_to_any" not in column:
+                if not is_relationships(column):
                     continue
                 name = column["name"]
-                if old in [part.strip() for part in str(fields.get(name, "")).split(";")]:
-                    fields[name] = replace_link_value(fields.get(name), old, new)
+                if references(fields.get(name), old):
+                    fields[name] = replace_relationship_target(fields.get(name), old, new)
                     changed = True
                     update_changed = True
             update["fields"] = fields
@@ -473,11 +492,11 @@ def resolve_links(old: str, new: str, schema: dict) -> list[str]:
         for row in read_rows(category, schema):
             changed = False
             for column in definition.get("columns", []):
-                if "links_to" not in column and "links_to_any" not in column:
+                if not is_relationships(column):
                     continue
                 name = column["name"]
-                if old in [part.strip() for part in str(row.get(name, "")).split(";")]:
-                    row[name] = replace_link_value(row.get(name), old, new)
+                if references(row.get(name), old):
+                    row[name] = replace_relationship_target(row.get(name), old, new)
                     changed = True
             if changed:
                 row[id_column(category, schema)] = row.get(id_column(category, schema), "")
@@ -522,7 +541,9 @@ def accept(proposal_id: str, revision: object, idempotency_key: str) -> dict:
         fields = dict(update.get("fields") or {})
         if update.get("action", "add") == "update":
             fields[id_column(category, schema)] = update["id"]
-            if category == "risk" and ({"Probability", "Impact"} & set(fields)):
+            scored = any(column.get("computed") == "risk_score"
+                         for column in schema["categories"][category]["columns"])
+            if scored and ({"Probability", "Impact"} & set(fields)):
                 existing = current_row(update, schema) or {}
                 for input_name in ("Probability", "Impact"):
                     if fields.get(input_name) in (None, "") and existing.get(input_name) not in (None, ""):
