@@ -9,9 +9,9 @@ Proposed updates only become tracker rows after a human approves them
 here. Never apply updates the user has not seen.
 
 Locate `shared/` at the installed Ascent plugin root. Set
-`ASCENT_OPPORTUNITY_ROOT` to the Opportunity folder for every engine command, then
+`ASCENT_PROJECT_ROOT` to the Project folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
-Use the Opportunity as the command working directory as well. Resolve the
+Use the Project as the command working directory as well. Resolve the
 installed plugin root explicitly; the scripts live under `shared/scripts/`,
 not under this skill's directory. The launcher rejects missing or mismatched
 roots before creating an environment. Do not retry a root error from the Account
@@ -25,7 +25,7 @@ PY <plugin-root>/shared/scripts/sync.py --check-setup
 
 This is a cheap, read-only filesystem check. If it reports the workspace as
 not ready, stop here and tell the user this doesn't look like an initialized
-Opportunity workspace, offer to hand off to `initial-setup` first.
+Project workspace, offer to hand off to `ascent-initial-setup` first.
 
 If it also prints an `ascent update:` line, pass that message to the user once, in
 plain words, and carry on. It is either a downloaded update waiting for a Codex
@@ -36,7 +36,7 @@ current work.
 
 Check `workspace/.system/project.yaml` for an `industry:` key.
 
-- **Absent entirely** — this Opportunity has never been asked. Scan
+- **Absent entirely** — this Project has never been asked. Scan
   `shared/industry/*/manifest.json` for available packs. If any exist, ask
   once, offering each by title plus a "none of these" option, and write
   whichever the user picks (an id, or `none`) into `project.yaml`,
@@ -57,7 +57,7 @@ the full contract if anything here is ambiguous.
 Start or reuse the loopback-only inbox with:
 
 ```
-PY <plugin-root>/shared/scripts/review_server.py start --root "$ASCENT_OPPORTUNITY_ROOT"
+PY <plugin-root>/shared/scripts/review_server.py start --root "$ASCENT_PROJECT_ROOT"
 ```
 
 Always use `shared/scripts/py` or `py.cmd` for review server commands. A server
@@ -104,7 +104,7 @@ the item pending and adds the clarification note to
 An active agent can wait for flags with:
 
 ```
-PY <plugin-root>/shared/scripts/review_server.py wait --root "$ASCENT_OPPORTUNITY_ROOT" --timeout 60
+PY <plugin-root>/shared/scripts/review_server.py wait --root "$ASCENT_PROJECT_ROOT" --timeout 60
 ```
 
 If the returned `items` list is non-empty, resume the conversation with those

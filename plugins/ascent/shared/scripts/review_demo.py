@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create and open a disposable, synthetic Opportunity review workspace.
+"""Create and open a disposable, synthetic Project review workspace.
 
 Run: python3 plugins/ascent/shared/scripts/review_demo.py
 Use --prepare-only to create the files without starting a browser or server.
@@ -76,7 +76,7 @@ def prepare(root: Path) -> None:
             stopped = subprocess.run([sys.executable, str(SCRIPTS / "review_server.py"),
                                       "stop", "--root", str(root)],
                                      capture_output=True, text=True,
-                                     env={**os.environ, "ASCENT_OPPORTUNITY_ROOT": str(root)})
+                                     env={**os.environ, "ASCENT_PROJECT_ROOT": str(root)})
             if stopped.returncode:
                 raise SystemExit(f"Could not stop the current demo server: {stopped.stderr.strip()}")
         shutil.rmtree(root)
@@ -84,14 +84,14 @@ def prepare(root: Path) -> None:
     (root / MARKER).write_text("Synthetic workspace. Safe to reset with review_demo.py.\n", encoding="utf-8")
     for name in ("project", "trackers", "inbox", ".system"):
         (root / "workspace" / name).mkdir(parents=True, exist_ok=True)
-    os.environ["ASCENT_OPPORTUNITY_ROOT"] = str(root)
+    os.environ["ASCENT_PROJECT_ROOT"] = str(root)
 
     from trackers import init_trackers, upsert_row
     from paths import load_schema
 
     write_yaml(root / "workspace/.system/project.yaml", {
         "account": "Cedar Vale Cooperative (synthetic)",
-        "opportunity": "Service Intake Modernization Demo",
+        "project": "Service Intake Modernization Demo",
         "industry": "none",
     })
     init_trackers()

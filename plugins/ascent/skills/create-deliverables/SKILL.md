@@ -30,16 +30,16 @@ workflow.
 
 ### Draft location and naming
 
-Create every draft deliverable inside the selected Opportunity folder at
-`workspace/draft-deliverables/<selected-template>-<opportunity-name>-<version number for example v1>/`.
+Create every draft deliverable inside the selected Project folder at
+`workspace/draft-deliverables/<selected-template>-<project-name>-<version number for example v1>/`.
 `<selected-template>` is the selected template's name, and
-`<opportunity-name>` is the confirmed Opportunity folder name. Use that exact
+`<project-name>` is the confirmed Project folder name. Use that exact
 directory name for all new drafts, including the intake, authored content,
-preview build, and any detached source. Do not place a draft in the Opportunity
+preview build, and any detached source. Do not place a draft in the Project
 root, `Deliverables/`, or an unscoped temporary folder unless you are explicitly told to do so by the user.
 
 For example, a first draft of a `project-kickoff` for the Modernization`
-Opportunity in the Northstar Account folder belongs in
+Project in the Northstar Account folder belongs in
 Northstar/Modernization/`workspace/draft-deliverables/project-kickoff- Modernization-v1/`.
 
 ### 1. Choose a template and its modules
@@ -89,8 +89,8 @@ starting composition. Do not ask the user to select a template or modules only
 after beginning evidence intake.
 
 Before evidence intake, confirm the workspace itself is initialized. Locate
-`shared/` at the installed Ascent plugin root, set `ASCENT_OPPORTUNITY_ROOT` to the
-Opportunity folder, and run:
+`shared/` at the installed Ascent plugin root, set `ASCENT_PROJECT_ROOT` to the
+Project folder, and run:
 
 ```bash
 PY <shared-skill-dir>/scripts/sync.py --check-setup
@@ -99,7 +99,7 @@ PY <shared-skill-dir>/scripts/sync.py --check-setup
 This is a cheap, read-only filesystem check shared by every workspace-
 dependent skill, not a scan of any content. If it reports the workspace as
 not ready, stop before intake and tell the user this doesn't look like an
-initialized Opportunity workspace — offer to hand off to `initial-setup`
+initialized Project workspace — offer to hand off to `ascent-initial-setup`
 first, the same way a document-processing gap hands off to
 `workspace-add`. Do not attempt the tracker-copy refresh below
 against an uninitialized workspace; the scripts it runs assume the standard
@@ -128,7 +128,7 @@ intake, not on every resume or rebuild.
 
 Check `workspace/.system/project.yaml` for an `industry:` key.
 
-- **Absent entirely** — this Opportunity has never been asked. Scan
+- **Absent entirely** — this Project has never been asked. Scan
   `shared/industry/*/manifest.json` for available packs. If any exist, ask
   once, offering each by title plus a "none of these" option, and write
   whichever the user picks (an id, or `none`) into `project.yaml`,
@@ -284,7 +284,7 @@ Validate before drafting presentation content:
 
 ```bash
 node scripts/validate-intake.mjs <selected-template> \
-  workspace/draft-deliverables/<selected-template>-<opportunity-name>/intake.yaml
+  workspace/draft-deliverables/<selected-template>-<project-name>/intake.yaml
 ```
 
 ### 5. Draft and render for review
@@ -299,9 +299,9 @@ Build a branded draft and give the user a preview link:
 
 ```bash
 node scripts/build.mjs \
-  workspace/draft-deliverables/<selected-template>-<opportunity-name>/content.yaml \
-  --intake workspace/draft-deliverables/<selected-template>-<opportunity-name>/intake.yaml \
-  --out workspace/draft-deliverables/<selected-template>-<opportunity-name>/build \
+  workspace/draft-deliverables/<selected-template>-<project-name>/content.yaml \
+  --intake workspace/draft-deliverables/<selected-template>-<project-name>/intake.yaml \
+  --out workspace/draft-deliverables/<selected-template>-<project-name>/build \
   --bundle
 ```
 

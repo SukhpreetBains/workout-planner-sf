@@ -84,7 +84,7 @@ TARGET_SCRIPTS = {
 }
 
 # Main superseded `.codex/project-context/` in commit 3f40c53. The manifest,
-# brief and persisted hierarchy now live here, under the opportunity root.
+# brief and persisted hierarchy now live here, under the project root.
 CONTEXT_SUBPATH = ("workspace", ".system", "project-context")
 
 
@@ -750,7 +750,7 @@ def execute_trial(case: Dict[str, Any], hash_seed: int) -> Dict[str, Any]:
     temp_root = Path(tempfile.mkdtemp(prefix="ascent-context-eval-"))
     runner = None
     try:
-        workspace = temp_root / "opportunity"
+        workspace = temp_root / "project"
         home = temp_root / "home"
         site_dir = temp_root / "site"
         for directory in (workspace, home, site_dir):

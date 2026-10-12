@@ -1,0 +1,9 @@
+interface:
+  display_name: "Ascent Initial Setup"
+  short_description: "Prepare a project workspace and project context"
+  icon_small: "./assets/skill-icon.svg"
+  icon_large: "./assets/skill-icon.svg"
+  default_prompt: "Use $ascent-initial-setup to prepare a new or existing Project workspace and help me choose shared or local-only storage."
+
+policy:
+  allow_implicit_invocation: false

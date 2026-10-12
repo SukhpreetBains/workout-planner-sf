@@ -1,0 +1,32 @@
+{
+  "schema_version": "ascent.ascent-initial-setup-storage-cases.v1",
+  "cases": [
+    {
+      "id": "local-only",
+      "decision": "Only on my computer",
+      "required_concepts": [
+        "local-only",
+        "synchronized automatically",
+        "full proposed path"
+      ]
+    },
+    {
+      "id": "existing-sharepoint-account",
+      "decision": "Shared in SharePoint, Account folder already exists",
+      "required_concepts": [
+        "Account folder exists",
+        "Add shortcut to OneDrive",
+        "sync"
+      ]
+    },
+    {
+      "id": "missing-sharepoint-account",
+      "decision": "Shared in SharePoint, Account folder does not exist",
+      "required_concepts": [
+        "Account folder is missing",
+        "Add shortcut to OneDrive",
+        "sync"
+      ]
+    }
+  ]
+}

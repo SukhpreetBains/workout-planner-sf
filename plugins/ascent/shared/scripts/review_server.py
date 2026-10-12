@@ -2,10 +2,10 @@
 """Run the loopback-only visual review inbox.
 
 Usage:
-    py review_server.py start [--root OPPORTUNITY]
-    py review_server.py status [--root OPPORTUNITY]
-    py review_server.py wait [--root OPPORTUNITY] [--after N] [--timeout SECONDS]
-    py review_server.py stop [--root OPPORTUNITY]
+    py review_server.py start [--root PROJECT]
+    py review_server.py status [--root PROJECT]
+    py review_server.py wait [--root PROJECT] [--after N] [--timeout SECONDS]
+    py review_server.py stop [--root PROJECT]
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ def configure_root(root: Path) -> None:
     resolved = root.resolve()
     if CONFIGURED_ROOT == resolved:
         return
-    os.environ["ASCENT_OPPORTUNITY_ROOT"] = str(resolved)
+    os.environ["ASCENT_PROJECT_ROOT"] = str(resolved)
     for module in ("paths", "trackers", "validate_updates", "review_store"):
         sys.modules.pop(module, None)
     CONFIGURED_ROOT = resolved

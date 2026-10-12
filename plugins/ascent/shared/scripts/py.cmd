@@ -1,12 +1,12 @@
 @echo off
 rem Run a workspace engine script with a per-user environment outside the
-rem synced Opportunity folder. ASCENT_PYTHON can pin the base interpreter.
+rem synced Project folder. ASCENT_PYTHON can pin the base interpreter.
 setlocal EnableExtensions
 set "SCRIPT_DIR=%~dp0"
-if defined ASCENT_OPPORTUNITY_ROOT (
-  set "OPPORTUNITY_ROOT=%ASCENT_OPPORTUNITY_ROOT%"
+if defined ASCENT_PROJECT_ROOT (
+  set "PROJECT_ROOT=%ASCENT_PROJECT_ROOT%"
 ) else (
-  set "OPPORTUNITY_ROOT=%CD%"
+  set "PROJECT_ROOT=%CD%"
 )
 set "INSTALL_DEPENDENCIES=0"
 if "%~1"=="--install-dependencies" (
@@ -24,14 +24,14 @@ if defined ASCENT_PYTHON (
   exit /b 1
 )
 
-for /f "usebackq delims=" %%I in (`"%BASE_PYTHON%" -c "import pathlib,sys; print(pathlib.Path(sys.argv[1]).expanduser().resolve())" "%OPPORTUNITY_ROOT%"`) do set "OPPORTUNITY_ROOT=%%I"
-set "ASCENT_OPPORTUNITY_ROOT=%OPPORTUNITY_ROOT%"
+for /f "usebackq delims=" %%I in (`"%BASE_PYTHON%" -c "import pathlib,sys; print(pathlib.Path(sys.argv[1]).expanduser().resolve())" "%PROJECT_ROOT%"`) do set "PROJECT_ROOT=%%I"
+set "ASCENT_PROJECT_ROOT=%PROJECT_ROOT%"
 "%BASE_PYTHON%" "%SCRIPT_DIR%launcher_preflight.py" %* || exit /b 2
-for /f "usebackq delims=" %%I in (`"%BASE_PYTHON%" -c "import hashlib,os,sys; value=os.path.normcase(os.path.realpath(sys.argv[1])).encode('utf-8'); print(hashlib.sha256(value).hexdigest()[:20])" "%OPPORTUNITY_ROOT%"`) do set "PATH_HASH=%%I"
+for /f "usebackq delims=" %%I in (`"%BASE_PYTHON%" -c "import hashlib,os,sys; value=os.path.normcase(os.path.realpath(sys.argv[1])).encode('utf-8'); print(hashlib.sha256(value).hexdigest()[:20])" "%PROJECT_ROOT%"`) do set "PATH_HASH=%%I"
 if defined ASCENT_CACHE_DIR (set "CACHE_ROOT=%ASCENT_CACHE_DIR%") else (set "CACHE_ROOT=%USERPROFILE%\.ascent")
 set "VENV=%CACHE_ROOT%\venvs\%PATH_HASH%"
 set "PYTHON=%VENV%\Scripts\python.exe"
-set "SYSTEM_DIR=%OPPORTUNITY_ROOT%\workspace\.system"
+set "SYSTEM_DIR=%PROJECT_ROOT%\workspace\.system"
 
 if not exist "%PYTHON%" (
   echo creating cached Python environment: %VENV% 1>&2
