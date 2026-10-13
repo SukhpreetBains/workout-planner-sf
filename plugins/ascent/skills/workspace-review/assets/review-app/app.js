@@ -387,14 +387,18 @@ function relationshipRow(meaningLabel, targetId, action) {
 function openRelationshipPicker(ownIds, trigger, onPick) {
   const modal = el("div", { class: "review-note-modal link-picker-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "relationship-picker-title" });
   const meaning = enumPicker("relationship-meaning", "relationship-meaning",
-    relationshipTypes.map(type => ({ value: type.id, text: type.label })), "", { ariaLabel: "Relationship meaning" });
+    relationshipTypes.map(type => ({ value: type.id, text: type.label })), "",
+    { ariaLabel: "Relationship meaning", emptyLabel: "Choose a relationship meaning" });
   const hint = el("p", { class: "relationship-hint" }, "Choose what the relationship means, then the record it points to.");
   meaning.input.addEventListener("input", () => { hint.textContent = relationshipType(meaning.input.value)?.definition || ""; });
   const search = el("input", { type: "search", placeholder: "Search records", "aria-label": "Search records to relate" });
   const list = el("div", { class: "link-picker-list", role: "radiogroup", "aria-label": "Related record" });
   const problem = el("p", { class: "validation", role: "alert", hidden: "" });
+  meaning.input.addEventListener("input", () => { problem.hidden = true; });
+  list.addEventListener("change", () => { problem.hidden = true; });
   const render = () => {
     const query = search.value.trim().toLowerCase();
+    const selectedTarget = list.querySelector("input[name='relationship-target']:checked")?.value;
     const records = knownRecords().filter(record => record.id && !ownIds.includes(record.id))
       .filter(record => !query || `${record.title} ${record.category_label} ${record.state} ${Object.values(record.fields).join(" ")}`.toLowerCase().includes(query));
     list.replaceChildren();
@@ -405,8 +409,10 @@ function openRelationshipPicker(ownIds, trigger, onPick) {
       list.append(el("h3", { class: "link-picker-category" }, category.label));
       matching.forEach(record => {
         const details = [record.fields.Status && label(record.fields.Status), String(record.fields.Description || "").slice(0, 160)].filter(Boolean).join(" · ");
+        const radio = el("input", { type: "radio", name: "relationship-target", value: record.id });
+        radio.checked = record.id === selectedTarget;
         list.append(el("label", { class: "link-picker-item" }, [
-          el("input", { type: "radio", name: "relationship-target", value: record.id }),
+          radio,
           el("span", {}, [el("strong", {}, record.title), el("small", {}, `${record.category_label} · ${record.state}`), el("span", {}, details)]),
         ]));
       });
@@ -415,7 +421,8 @@ function openRelationshipPicker(ownIds, trigger, onPick) {
   const form = el("form", {});
   form.append(el("p", { class: "eyebrow" }, "Relationship"), el("h2", { id: "relationship-picker-title" }, "Add relationship"),
     el("div", { class: "field" }, [el("label", { for: meaning.labelFor }, "Meaning"), meaning.control]), hint,
-    el("div", { class: "field" }, [el("label", {}, "Related record"), search]), list, problem,
+    el("div", { class: "field" }, [el("label", {}, "Related record"), search]),
+    el("p", { class: "relationship-hint" }, "Search narrows the list. Select a record using its circle."), list, problem,
     el("div", { class: "modal-actions" }, [
       el("button", { class: "quiet", type: "button", onclick: () => closeModal(modal, trigger) }, "Cancel"),
       el("button", { class: "primary", type: "submit" }, "Add relationship"),
@@ -424,8 +431,11 @@ function openRelationshipPicker(ownIds, trigger, onPick) {
     event.preventDefault();
     const target = form.querySelector("input[name='relationship-target']:checked")?.value;
     if (!meaning.input.value || !target) {
-      problem.textContent = "Choose a meaning and a related record.";
+      problem.textContent = !meaning.input.value && !target
+        ? "Choose a relationship meaning and select a record from the results."
+        : !meaning.input.value ? "Choose a relationship meaning." : "Select a record from the results.";
       problem.hidden = false;
+      (!meaning.input.value ? meaning.control.querySelector("button") : search).focus();
       return;
     }
     onPick(meaning.input.value, target);
@@ -476,7 +486,7 @@ function relationshipsSection(ownIds, definition, value, onChange) {
   ]);
 }
 
-function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true } = {}) {
+function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true, emptyLabel = "Select an option" } = {}) {
   const input = el("input", { id, name, type: "hidden", value });
   const button = el("button", {
     id: `${id}-button`, class: "field-picker-button", type: "button",
@@ -486,8 +496,8 @@ function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true }
   const close = () => { list.hidden = true; button.setAttribute("aria-expanded", "false"); };
   const open = () => { list.hidden = false; button.setAttribute("aria-expanded", "true"); };
   const choices = options.map(option => typeof option === "string" ? { value: option, text: label(option) } : option);
-  if (includeEmpty) choices.unshift({ value: "", text: "Select an option" });
-  button.textContent = choices.find(option => option.value === value)?.text || "Select an option";
+  if (includeEmpty) choices.unshift({ value: "", text: emptyLabel });
+  button.textContent = choices.find(option => option.value === value)?.text || emptyLabel;
   choices
     .forEach(option => list.append(el("button", {
       type: "button", role: "option", "aria-selected": String(option.value === value), onclick: () => {
