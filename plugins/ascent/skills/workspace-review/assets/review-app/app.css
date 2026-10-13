@@ -285,7 +285,9 @@ button.source-ref { padding: 0; border: 0; background: transparent; cursor: poin
 .review-note-modal { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(0 47 175 / 34%); }
 .review-note-modal form { display: grid; gap: 1rem; padding: clamp(1.25rem, 4vw, 2.25rem); }
 .review-note-modal form { width: min(560px, 100%); background: var(--white); border-radius: 0 20px 0 0; box-shadow: 0 24px 72px rgb(0 47 175 / 24%); }
-.link-picker-modal form { width: min(672px, 100%); }
+.link-picker-modal form { display: flex; flex-direction: column; width: min(672px, 100%); max-height: calc(100dvh - 2rem); }
+.link-picker-modal form > * { flex-shrink: 0; }
+.link-picker-modal .link-picker-list { flex: 1 1 auto; min-height: 6rem; max-height: none; margin-top: 0; }
 .review-note-modal h2, .review-note-modal p { margin-bottom: 0; }
 .review-note-modal textarea { min-height: 130px; }
 .modal-actions { display: flex; justify-content: end; flex-wrap: wrap; gap: .75rem; }
