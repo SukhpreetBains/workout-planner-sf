@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "ascent",
   "displayName": "Ascent",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Governed, evidence-backed skills for accelerated Discovery engagements and Project delivery.",
   "author": {"name": "Slalom"},
   "homepage": "https://github.com/Slalom/ascent",

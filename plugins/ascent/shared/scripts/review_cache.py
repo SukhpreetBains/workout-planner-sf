@@ -13,6 +13,8 @@ import shutil
 import tempfile
 import threading
 import time
+from zipfile import ZipFile
+from xml.etree import ElementTree
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -94,6 +96,24 @@ def atomic_copy(source: Path, destination: Path) -> None:
 
 def now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def same_workbook_content(left: Path, right: Path) -> bool:
+    """Compare Excel content while ignoring OneDrive's package metadata."""
+    def payload(path: Path) -> dict[str, str]:
+        with ZipFile(path) as workbook:
+            result = {
+                name: hashlib.sha256(workbook.read(name)).hexdigest()
+                for name in workbook.namelist()
+                if name.startswith("xl/") and name != "xl/_rels/workbook.xml.rels"
+            }
+            relationships = ElementTree.fromstring(workbook.read("xl/_rels/workbook.xml.rels"))
+            essential = sorted((item.get("Id"), item.get("Type"), item.get("Target"),
+                                item.get("TargetMode")) for item in relationships
+                               if not item.get("Type", "").endswith("/customXml"))
+            result["xl/_rels/workbook.xml.rels"] = hashlib.sha256(repr(essential).encode()).hexdigest()
+            return result
+    return payload(left) == payload(right)
 
 
 class ReviewCache:
@@ -202,6 +222,7 @@ class ReviewCache:
         push = []
         pull = []
         equal = []
+        adopt_remote = []
         for relative in sorted(paths):
             old, current, upstream = baseline.get(relative), local.get(relative), remote.get(relative)
             local_changed = current != old
@@ -209,7 +230,12 @@ class ReviewCache:
             if local_changed and remote_changed and current == upstream:
                 equal.append(relative)
             elif local_changed and remote_changed and current != upstream:
-                conflicts.append(relative)
+                if (relative.endswith(".xlsx") and current is not None and upstream is not None
+                        and same_workbook_content(self.local_root / relative,
+                                                  self.project_root / relative)):
+                    adopt_remote.append(relative)
+                else:
+                    conflicts.append(relative)
             elif local_changed and current != upstream:
                 if review_owned(relative):
                     push.append(relative)
@@ -231,6 +257,20 @@ class ReviewCache:
                                     "pending": len(push), "error": None})
                 self._save_manifest()
             return
+        for relative in adopt_remote:
+            source = self.project_root / relative
+            temporary = self.directory / "inbound" / relative
+            atomic_copy(source, temporary)
+            if digest(temporary) != remote[relative]:
+                raise RuntimeError(f"OneDrive changed during sync: {relative}")
+            with self.work_lock:
+                destination = self.local_root / relative
+                if digest(destination) != local[relative]:
+                    raise RuntimeError(f"Local review changed during sync: {relative}")
+                atomic_copy(temporary, destination)
+                self.baseline[relative] = remote[relative]
+                self._save_manifest()
+            temporary.unlink(missing_ok=True)
         with self.lock:
             self.status.update({"state": "syncing", "conflicts": [],
                                 "pending": len(push), "error": None})
