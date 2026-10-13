@@ -199,6 +199,23 @@ test('content: the worked minimal example validates', () => {
   ok(check(content()));
 });
 
+test('content: citations require evidence and a matching content target', () => {
+  const doc = content();
+  doc.sections.at(-1).citations = [{ target: 'item-1', label: 'First action', value: 'One', status: 'source', source_ref: 'tracker-copy#REQ-1', source_document: 'source.md', source_locator: 'line 1', excerpt: 'One' }];
+  ok(check(doc));
+  delete doc.sections.at(-1).citations[0].source_ref;
+  contentError(doc, 'source and changed citations need source_ref');
+  doc.sections.at(-1).citations[0].source_ref = 'tracker-copy#REQ-1';
+  delete doc.sections.at(-1).citations[0].source_document;
+  contentError(doc, 'source and changed citations need source_document');
+  doc.sections.at(-1).citations[0].source_document = 'source.md';
+  doc.sections.at(-1).citations[0].source_url = 'file:///private/source.md';
+  contentError(doc, 'source_url must be an HTTP(S) URL');
+  delete doc.sections.at(-1).citations[0].source_url;
+  doc.sections.at(-1).citations[0].target = 'item-2';
+  contentError(doc, 'has no matching item or phase');
+});
+
 test('content: a missing required meta field names the field', () => {
   const doc = content();
   delete doc.meta.classification;
@@ -734,6 +751,41 @@ test('build: the project-kickoff worked example renders the integrated template'
   includes(result.html, 'org-tree');
 });
 
+test('build: module sources preserve the original passage and bundle without changing section width', async () => {
+  const doc = parseContentFile(EXAMPLE);
+  const timeline = doc.sections.find(section => section.module === 'timeline-roadmap');
+  timeline.citations = [
+    { target: 'item-1', label: 'First phase', value: 'September', status: 'source', source_ref: 'tracker-copies/requirements.yaml#REQ-001', source_document: 'schedule.md', source_locator: 'line 4', excerpt: 'First phase in September.', source_url: 'https://example.com/schedule.md' },
+    { target: 'item-2', label: 'Second phase', value: 'October', status: 'changed', source_ref: 'tracker-copies/requirements.yaml#REQ-002', source_document: 'schedule.md', source_locator: 'line 5', excerpt: 'Second phase in late September.', note: 'The approved value changed after source review.' },
+  ];
+  const file = path.join(TMP, 'cited-content.json');
+  writeFileSync(file, JSON.stringify(doc));
+  const result = await build(file, { out: path.join(TMP, 'cited'), bundle: true, intake: COMPLETE_INTAKE });
+  includes(result.html, 'class="citation-region"');
+  includes(result.html, 'class="source-disclosure"');
+  includes(result.html, 'schedule.md');
+  includes(result.html, 'line 4');
+  includes(result.html, 'First phase in September.');
+  includes(result.html, 'Needs review after edit');
+  includes(result.html, 'Second phase in late September.');
+  includes(result.html, 'The approved value changed after source review.');
+  includes(result.html, 'data-source-document-link="true" href="https://example.com/schedule.md"');
+  const gate = validateBuild(result.outDir);
+  ok(!gate.errors.some(error => ['rule 22', 'rule 23'].includes(error.rule)), 'the explicit source link must pass the external-resource gate');
+  ok(!result.html.includes('data-citation-anchor='));
+  includes(result.html, 'tracker-copies/requirements.yaml#REQ-001');
+  ok(existsSync(path.join(result.outDir, 'css/citations.css')));
+  ok(existsSync(path.join(result.outDir, 'js/citations.js')));
+  const css = readFileSync(path.join(result.outDir, 'css/citations.css'), 'utf8');
+  includes(css, '.source-disclosure { position:absolute;');
+  ok(!css.includes('grid-template-columns'), 'opening a source must not change content columns');
+  const bundle = readFileSync(result.bundlePath, 'utf8');
+  includes(bundle, 'Sources for');
+  includes(bundle, 'The approved value changed after source review.');
+  ok(!bundle.includes('src="js/citations.js"'));
+  ok(!bundle.includes('href="css/citations.css"'));
+});
+
 test('build: one module can render in isolation with its normal renderer paths', async () => {
   const result = await build(EXAMPLE, {
     out: path.join(TMP, 'agenda-isolated'),
@@ -1123,6 +1175,10 @@ brokenFixture('an external image', 'rule 22', (dir) =>
 brokenFixture('a CDN stylesheet', 'rule 22', (dir) =>
   replace(dir, 'index.html', '<link rel="stylesheet" href="css/tokens.css">',
     '<link rel="stylesheet" href="//cdn.example.com/reset.css"><link rel="stylesheet" href="css/tokens.css">'));
+
+brokenFixture('an unrelated external link', 'rule 22', (dir) =>
+  replace(dir, 'index.html', '<main id="main">',
+    '<main id="main"><a href="https://example.com">External link</a>'));
 
 brokenFixture('an external font import in CSS', 'rule 22', (dir) =>
   append(dir, 'css/base.css', '\n@font-face { font-family: X; src: url(https://fonts.example.com/x.woff2); }\n'));

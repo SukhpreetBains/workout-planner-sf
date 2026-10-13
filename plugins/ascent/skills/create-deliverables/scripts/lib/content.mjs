@@ -31,6 +31,19 @@ const MICROSITE_FIELDS = {
   } },
 };
 
+const CITATIONS = { type: 'list', min: 1, of: {
+  target: { type: 'string', required: true, pattern: /^(?:section|item-[1-9]\d*)$/ },
+  label: { type: 'string', required: true },
+  value: { type: 'string', required: true },
+  status: { type: 'string', required: true, enum: ['source', 'user', 'changed', 'missing'] },
+  source_ref: { type: 'string' },
+  source_document: { type: 'string' },
+  source_locator: { type: 'string' },
+  source_url: { type: 'string' },
+  excerpt: { type: 'string' },
+  note: { type: 'string' },
+} };
+
 const META_FIELDS = {
   archetype: { type: 'string', required: true },
   client: { type: 'string', required: true },
@@ -367,8 +380,34 @@ export function validateContent(doc, { archetype = null, iconNames = null } = {}
         type: { type: 'string', required: true },
         module: { type: 'string' },
         view: { type: 'string' },
+        citations: CITATIONS,
         ...(section.layout === 'microsite' ? { title: { type: 'string', required: true }, ...MICROSITE_FIELDS } : schema),
       }, where, problems, ctx);
+      if (Array.isArray(section.citations)) {
+        const targets = new Set();
+        for (const [citationIndex, citation] of section.citations.entries()) {
+          if (!isPlainObject(citation)) continue;
+          const at = `${where}.citations[${citationIndex}]`;
+          if (targets.has(citation.target)) problems.push(`${at}: duplicate citation target \`${citation.target}\``);
+          targets.add(citation.target);
+          if (citation.status === 'source' || citation.status === 'changed') {
+            if (!citation.source_ref) problems.push(`${at}: source and changed citations need source_ref`);
+            if (!citation.source_document) problems.push(`${at}: source and changed citations need source_document`);
+            if (!citation.source_locator && !citation.excerpt) problems.push(`${at}: source and changed citations need a source_locator or exact excerpt`);
+            if (citation.status === 'changed' && !citation.note) problems.push(`${at}: changed citations need a note explaining the unreviewed edit`);
+          } else if (citation.status === 'user' || citation.status === 'missing') {
+            if (!citation.note) problems.push(`${at}: user and missing citations need a note`);
+            if (citation.source_ref || citation.source_document || citation.source_locator || citation.source_url || citation.excerpt) problems.push(`${at}: user and missing citations cannot claim source evidence`);
+          }
+          if (citation.source_url && !/^https?:\/\//i.test(citation.source_url)) problems.push(`${at}: source_url must be an HTTP(S) URL`);
+          if (typeof citation.target === 'string' && citation.target !== 'section') {
+            const items = section.items ?? section.phases ?? (section.layout === 'microsite' && section.module === 'objectives-and-success' ? Array(3) : section.layout === 'microsite' && section.module === 'immediate-next-steps' ? Array(4) : null);
+            const index = Number(citation.target.slice(5));
+            if (!Array.isArray(items) || index > items.length || index < 1) problems.push(`${at}: target \`${citation.target}\` has no matching item or phase`);
+            if (!['objectives-and-success', 'timeline-roadmap', 'immediate-next-steps'].includes(section.module)) problems.push(`${at}: item targets are supported only for objectives, timeline, and next steps`);
+          }
+        }
+      }
       if (type === 'roadmap' && Array.isArray(section.phases)) {
         section.phases.forEach((phase, phaseIndex) => {
           if (!isPlainObject(phase)) return;

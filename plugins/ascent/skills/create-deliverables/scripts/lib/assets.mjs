@@ -207,14 +207,16 @@ export function copyAssets(outDir, plan) {
 }
 
 /** Copy this skill's own stylesheets and motion layer. */
-export function copyOwnAssets(outDir, { referenceLayouts = false } = {}) {
-  const css = ['tokens.css', 'base.css', 'components.css', ...(referenceLayouts ? ['reference-layout.css'] : []), 'print.css'];
+export function copyOwnAssets(outDir, { referenceLayouts = false, citations = false } = {}) {
+  const css = ['tokens.css', 'base.css', 'components.css', ...(referenceLayouts ? ['reference-layout.css'] : []), 'print.css', ...(citations ? ['citations.css'] : [])];
   for (const file of css) {
     copy(require_(path.join(SKILL_ROOT, 'assets', 'css', file), `this skill's ${file}`),
       path.join(outDir, 'css', file));
   }
   copy(require_(path.join(SKILL_ROOT, 'assets', 'js', 'motion.js'), "this skill's motion.js"),
     path.join(outDir, 'js', 'motion.js'));
+  if (citations) copy(require_(path.join(SKILL_ROOT, 'assets', 'js', 'citations.js'), "this skill's citations.js"),
+    path.join(outDir, 'js', 'citations.js'));
   return { css: css.map((f) => `css/${f}`), js: 'js/motion.js' };
 }
 

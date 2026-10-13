@@ -157,3 +157,27 @@ export function renderSection(section, index, ctx, renderer = null) {
     </div>
   </section>`;
 }
+
+/** One disclosure per module keeps evidence available without marking up the content. */
+export function renderCitedSection(section, index, ctx, renderer = null) {
+  const content = renderSection(section, index, ctx, renderer);
+  if (!section.citations?.length) return content;
+  const notes = section.citations.map((citation) => {
+    const status = {
+      source: 'Source', user: 'Direct user input',
+      changed: 'Needs review after edit', missing: 'No recorded source',
+    }[citation.status];
+    const sourceLink = citation.source_url
+      ? `<a data-source-document-link="true" href="${esc(citation.source_url)}" target="_blank" rel="noopener noreferrer">Open original document</a>`
+      : '';
+    const evidence = citation.source_ref
+      ? `<div class="source-panel__evidence"><p class="source-panel__ref">${esc(citation.source_document)}</p>${sourceLink}<p class="source-panel__locator">${esc(citation.source_locator ?? citation.source_ref)}</p>${citation.excerpt ? `<blockquote>${esc(citation.excerpt)}</blockquote>` : ''}<p class="source-panel__trail">Review record: ${esc(citation.source_ref)}</p></div>`
+      : '';
+    return `<li class="source-entry">
+      <h4>${esc(citation.label)}</h4><p class="source-entry__status${citation.status === 'changed' || citation.status === 'missing' ? ' source-entry__status--review' : ''}">${status}</p>
+      <p class="source-entry__value"><span>Displayed value:</span> ${esc(citation.value)}</p>
+      ${evidence}${citation.note ? `<p class="source-panel__note">${esc(citation.note)}</p>` : ''}
+    </li>`;
+  }).join('');
+  return `<div class="citation-region"><div class="citation-content">${content}</div><details class="source-disclosure"><summary>Sources <span aria-hidden="true">(${section.citations.length})</span></summary><div class="source-panel"><h3>Sources for ${esc(railLabel(section))}</h3><ol>${notes}</ol></div></details></div>`;
+}

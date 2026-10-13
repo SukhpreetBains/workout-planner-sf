@@ -30,7 +30,7 @@ import {
   AssetError, SKILL_ROOT, copyAssets, copyOwnAssets, copyProfileAssets, listIconNames, logoVariantFor,
 } from './lib/assets.mjs';
 import {
-  railLabel, renderFooter, renderRail, renderSection, sectionId,
+  railLabel, renderFooter, renderRail, renderCitedSection, sectionId,
 } from './lib/page.mjs';
 import { esc } from '../modules/shared/primitives.mjs';
 import { composeStructurePreview } from './lib/examples.mjs';
@@ -116,7 +116,7 @@ export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRende
     const renderer = section.module && section.view
       ? moduleRenderers.get(`${section.module}:${section.view}`)
       : null;
-    return renderSection(section, i, ctx, renderer);
+    return renderCitedSection(section, i, ctx, renderer);
   }).join('\n');
   const description = meta.subtitle
     ? `${meta.title} — ${meta.subtitle}`
@@ -145,6 +145,7 @@ export function renderDocument(doc, ctx, moduleRenderers = new Map(), coverRende
   <link rel="stylesheet" href="css/components.css">
   ${meta.layout === 'microsite' || sections.some((section) => section.layout === 'microsite') ? '<link rel="stylesheet" href="css/reference-layout.css">' : ''}
   <link rel="stylesheet" href="css/print.css">
+  ${sections.some((section) => section.citations?.length) ? '<link rel="stylesheet" href="css/citations.css">' : ''}
   <script type="importmap">{"imports":{"animejs":"./js/anime.esm.min.js"}}</script>
 </head>
 <body>
@@ -158,6 +159,7 @@ ${body}
 ${renderFooter(meta, ctx)}
   </div>
   <script type="module" src="js/motion.js"></script>
+  ${sections.some((section) => section.citations?.length) ? '<script src="js/citations.js" defer></script>' : ''}
 </body>
 </html>
 `;
@@ -229,6 +231,7 @@ export async function build(contentPath, {
   });
   copyOwnAssets(outDir, {
     referenceLayouts: meta.layout === 'microsite' || renderedDoc.sections.some((section) => section.layout === 'microsite'),
+    citations: renderedDoc.sections.some((section) => section.citations?.length),
   });
   const templateAssets = copyTemplateOptions(archetype, intake, outDir);
   const profiles = copyProfileAssets(renderedDoc.sections, contentDir, outDir);
