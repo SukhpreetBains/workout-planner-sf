@@ -1,0 +1,29 @@
+{
+  "schema_version": "ascent.skill-eval-profile.v1",
+  "skill_id": "ascent-initial-setup",
+  "purpose": "Route a project to the selected storage model and initialize a complete workspace whose readiness result reflects its actual state.",
+  "deliverable": {
+    "name": "Initialized Project workspace and readiness report",
+    "kind": "workspace",
+    "client_facing": false,
+    "path_or_form": "A fresh temporary Project fixture",
+    "note": "The fixture is synthetic and contains no client data."
+  },
+  "golden_reference": {"available": false, "reference_id": null, "owner": null, "note": "Behavior is graded against explicit state transitions rather than a prose golden file."},
+  "expected_skill_invocations": ["ascent-initial-setup"],
+  "expected_skill_invocations_note": "Not observable because the deterministic runner invokes shipped scripts directly.",
+  "required_clarifying_questions": ["Confirm storage choice.", "Confirm Account and Project names."],
+  "required_clarifying_questions_note": "Not observable because the deterministic runner has no user turn.",
+  "interfaces": {
+    "inputs": ["Storage choice", "Account name", "Project name", "Project path"],
+    "outputs": ["Prepared Project folder", "Tracker workbooks", "Identity metadata", "Search state", "Readiness report"],
+    "tools": ["prepare-project-folder.py", "setup-workspace.py", "sync.py --check-setup"],
+    "environment": ["Fresh temporary workspace", "Temporary HOME", "Network blocked in subprocesses"]
+  },
+  "success_conditions": ["All supported storage choices are documented distinctly.", "A fresh Project becomes ready through one orchestration command.", "Identity metadata participates in the readiness verdict."],
+  "trajectory_requirements": ["Do not install packages or access the network.", "Do not edit identity metadata by hand."],
+  "known_failure_modes": ["Local-only setup described as SharePoint-backed", "Missing SharePoint Account folder has no route", "Readiness succeeds without project.yaml", "Setup depends on a developer's home or environment"],
+  "failure_mode_provenance": "contract-enumeration",
+  "failure_mode_provenance_note": "Failures come from the ascent-initial-setup workflow contract and reported regressions, not model trace analysis.",
+  "unknowns": []
+}

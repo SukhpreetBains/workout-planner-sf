@@ -35,7 +35,7 @@ class SelectInboxBatchTest(unittest.TestCase):
     def select(self) -> dict:
         result = subprocess.run(
             [sys.executable, str(SCRIPT)], capture_output=True, text=True, check=True,
-            env={**os.environ, "ASCENT_OPPORTUNITY_ROOT": str(self.root)}, cwd=self.root)
+            env={**os.environ, "ASCENT_PROJECT_ROOT": str(self.root)}, cwd=self.root)
         return json.loads(result.stdout)
 
     def names(self, batch: dict) -> list[str]:

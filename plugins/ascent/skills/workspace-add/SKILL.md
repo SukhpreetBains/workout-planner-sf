@@ -1,17 +1,20 @@
 ---
 name: workspace-add
-description: Process new documents from workspace/inbox/ by filing them in the workspace, turning meeting transcripts or raw notes into a structured session note, recording everything in the document-source ledger, extracting evidence-backed tracker updates, validating the proposals, and refreshing the search index. Use whenever new project source material arrives, including after workshops, interviews, standups, or other project sessions, in an initialized Opportunity workspace.
+description: Process new documents from workspace/inbox/ by filing them in the workspace, turning meeting transcripts or raw notes into a structured session note, recording everything in the document-source ledger, extracting evidence-backed tracker updates, validating the proposals, and refreshing the search index. Use whenever new project source material arrives, including after workshops, interviews, standups, or other project sessions, in an initialized Project workspace.
 ---
 
 # Workspace Add
 
-Turn whatever landed in `workspace/inbox/` into filed documents (plus a
+If the user attached source documents in chat, save those attachments into
+`workspace/inbox/` first, preserving their original filenames and contents.
+Resolve a filename collision without overwriting either source. Then turn
+whatever landed in `workspace/inbox/` into filed documents (plus a
 structured session note for meeting material) and proposed tracker
 updates. Nothing is written to the trackers here; that only happens
 after the user approves through `workspace-review`.
 
 Locate `shared/` at the installed Ascent plugin root. Set
-`ASCENT_OPPORTUNITY_ROOT` to the Opportunity folder for every engine command, then
+`ASCENT_PROJECT_ROOT` to the Project folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
 
 Before anything else, confirm the workspace is initialized:
@@ -22,7 +25,7 @@ PY <shared-skill-dir>/scripts/sync.py --check-setup
 
 This is a cheap, read-only filesystem check. If it reports the workspace as
 not ready, stop here and tell the user this doesn't look like an initialized
-Opportunity workspace — offer to hand off to `initial-setup` first.
+Project workspace — offer to hand off to `ascent-initial-setup` first.
 
 If it also prints an `ascent update:` line, pass that message to the user once, in
 plain words, and carry on. It is either a downloaded update waiting for a Codex
@@ -33,7 +36,7 @@ current work.
 
 Check `workspace/.system/project.yaml` for an `industry:` key.
 
-- **Absent entirely** — this Opportunity has never been asked. Scan
+- **Absent entirely** — this Project has never been asked. Scan
   `shared/industry/*/manifest.json` for available packs. If any exist, ask
   once, offering each by title plus a "none of these" option, and write
   whichever the user picks (an id, or `none`) into `project.yaml`,
@@ -379,7 +382,7 @@ Run this once, after the last batch. Run `PY <shared-skill-dir>/scripts/sync.py`
 proposals, run:
 
 ```
-PY <shared-skill-dir>/scripts/review_server.py start --root "$ASCENT_OPPORTUNITY_ROOT"
+PY <shared-skill-dir>/scripts/review_server.py start --root "$ASCENT_PROJECT_ROOT"
 ```
 
 The command health-checks and reuses a running inbox or safely replaces stale

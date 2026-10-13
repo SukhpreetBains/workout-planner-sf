@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "plugins" / "ascent" / "skills" / "initial-setup" / "scripts" / "manage-plugin-update-schedule.py"
+SCRIPT = ROOT / "plugins" / "ascent" / "skills" / "ascent-initial-setup" / "scripts" / "manage-plugin-update-schedule.py"
 
 
 class PluginUpdateScheduleTest(unittest.TestCase):
@@ -32,7 +32,7 @@ class PluginUpdateScheduleTest(unittest.TestCase):
         # A Git-subdir clone has no `.git` anywhere above the running script
         # (codex-rs/core-plugins/src/loader.rs strips it before caching).
         base = Path(self.tmp.name) / "cache" / "ascent" / "ascent" / "0.1.0+codex.local-1"
-        script_copy = base / "skills" / "initial-setup" / "scripts" / "manage-plugin-update-schedule.py"
+        script_copy = base / "skills" / "ascent-initial-setup" / "scripts" / "manage-plugin-update-schedule.py"
         script_copy.parent.mkdir(parents=True)
         shutil.copyfile(SCRIPT, script_copy)
         codex_home = Path(self.tmp.name) / "codex-home"

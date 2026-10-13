@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
 DISCOVERY = SKILLS_ROOT / "investigate-project" / "scripts" / "project_context.py"
-SOURCE_CONTEXT = SKILLS_ROOT / "initial-setup" / "scripts" / "manage-source-context.py"
+SOURCE_CONTEXT = SKILLS_ROOT / "ascent-initial-setup" / "scripts" / "manage-source-context.py"
 RANK = SKILLS_ROOT / "investigate-project" / "scripts" / "rank_context.py"
 PERSIST = SKILLS_ROOT / "investigate-project" / "scripts" / "persist_context.py"
 CACHE = SKILLS_ROOT / "investigate-project" / "scripts" / "cache_context.py"
@@ -37,7 +37,7 @@ def main() -> None:
         root = Path(temp)
         context = root / "workspace" / ".system" / "project-context"
         source_context = root / "workspace" / ".system" / "source-context.yaml"
-        run(str(SOURCE_CONTEXT), "init", "--root", str(root), "--account", "Synthetic Account", "--opportunity", "Synthetic")
+        run(str(SOURCE_CONTEXT), "init", "--root", str(root), "--account", "Synthetic Account", "--project", "Synthetic")
         shared = ["--root", str(root), "--authority", "canonical", "--priority", "5", "--sensitivity", "internal"]
         run(str(SOURCE_CONTEXT), "upsert-source", *shared, "--id", "chat", "--kind", "slack", "--name", "Chat source", "--locator", "slack://team/channel", "--identifier", "parent_id=team", "--identifier", "channel_id=channel", "--purpose", "Decisions about context boundaries", "--access-state", "available")
         run(str(SOURCE_CONTEXT), "upsert-source", *shared, "--id", "document", "--kind", "sharepoint", "--name", "Document source", "--locator", "https://tenant.sharepoint.com/sites/Delivery/Shared%20Documents/Synthetic", "--identifier", "hostname=tenant.sharepoint.com", "--identifier", "site_path=/sites/Delivery", "--identifier", "drive_name=Shared Documents", "--identifier", "folder_path=Synthetic", "--purpose", "Requirements and acceptance criteria", "--access-state", "available")
@@ -109,7 +109,7 @@ def main() -> None:
     # The shared YAML manager remains usable when PyYAML is absent from the runtime.
     with tempfile.TemporaryDirectory(prefix="source-context-fallback-") as temp:
         root = Path(temp)
-        run("-S", str(SOURCE_CONTEXT), "init", "--root", str(root), "--account", "Fallback Account", "--opportunity", "Fallback Project")
+        run("-S", str(SOURCE_CONTEXT), "init", "--root", str(root), "--account", "Fallback Account", "--project", "Fallback Project")
         run("-S", str(SOURCE_CONTEXT), "upsert-source", "--root", str(root), "--id", "fallback-folder", "--kind", "sharepoint", "--name", "Fallback folder", "--locator", "https://tenant.sharepoint.com/sites/Test/Shared%20Documents/Fallback", "--identifier", "hostname=tenant.sharepoint.com", "--identifier", "site_path=/sites/Test", "--identifier", "folder_path=Fallback", "--purpose", "Fallback parser validation")
         exported = json.loads(run("-S", str(SOURCE_CONTEXT), "export", "--root", str(root)))
         assert exported["sources"][0]["id"] == "fallback-folder"
@@ -122,7 +122,7 @@ def main() -> None:
         source_context.parent.mkdir(parents=True)
         source_context.write_text(
             """account: Acme
-opportunity: Service Transformation
+project: Service Transformation
 last_verified: 2026-08-11
 messaging_platforms:
   - name: Slack

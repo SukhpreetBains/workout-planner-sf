@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Run a workspace engine script with a per-user Python environment outside the
-# synced Opportunity folder. Set ASCENT_OPPORTUNITY_ROOT when the Opportunity
+# synced Project folder. Set ASCENT_PROJECT_ROOT when the Project
 # is not the current directory. Set ASCENT_PYTHON to pin the base interpreter.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OPPORTUNITY_ROOT="${ASCENT_OPPORTUNITY_ROOT:-$PWD}"
+PROJECT_ROOT="${ASCENT_PROJECT_ROOT:-$PWD}"
 INSTALL_DEPENDENCIES=0
 
 if [ "${1:-}" = "--install-dependencies" ]; then
@@ -29,14 +29,14 @@ if ! "$BASE_PYTHON" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3
   exit 1
 fi
 
-OPPORTUNITY_ROOT="$($BASE_PYTHON -c 'import pathlib, sys; print(pathlib.Path(sys.argv[1]).expanduser().resolve())' "$OPPORTUNITY_ROOT")"
-export ASCENT_OPPORTUNITY_ROOT="$OPPORTUNITY_ROOT"
+PROJECT_ROOT="$($BASE_PYTHON -c 'import pathlib, sys; print(pathlib.Path(sys.argv[1]).expanduser().resolve())' "$PROJECT_ROOT")"
+export ASCENT_PROJECT_ROOT="$PROJECT_ROOT"
 "$BASE_PYTHON" "$SCRIPT_DIR/launcher_preflight.py" "$@"
-PATH_HASH="$($BASE_PYTHON -c 'import hashlib, os, sys; value=os.path.normcase(os.path.realpath(sys.argv[1])).encode("utf-8"); print(hashlib.sha256(value).hexdigest()[:20])' "$OPPORTUNITY_ROOT")"
+PATH_HASH="$($BASE_PYTHON -c 'import hashlib, os, sys; value=os.path.normcase(os.path.realpath(sys.argv[1])).encode("utf-8"); print(hashlib.sha256(value).hexdigest()[:20])' "$PROJECT_ROOT")"
 CACHE_ROOT="${ASCENT_CACHE_DIR:-$HOME/.ascent}"
 VENV="$CACHE_ROOT/venvs/$PATH_HASH"
 PYTHON="$VENV/bin/python"
-POINTER="$OPPORTUNITY_ROOT/workspace/.system/.venv-path"
+POINTER="$PROJECT_ROOT/workspace/.system/.venv-path"
 
 if [ ! -x "$PYTHON" ]; then
   echo "creating cached Python environment: $VENV" >&2

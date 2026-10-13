@@ -28,7 +28,7 @@ class PluginUpdateNoticeTest(unittest.TestCase):
         base = Path(self.tmp.name)
         self.codex_home, self.checkout = base / "codex-home", base / "checkout"
         self.codex_home.mkdir()
-        self.env = {**os.environ, "CODEX_HOME": str(self.codex_home), "ASCENT_OPPORTUNITY_ROOT": str(base)}
+        self.env = {**os.environ, "CODEX_HOME": str(self.codex_home), "ASCENT_PROJECT_ROOT": str(base)}
         os.environ["CODEX_HOME"] = str(self.codex_home)
         sys.modules.pop("plugin_update_notice", None)
         sys.path.insert(0, str(SCRIPTS))

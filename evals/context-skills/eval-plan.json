@@ -103,7 +103,7 @@
     "clarifying_questions": {
       "status": "not-observable",
       "required": [
-        "Confirm the opportunity root before writing a local projection",
+        "Confirm the project root before writing a local projection",
         "Confirm the concrete task before retrieving source content"
       ],
       "note": "There is no user turn in a script-driven run."

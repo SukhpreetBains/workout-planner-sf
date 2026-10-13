@@ -6,9 +6,9 @@
     "phase": "mobilize"
   },
   "sources": [
-    {"id":"client-docs","kind":"sharepoint","label":"Client Docs","locator":"Ascent/Account/Opportunity/Content Inbox/Client Docs","purpose":"Canonical scope, governance, architecture, and deliverable inputs.","authority":"canonical","priority":5,"query_hints":["scope","governance","architecture"],"freshness_hours":168,"access_state":"available"},
-    {"id":"mobilize-deliverables","kind":"local","label":"Mobilize Deliverables","locator":"Ascent/Account/Opportunity/Deliverables/Mobilize","purpose":"Canonical Mobilize checklist and approval destination.","authority":"canonical","priority":5,"query_hints":["Mobilize","Risk Gate 1"],"freshness_hours":0,"access_state":"available"},
-    {"id":"email-threads","kind":"other","label":"Email Threads","locator":"Ascent/Account/Opportunity/Content Inbox/Email Threads","purpose":"Potential client approvals.","authority":"supporting","priority":3,"query_hints":["approval"],"freshness_hours":168,"access_state":"unavailable","access_reason":"Email connector is not connected for this fixture."}
+    {"id":"client-docs","kind":"sharepoint","label":"Client Docs","locator":"Ascent/Account/Project/Content Inbox/Client Docs","purpose":"Canonical scope, governance, architecture, and deliverable inputs.","authority":"canonical","priority":5,"query_hints":["scope","governance","architecture"],"freshness_hours":168,"access_state":"available"},
+    {"id":"mobilize-deliverables","kind":"local","label":"Mobilize Deliverables","locator":"Ascent/Account/Project/Deliverables/Mobilize","purpose":"Canonical Mobilize checklist and approval destination.","authority":"canonical","priority":5,"query_hints":["Mobilize","Risk Gate 1"],"freshness_hours":0,"access_state":"available"},
+    {"id":"email-threads","kind":"other","label":"Email Threads","locator":"Ascent/Account/Project/Content Inbox/Email Threads","purpose":"Potential client approvals.","authority":"supporting","priority":3,"query_hints":["approval"],"freshness_hours":168,"access_state":"unavailable","access_reason":"Email connector is not connected for this fixture."}
   ],
   "metrics": {"sources_considered":4,"sources_recorded":3,"connector_calls":1,"items_inspected":9,"characters_inspected":800,"caps":["local=30","document=30","other=10"]},
   "sentinel": "RESTRICTED_EMAIL_BODY_MUST_NOT_LEAK",

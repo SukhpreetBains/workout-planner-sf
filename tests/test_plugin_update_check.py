@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "plugins" / "ascent" / "skills" / "initial-setup" / "scripts" / "check-for-plugin-update.py"
+SCRIPT = ROOT / "plugins" / "ascent" / "skills" / "ascent-initial-setup" / "scripts" / "check-for-plugin-update.py"
 MANIFEST = Path("plugins/ascent/.codex-plugin/plugin.json")
 SKILL = Path("plugins/ascent/skills/example/SKILL.md")
 

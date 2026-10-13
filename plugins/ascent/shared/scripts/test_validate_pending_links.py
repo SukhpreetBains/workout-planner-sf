@@ -47,7 +47,7 @@ class PendingLinkValidationTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
-        self.env = {**os.environ, "ASCENT_OPPORTUNITY_ROOT": str(self.root)}
+        self.env = {**os.environ, "ASCENT_PROJECT_ROOT": str(self.root)}
         (self.root / "workspace" / "reference").mkdir(parents=True)
         (self.root / SOURCE).write_text("Maria Chen: approvals take 9 days.", encoding="utf-8")
         self.proposals = self.root / "workspace" / ".system" / "proposed-updates"

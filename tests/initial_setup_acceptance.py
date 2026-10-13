@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the unified initial setup against a temporary Opportunity."""
+"""Exercise the unified initial setup against a temporary Project."""
 
 from __future__ import annotations
 
@@ -15,21 +15,21 @@ from openpyxl import load_workbook
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
-PREPARE = SKILLS_ROOT / "initial-setup" / "scripts" / "prepare-opportunity-folder.py"
-SOURCE_CONTEXT = SKILLS_ROOT / "initial-setup" / "scripts" / "manage-source-context.py"
-SETUP_WORKSPACE = SKILLS_ROOT / "initial-setup" / "scripts" / "setup-workspace.py"
-RECORD_IDENTITY = SKILLS_ROOT / "initial-setup" / "scripts" / "record-identity.py"
+PREPARE = SKILLS_ROOT / "ascent-initial-setup" / "scripts" / "prepare-project-folder.py"
+SOURCE_CONTEXT = SKILLS_ROOT / "ascent-initial-setup" / "scripts" / "manage-source-context.py"
+SETUP_WORKSPACE = SKILLS_ROOT / "ascent-initial-setup" / "scripts" / "setup-workspace.py"
+RECORD_IDENTITY = SKILLS_ROOT / "ascent-initial-setup" / "scripts" / "record-identity.py"
 LAUNCHER = ROOT / "plugins" / "ascent" / "shared" / "scripts" / "py"
 SYNC = ROOT / "plugins" / "ascent" / "shared" / "scripts" / "sync.py"
-INITIAL_SETUP = SKILLS_ROOT / "initial-setup" / "SKILL.md"
-WORKSPACE_SETUP = SKILLS_ROOT / "initial-setup" / "references" / "project-workspace-setup.md"
-STORAGE_DECISIONS = SKILLS_ROOT / "initial-setup" / "references" / "storage-decision-tree.md"
-SETUP_READINESS = SKILLS_ROOT / "initial-setup" / "references" / "setup-readiness.md"
-HOST_ACCESS = SKILLS_ROOT / "initial-setup" / "references" / "host-workspace-access.md"
-CODEX_ACCESS = SKILLS_ROOT / "initial-setup" / "references" / "hosts" / "codex.md"
+INITIAL_SETUP = SKILLS_ROOT / "ascent-initial-setup" / "SKILL.md"
+WORKSPACE_SETUP = SKILLS_ROOT / "ascent-initial-setup" / "references" / "project-workspace-setup.md"
+STORAGE_DECISIONS = SKILLS_ROOT / "ascent-initial-setup" / "references" / "storage-decision-tree.md"
+SETUP_READINESS = SKILLS_ROOT / "ascent-initial-setup" / "references" / "setup-readiness.md"
+HOST_ACCESS = SKILLS_ROOT / "ascent-initial-setup" / "references" / "host-workspace-access.md"
+CODEX_ACCESS = SKILLS_ROOT / "ascent-initial-setup" / "references" / "hosts" / "codex.md"
 PLUGIN_OVERVIEW = ROOT / "plugins" / "ascent" / "README.md"
 REPOSITORY_README = ROOT / "README.md"
-WALKTHROUGH = ROOT / "docs" / "opportunity-workspace-walkthrough.md"
+WALKTHROUGH = ROOT / "docs" / "project-workspace-walkthrough.md"
 
 
 def run(*args: str) -> str:
@@ -68,7 +68,7 @@ def assert_workflow_contract() -> None:
     assert "Do not inspect `workspace/inbox/`" in combined_setup_contract
     assert "invoke `workspace-add`" not in combined_setup_contract
     assert "Existing documents remain untouched" in combined_setup_contract
-    assert "fresh agent chat scoped to the Opportunity" in combined_setup_contract
+    assert "fresh agent chat scoped to the Project" in combined_setup_contract
 
     assert "[workflow overview](../../README.md)" in initial_setup
     assert "[Ascent Workflow Overview](plugins/ascent/README.md)" in repository_readme
@@ -91,44 +91,47 @@ def assert_workflow_contract() -> None:
     readiness = SETUP_READINESS.read_text(encoding="utf-8")
     assert readiness.index("## First-document action") > readiness.index("## Checklist")
     assert "review inbox" in readiness
+    assert "drag files into a fresh agent chat" in readiness
+    assert "clickable Markdown folder link" in readiness
+    assert "structured project content" in readiness
 
 
 def main() -> None:
     assert_workflow_contract()
 
-    with tempfile.TemporaryDirectory(prefix="initial-setup-") as temp:
+    with tempfile.TemporaryDirectory(prefix="ascent-initial-setup-") as temp:
         account = Path(temp) / "Synthetic Account"
         account.mkdir()
         common = (
             "--account-root", str(account),
-            "--opportunity-name", "Synthetic Opportunity",
+            "--project-name", "Synthetic Project",
         )
 
         output = run(str(PREPARE), "--mode", "new", *common, "--check-only")
         assert "no folders or files were created or changed" in output
-        opportunity = account / "Synthetic Opportunity"
-        assert not opportunity.exists()
+        project = account / "Synthetic Project"
+        assert not project.exists()
 
         output = run(str(PREPARE), "--mode", "new", *common)
         assert "managed by a sync client" in output
         assert "OneDrive will sync" not in output
-        assert (opportunity / "workspace" / "inbox").is_dir()
-        first_document = opportunity / "workspace" / "inbox" / "First Brief.md"
+        assert (project / "workspace" / "inbox").is_dir()
+        first_document = project / "workspace" / "inbox" / "First Brief.md"
         first_document.write_text("First source remains untouched during setup.\n", encoding="utf-8")
-        assert (opportunity / "workspace" / "trackers" / "stakeholders.xlsx").is_file()
-        raid = load_workbook(opportunity / "workspace" / "trackers" / "raid.xlsx", read_only=True)
+        assert (project / "workspace" / "trackers" / "stakeholders.xlsx").is_file()
+        raid = load_workbook(project / "workspace" / "trackers" / "raid.xlsx", read_only=True)
         assert "Issues" in raid.sheetnames
         assert "Dependencies" in raid.sheetnames
         raid.close()
-        assert (opportunity / "Deliverables" / "Discover").is_dir()
-        assert (opportunity / "AGENTS.md").is_file()
-        assert not (opportunity / "Content Inbox").exists()
-        assert not (opportunity / "Agent Inbox").exists()
+        assert (project / "Deliverables" / "Discover").is_dir()
+        assert (project / "AGENTS.md").is_file()
+        assert not (project / "Content Inbox").exists()
+        assert not (project / "Agent Inbox").exists()
 
-        overview = opportunity / "workspace" / "project" / "Project Overview.md"
+        overview = project / "workspace" / "project" / "Project Overview.md"
         generated_overview = overview.read_text(encoding="utf-8")
         assert "**Account**" in generated_overview
-        assert "**Opportunity**" in generated_overview
+        assert "**Project**" in generated_overview
         for optional_detail in (
             "Engagement Type",
             "Start Date",
@@ -146,19 +149,19 @@ def main() -> None:
         assert overview.read_text(encoding="utf-8") == "# Project Overview\n\nuser-owned content\n"
 
         run(
-            str(SOURCE_CONTEXT), "init", "--root", str(opportunity),
-            "--account", "Synthetic Account", "--opportunity", "Synthetic Opportunity",
+            str(SOURCE_CONTEXT), "init", "--root", str(project),
+            "--account", "Synthetic Account", "--project", "Synthetic Project",
         )
-        source_context = opportunity / "workspace" / ".system" / "source-context.yaml"
+        source_context = project / "workspace" / ".system" / "source-context.yaml"
         content = source_context.read_text(encoding="utf-8")
         assert "account: \"Synthetic Account\"" in content
-        assert "opportunity: \"Synthetic Opportunity\"" in content
+        assert "project: \"Synthetic Project\"" in content
 
         # Exercise the real launcher without allowing it to install anything.
         # The cached environment is pre-seeded from the test interpreter so the
         # fixture remains offline and deterministic.
         cache = Path(temp) / "ascent-cache"
-        digest = hashlib.sha256(os.path.normcase(os.path.realpath(opportunity)).encode("utf-8")).hexdigest()[:20]
+        digest = hashlib.sha256(os.path.normcase(os.path.realpath(project)).encode("utf-8")).hexdigest()[:20]
         venv = cache / "venvs" / digest
         created = subprocess.run(
             [sys.executable, "-m", "venv", "--system-site-packages", str(venv)],
@@ -196,10 +199,10 @@ def main() -> None:
 
         # Force tracker initialization to do observable work rather than merely
         # accepting the copies created from the workspace template.
-        for tracker in (opportunity / "workspace" / "trackers").glob("*.xlsx"):
+        for tracker in (project / "workspace" / "trackers").glob("*.xlsx"):
             tracker.unlink()
 
-        project_identity = opportunity / "workspace" / ".system" / "project.yaml"
+        project_identity = project / "workspace" / ".system" / "project.yaml"
         project_identity.write_text(
             "# user-owned identity metadata\nphase: Discover\n",
             encoding="utf-8",
@@ -208,33 +211,35 @@ def main() -> None:
         env = {
             **os.environ,
             "ASCENT_CACHE_DIR": str(cache),
-            "ASCENT_OPPORTUNITY_ROOT": str(opportunity),
+            "ASCENT_PROJECT_ROOT": str(project),
             "ASCENT_PYTHON": sys.executable,
         }
         setup = run_command(
             [
                 str(LAUNCHER),
                 str(SETUP_WORKSPACE),
-                "--opportunity", str(opportunity),
+                "--project", str(project),
                 "--account", "Synthetic Account",
-                "--opportunity-name", "Synthetic Opportunity",
+                "--project-name", "Synthetic Project",
             ],
-            cwd=opportunity,
+            cwd=project,
             env=env,
         )
         assert setup.returncode == 0, f"{setup.stdout}\n{setup.stderr}"
         assert "Setup workspace readiness: READY" in setup.stdout
-        assert str(opportunity / "workspace" / "inbox") in setup.stdout
+        assert str(project / "workspace" / "inbox") in setup.stdout
         assert setup.stdout.index("After the final setup checklist") > setup.stdout.index("Setup workspace readiness: READY")
         assert "fresh conversation" in setup.stdout
-        assert "Use workspace-add to process the documents in this Opportunity workspace inbox." in setup.stdout
+        assert "Drag documents into a fresh agent chat" in setup.stdout
+        assert f"[Open the review inbox](<{project.resolve() / 'workspace' / 'inbox'}>)" in setup.stdout
+        assert "Use workspace-add to ingest the documents I attached or placed in this Project workspace inbox." in setup.stdout
         assert "review inbox" in setup.stdout
         assert first_document.read_text(encoding="utf-8") == "First source remains untouched during setup.\n"
 
-        pointer = opportunity / "workspace" / ".system" / ".venv-path"
+        pointer = project / "workspace" / ".system" / ".venv-path"
         assert pointer.read_text(encoding="utf-8").strip() == str(venv)
-        assert not (opportunity / "workspace" / ".system" / ".venv").exists()
-        assert all((opportunity / "workspace" / "trackers" / name).is_file() for name in (
+        assert not (project / "workspace" / ".system" / ".venv").exists()
+        assert all((project / "workspace" / "trackers" / name).is_file() for name in (
             "current-state.xlsx", "future-state.xlsx", "raid.xlsx", "stakeholders.xlsx",
         ))
         identity = project_identity
@@ -242,9 +247,9 @@ def main() -> None:
         assert "Synthetic Account" in identity_content
         assert "# user-owned identity metadata" in identity_content
         assert "phase: Discover" in identity_content
-        assert "Synthetic Opportunity" in overview.read_text(encoding="utf-8")
+        assert "Synthetic Project" in overview.read_text(encoding="utf-8")
         assert "user-owned content" in overview.read_text(encoding="utf-8")
-        assert (opportunity / "workspace" / ".system" / "search" / "index.sqlite").is_file()
+        assert (project / "workspace" / ".system" / "search" / "index.sqlite").is_file()
 
         before_identity_rerun = identity.read_bytes()
         before_overview_rerun = overview.read_bytes()
@@ -252,26 +257,44 @@ def main() -> None:
             [
                 str(venv_python),
                 str(RECORD_IDENTITY),
-                "--opportunity", str(opportunity),
+                "--project", str(project),
                 "--account", "Synthetic Account",
-                "--opportunity-name", "Synthetic Opportunity",
+                "--project-name", "Synthetic Project",
             ],
-            cwd=opportunity,
+            cwd=project,
             env=env,
         )
         assert identity_rerun.returncode == 0, identity_rerun.stderr
         assert identity.read_bytes() == before_identity_rerun
         assert overview.read_bytes() == before_overview_rerun
 
-        ready = run_command([str(venv_python), str(SYNC), "--check-setup"], cwd=opportunity, env=env)
+        identity.write_text('account: "Synthetic Account"\nopportunity: "Synthetic Project"\nphase: Discover\n', encoding="utf-8")
+        overview.write_text(
+            overview.read_text(encoding="utf-8")
+            .replace("## Project Identity", "## Opportunity Identity")
+            .replace("| **Project** |", "| **Opportunity** |"),
+            encoding="utf-8",
+        )
+        migrated = run_command(
+            [str(venv_python), str(RECORD_IDENTITY), "--project", str(project),
+             "--account", "Synthetic Account", "--project-name", "Synthetic Project"],
+            cwd=project, env=env,
+        )
+        assert migrated.returncode == 0, migrated.stderr
+        assert "opportunity:" not in identity.read_text(encoding="utf-8")
+        assert "phase: Discover" in identity.read_text(encoding="utf-8")
+        assert "Opportunity Identity" not in overview.read_text(encoding="utf-8")
+        assert "| **Opportunity** |" not in overview.read_text(encoding="utf-8")
+
+        ready = run_command([str(venv_python), str(SYNC), "--check-setup"], cwd=project, env=env)
         assert ready.returncode == 0
-        assert "ready: this looks like an initialized Opportunity workspace" in ready.stdout
+        assert "ready: this looks like an initialized Project workspace" in ready.stdout
 
         identity.unlink()
-        incomplete = run_command([str(venv_python), str(SYNC), "--check-setup"], cwd=opportunity, env=env)
-        assert "not ready: this does not look like an initialized Opportunity workspace" in incomplete.stdout
+        incomplete = run_command([str(venv_python), str(SYNC), "--check-setup"], cwd=project, env=env)
+        assert "not ready: this does not look like an initialized Project workspace" in incomplete.stdout
 
-    print("Passed unified initial-setup acceptance fixture")
+    print("Passed unified ascent-initial-setup acceptance fixture")
 
 
 if __name__ == "__main__":
