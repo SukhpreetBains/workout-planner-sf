@@ -1004,6 +1004,44 @@ async function loadInbox() {
   }
 }
 
+const syncIndicator = el("span", { class: "sync-indicator", role: "status" }, "Working locally");
+const syncButton = el("button", { class: "quiet sync-button", type: "button", onclick: async () => {
+  syncButton.disabled = true;
+  try {
+    await api("/api/sync-now", { method: "POST", body: "{}" });
+    syncIndicator.textContent = "Sync requested";
+    setTimeout(refreshSyncStatus, 1500);
+  } catch (error) {
+    showToast(error.message || "Could not request sync.");
+  } finally {
+    syncButton.disabled = false;
+  }
+} }, "Sync now");
+acceptedButton.before(syncIndicator, syncButton);
+
+async function refreshSyncStatus() {
+  try {
+    const status = await api("/api/sync-status");
+    const details = status.conflicts || [];
+    syncIndicator.title = details.join("\n") || status.error || "";
+    if (status.state === "conflict") {
+      syncIndicator.textContent = `Sync paused: ${details.length} conflicting file${details.length === 1 ? "" : "s"}`;
+    } else if (status.state === "offline") {
+      syncIndicator.textContent = "Saved locally; OneDrive unavailable";
+    } else if (status.state === "syncing") {
+      syncIndicator.textContent = "Syncing to OneDrive";
+    } else if (status.state === "synced") {
+      syncIndicator.textContent = "Synced to OneDrive";
+    } else {
+      syncIndicator.textContent = "Saved locally; sync pending";
+    }
+  } catch {
+    syncIndicator.textContent = "Working locally";
+  }
+}
+refreshSyncStatus();
+setInterval(refreshSyncStatus, 30000);
+
 window.addEventListener("beforeunload", () => scope?.revert());
 if (acceptedPage) {
   headerTitle.textContent = "Accepted";

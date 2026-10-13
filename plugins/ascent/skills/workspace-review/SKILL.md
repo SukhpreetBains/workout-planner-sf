@@ -67,10 +67,22 @@ that interpreter. Startup also checks that the page and its assets are served,
 and restarts an older server when either check fails. Use the new URL after a
 restart because its session token changes.
 
+The server serves the inbox from a persistent local review cache at
+`~/.ascent/review-cache/<project-hash>/project/`. The Project folder in OneDrive
+remains canonical. Review actions save locally first, and a background task
+reconciles review-owned files to OneDrive every five minutes while the server is
+running. The page shows sync status and has a `Sync now` button. If OneDrive is
+unavailable, keep reviewing locally. Do not remove the cache or claim the work
+has reached OneDrive until sync status says `synced`. When both copies of the
+same review file changed, sync pauses and lists the conflicting paths. Preserve
+both versions, inspect the conflict, and ask the user which change to keep
+before resolving it. Source documents refresh independently, so a slow source
+file cannot block tracker publishing.
+
 Before posting the URL, request that exact URL over loopback and confirm it
 returns the HTML review page, not a JSON error. If the page fails this check,
 stop and start the server through the launcher above, then check the new URL.
-If it still fails, inspect `workspace/.system/review-server.log` and use the chat
+If it still fails, inspect `~/.ascent/review-cache/<project-hash>/review-server.log` and use the chat
 review fallback. Post only a working URL in chat and let the user open it.
 Never open the browser automatically. The server assigns an ephemeral port,
 recovers from stale state, and requires its session token for every mutation.
