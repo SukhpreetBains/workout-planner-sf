@@ -117,6 +117,26 @@ def healthy(state: dict | None) -> bool:
         return False
 
 
+def review_app_ready(state: dict) -> bool:
+    """Check the page and assets before returning a reusable server's URL."""
+    for path, content_type in (("/", "text/html"), ("/app.js", "text/javascript"),
+                               ("/app.css", "text/css")):
+        try:
+            with urllib.request.urlopen(
+                f"http://127.0.0.1:{state['port']}{path}", timeout=2.0,
+            ) as response:
+                if response.status != 200 or response.headers.get_content_type() != content_type:
+                    return False
+                if path == "/" and b"Workspace review inbox" not in response.read(4096):
+                    return False
+        except (OSError, ValueError, urllib.error.URLError) as exc:
+            reason = getattr(exc, "reason", exc)
+            if isinstance(reason, PermissionError) or getattr(reason, "errno", None) in (errno.EPERM, errno.EACCES):
+                raise LocalServerPermissionError(PERMISSION_HINT) from exc
+            return False
+    return True
+
+
 class ReviewServer(ThreadingHTTPServer):
     daemon_threads = True
 
@@ -461,10 +481,10 @@ def start(root: Path) -> int:
     state = read_state(root)
     if healthy(state):
         previous_python = state.get("python_executable", "")
-        if previous_python and not disposable_python(previous_python):
+        if previous_python and not disposable_python(previous_python) and review_app_ready(state):
             print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
             return 0
-        print("restarting review inbox with a persistent Python environment", file=sys.stderr)
+        print("restarting review inbox with a working page and persistent Python environment", file=sys.stderr)
         if stop(root):
             return 1
     state_path(root).unlink(missing_ok=True)
@@ -491,7 +511,7 @@ def start(root: Path) -> int:
                 print(f"review server exited with status {returncode}; see {log}", file=sys.stderr)
             return returncode or 1
         state = read_state(root)
-        if healthy(state):
+        if healthy(state) and review_app_ready(state):
             print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
             return 0
         time.sleep(0.1)

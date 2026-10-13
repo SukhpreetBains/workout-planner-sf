@@ -2,15 +2,44 @@
 
 from __future__ import annotations
 
+import errno
+import time
 from copy import copy
 from datetime import date, datetime, timezone
 from pathlib import Path
+from zipfile import BadZipFile
 
 from openpyxl import Workbook, load_workbook
 
 from paths import REPO_ROOT, load_schema
 
 MANAGED_COLUMNS = ["Source Refs", "Notes", "Created At", "Updated At"]
+
+
+def is_workspace_timeout(error: BaseException) -> bool:
+    """Recognize OneDrive timeouts, including ones wrapped by ZIP parsing."""
+    pending = [error]
+    seen = set()
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, OSError) and current.errno == errno.ETIMEDOUT:
+            return True
+        pending.extend(cause for cause in (current.__cause__, current.__context__) if cause)
+    return False
+
+
+def load_workspace_workbook(path: Path, **options):
+    """Retry a workbook read only when OneDrive timed out during that read."""
+    for attempt in range(3):
+        try:
+            return load_workbook(path, **options)
+        except (OSError, BadZipFile) as error:
+            if not is_workspace_timeout(error) or attempt == 2:
+                raise
+            time.sleep(0.2 * (attempt + 1))
 
 
 def now_iso() -> str:
@@ -104,7 +133,7 @@ def init_trackers(schema: dict | None = None, reset: bool = False) -> list[str]:
         path = REPO_ROOT / tracker["file"]
         path.parent.mkdir(parents=True, exist_ok=True)
         if path.exists():
-            wb = load_workbook(path)
+            wb = load_workspace_workbook(path)
         else:
             wb = Workbook()
             wb.remove(wb.active)
@@ -154,7 +183,7 @@ def read_rows(category: str, schema: dict | None = None) -> list[dict]:
     path = REPO_ROOT / cat["tracker_file"]
     if not path.exists():
         return []
-    wb = load_workbook(path, read_only=True)
+    wb = load_workspace_workbook(path, read_only=True)
     if cat["tab"] not in wb.sheetnames:
         return []
     ws = wb[cat["tab"]]
@@ -185,7 +214,7 @@ def upsert_row(category: str, fields: dict, schema: dict) -> str:
     cat = schema["categories"][category]
     init_trackers(schema)
     path = REPO_ROOT / cat["tracker_file"]
-    wb = load_workbook(path)
+    wb = load_workspace_workbook(path)
     ws = wb[cat["tab"]]
     cols = [c.value for c in ws[1] if c.value]
     idcol = id_column(category, schema)
@@ -233,7 +262,7 @@ def delete_row(category: str, tracker_id: str, schema: dict) -> None:
     path = REPO_ROOT / cat["tracker_file"]
     if not path.exists():
         raise ValueError(f"{category} tracker does not exist")
-    wb = load_workbook(path)
+    wb = load_workspace_workbook(path)
     try:
         if cat["tab"] not in wb.sheetnames:
             raise ValueError(f"{category} tracker tab does not exist")
