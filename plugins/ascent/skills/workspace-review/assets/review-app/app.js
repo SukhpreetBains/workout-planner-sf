@@ -979,6 +979,9 @@ async function refreshInbox() {
 }
 
 async function loadInbox() {
+  errorState.hidden = true;
+  errorState.replaceChildren();
+  loading.hidden = false;
   try {
     if (acceptedPage) {
       const [result, inbox] = await Promise.all([api("/api/accepted"), api("/api/inbox")]);
@@ -996,7 +999,8 @@ async function loadInbox() {
     loading.hidden = true;
     errorState.hidden = false;
     errorState.append(el("p", { class: "eyebrow" }, "Unable to load"),
-      el("h1", {}, "The review inbox is unavailable."), el("p", {}, error.message));
+      el("h1", {}, "The review inbox is unavailable."), el("p", {}, error.message),
+      el("button", { type: "button", onclick: () => loadInbox() }, "Retry"));
   }
 }
 

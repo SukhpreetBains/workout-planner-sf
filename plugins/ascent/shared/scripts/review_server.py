@@ -301,12 +301,28 @@ class ReviewHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/accepted":
             from paths import load_schema
+            from trackers import is_workspace_timeout
 
-            self.json(200, {"items": accepted_items(self.server),
-                            **review_store.catalog(load_schema())})
+            try:
+                items = accepted_items(self.server)
+            except Exception as exc:
+                if not is_workspace_timeout(exc):
+                    raise
+                self.json(503, {"error": "OneDrive timed out while reading a tracker. Retry in a moment."})
+                return
+            self.json(200, {"items": items, **review_store.catalog(load_schema())})
             return
         if path == "/api/link-options":
-            self.json(200, {"items": accepted_link_options(self.server)})
+            from trackers import is_workspace_timeout
+
+            try:
+                items = accepted_link_options(self.server)
+            except Exception as exc:
+                if not is_workspace_timeout(exc):
+                    raise
+                self.json(503, {"error": "OneDrive timed out while reading a tracker. Retry in a moment."})
+                return
+            self.json(200, {"items": items})
             return
         if path == "/source":
             source_ref = query.get("path", [""])[0]
