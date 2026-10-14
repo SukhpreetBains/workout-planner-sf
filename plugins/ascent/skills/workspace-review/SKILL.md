@@ -9,9 +9,9 @@ Proposed updates only become tracker rows after a human approves them
 here. Never apply updates the user has not seen.
 
 Locate `shared/` at the installed Ascent plugin root. Set
-`ASCENT_OPPORTUNITY_ROOT` to the Opportunity folder for every engine command, then
+`ASCENT_PROJECT_ROOT` to the Project folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
-Use the Opportunity as the command working directory as well. Resolve the
+Use the Project as the command working directory as well. Resolve the
 installed plugin root explicitly; the scripts live under `shared/scripts/`,
 not under this skill's directory. The launcher rejects missing or mismatched
 roots before creating an environment. Do not retry a root error from the Account
@@ -25,7 +25,7 @@ PY <plugin-root>/shared/scripts/sync.py --check-setup
 
 This is a cheap, read-only filesystem check. If it reports the workspace as
 not ready, stop here and tell the user this doesn't look like an initialized
-Opportunity workspace, offer to hand off to `initial-setup` first.
+Project workspace, offer to hand off to `ascent-initial-setup` first.
 
 If it also prints an `ascent update:` line, pass that message to the user once, in
 plain words, and carry on. It is either a downloaded update waiting for a Codex
@@ -36,7 +36,7 @@ current work.
 
 Check `workspace/.system/project.yaml` for an `industry:` key.
 
-- **Absent entirely** — this Opportunity has never been asked. Scan
+- **Absent entirely** — this Project has never been asked. Scan
   `shared/industry/*/manifest.json` for available packs. If any exist, ask
   once, offering each by title plus a "none of these" option, and write
   whichever the user picks (an id, or `none`) into `project.yaml`,
@@ -57,23 +57,44 @@ the full contract if anything here is ambiguous.
 Start or reuse the loopback-only inbox with:
 
 ```
-PY <plugin-root>/shared/scripts/review_server.py start --root "$ASCENT_OPPORTUNITY_ROOT"
+PY <plugin-root>/shared/scripts/review_server.py start --root "$ASCENT_PROJECT_ROOT"
 ```
 
 Always use `shared/scripts/py` or `py.cmd` for review server commands. A server
 started with `uv run` can inherit a temporary Python path that disappears while
 the inbox is open, causing approval to fail during tracker sync. Startup rejects
-that interpreter and restarts an older server whose interpreter is missing or
-unverified. Use the new URL after a restart because its session token changes.
+that interpreter. Startup also checks that the page and its assets are served,
+and restarts an older server when either check fails. Use the new URL after a
+restart because its session token changes.
 
-Post the returned URL in chat and let the user open it. Never open the browser
-automatically. The server assigns an ephemeral port, recovers from stale state,
-and requires its session token for every mutation.
+The server serves the inbox from a persistent local review cache at
+`~/.ascent/review-cache/<project-hash>/project/`. The Project folder in OneDrive
+remains canonical. Review actions save locally first, and a background task
+reconciles review-owned files to OneDrive every five minutes while the server is
+running. The page shows sync status and has a `Sync now` button. If OneDrive is
+unavailable, keep reviewing locally. Do not remove the cache or claim the work
+has reached OneDrive until sync status says `synced`. When both copies of the
+same review file changed, sync pauses and lists the conflicting paths. Preserve
+both versions, inspect the conflict, and ask the user which change to keep
+before resolving it. Source documents refresh independently, so a slow source
+file cannot block tracker publishing.
+
+Before posting the URL, request that exact URL over loopback and confirm it
+returns the HTML review page, not a JSON error. If the page fails this check,
+stop and start the server through the launcher above, then check the new URL.
+If it still fails, inspect `~/.ascent/review-cache/<project-hash>/review-server.log` and use the chat
+review fallback. Post only a working URL in chat and let the user open it.
+Never open the browser automatically. The server assigns an ephemeral port,
+recovers from stale state, and requires its session token for every mutation.
 
 If an approval reports a missing Python executable, stop and start the inbox
 through the launcher above. Before retrying the approval, check the proposal,
 `workspace/.system/applied-updates/`, and the affected tracker row to determine
 whether the earlier action persisted. Never infer that from the error alone.
+Use the same reconciliation for any failed approval. A workbook error such as
+`File is not a zip file` can wrap a temporary OneDrive read timeout. Check the
+server log and workbook integrity before one retry. If the workbook is damaged,
+preserve it and report the problem instead of retrying the approval.
 
 ### Runtime permissions
 
@@ -104,7 +125,7 @@ the item pending and adds the clarification note to
 An active agent can wait for flags with:
 
 ```
-PY <plugin-root>/shared/scripts/review_server.py wait --root "$ASCENT_OPPORTUNITY_ROOT" --timeout 60
+PY <plugin-root>/shared/scripts/review_server.py wait --root "$ASCENT_PROJECT_ROOT" --timeout 60
 ```
 
 If the returned `items` list is non-empty, resume the conversation with those

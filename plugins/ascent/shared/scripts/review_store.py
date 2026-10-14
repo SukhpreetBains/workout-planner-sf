@@ -36,6 +36,7 @@ from trackers import (
     format_relationships,
     id_column,
     is_relationships,
+    is_workspace_timeout,
     parse_relationships,
     read_rows,
     upsert_row,
@@ -53,11 +54,6 @@ ONEDRIVE_RETRY_MESSAGE = (
     "OneDrive is temporarily delaying access to a workspace file. "
     "Wait for OneDrive to finish syncing, then retry this review action."
 )
-
-
-def is_workspace_timeout(error: BaseException) -> bool:
-    """Identify the macOS timeout OneDrive raises for delayed file access."""
-    return isinstance(error, OSError) and error.errno == errno.ETIMEDOUT
 
 
 def workspace_timeout_error(error: BaseException) -> ReviewError:

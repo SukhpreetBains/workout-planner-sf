@@ -340,3 +340,6 @@ button.source-ref { padding: 0; border: 0; background: transparent; cursor: poin
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
 }
+
+.sync-indicator { color: var(--gray-700); font-size: .8rem; white-space: nowrap; }
+.sync-button { white-space: nowrap; }

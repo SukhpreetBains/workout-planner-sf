@@ -21,7 +21,7 @@ DESCRIPTION = "Relying on Danielle as the only Experian routing point could slow
 class NameTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        os.environ["ASCENT_OPPORTUNITY_ROOT"] = self.tmp.name
+        os.environ["ASCENT_PROJECT_ROOT"] = self.tmp.name
         for name in ("paths", "trackers", "validate_updates"):
             sys.modules.pop(name, None)
         self.paths = importlib.import_module("paths")

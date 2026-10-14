@@ -6,7 +6,7 @@
     "name": "Local project-context projection: manifest.json, brief.md and a ranked evidence pack",
     "kind": "machine-local-state",
     "client_facing": false,
-    "path_or_form": "workspace/.system/project-context/ under the opportunity root, deliberately untracked",
+    "path_or_form": "workspace/.system/project-context/ under the project root, deliberately untracked",
     "note": "There is no client-facing document here, so this suite has no golden-document comparison and a thin correctness surface by nature. The document-producing skills downstream of this one are where the reference-based capability evaluation belongs."
   },
   "human_baseline": {
@@ -27,13 +27,13 @@
   ],
   "expected_skill_invocations_note": "Not currently observable: the deterministic harness invokes the scripts directly, so nothing in this suite proves a model would have chosen these skills. Recorded here so an agentic arm can assert it later.",
   "required_clarifying_questions": [
-    "Confirm the opportunity root before writing a local projection",
+    "Confirm the project root before writing a local projection",
     "Confirm the concrete task before retrieving source content"
   ],
   "required_clarifying_questions_note": "Not currently observable for the same reason: there is no user turn in a script-driven run.",
   "interfaces": {
     "inputs": [
-      "Opportunity-root source-context record",
+      "Project-root source-context record",
       "Task-specific retrieval prompt",
       "Bounded source metadata and content chunks"
     ],

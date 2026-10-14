@@ -132,7 +132,7 @@ the paths below instead.
 
 #### Automatically, with the background job
 
-`initial-setup` offers to enable a daily background check the first time it
+`ascent-initial-setup` offers to enable a daily background check the first time it
 runs on a machine. If accepted, it registers a per-user scheduled job (a
 macOS LaunchAgent, Windows Scheduled Task, or Linux crontab entry) that
 fast-forwards the local `main` checkout from `origin/main` once a day. The
@@ -147,14 +147,14 @@ never forces a change — it skips safely (logging why, to
 branch or has uncommitted changes. The log also notes when a pull changed
 plugin files without a new version, since Codex will not load those
 changes. Decline or accept the
-question again at any time by rerunning `initial-setup`, or manage the job
+question again at any time by rerunning `ascent-initial-setup`, or manage the job
 directly:
 
 ```bash
-python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedule.py --status
-python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedule.py --install
-python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedule.py --install --frequency weekly
-python3 plugins/ascent/skills/initial-setup/scripts/manage-plugin-update-schedule.py --uninstall
+python3 plugins/ascent/skills/ascent-initial-setup/scripts/manage-plugin-update-schedule.py --status
+python3 plugins/ascent/skills/ascent-initial-setup/scripts/manage-plugin-update-schedule.py --install
+python3 plugins/ascent/skills/ascent-initial-setup/scripts/manage-plugin-update-schedule.py --install --frequency weekly
+python3 plugins/ascent/skills/ascent-initial-setup/scripts/manage-plugin-update-schedule.py --uninstall
 ```
 
 `--install --frequency {daily,weekly}` also changes an already-installed

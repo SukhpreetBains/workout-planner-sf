@@ -2,10 +2,10 @@
 """Run the loopback-only visual review inbox.
 
 Usage:
-    py review_server.py start [--root OPPORTUNITY]
-    py review_server.py status [--root OPPORTUNITY]
-    py review_server.py wait [--root OPPORTUNITY] [--after N] [--timeout SECONDS]
-    py review_server.py stop [--root OPPORTUNITY]
+    py review_server.py start [--root PROJECT]
+    py review_server.py status [--root PROJECT]
+    py review_server.py wait [--root PROJECT] [--after N] [--timeout SECONDS]
+    py review_server.py stop [--root PROJECT]
 """
 
 from __future__ import annotations
@@ -26,6 +26,8 @@ from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+from review_cache import ReviewCache, cache_dir
 
 
 SCRIPT = Path(__file__).resolve()
@@ -63,14 +65,14 @@ def configure_root(root: Path) -> None:
     resolved = root.resolve()
     if CONFIGURED_ROOT == resolved:
         return
-    os.environ["ASCENT_OPPORTUNITY_ROOT"] = str(resolved)
+    os.environ["ASCENT_PROJECT_ROOT"] = str(resolved)
     for module in ("paths", "trackers", "validate_updates", "review_store"):
         sys.modules.pop(module, None)
     CONFIGURED_ROOT = resolved
 
 
 def state_path(root: Path) -> Path:
-    return root / "workspace" / ".system" / "review-server.json"
+    return cache_dir(root) / "review-server.json"
 
 
 def read_state(root: Path) -> dict | None:
@@ -117,14 +119,37 @@ def healthy(state: dict | None) -> bool:
         return False
 
 
+def review_app_ready(state: dict) -> bool:
+    """Check the page and assets before returning a reusable server's URL."""
+    for path, content_type in (("/", "text/html"), ("/app.js", "text/javascript"),
+                               ("/app.css", "text/css")):
+        try:
+            with urllib.request.urlopen(
+                f"http://127.0.0.1:{state['port']}{path}", timeout=2.0,
+            ) as response:
+                if response.status != 200 or response.headers.get_content_type() != content_type:
+                    return False
+                if path == "/" and b"Workspace review inbox" not in response.read(4096):
+                    return False
+        except (OSError, ValueError, urllib.error.URLError) as exc:
+            reason = getattr(exc, "reason", exc)
+            if isinstance(reason, PermissionError) or getattr(reason, "errno", None) in (errno.EPERM, errno.EACCES):
+                raise LocalServerPermissionError(PERMISSION_HINT) from exc
+            return False
+    return True
+
+
 class ReviewServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, address: tuple[str, int], token: str, root: Path, instance_id: str):
+    def __init__(self, address: tuple[str, int], token: str, root: Path, instance_id: str,
+                 cache: ReviewCache):
         super().__init__(address, ReviewHandler)
         self.review_token = token
         self.root_path = root
         self.instance_id = instance_id
+        self.cache = cache
+        self.canonical_root = cache.project_root
         self.accepted_cache: dict[str, object] = {"signature": None, "items": []}
         self.link_options_cache: dict[str, object] = {"signature": None, "items": []}
 
@@ -221,6 +246,7 @@ class ReviewHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def json(self, status: int, value: dict) -> None:
+        self.response_status = status
         payload = json.dumps(value, default=str).encode()
         self.send_common_headers(status, length=len(payload))
         self.wfile.write(payload)
@@ -276,17 +302,36 @@ class ReviewHandler(BaseHTTPRequestHandler):
             self.json(200, {"ok": True, "instance_id": self.server.instance_id,
                             "pid": os.getpid(), "root": str(self.server.root_path)})
             return
+        if path == "/api/sync-status":
+            self.json(200, self.server.cache.status_json())
+            return
         if path == "/api/inbox":
             self.json(200, review_store.list_cards())
             return
         if path == "/api/accepted":
             from paths import load_schema
+            from trackers import is_workspace_timeout
 
-            self.json(200, {"items": accepted_items(self.server),
-                            **review_store.catalog(load_schema())})
+            try:
+                items = accepted_items(self.server)
+            except Exception as exc:
+                if not is_workspace_timeout(exc):
+                    raise
+                self.json(503, {"error": "OneDrive timed out while reading a tracker. Retry in a moment."})
+                return
+            self.json(200, {"items": items, **review_store.catalog(load_schema())})
             return
         if path == "/api/link-options":
-            self.json(200, {"items": accepted_link_options(self.server)})
+            from trackers import is_workspace_timeout
+
+            try:
+                items = accepted_link_options(self.server)
+            except Exception as exc:
+                if not is_workspace_timeout(exc):
+                    raise
+                self.json(503, {"error": "OneDrive timed out while reading a tracker. Retry in a moment."})
+                return
+            self.json(200, {"items": items})
             return
         if path == "/source":
             source_ref = query.get("path", [""])[0]
@@ -303,9 +348,9 @@ class ReviewHandler(BaseHTTPRequestHandler):
             if not self.require_token():
                 return
             source_ref = query.get("path", [""])[0]
-            candidate = (self.server.root_path / source_ref).resolve()
+            candidate = (self.server.canonical_root / source_ref).resolve()
             try:
-                candidate.relative_to(self.server.root_path / "workspace")
+                candidate.relative_to(self.server.canonical_root / "workspace")
             except ValueError:
                 self.json(403, {"error": "source path is outside the workspace"})
                 return
@@ -351,6 +396,12 @@ class ReviewHandler(BaseHTTPRequestHandler):
         self.json(404, {"error": "not found"})
 
     def do_POST(self) -> None:
+        with self.server.cache.work_lock:
+            self._do_POST()
+            if getattr(self, "response_status", 500) < 300 and self.parsed()[0] not in ("/api/stop", "/api/sync-now"):
+                self.server.cache.mark_local_change()
+
+    def _do_POST(self) -> None:
         if not self.require_token():
             return
         configure_root(self.server.root_path)
@@ -374,6 +425,10 @@ class ReviewHandler(BaseHTTPRequestHandler):
             "/api/accepted/pending": lambda body: review_store.move_accepted_to_pending(
                 str(body.get("category", "")), str(body.get("tracker_id", ""))),
         }
+        if path == "/api/sync-now":
+            self.server.cache.request_sync()
+            self.json(202, self.server.cache.status_json())
+            return
         if path == "/api/stop":
             self.json(200, {"stopping": True})
             import threading
@@ -428,9 +483,15 @@ def serve(root: Path, token: str, instance_id: str) -> int:
     if disposable_python(sys.executable):
         print(RUNTIME_HINT, file=sys.stderr)
         return 2
-    configure_root(root)
+    cache = ReviewCache(root)
     try:
-        server = ReviewServer(("127.0.0.1", 0), token, root, instance_id)
+        cache.prepare()
+    except Exception as exc:
+        print(f"local review cache could not be prepared: {exc}", file=sys.stderr)
+        return 1
+    configure_root(cache.local_root)
+    try:
+        server = ReviewServer(("127.0.0.1", 0), token, cache.local_root, instance_id, cache)
     except PermissionError:
         print(PERMISSION_HINT, file=sys.stderr)
         return PERMISSION_EXIT
@@ -441,12 +502,15 @@ def serve(root: Path, token: str, instance_id: str) -> int:
         "instance_id": instance_id,
         "root": str(root),
         "python_executable": sys.executable,
+        "server_script": str(SCRIPT),
         "started_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
     }
     write_state(root, state)
+    cache.start()
     try:
         server.serve_forever(poll_interval=0.2)
     finally:
+        cache.stop()
         server.server_close()
         current = read_state(root)
         if current and current.get("instance_id") == instance_id:
@@ -461,16 +525,17 @@ def start(root: Path) -> int:
     state = read_state(root)
     if healthy(state):
         previous_python = state.get("python_executable", "")
-        if previous_python and not disposable_python(previous_python):
+        if (previous_python and not disposable_python(previous_python)
+                and state.get("server_script") == str(SCRIPT) and review_app_ready(state)):
             print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
             return 0
-        print("restarting review inbox with a persistent Python environment", file=sys.stderr)
+        print("restarting review inbox with a working page and persistent Python environment", file=sys.stderr)
         if stop(root):
             return 1
     state_path(root).unlink(missing_ok=True)
     token = secrets.token_urlsafe(32)
     instance_id = str(secrets.token_hex(16))
-    log = root / "workspace" / ".system" / "review-server.log"
+    log = cache_dir(root) / "review-server.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     with open(log, "ab") as output:
         process = subprocess.Popen(
@@ -480,7 +545,7 @@ def start(root: Path) -> int:
             start_new_session=True,
         )
         STARTED_PROCESSES[instance_id] = process
-    deadline = time.monotonic() + 8
+    deadline = time.monotonic() + 45
     while time.monotonic() < deadline:
         returncode = process.poll()
         if returncode is not None:
@@ -491,7 +556,7 @@ def start(root: Path) -> int:
                 print(f"review server exited with status {returncode}; see {log}", file=sys.stderr)
             return returncode or 1
         state = read_state(root)
-        if healthy(state):
+        if healthy(state) and review_app_ready(state):
             print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
             return 0
         time.sleep(0.1)

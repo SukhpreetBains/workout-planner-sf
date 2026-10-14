@@ -14,14 +14,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT = REPO_ROOT / "plugins" / "ascent"
 SKILLS_ROOT = PLUGIN_ROOT / "skills"
 PLUGIN_NAME = "ascent"
-PLUGIN_VERSION = "0.1.0"
+PLUGIN_VERSION = "0.1.1"
 EXPECTED_SKILLS = {
     "analyze-org",
     "compose-deliverable",
     "create-deliverables",
     "design-skill-evals",
     "download-teams-transcripts",
-    "initial-setup",
+    "ascent-initial-setup",
     "interview-me",
     "investigate-project",
     "update-deliverable-structure",

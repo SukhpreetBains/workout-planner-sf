@@ -3,4 +3,4 @@ interface:
   short_description: "Summarize workspace evidence and tracker knowledge"
   icon_small: "./assets/skill-icon.svg"
   icon_large: "./assets/skill-icon.svg"
-  default_prompt: "Use $workspace-summarize to produce an evidence-grounded summary from my Opportunity workspace."
+  default_prompt: "Use $workspace-summarize to produce an evidence-grounded summary from my Project workspace."

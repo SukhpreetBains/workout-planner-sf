@@ -4,7 +4,7 @@ An industry pack is optional reference content — vocabulary, extraction
 emphasis, review considerations, and deliverable framing — that the
 agnostic Ascent skills (`workspace-add`,
 `workspace-review`, `create-deliverables`) may layer on top of
-their normal behavior when one is active for an Opportunity. It never
+their normal behavior when one is active for a project. It never
 changes what those skills fundamentally do, and it never touches
 `shared/schema/trackers.yaml`: every industry shares the same tracker
 categories, columns, and engine. A pack only shapes how a skill
@@ -89,12 +89,12 @@ entirely on its own.
 `workspace/.system/project.yaml` may carry an `industry:` key: an id
 matching a `shared/industry/<id>/` folder, or the literal `none`.
 
-- **Absent entirely** — this Opportunity has never been asked. The first
-  skill that checks (`initial-setup` during setup, or whichever of the
+- **Absent entirely** — this Project has never been asked. The first
+  skill that checks (`ascent-initial-setup` during setup, or whichever of the
   three consulting skills runs first otherwise) asks once, offers every
   pack found under this folder plus a "none of these" option, and writes
   whichever the user picks. This is a short, closed, confirmatory
-  question — the same shape as `initial-setup`'s existing storage and
+  question — the same shape as `ascent-initial-setup`'s existing storage and
   messaging questions — never a request to compose engagement detail.
 - **`none`** — asked and declined. Never asked again. Every skill runs
   exactly as documented, no different from a pack never having existed.

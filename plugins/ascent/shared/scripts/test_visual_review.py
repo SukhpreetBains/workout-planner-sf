@@ -13,6 +13,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 from unittest import mock
+from zipfile import BadZipFile
 
 import yaml
 from openpyxl import Workbook, load_workbook
@@ -27,7 +28,7 @@ class VisualReviewTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
-        os.environ["ASCENT_OPPORTUNITY_ROOT"] = str(self.root)
+        os.environ["ASCENT_PROJECT_ROOT"] = str(self.root)
         for name in ("paths", "trackers", "validate_updates", "review_store", "review_server", "sync"):
             sys.modules.pop(name, None)
         self.paths = importlib.import_module("paths")
@@ -238,6 +239,30 @@ class VisualReviewTest(unittest.TestCase):
                 self.store.accept(card["proposal_id"], card["revision"], "onedrive-timeout")
         self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema()), [])
         self.assertEqual(len(self.store.list_cards()["cards"]), 1)
+
+    def test_workbook_read_retries_timeout_wrapped_as_bad_zip(self):
+        try:
+            try:
+                raise TimeoutError(self.store.errno.ETIMEDOUT, "Operation timed out")
+            except TimeoutError:
+                raise BadZipFile("File is not a zip file")
+        except BadZipFile as error:
+            wrapped_timeout = error
+
+        original_load = self.trackers.load_workbook
+        calls = 0
+
+        def delayed_load(path, **options):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise wrapped_timeout
+            return original_load(path, **options)
+
+        with mock.patch.object(self.trackers, "load_workbook", side_effect=delayed_load), \
+                mock.patch.object(self.trackers.time, "sleep"):
+            self.assertEqual(self.trackers.read_rows("person"), [])
+        self.assertEqual(calls, 2)
 
     def test_relationships_connect_any_categories(self):
         schema = self.paths.load_schema()
@@ -489,6 +514,20 @@ class VisualReviewTest(unittest.TestCase):
             self.assertEqual(first["port"], second["port"])
         finally:
             self.server_module.stop(self.root)
+
+    def test_start_restarts_server_when_review_page_is_missing(self):
+        self.server_module.write_state(self.root, {
+            "pid": 123, "port": 456, "token": "stale", "instance_id": "stale",
+            "python_executable": sys.executable,
+        })
+        child = mock.Mock()
+        child.poll.return_value = 1
+        with mock.patch.object(self.server_module, "healthy", return_value=True), \
+                mock.patch.object(self.server_module, "review_app_ready", return_value=False), \
+                mock.patch.object(self.server_module, "stop", return_value=0) as stop, \
+                mock.patch.object(self.server_module.subprocess, "Popen", return_value=child):
+            self.assertEqual(self.server_module.start(self.root), 1)
+        stop.assert_called_once_with(self.root)
 
 
 if __name__ == "__main__":

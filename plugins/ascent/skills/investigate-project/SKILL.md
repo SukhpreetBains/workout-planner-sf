@@ -31,9 +31,9 @@ documents mid-task yourself.
 Both modes read and write the same store:
 
 ```text
-<Opportunity folder>/
+<Project folder>/
 └── workspace/.system/
-    ├── source-context.yaml       # shared source locations from initial-setup
+    ├── source-context.yaml       # shared source locations from ascent-initial-setup
     └── project-context/
         ├── .gitignore
         ├── manifest.json         # generated local retrieval projection
@@ -50,10 +50,10 @@ both modes must preserve: never store credentials, message bodies, or
 full connector payloads; keep source IDs stable; validate after every
 write.
 
-Read the initial-setup [project communications record
-contract](../initial-setup/references/source-context.md) before
+Read the ascent-initial-setup [project communications record
+contract](../ascent-initial-setup/references/source-context.md) before
 changing shared locations. `source-context.yaml` is owned by
-`initial-setup`; both modes here only add to it after user
+`ascent-initial-setup`; both modes here only add to it after user
 confirmation, and must preserve unknown fields and previously
 confirmed locations.
 

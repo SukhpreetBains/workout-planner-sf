@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = ROOT / "plugins" / "ascent" / "skills"
 SKILLS = (
-    "initial-setup",
+    "ascent-initial-setup",
     "investigate-project",
     "workspace-add",
     "workspace-review",

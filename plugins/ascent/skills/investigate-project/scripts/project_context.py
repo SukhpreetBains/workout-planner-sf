@@ -51,7 +51,7 @@ def paths(root: str) -> tuple[Path, Path, Path]:
 
 
 def source_context_tool() -> Path:
-    return Path(__file__).resolve().parents[2] / "initial-setup" / "scripts" / "manage-source-context.py"
+    return Path(__file__).resolve().parents[2] / "ascent-initial-setup" / "scripts" / "manage-source-context.py"
 
 
 def atomic_write(path: Path, content: str) -> None:

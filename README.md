@@ -1,6 +1,6 @@
 # Ascent
 
-Ascent is an AI skill library for accelerated delivery of Discovery engagements. It gives Opportunity teams a governed, evidence-backed path from source material to project knowledge and client deliverables.
+Ascent is an AI skill library for accelerated delivery of Discovery engagements. It gives Project teams a governed, evidence-backed path from source material to project knowledge and client deliverables.
 
 The skills are host-neutral. Any supported agent host (Claude Code, Codex, Cursor, GitHub Copilot) uses the same flat library in `plugins/ascent/skills/`, distributed through the self-contained Ascent plugin.
 
@@ -25,11 +25,11 @@ evals/            Evaluation packages for the skills (contributor-facing)
 tests/            Acceptance tests
 ```
 
-Note that the Opportunity workspace itself does **not** live in this repository. It lives in the Opportunity's SharePoint folder, synced locally through OneDrive.
+Note that the Project workspace itself does **not** live in this repository. It lives in the Project's SharePoint folder, synced locally through OneDrive.
 
 ## Further reading
 
 - [Installing and updating Ascent](docs/installation-and-updating.md), host-specific installation and update instructions.
 - [Ascent Workflow Overview](plugins/ascent/README.md), the shared setup handoff and current knowledge lifecycle.
-- [Opportunity Workspace Walkthrough](docs/opportunity-workspace-walkthrough.md), the complete setup and daily operating flow, step by step.
+- [Project Workspace Walkthrough](docs/project-workspace-walkthrough.md), the complete setup and daily operating flow, step by step.
 - [Ascent evaluations](evals/README.md), how skill evaluation packages are designed and run (for contributors).

@@ -15,33 +15,33 @@ class LauncherPreflightTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.account = Path(self.temp.name)
-        self.root = self.account / "Opportunity"
+        self.root = self.account / "Project"
         for name in ("project", "trackers", "inbox", ".system"):
             (self.root / "workspace" / name).mkdir(parents=True)
         self.script = str(Path(__file__).with_name("sync.py"))
 
     def test_missing_root_cannot_create_account_workspace(self):
         environment = dict(os.environ)
-        environment.pop("ASCENT_OPPORTUNITY_ROOT", None)
+        environment.pop("ASCENT_PROJECT_ROOT", None)
         result = subprocess.run(["bash", str(Path(__file__).with_name("py")), self.script],
                                 cwd=self.account, env=environment, capture_output=True, text=True)
         self.assertEqual(result.returncode, 2)
-        self.assertIn("prepared Opportunity workspace", result.stderr)
+        self.assertIn("prepared Project workspace", result.stderr)
         self.assertFalse((self.account / "workspace").exists())
 
     def test_explicit_account_root_is_rejected_without_writes(self):
-        with mock.patch.dict(os.environ, {"ASCENT_OPPORTUNITY_ROOT": str(self.account)}):
+        with mock.patch.dict(os.environ, {"ASCENT_PROJECT_ROOT": str(self.account)}):
             with self.assertRaisesRegex(ValueError, "Account root"):
                 validate([self.script])
         self.assertFalse((self.account / "workspace").exists())
 
-    def test_prepared_opportunity_supports_initial_setup(self):
-        with mock.patch.dict(os.environ, {"ASCENT_OPPORTUNITY_ROOT": str(self.root)}):
+    def test_prepared_project_supports_initial_setup(self):
+        with mock.patch.dict(os.environ, {"ASCENT_PROJECT_ROOT": str(self.root)}):
             validate([self.script])
         self.assertFalse((self.root / "workspace/.system/.venv").exists())
 
     def test_mismatched_root_and_missing_script_are_rejected(self):
-        with mock.patch.dict(os.environ, {"ASCENT_OPPORTUNITY_ROOT": str(self.root)}):
+        with mock.patch.dict(os.environ, {"ASCENT_PROJECT_ROOT": str(self.root)}):
             for arguments in ([self.script, "--root", str(self.account)],
                               [self.script, "--root=" + str(self.account)],
                               ["missing.py"]):

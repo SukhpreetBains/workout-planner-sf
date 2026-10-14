@@ -3,4 +3,4 @@ interface:
   short_description: "File documents, capture meeting notes, and propose tracker updates"
   icon_small: "./assets/skill-icon.svg"
   icon_large: "./assets/skill-icon.svg"
-  default_prompt: "Use $workspace-add to process the documents in my Opportunity workspace inbox."
+  default_prompt: "Use $workspace-add to process the documents in my Project workspace inbox."

@@ -3,7 +3,7 @@
 The shared contract for the manifest both modes read and write, plus
 the chunk, pack, and access-gap formats evidence mode produces from it.
 
-Use `workspace/.system/source-context.yaml`, created by `initial-setup`, as the project-owned source-location record. Use `workspace/.system/project-context/manifest.json` as its machine-local retrieval projection and stable handoff to ranking scripts. Import the shared record before retrieval; do not maintain conflicting source identities in the local projection.
+Use `workspace/.system/source-context.yaml`, created by `ascent-initial-setup`, as the project-owned source-location record. Use `workspace/.system/project-context/manifest.json` as its machine-local retrieval projection and stable handoff to ranking scripts. Import the shared record before retrieval; do not maintain conflicting source identities in the local projection.
 
 ## Manifest
 

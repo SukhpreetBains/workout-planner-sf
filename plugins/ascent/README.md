@@ -1,15 +1,15 @@
 # Ascent Workflow Overview
 
-Ascent gives an Opportunity team a governed path from source material to evidence-backed project knowledge and client deliverables. Agent hosts discover the workflows from the installed skills in `skills/`; this overview explains how the currently executable workflows fit together without duplicating their detailed instructions. Before recommending a workflow, inspect the installed skills so availability stays current as the plugin evolves.
+Ascent gives a project team a governed path from source material to evidence-backed project knowledge and client deliverables. Agent hosts discover the workflows from the installed skills in `skills/`; this overview explains how the currently executable workflows fit together without duplicating their detailed instructions. Before recommending a workflow, inspect the installed skills so availability stays current as the plugin evolves.
 
 ## Start with identity-only setup
 
-Run `initial-setup` when starting a new Opportunity or joining an existing one. It prepares or resumes the workspace, confirms storage and communications, initializes trackers and search, and records only the confirmed Account and Opportunity identity. It preserves existing project metadata and readable overview content.
+Run `ascent-initial-setup` when starting a new Project or joining an existing one. It prepares or resumes the workspace, confirms storage and communications, initializes trackers and search, and records only the confirmed Account and Project identity. It preserves existing project metadata and readable overview content.
 
-Initial setup does not ask for optional engagement details and does not inspect or process source documents. After its final checklist, users with documents should place them in the Opportunity's `workspace/inbox/` folder (or leave them there if already present), then open a fresh agent chat with the same Opportunity folder open. This gives ingestion room to process documents without the setup conversation's history. Use this prompt:
+Initial setup does not ask for optional engagement details and does not inspect or process source documents. After its final checklist, open a fresh agent chat with the same project folder open. Drag documents into that chat, or find the files on your computer and place them in the linked `workspace/inbox/` review inbox. Then run `workspace-add` to turn the sources into structured project content and proposed tracker updates for review. Use this prompt:
 
 ```text
-Use workspace-add to process the documents in this Opportunity workspace inbox.
+Use workspace-add to ingest the documents I attached or placed in this project workspace inbox.
 ```
 
 `workspace-add` prepares evidence-backed proposals. If it finds proposals, the review inbox is for approving them afterward; only `workspace-review` writes approved changes into trackers.
@@ -38,4 +38,4 @@ The workflow is intentionally separated. Source processing proposes knowledge, h
 - Existing files, metadata, and tracker rows are preserved by resumable setup.
 - Planned skills marked as non-executable in the repository are not part of this workflow.
 
-For step-by-step setup and operating guidance, see the repository [Opportunity Workspace Walkthrough](../../docs/opportunity-workspace-walkthrough.md).
+For step-by-step setup and operating guidance, see the repository [Project Workspace Walkthrough](../../docs/project-workspace-walkthrough.md).

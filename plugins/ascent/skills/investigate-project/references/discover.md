@@ -8,7 +8,7 @@ Read [context-contract.md](context-contract.md) before writing the local project
 
 Discovery is read-only and lightweight. It returns a shortlist of canonical source references and narrow retrieval hints—not file contents, message bodies, document bodies, transcripts, or connector payloads. Every recorded source carries a bounded access state (`available`, `unavailable`, or `unknown`) and a short reason.
 
-Use the initial-setup `scripts/manage-source-context.py` for shared source updates. Use `scripts/project_context.py` to initialize, import, render, measure, and validate the machine-local projection.
+Use the ascent-initial-setup `scripts/manage-source-context.py` for shared source updates. Use `scripts/project_context.py` to initialize, import, render, measure, and validate the machine-local projection.
 
 ## Workflow
 
@@ -20,17 +20,17 @@ Use the initial-setup `scripts/manage-source-context.py` for shared source updat
 
 ### 2. Reuse before discovering
 
-- Check `workspace/.system/source-context.yaml` first and validate it with the initial-setup manager.
+- Check `workspace/.system/source-context.yaml` first and validate it with the ascent-initial-setup manager.
 - Check `workspace/.system/project-context/manifest.json` next. If it exists, validate it and import the shared record before identifying missing, stale, or task-relevant fields.
 - Read `brief.md` before any broader exploration. Refresh instead of restarting.
 
 Run:
 
 ```bash
-python3 <skill-dir>/scripts/project_context.py init --root <opportunity-root>
-python3 <initial-setup-skill-dir>/scripts/manage-source-context.py validate --root <opportunity-root>
-python3 <skill-dir>/scripts/project_context.py import-source-context --root <opportunity-root> --allow-incomplete
-python3 <skill-dir>/scripts/project_context.py validate --root <opportunity-root> --allow-incomplete
+python3 <skill-dir>/scripts/project_context.py init --root <project-root>
+python3 <ascent-initial-setup-skill-dir>/scripts/manage-source-context.py validate --root <project-root>
+python3 <skill-dir>/scripts/project_context.py import-source-context --root <project-root> --allow-incomplete
+python3 <skill-dir>/scripts/project_context.py validate --root <project-root> --allow-incomplete
 ```
 
 `init` is non-destructive and does not overwrite an existing local manifest. It also creates a directory-local `.gitignore` so manifests and later cached excerpts stay local by default. Tell the user that the ranked context cache is intentionally untracked while the project communications record remains project-owned.
@@ -78,7 +78,7 @@ Measure the pass after the scan: count connector calls, candidate locations cons
 
 ```bash
 python3 <skill-dir>/scripts/project_context.py record-discovery \
-  --root <opportunity-root> \
+  --root <project-root> \
   --sources-considered 6 \
   --sources-recorded 3 \
   --connector-calls 4 \
@@ -110,8 +110,8 @@ Use source kinds `local`, `slack`, `teams`, `sharepoint`, `web`, or `other`. Put
 After user confirmation, add each distinct canonical location to the shared record, then import it into the local projection. For SharePoint, include every identifier the runtime exposed:
 
 ```bash
-python3 <initial-setup-skill-dir>/scripts/manage-source-context.py upsert-source \
-  --root <opportunity-root> \
+python3 <ascent-initial-setup-skill-dir>/scripts/manage-source-context.py upsert-source \
+  --root <project-root> \
   --id engagement-folder \
   --kind sharepoint \
   --name "Engagement folder" \
@@ -127,17 +127,17 @@ python3 <initial-setup-skill-dir>/scripts/manage-source-context.py upsert-source
   --access-reason "Folder identity was confirmed during discovery."
 
 python3 <skill-dir>/scripts/project_context.py set-project \
-  --root <opportunity-root> \
+  --root <project-root> \
   --name "Project name" \
   --objective "Current objective" \
   --phase "Current phase"
 
-python3 <skill-dir>/scripts/project_context.py import-source-context --root <opportunity-root>
-python3 <skill-dir>/scripts/project_context.py validate --root <opportunity-root>
+python3 <skill-dir>/scripts/project_context.py import-source-context --root <project-root>
+python3 <skill-dir>/scripts/project_context.py validate --root <project-root>
 ```
 
 - Use workspace-relative paths for local sources when possible.
-- Preserve the setup-generated `account`, `opportunity`, platform connection states, and unknown compatible fields.
+- Preserve the setup-generated `account`, `project`, platform connection states, and unknown compatible fields.
 - Store no credentials, tokens, copied private messages, or full document content in the shared record or local projection.
 - Mark confidential source locations with the appropriate `sensitivity` value.
 - Keep unresolved but important gaps explicit in `open_questions`.

@@ -4,7 +4,7 @@ Build a task-specific evidence pack from sources already identified in map mode 
 
 ## Preconditions
 
-Require the setup-generated `workspace/.system/source-context.yaml` beneath the Opportunity root. Validate it, initialize the local `workspace/.system/project-context/manifest.json` projection when needed, and run map mode's `import-source-context` command before planning retrieval. Read `workspace/.system/project-context/brief.md`, then validate the imported manifest.
+Require the setup-generated `workspace/.system/source-context.yaml` beneath the Project root. Validate it, initialize the local `workspace/.system/project-context/manifest.json` projection when needed, and run map mode's `import-source-context` command before planning retrieval. Read `workspace/.system/project-context/brief.md`, then validate the imported manifest.
 
 If the shared record is absent or lacks the sources needed for the task, switch to map mode (`discover.md`) or ask only for the missing location. Do not compensate with an unbounded workspace or connector search. Do not edit shared locations as an incidental retrieval side effect.
 
@@ -71,7 +71,7 @@ Run:
 
 ```bash
 python3 <skill-dir>/scripts/rank_context.py \
-  --manifest <opportunity-root>/workspace/.system/project-context/manifest.json \
+  --manifest <project-root>/workspace/.system/project-context/manifest.json \
   --chunks <temporary-dir>/chunks.jsonl \
   --task "<retrieval task>" \
   --output <temporary-dir>/ranked.jsonl \
@@ -100,9 +100,9 @@ Run:
 
 ```bash
 python3 <skill-dir>/scripts/persist_context.py \
-  --manifest <opportunity-root>/workspace/.system/project-context/manifest.json \
+  --manifest <project-root>/workspace/.system/project-context/manifest.json \
   --pack <temporary-dir>/pack.json \
-  --context-dir <opportunity-root>/workspace/.system/project-context
+  --context-dir <project-root>/workspace/.system/project-context
 ```
 
 This produces:

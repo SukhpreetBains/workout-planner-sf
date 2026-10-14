@@ -70,12 +70,12 @@ date shown on the cover from it and enforces the ISO pattern structurally.
 ## Draft naming: use a date, not a version number
 
 The parent `create-deliverables` guidance names drafts
-`<template>-<opportunity>-<version, e.g. v1>`. For this template, use a date
+`<template>-<project>-<version, e.g. v1>`. For this template, use a date
 instead, since each week is a new artifact rather than a revision of the
 previous one:
 
 ```
-workspace/draft-deliverables/weekly-status-report-<opportunity-name>-<YYYY-MM-DD>/
+workspace/draft-deliverables/weekly-status-report-<project-name>-<YYYY-MM-DD>/
 ```
 
 Use the report's reporting-period date (the Monday of the week being

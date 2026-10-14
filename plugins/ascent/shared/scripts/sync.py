@@ -7,7 +7,7 @@ Usage:
     py sync.py --status   # report what is new/changed since the last sync
                           # and which documents have not been extracted yet
     py sync.py --check-setup  # cheap, read-only: does this look like an
-                          # initialized Opportunity workspace at all? For any
+                          # initialized Project workspace at all? For any
                           # workspace-dependent skill to call before assuming
                           # one exists — does not require Python deps beyond
                           # this script's own (yaml), does no scanning or
@@ -125,7 +125,7 @@ def extracted_sources() -> set[str]:
 
 def check_setup() -> int:
     """Cheap, read-only precondition check: does this look like an
-    initialized Opportunity workspace? Filesystem existence only — no
+    initialized Project workspace? Filesystem existence only — no
     workbook parsing, no document scanning, safe to call before every
     workspace-dependent skill's real work starts."""
     schema = load_schema()
@@ -144,9 +144,9 @@ def check_setup() -> int:
     print(f"identity (workspace/.system/project.yaml): {'found' if identity_ready else 'MISSING'}")
 
     if workspace_ready and system_ready and trackers_ready and identity_ready:
-        print("ready: this looks like an initialized Opportunity workspace")
+        print("ready: this looks like an initialized Project workspace")
     else:
-        print("not ready: this does not look like an initialized Opportunity workspace — run initial-setup first")
+        print("not ready: this does not look like an initialized Project workspace — run ascent-initial-setup first")
 
     for notice in (update_notice(), job_notice()):
         if notice:

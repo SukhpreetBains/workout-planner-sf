@@ -40,7 +40,7 @@ confirmed on-topic versus ambiguous. To use one:
 
 1. Copy the chosen file into the draft's own directory (e.g.
    `workspace/draft-deliverables/<draft>/assets/cover-background.jpg`).
-   Content lives in the Opportunity workspace; the image lives inside the
+   Content lives in the Project workspace; the image lives inside the
    installed plugin — copy it in rather than trying to reference it with a
    long, install-location-dependent relative path.
 2. Set `meta.cover_background` in the authored `content.yaml` to that local
