@@ -63,17 +63,38 @@ PY <plugin-root>/shared/scripts/review_server.py start --root "$ASCENT_PROJECT_R
 Always use `shared/scripts/py` or `py.cmd` for review server commands. A server
 started with `uv run` can inherit a temporary Python path that disappears while
 the inbox is open, causing approval to fail during tracker sync. Startup rejects
-that interpreter and restarts an older server whose interpreter is missing or
-unverified. Use the new URL after a restart because its session token changes.
+that interpreter. Startup also checks that the page and its assets are served,
+and restarts an older server when either check fails. Use the new URL after a
+restart because its session token changes.
 
-Post the returned URL in chat and let the user open it. Never open the browser
-automatically. The server assigns an ephemeral port, recovers from stale state,
-and requires its session token for every mutation.
+The server serves the inbox from a persistent local review cache at
+`~/.ascent/review-cache/<project-hash>/project/`. The Project folder in OneDrive
+remains canonical. Review actions save locally first, and a background task
+reconciles review-owned files to OneDrive every five minutes while the server is
+running. The page shows sync status and has a `Sync now` button. If OneDrive is
+unavailable, keep reviewing locally. Do not remove the cache or claim the work
+has reached OneDrive until sync status says `synced`. When both copies of the
+same review file changed, sync pauses and lists the conflicting paths. Preserve
+both versions, inspect the conflict, and ask the user which change to keep
+before resolving it. Source documents refresh independently, so a slow source
+file cannot block tracker publishing.
+
+Before posting the URL, request that exact URL over loopback and confirm it
+returns the HTML review page, not a JSON error. If the page fails this check,
+stop and start the server through the launcher above, then check the new URL.
+If it still fails, inspect `~/.ascent/review-cache/<project-hash>/review-server.log` and use the chat
+review fallback. Post only a working URL in chat and let the user open it.
+Never open the browser automatically. The server assigns an ephemeral port,
+recovers from stale state, and requires its session token for every mutation.
 
 If an approval reports a missing Python executable, stop and start the inbox
 through the launcher above. Before retrying the approval, check the proposal,
 `workspace/.system/applied-updates/`, and the affected tracker row to determine
 whether the earlier action persisted. Never infer that from the error alone.
+Use the same reconciliation for any failed approval. A workbook error such as
+`File is not a zip file` can wrap a temporary OneDrive read timeout. Check the
+server log and workbook integrity before one retry. If the workbook is damaged,
+preserve it and report the problem instead of retrying the approval.
 
 ### Runtime permissions
 
