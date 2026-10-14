@@ -95,6 +95,11 @@ def apply_computed_fields(category: str, fields: dict, schema: dict) -> None:
     )
 
 
+def has_rows(ws) -> bool:
+    return any(any(value not in (None, "") for value in row)
+               for row in ws.iter_rows(min_row=2, values_only=True))
+
+
 def init_trackers(schema: dict | None = None, reset: bool = False) -> list[str]:
     """Create tracker workbooks/tabs that are missing. Never touches existing
     rows unless reset=True (which rebuilds headers on empty tabs only)."""
@@ -142,7 +147,11 @@ def init_trackers(schema: dict | None = None, reset: bool = False) -> list[str]:
                             target.alignment = copy(source.alignment)
                         changed.append(f"added column '{name}' to '{tab}' in {tracker['file']}")
                         have.append(name)
-        # Unknown tabs and custom columns are user-owned and are never removed.
+        for tab in tracker.get("retired_tabs", []):
+            if tab in wb.sheetnames and len(wb.sheetnames) > 1 and not has_rows(wb[tab]):
+                del wb[tab]
+                changed.append(f"removed empty retired tab '{tab}' from {tracker['file']}")
+        # Other unknown tabs and custom columns are user-owned and are never removed.
         wb.save(path)
     return changed
 

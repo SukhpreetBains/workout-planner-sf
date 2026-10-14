@@ -168,6 +168,29 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(sheet.cell(2, headers.index("Custom Score") + 1).value, "=LEN(B2)")
         self.assertEqual(sheet.cell(2, headers.index("Notes") + 1).value, "Keep me")
 
+    def test_retired_tabs_go_only_when_empty_and_stale_copies_are_removed(self):
+        trackers = self.root / "workspace" / "trackers"
+        stakeholders = load_workbook(trackers / "stakeholders.xlsx")
+        stakeholders.create_sheet("Stakeholders").append(["Stakeholder ID", "Name"])
+        stakeholders.save(trackers / "stakeholders.xlsx")
+        delivery = load_workbook(trackers / "delivery.xlsx")
+        plan = delivery.create_sheet("Delivery Plan")
+        plan.append(["Plan Item ID", "Name"])
+        plan.append(["PLN-001", "Kept because it holds a row"])
+        delivery.save(trackers / "delivery.xlsx")
+
+        changes = self.trackers.init_trackers()
+        self.assertIn("removed empty retired tab 'Stakeholders' from workspace/trackers/stakeholders.xlsx", changes)
+        self.assertNotIn("Stakeholders", load_workbook(trackers / "stakeholders.xlsx").sheetnames)
+        self.assertIn("Delivery Plan", load_workbook(trackers / "delivery.xlsx").sheetnames)
+
+        self.paths.TRACKER_COPIES_DIR.mkdir(parents=True, exist_ok=True)
+        stale = self.paths.TRACKER_COPIES_DIR / "stakeholder.yaml"
+        stale.write_text("category: stakeholder\ncount: 0\nrows: []\n", encoding="utf-8")
+        importlib.import_module("sync").export_tracker_copies(self.paths.load_schema())
+        self.assertFalse(stale.exists())
+        self.assertTrue((self.paths.TRACKER_COPIES_DIR / "person.yaml").exists())
+
     def test_autosave_conflict_and_audit(self):
         self.proposal([self.risk()])
         card = next(card for card in self.store.list_cards()["cards"]

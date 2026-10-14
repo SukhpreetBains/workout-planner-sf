@@ -111,8 +111,9 @@ returns:
 
 - the classification;
 - candidate findings, each with its category, proposed field values,
-  any relationships the source states (meaning plus the other finding or
-  record it points to), and source-linked evidence — the `source_ref` plus
+  any relationships the source states (meaning, the other finding or
+  record it points to, and the verbatim excerpt that states the
+  connection), and source-linked evidence — the `source_ref` plus
   a short verbatim `excerpt` that on its own supports the whole finding (a
   heading or label alone is not evidence; line numbers only when actually
   known);
@@ -125,8 +126,11 @@ Each category has a `group` (entity: who or what the project is about;
 signal: what we learned), a `definition`, a `bar_to_clear`, `lookalikes`
 that say how it differs from the categories it is most often confused
 with, and `examples`. Pick the category whose definition the excerpt fits;
-when two compete, apply the lookalike distinction the schema states. One
-statement becomes one finding in one category; split a passage only when
+when two compete, apply the lookalike distinction the schema states. A
+section heading is context, never the category: an item listed under "Key
+Decisions" that says "recommended" or "suggested" is a proposal, and an item
+under "Risks" that has already happened is an issue. One statement becomes
+one finding in one category; split a passage only when
 it states independent things. `ontology.dropped` lists kinds of content
 Ascent does not track and where that content goes instead.
 
@@ -227,6 +231,12 @@ Work from what the subagents returned:
 
 Reconcile before proposing:
 
+- **Within a document** — meeting notes and decks often repeat one item
+  under several headings (open questions, risks, follow-ups). Propose it
+  once, in the category whose definition fits best, and fold the other
+  mentions into its Description and evidence. Keep separate items only
+  when they state different things, such as a risk and the action that
+  addresses it.
 - **Across documents** — merge findings that describe the same fact into
   one proposal carrying evidence from each document.
 - **Against existing tracker rows** — check
@@ -309,6 +319,16 @@ each meaning's definition gives. Add a relationship only when the source
 states the connection; appearing in the same document is not one. Use the
 most specific meaning that fits and `related_to` only when none does.
 
+Every relationship must be visible in the item's own evidence: an excerpt
+has to state the connection itself ("the sponsor selected Option B"
+supports `decided_by` the sponsor; "Sam works for Acme Hosting" supports
+`part_of` Acme Hosting). When the connection is stated in a different
+sentence from the item's main excerpt, add that sentence as another
+evidence entry. A connection that is only implied, inferred from a section
+heading, or suggested by two things appearing near each other is left out;
+the reviewer can add it in the inbox. A wrong relationship is worse than a
+missing one.
+
 When a relationship points to a person, system, or other record that is
 not in the trackers, propose that record as well and use its
 `proposal_id` as the ID. It may come from this batch or an earlier batch
@@ -339,6 +359,11 @@ deliberately; meetings are the richest source for those five.
 - **Sessions** — propose one `session` for every meeting processed, with
   `Status: completed`, `Date` set to its date (left empty when the meeting
   is undated), and its session note as the source.
+
+Write proposal files directly. If a helper script is genuinely useful,
+keep it outside the Opportunity folder (for example in the system temporary
+directory) and delete it when you are done; never leave scripts or other
+working files in `workspace/`.
 
 Write one file per batch to
 `workspace/.system/proposed-updates/<YYYY-MM-DD>-<short-topic>.yaml`:
