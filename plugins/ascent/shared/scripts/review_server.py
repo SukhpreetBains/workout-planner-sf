@@ -151,7 +151,6 @@ class ReviewServer(ThreadingHTTPServer):
         self.cache = cache
         self.canonical_root = cache.project_root
         self.accepted_cache: dict[str, object] = {"signature": None, "items": []}
-        self.link_options_cache: dict[str, object] = {"signature": None, "items": []}
 
 
 def accepted_cache_signature(root: Path, schema: dict) -> tuple[tuple[str, int, int], ...]:
@@ -197,28 +196,6 @@ def accepted_items(server: ReviewServer) -> list[dict]:
         "signature": signature,
         "items": items,
     }
-    return items
-
-
-def accepted_link_options(server: ReviewServer) -> list[dict]:
-    """Return link picker data without reconstructing evidence."""
-    from paths import load_schema
-    from trackers import id_column, read_rows
-    import review_store
-
-    schema = load_schema()
-    signature = tuple(sorted((str(path), path.stat().st_mtime_ns, path.stat().st_size)
-                             for path in {server.root_path / definition["tracker_file"]
-                                          for definition in schema["categories"].values()} if path.is_file()))
-    if server.link_options_cache["signature"] == signature:
-        return server.link_options_cache["items"]
-    items = []
-    for category, definition in schema["categories"].items():
-        for row in read_rows(category, schema):
-            title = review_store.display_label(category, row, schema)
-            items.append({"category": category, "category_label": review_store.category_label(category, schema),
-                          "tracker_id": row.get(id_column(category, schema), ""), "title": title, "fields": row})
-    server.link_options_cache = {"signature": signature, "items": items}
     return items
 
 
@@ -321,17 +298,8 @@ class ReviewHandler(BaseHTTPRequestHandler):
                 return
             self.json(200, {"items": items, **review_store.catalog(load_schema())})
             return
-        if path == "/api/link-options":
-            from trackers import is_workspace_timeout
-
-            try:
-                items = accepted_link_options(self.server)
-            except Exception as exc:
-                if not is_workspace_timeout(exc):
-                    raise
-                self.json(503, {"error": "OneDrive timed out while reading a tracker. Retry in a moment."})
-                return
-            self.json(200, {"items": items})
+        if path == "/api/rejected":
+            self.json(200, {"items": review_store.list_rejected()})
             return
         if path == "/source":
             source_ref = query.get("path", [""])[0]
@@ -424,6 +392,10 @@ class ReviewHandler(BaseHTTPRequestHandler):
                 str(body.get("category", "")), str(body.get("tracker_id", "")), str(body.get("reason", ""))),
             "/api/accepted/pending": lambda body: review_store.move_accepted_to_pending(
                 str(body.get("category", "")), str(body.get("tracker_id", ""))),
+            "/api/accepted/update": lambda body: review_store.update_accepted(
+                str(body.get("category", "")), str(body.get("tracker_id", "")), body.get("fields")),
+            "/api/rejected/pending": lambda body: review_store.restore_rejected(
+                str(body.get("rejected_id", ""))),
         }
         if path == "/api/sync-now":
             self.server.cache.request_sync()
@@ -433,28 +405,6 @@ class ReviewHandler(BaseHTTPRequestHandler):
             self.json(200, {"stopping": True})
             import threading
             threading.Thread(target=self.server.shutdown, daemon=True).start()
-            return
-        if path == "/api/accepted/update":
-            from paths import load_schema
-            from trackers import id_column, upsert_row
-
-            body = self.body()
-            category = str(body.get("category", ""))
-            schema = load_schema()
-            if category not in schema["categories"]:
-                self.json(400, {"error": "unknown tracker category"})
-                return
-            fields = body.get("fields")
-            if not isinstance(fields, dict):
-                self.json(400, {"error": "fields must be an object"})
-                return
-            fields[id_column(category, schema)] = str(body.get("tracker_id", ""))
-            try:
-                tracker_id = upsert_row(category, fields, schema)
-            except (TypeError, ValueError) as exc:
-                self.json(422, {"error": str(exc)})
-                return
-            self.json(200, {"tracker_id": tracker_id})
             return
         if path not in routes:
             self.json(404, {"error": "not found"})

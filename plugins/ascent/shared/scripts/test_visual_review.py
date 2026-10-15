@@ -169,6 +169,72 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(sheet.cell(2, headers.index("Custom Score") + 1).value, "=LEN(B2)")
         self.assertEqual(sheet.cell(2, headers.index("Notes") + 1).value, "Keep me")
 
+    def test_retired_tabs_go_only_when_empty_and_stale_copies_are_removed(self):
+        trackers = self.root / "workspace" / "trackers"
+        stakeholders = load_workbook(trackers / "stakeholders.xlsx")
+        stakeholders.create_sheet("Stakeholders").append(["Stakeholder ID", "Name"])
+        stakeholders.save(trackers / "stakeholders.xlsx")
+        delivery = load_workbook(trackers / "delivery.xlsx")
+        plan = delivery.create_sheet("Delivery Plan")
+        plan.append(["Plan Item ID", "Name"])
+        plan.append(["PLN-001", "Kept because it holds a row"])
+        delivery.save(trackers / "delivery.xlsx")
+
+        changes = self.trackers.init_trackers()
+        self.assertIn("removed empty retired tab 'Stakeholders' from workspace/trackers/stakeholders.xlsx", changes)
+        self.assertNotIn("Stakeholders", load_workbook(trackers / "stakeholders.xlsx").sheetnames)
+        self.assertIn("Delivery Plan", load_workbook(trackers / "delivery.xlsx").sheetnames)
+
+        self.paths.TRACKER_COPIES_DIR.mkdir(parents=True, exist_ok=True)
+        stale = self.paths.TRACKER_COPIES_DIR / "stakeholder.yaml"
+        stale.write_text("category: stakeholder\ncount: 0\nrows: []\n", encoding="utf-8")
+        importlib.import_module("sync").export_tracker_copies(self.paths.load_schema())
+        self.assertFalse(stale.exists())
+        self.assertTrue((self.paths.TRACKER_COPIES_DIR / "person.yaml").exists())
+
+    def test_accepted_rows_autosave_only_valid_edits(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        accepted = self.store.accept(card["proposal_id"], card["revision"], "accepted-edit")
+        schema = self.paths.load_schema()
+        self.store.update_accepted("risk", accepted["tracker_id"], {"Description": "Test data may arrive two weeks late."})
+        row = self.trackers.read_rows("risk", schema)[0]
+        self.assertEqual(row["Description"], "Test data may arrive two weeks late.")
+        for bad in ({"Status": "finished"}, {"Name": ""}, {"Relationships": "caused_by: RSK-001"}):
+            with self.subTest(fields=bad), self.assertRaises(self.store.ValidationFailure):
+                self.store.update_accepted("risk", accepted["tracker_id"], bad)
+        self.assertEqual(self.trackers.read_rows("risk", schema)[0]["Name"], "Late test data")
+
+    def test_rejected_items_are_listed_and_can_return_to_pending(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        self.store.reject(card["proposal_id"], card["revision"], "Duplicate")
+        rejected = self.store.list_rejected()
+        self.assertEqual(len(rejected), 1)
+        self.assertEqual(rejected[0]["fields"]["Name"], "Late test data")
+        self.assertEqual(rejected[0]["review_note"], "Duplicate")
+        self.assertEqual(self.store.list_cards()["progress"]["rejected"], 1)
+
+        restored = self.store.restore_rejected(rejected[0]["rejected_id"])
+        pending = self.store.list_cards()
+        self.assertEqual([item["proposal_id"] for item in pending["cards"]], [restored["proposal_id"]])
+        self.assertEqual(pending["cards"][0]["fields"]["Description"], "Test data may arrive late.")
+        self.assertEqual(self.store.list_rejected(), [])
+        self.assertEqual(pending["progress"]["rejected"], 0)
+        with self.assertRaises(self.store.NotFound):
+            self.store.restore_rejected(rejected[0]["rejected_id"])
+
+    def test_rejected_accepted_row_remembers_its_tracker_id(self):
+        self.proposal([self.risk()])
+        card = self.store.list_cards()["cards"][0]
+        accepted = self.store.accept(card["proposal_id"], card["revision"], "accept-then-reject")
+        self.store.reject_accepted("risk", accepted["tracker_id"], "No longer relevant")
+        rejected = self.store.list_rejected()
+        self.assertEqual(rejected[0]["previous_tracker_id"], accepted["tracker_id"])
+        self.assertNotIn("Risk ID", rejected[0]["fields"])
+        restored = self.store.restore_rejected(rejected[0]["rejected_id"])
+        self.assertEqual(self.store.list_cards()["cards"][0]["proposal_id"], restored["proposal_id"])
+
     def test_autosave_conflict_and_audit(self):
         self.proposal([self.risk()])
         card = next(card for card in self.store.list_cards()["cards"]

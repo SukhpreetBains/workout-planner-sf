@@ -31,6 +31,8 @@
 #     are managed by apply_updates.py ("Source Refs" comes from the update
 #     file).
 #   - A column's optional `label` replaces its name in the review inbox.
+#   - A tracker's `retired_tabs` belonged to categories this schema no longer
+#     has. init_trackers removes them only while they hold no rows.
 
 schema_version: "2.0"
 list_delimiter: "; "
@@ -285,6 +287,7 @@ trackers:
   stakeholders:
     file: workspace/trackers/stakeholders.xlsx
     tabs: [person, role, organization, feedback]
+    retired_tabs: [Stakeholders]
   current-state:
     file: workspace/trackers/current-state.xlsx
     tabs: [system, data_asset, capability, business_process, pain_point]
@@ -298,6 +301,7 @@ trackers:
     file: workspace/trackers/delivery.xlsx
     tabs: [phase, workstream, milestone, deliverable, session, action_item,
            change_request, governance_rule, working_agreement]
+    retired_tabs: [Operating Model, Delivery Plan, Workflow Stages]
 
 # Category order is the order the review inbox shows within each group.
 categories:
@@ -969,8 +973,10 @@ categories:
       Authority or commitment is visible: who decided, decisive language
       ("selected", "agreed", "approved the approach"). Link the decision maker
       with decided_by. Options still under discussion are open questions;
-      recommendations are proposals. Put rationale and options considered in
-      the Description.
+      recommendations are proposals. Judge the statement's own wording, not
+      the section it sits under: an item under a "Decisions" heading that says
+      "recommended", "suggested", or "should" is a proposal. Put rationale and
+      options considered in the Description.
     lookalikes:
       - proposal — a suggested choice not yet made.
       - open_question — a choice still to be made.
@@ -980,6 +986,7 @@ categories:
       - '"The sponsor selected a queue for invoice events." → decision decided_by Sponsor.'
       - '"We still need to decide whether to migrate closed cases." → open_question, not a decision.'
       - '"I recommend using a queue for invoice events." → proposal, not a decision.'
+      - '"Key decisions: conservative identity-resolution mapping is recommended." → proposal; the heading does not make it a decision.'
     columns:
       - *name
       - *signal_description
@@ -1028,8 +1035,9 @@ categories:
       not yet been chosen or adopted.
     bar_to_clear: >-
       Someone advocates an approach ("recommend", "suggest", "propose", "we
-      should"). Link the proposer with raised_by. A suggestion that revises an
-      agreed baseline is a change request. When a proposal is adopted, keep it
+      should"). This holds even when the source lists it under a "Decisions"
+      or "Agreements" heading. Link the proposer with raised_by. A suggestion
+      that revises an agreed baseline is a change request. When a proposal is adopted, keep it
       (Status accepted) and record the resulting choice as a separate
       decision.
     lookalikes:
@@ -1042,6 +1050,7 @@ categories:
       - '"John suggested moving the demo to Friday." (no agreed schedule) → proposal raised_by John.'
       - '"We should post standup notes by noon." → proposal.'
       - '"I suggest negotiating an early-payment discount." → proposal.'
+      - '"Amanda suggested documenting stream choices in Jira templates; no one was assigned." under a Key Decisions heading → proposal raised_by Amanda.'
       - '"The client says the screen is confusing and suggests grouping the fields." → feedback plus a proposal.'
     columns:
       - *name

@@ -80,6 +80,9 @@ def export_tracker_copies(schema: dict) -> int:
             encoding="utf-8",
         )
         total += len(rows)
+    for stale in TRACKER_COPIES_DIR.glob("*.yaml"):
+        if stale.stem not in schema["categories"]:
+            stale.unlink()
     return total
 
 

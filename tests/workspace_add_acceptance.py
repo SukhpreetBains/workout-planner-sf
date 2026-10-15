@@ -105,11 +105,18 @@ def main() -> None:
     assert "removes the relationship if it is rejected" in flat
     assert "Store each relationship once, on its source record" in flat
     assert "appearing in the same document is not one" in flat
+    assert "Every relationship must be visible in the item's own evidence" in flat
+    assert "add that sentence as another evidence entry" in flat
+    assert "A wrong relationship is worse than a missing one" in flat
 
     assert "classifies with the schema's definitions, not by keyword" in flat
     assert "apply the lookalike distinction the schema states" in flat
     assert "leave the rest empty for the reviewer" in flat
     assert "A finding whose category cannot be decided from the source is not proposed" in flat
+    assert "A section heading is context, never the category" in flat
+    assert "**Within a document**" in text
+    assert "Propose it once, in the category whose definition fits best" in flat
+    assert "never leave scripts or other working files in `workspace/`" in flat
 
     assert "must not move files" in flat
     assert "write to trackers" in flat

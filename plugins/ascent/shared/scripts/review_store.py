@@ -44,6 +44,7 @@ from trackers import (
 from validate_updates import validate
 
 USER_SUBMITTED_SOURCE = "User Submitted"
+RESTORED_DECISION = "restored_to_pending"
 
 
 class ReviewError(RuntimeError):
@@ -225,6 +226,8 @@ def archived_counts(directory: Path, excluded_tracker_ids: set[tuple[str, str]] 
         try:
             document = load_yaml(path)
         except (OSError, ReviewError, yaml.YAMLError):
+            continue
+        if document.get("review_decision") == RESTORED_DECISION:
             continue
         for update in document["updates"]:
             category = str(update.get("category", ""))
@@ -769,6 +772,112 @@ def move_accepted_to_pending(category: str, tracker_id: str) -> dict:
                 tracker_path.write_bytes(backup)
             raise
         append_history("return-to-pending", update, {"tracker_id": tracker_id})
+        return {"proposal_id": proposal_id, "category": category, "decision": "pending"}
+
+
+def update_accepted(category: str, tracker_id: str, fields: object) -> dict:
+    """Autosave edits to an accepted tracker row after validating them."""
+    schema = load_schema()
+    if category not in schema["categories"]:
+        raise ReviewError("unknown tracker category")
+    if not isinstance(fields, dict):
+        raise ReviewError("fields must be an object")
+    columns = {column["name"]: column for column in schema["categories"][category]["columns"]
+               if not column.get("computed")}
+    fields = {name: value for name, value in fields.items() if name in columns}
+    with review_lock():
+        update = {"category": category, "action": "update", "id": tracker_id, "fields": fields}
+        problems = validate({"source_refs": [USER_SUBMITTED_SOURCE], "updates": [update]},
+                            schema, pending_link_ids())
+        problems += [f"'{name}' is required" for name, column in columns.items()
+                     if column.get("required") and name in fields and not str(fields[name]).strip()]
+        if problems:
+            raise ValidationFailure(problems)
+        upsert_row(category, {**update["fields"], id_column(category, schema): tracker_id}, schema)
+        return {"category": category, "tracker_id": tracker_id, "validation": []}
+
+
+def rejected_archives() -> list[tuple[Path, dict]]:
+    archives = []
+    if not REJECTED_UPDATES_DIR.exists():
+        return archives
+    for path in sorted(REJECTED_UPDATES_DIR.glob("*.y*ml")):
+        try:
+            document = load_yaml(path)
+        except (OSError, ReviewError, yaml.YAMLError):
+            continue
+        if document.get("review_decision") != RESTORED_DECISION and document["updates"]:
+            archives.append((path, document))
+    return archives
+
+
+def list_rejected() -> list[dict]:
+    """Rejected proposals and rejected accepted rows that can be restored."""
+    schema = load_schema()
+    items = []
+    for path, document in rejected_archives():
+        update = document["updates"][0]
+        category = str(update.get("category", ""))
+        if category not in schema["categories"]:
+            continue
+        fields = proposal_fields_from_row(category, update.get("fields") or {}, schema)
+        items.append({
+            "rejected_id": path.stem,
+            "category": category,
+            "category_label": category_label(category, schema),
+            "title": display_label(category, fields, schema),
+            "fields": fields,
+            "field_schema": schema["categories"][category].get("columns", []),
+            "source_refs": update.get("source_refs") or document.get("source_refs") or [],
+            "evidence": update.get("evidence") or [],
+            "review_note": document.get("review_note", ""),
+            "reviewed_at": document.get("reviewed_at", ""),
+            "previous_tracker_id": document.get("tracker_id", "")
+            if document.get("review_decision") == "rejected_after_acceptance" else "",
+        })
+    return items
+
+
+def restore_rejected(rejected_id: str) -> dict:
+    """Return a rejected item to the pending inbox, keeping its archive as history."""
+    schema = load_schema()
+    if not rejected_id or Path(rejected_id).name != rejected_id:
+        raise ReviewError("invalid rejected item")
+    with review_lock():
+        path = next((candidate for candidate, _document in rejected_archives()
+                     if candidate.stem == rejected_id), None)
+        if path is None:
+            raise NotFound(f"rejected item {rejected_id} was not found")
+        document = load_yaml(path)
+        update = document["updates"][0]
+        category = str(update.get("category", ""))
+        if category not in schema["categories"]:
+            raise ReviewError("unknown tracker category")
+        source_refs = update.get("source_refs") or document.get("source_refs") or []
+        proposal_id = str(uuid.uuid4())
+        restored = {
+            "proposal_id": proposal_id,
+            "revision": 1,
+            "category": category,
+            "action": "add",
+            "fields": proposal_fields_from_row(category, update.get("fields") or {}, schema),
+            "source_refs": source_refs,
+            "evidence": update.get("evidence") or [{"source_ref": ref, "excerpt": ""} for ref in source_refs],
+            "review": {"state": "pending"},
+        }
+        target_id = str(update.get("id") or "")
+        identifier = id_column(category, schema)
+        if update.get("action") == "update" and any(row.get(identifier) == target_id
+                                                      for row in read_rows(category, schema)):
+            restored["action"] = "update"
+            restored["id"] = target_id
+        atomic_yaml(PROPOSED_UPDATES_DIR / f"restored-{category}-{proposal_id}.yaml",
+                    {"source_refs": source_refs, "updates": [restored]})
+        document["review_decision"] = RESTORED_DECISION
+        document["restored_proposal_id"] = proposal_id
+        document["restored_at"] = now_iso()
+        atomic_yaml(path, document)
+        append_history("restore-rejected", restored, {"rejected_id": rejected_id})
         return {"proposal_id": proposal_id, "category": category, "decision": "pending"}
 
 

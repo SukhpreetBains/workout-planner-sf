@@ -115,12 +115,22 @@ server commands. If scoped access is denied or unavailable, explain the actual
 block and continue the review in chat. If startup exits for another reason,
 inspect the current log error before choosing a fallback.
 
-Each card is one proposal item, even when its source YAML contains several
-updates. Edits autosave to pending YAML. Accept writes that one item to Excel,
-syncs derived copies and the search index, and only then removes it from the
-pending inbox. Reject archives the item without touching a tracker. Flag keeps
-the item pending and adds the clarification note to
-`workspace/.system/ai-review-queue.yaml`.
+The inbox is one view of every item with a read-only review state: pending,
+accepted, or rejected. It opens on pending items; the review-state filter
+shows accepted, rejected, flagged, or all items. Each pending card is one
+proposal item, even when its source YAML contains several updates.
+
+- Pending edits autosave to pending YAML. Accept writes that one item to
+  Excel, syncs derived copies and the search index, and marks it accepted.
+  Reject archives it in `workspace/.system/rejected-updates/` without
+  touching a tracker and marks it rejected.
+- Accepted items stay editable and autosave straight to their tracker row
+  after validation. Move to pending takes the row out of the tracker for
+  re-review; Reject removes it from the tracker and marks it rejected.
+- Rejected items are read-only. Move to pending restores one for editing;
+  Accept restores and accepts it in one step. The archive keeps the history.
+- Flag keeps the item pending and adds the clarification note to
+  `workspace/.system/ai-review-queue.yaml`.
 
 An active agent can wait for flags with:
 
