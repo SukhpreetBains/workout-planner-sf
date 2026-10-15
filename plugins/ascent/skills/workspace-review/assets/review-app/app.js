@@ -37,6 +37,9 @@ let pendingSaveRecord = null;
 let filterTimer = null;
 let scope = null;
 let filtersExpanded = false;
+let categoriesOpen = false;
+const collapsedGroups = new Set();
+const showEmptyGroups = new Set();
 
 const label = value => String(value || "").replaceAll("_", " ").replace(/\b\w/g, c => c.toUpperCase());
 const categoryLabel = id => categories.find(category => category.id === id)?.label || label(id);
@@ -789,28 +792,64 @@ function reviewActions(record) {
 
 // ---------------------------------------------------------------- layout
 
+// Sidebar of categories grouped as entities and signals, with empty ones folded away.
 function categoryNavigation(visible) {
-  const container = el("div", { class: "category-groups" });
+  const counts = Object.fromEntries(categories.map(category => [category.id, 0]));
+  visible.forEach(record => { counts[record.category] = (counts[record.category] || 0) + 1; });
+  const activeGroup = groups.find(group => group.id === categories.find(category => category.id === activeCategory)?.group);
+  const nav = el("nav", { class: `category-nav${categoriesOpen ? " is-open" : ""}`, "aria-label": "Categories" });
+  const toggle = el("button", { class: "category-nav-toggle", type: "button", "aria-expanded": String(categoriesOpen),
+    onclick: () => { categoriesOpen = !categoriesOpen; renderCategory(); } }, [
+    el("span", {}, `${activeGroup ? `${activeGroup.label} › ` : ""}${categoryLabel(activeCategory)}`),
+    el("span", { class: "category-nav-toggle-hint" }, categoriesOpen ? "Hide categories ▴" : "Change category ▾"),
+  ]);
+  const body = el("div", { class: "category-nav-body" });
   groups.forEach(group => {
-    const nav = el("nav", { class: "category-tabs", "aria-label": `${group.label} categories` });
-    categories.filter(category => category.group === group.id).forEach(category => {
-      const count = visible.filter(record => record.category === category.id).length;
-      nav.append(el("div", { class: `category-tab category-${category.id}` }, [
-        el("button", { class: "quiet category-selector", type: "button", title: category.definition,
-          "aria-current": category.id === activeCategory ? "true" : "false",
-          "aria-label": `${category.label}, ${count} shown`,
-          onclick: () => openFlow(category.id),
-        }, [
-          el("span", { class: "category-tab-label" }, category.label),
-          el("span", { class: "category-tab-meta" }, String(count)),
-        ]),
-        el("button", { class: "quiet category-tab-create", type: "button", title: `Create ${category.label} proposal`,
-          "aria-label": `Create ${category.label} proposal`, onclick: () => createManualProposal(category.id) }, "+"),
-      ]));
-    });
-    container.append(el("section", { class: "category-group" }, [el("h2", { class: "eyebrow category-group-label" }, group.label), nav]));
+    const inGroup = categories.filter(category => category.group === group.id);
+    const collapsed = collapsedGroups.has(group.id);
+    const showEmpty = showEmptyGroups.has(group.id);
+    const shown = inGroup.filter(category => showEmpty || counts[category.id] || category.id === activeCategory);
+    const emptyCount = inGroup.filter(category => !counts[category.id]).length;
+    const total = inGroup.reduce((sum, category) => sum + counts[category.id], 0);
+    const listId = `category-nav-${group.id}`;
+    const heading = el("button", { class: "category-nav-heading", type: "button", "aria-expanded": String(!collapsed),
+      "aria-controls": listId, title: group.definition, onclick: () => {
+        if (collapsed) collapsedGroups.delete(group.id); else collapsedGroups.add(group.id);
+        renderCategory();
+      } }, [
+      el("span", { class: "category-nav-chevron", "aria-hidden": "true" }, collapsed ? "▸" : "▾"),
+      el("span", {}, group.label),
+      el("span", { class: "category-nav-count", "aria-label": `${total} shown` }, String(total)),
+    ]);
+    const list = el("ul", { class: "category-nav-list", id: listId, hidden: collapsed ? "" : undefined });
+    shown.forEach(category => list.append(el("li", {}, el("button", {
+      class: "category-nav-item", type: "button", title: category.definition,
+      "aria-current": category.id === activeCategory ? "true" : undefined,
+      onclick: () => { categoriesOpen = false; openFlow(category.id); },
+    }, [
+      el("span", { class: "category-nav-label" }, category.label),
+      el("span", { class: "category-nav-count", "aria-label": `${counts[category.id]} shown` }, String(counts[category.id])),
+    ]))));
+    const hiddenCount = inGroup.length - shown.length;
+    if (hiddenCount || (showEmpty && emptyCount)) {
+      list.append(el("li", {}, el("button", { class: "category-nav-more", type: "button", onclick: () => {
+        if (showEmpty) showEmptyGroups.delete(group.id); else showEmptyGroups.add(group.id);
+        renderCategory();
+      } }, showEmpty ? "Hide empty" : `+ ${hiddenCount} empty`)));
+    }
+    body.append(el("section", { class: "category-nav-group" }, [heading, list]));
   });
-  return container;
+  nav.append(toggle, body);
+  return nav;
+}
+
+function listHeader(count) {
+  const name = categoryLabel(activeCategory);
+  return el("div", { class: "proposal-list-header" }, [
+    el("h2", { class: "proposal-list-heading" }, [name, el("span", { class: "category-nav-count" }, String(count))]),
+    el("button", { class: "quiet proposal-list-new", type: "button", title: `Create a ${name} proposal`,
+      "aria-label": `Create a ${name} proposal`, onclick: () => createManualProposal(activeCategory) }, "+ New"),
+  ]);
 }
 
 function quickDefinitions(record) {
@@ -981,16 +1020,17 @@ function renderCategory(options = {}) {
   setHeaderCount(visible.length);
   headerControls.replaceChildren(triageControls());
   flow.replaceChildren(categoryNavigation(visible));
-  const list = el("aside", { class: "proposal-list", "aria-label": `${categoryLabel(activeCategory)} items` });
+  const list = el("aside", { class: "proposal-list", "aria-label": `${categoryLabel(activeCategory)} items` }, [listHeader(inCategory.length)]);
   inCategory.forEach(item => list.append(renderProposalListItem(item, item === record)));
-  const review = el("div", { class: `category-review${record ? "" : " empty-category-review"}` });
+  if (!inCategory.length) list.append(el("p", { class: "proposal-list-empty" }, "No items match."));
+  const review = el("div", { class: "category-review" });
   if (record) review.append(expandedCardContent(record));
   else review.append(el("section", { class: "state-panel empty-category-state" }, [
     el("p", { class: "eyebrow" }, `${categoryLabel(activeCategory)} results`),
     el("h2", {}, `No ${categoryLabel(activeCategory).toLowerCase()} items match.`),
     el("p", {}, emptyStateMessage()),
   ]));
-  flow.append(el("div", { class: "review-layout" }, record ? [list, review] : [review]));
+  flow.append(el("div", { class: "review-layout" }, [list, review]));
   if (options.focusSearch) {
     const search = headerControls.querySelector(".triage-search");
     search?.focus();
