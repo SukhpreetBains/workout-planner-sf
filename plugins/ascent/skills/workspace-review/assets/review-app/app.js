@@ -188,7 +188,13 @@ function knownRecords() {
   return records.filter(record => record.state !== "rejected").map(record => ({
     id: linkId(record), key: record.key, title: recordTitle(record), category: record.category,
     category_label: record.category_label, state: reviewStates[record.state], fields: record.fields || {},
+    pendingUpdate: record.state === "pending" && record.action === "update",
   }));
+}
+
+// A pending update to an existing row is offered as that row, so a rejected update cannot drop the link.
+function linkableRecords() {
+  return knownRecords().filter(record => !record.pendingUpdate);
 }
 
 // ---------------------------------------------------------------- filters
@@ -340,7 +346,7 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
   });
   const render = () => {
     const query = search.value.trim().toLowerCase();
-    const matching = knownRecords().filter(record => record.id && !excluded.includes(record.id))
+    const matching = linkableRecords().filter(record => record.id && !excluded.includes(record.id))
       .filter(record => selected.has(record.id) || !query
         || `${record.title} ${record.category_label} ${record.state} ${Object.values(record.fields).join(" ")}`.toLowerCase().includes(query));
     list.replaceChildren();
