@@ -168,7 +168,6 @@ function recordSearchText(record) {
 
 function matchesReviewFilter(record) {
   if (reviewFilter === "all") return true;
-  if (reviewFilter === "flagged") return isFlagged(record);
   return record.state === reviewFilter;
 }
 
@@ -218,7 +217,6 @@ function triageControls() {
   const review = enumPicker("filter-review-state", "review-filter", [
     { value: "all", text: "All review states" }, { value: "pending", text: "Pending" },
     { value: "accepted", text: "Accepted" }, { value: "rejected", text: "Rejected" },
-    { value: "flagged", text: "Flagged" },
   ], reviewFilter, { ariaLabel: "Filter by review state", includeEmpty: false });
   review.input.addEventListener("input", () => { reviewFilter = review.input.value; flushSave(); scheduleFilterRender(); });
   const completeness = enumPicker("filter-completeness", "completeness-filter", [
@@ -298,13 +296,13 @@ function relationshipsValue(category, fields) {
   return definition ? fields?.[definition.name] : "";
 }
 
-function relationshipRow(meaningLabel, targetId, actions = []) {
+function relationshipRow(meaningLabel, targetId, actions = [], { incoming = false } = {}) {
   const record = knownRecords().find(item => item.id === targetId);
   const title = record
     ? el("button", { class: "relationship-link", type: "button", title: `Open ${record.title}`,
       onclick: () => navigateTo(record.key) }, record.title)
     : el("strong", {}, targetId);
-  return el("li", { class: "relationship-item" }, [
+  return el("li", { class: `relationship-item${incoming ? " is-incoming" : ""}` }, [
     el("span", { class: "relationship-meaning" }, meaningLabel),
     el("span", { class: "relationship-target" }, [
       title,
@@ -314,15 +312,19 @@ function relationshipRow(meaningLabel, targetId, actions = []) {
   ]);
 }
 
-function meaningSelect(value, emptyLabel, ariaLabel) {
-  const select = el("select", { class: "relationship-row-meaning", "aria-label": ariaLabel });
-  select.append(el("option", { value: "" }, emptyLabel));
-  relationshipTypes.forEach(type => {
-    const option = el("option", { value: type.id }, type.label);
-    option.selected = type.id === value;
-    select.append(option);
-  });
-  return select;
+function meaningOptions() {
+  return relationshipTypes.map(type => ({ value: type.id, text: type.label }));
+}
+
+// A small "i" button whose explanation shows on hover or keyboard focus.
+function infoTip(id, about, text) {
+  const tip = el("span", { class: "info-tip-text", role: "tooltip", id }, text);
+  const button = el("button", { class: "info-tip", type: "button", "aria-label": `About ${about}`, "aria-describedby": id }, "i");
+  return { node: el("span", { class: "info-tip-wrap" }, [button, tip]), setText: value => { tip.textContent = value; } };
+}
+
+function labelWithTip(forId, text, tip) {
+  return el("div", { class: "field-label-row" }, [el("label", { for: forId }, text), tip.node]);
 }
 
 // Add mode lets the reviewer tick several records; edit mode changes one relationship.
@@ -330,13 +332,15 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
   const editing = Boolean(existing);
   const selected = new Map(editing ? [[existing.target, ""]] : []);
   const modal = el("div", { class: "review-note-modal link-picker-modal", role: "dialog", "aria-modal": "true", "aria-labelledby": "relationship-picker-title" });
-  const meaning = enumPicker("relationship-meaning", "relationship-meaning",
-    relationshipTypes.map(type => ({ value: type.id, text: type.label })), existing?.meaning || "",
+  const meaning = enumPicker("relationship-meaning", "relationship-meaning", meaningOptions(), existing?.meaning || "",
     { ariaLabel: "Relationship meaning", emptyLabel: "Choose a relationship meaning" });
-  const hint = el("p", { class: "relationship-hint" }, relationshipType(existing?.meaning)?.definition
+  const meaningTip = infoTip("relationship-meaning-tip", "relationship meanings", relationshipType(existing?.meaning)?.definition
     || (editing ? "Choose what the relationship means and the record it points to."
       : "This meaning applies to every record you select, unless you choose a different meaning for a record."));
-  const search = el("input", { type: "search", placeholder: "Search records", "aria-label": "Search records to relate" });
+  const recordsTip = infoTip("relationship-records-tip", "choosing related records", editing
+    ? "Search narrows the list. Select one record."
+    : "Search narrows the list. Tick every record to relate; each one can take its own meaning.");
+  const search = el("input", { id: "relationship-search", type: "search", placeholder: "Search records", "aria-label": "Search records to relate" });
   const list = el("div", { class: "link-picker-list", role: editing ? "radiogroup" : "group", "aria-label": "Related records" });
   const problem = el("p", { class: "validation", role: "alert", hidden: "" });
   const submit = el("button", { class: "primary", type: "submit" }, editing ? "Save relationship" : "Add relationship");
@@ -345,7 +349,8 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
   };
   meaning.input.addEventListener("input", () => {
     problem.hidden = true;
-    hint.textContent = relationshipType(meaning.input.value)?.definition || hint.textContent;
+    const definition = relationshipType(meaning.input.value)?.definition;
+    if (definition) meaningTip.setText(definition);
   });
   const render = () => {
     const query = search.value.trim().toLowerCase();
@@ -372,9 +377,11 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
           item.classList.toggle("is-selected", choice.checked);
           item.querySelector(".link-picker-row-meaning")?.remove();
           if (!choice.checked || editing) return;
-          const rowMeaning = meaningSelect(selected.get(record.id), "Use the meaning above", `Meaning for ${record.title}`);
-          rowMeaning.addEventListener("change", () => { selected.set(record.id, rowMeaning.value); problem.hidden = true; });
-          item.append(el("div", { class: "link-picker-row-meaning" }, [el("small", {}, "Meaning for this record"), rowMeaning]));
+          const rowMeaning = enumPicker(`relationship-row-meaning-${record.id.replace(/[^a-z0-9]/gi, "-")}`, "relationship-row-meaning",
+            meaningOptions(), selected.get(record.id) || "",
+            { ariaLabel: `Meaning for ${record.title}`, emptyLabel: "Use the meaning above" });
+          rowMeaning.input.addEventListener("input", () => { selected.set(record.id, rowMeaning.input.value); problem.hidden = true; });
+          item.append(el("div", { class: "link-picker-row-meaning" }, [el("small", {}, "Meaning for this record"), rowMeaning.control]));
         };
         choice.addEventListener("change", () => {
           problem.hidden = true;
@@ -395,10 +402,8 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
   const form = el("form", {});
   form.append(el("p", { class: "eyebrow" }, "Relationship"),
     el("h2", { id: "relationship-picker-title" }, editing ? "Edit relationship" : "Add relationships"),
-    el("div", { class: "field" }, [el("label", { for: meaning.labelFor }, editing ? "Meaning" : "Meaning for all selected records"), meaning.control]), hint,
-    el("div", { class: "field" }, [el("label", {}, editing ? "Related record" : "Related records"), search]),
-    el("p", { class: "relationship-hint" }, editing ? "Search narrows the list. Select one record."
-      : "Search narrows the list. Tick every record to relate; each one can take its own meaning."),
+    el("div", { class: "field" }, [labelWithTip(meaning.labelFor, editing ? "Meaning" : "Meaning for all selected records", meaningTip), meaning.control]),
+    el("div", { class: "field" }, [labelWithTip("relationship-search", editing ? "Related record" : "Related records", recordsTip), search]),
     list, problem,
     el("div", { class: "modal-actions" }, [
       el("button", { class: "quiet", type: "button", onclick: () => closeModal(modal, trigger) }, "Cancel"),
@@ -462,7 +467,7 @@ function relationshipsSection(record, definition, onChange) {
     const pointing = ids.length ? knownRecords().flatMap(other => parseRelationships(relationshipsValue(other.category, other.fields))
       .filter(entry => ids.includes(entry.target)).map(entry => ({ other, meaning: entry.meaning }))) : [];
     incoming.replaceChildren(...(pointing.length ? pointing.map(({ other, meaning }) =>
-      relationshipRow(relationshipType(meaning)?.inverse_label || meaning, other.id))
+      relationshipRow(relationshipType(meaning)?.inverse_label || meaning, other.id, [], { incoming: true }))
       : [el("li", { class: "relationship-empty" }, "No other record points to this one yet.")]));
   };
   add.addEventListener("click", () => openRelationshipPicker({
@@ -878,7 +883,7 @@ function renderProposalListItem(record, selected) {
     onclick: () => { flushSave(); selectedKey = record.key; renderCategory(); } }, [
     el("span", { class: "proposal-title-copy" }, recordTitle(record)),
     el("span", { class: "proposal-list-meta" }, [
-      ...(reviewFilter === "all" || record.state !== "pending" ? [stateBadge(record)] : []),
+      ...(reviewFilter === "all" ? [stateBadge(record)] : []),
       ...(isFlagged(record) ? [el("span", { class: "proposal-badge flagged" }, "Flagged")] : []),
       ...(missing ? [el("span", { class: "proposal-badge needs-attention" }, `${missing} required`)] : []),
       el("span", {}, `${sources} ${sources === 1 ? "source" : "sources"}`),
@@ -1003,7 +1008,7 @@ function showModal(modal, initialFocus, trigger) {
 }
 
 function emptyStateMessage() {
-  const stateText = { all: "", pending: "pending ", accepted: "accepted ", rejected: "rejected ", flagged: "flagged " }[reviewFilter];
+  const stateText = { all: "", pending: "pending ", accepted: "accepted ", rejected: "rejected " }[reviewFilter];
   return records.some(record => record.category === activeCategory && matchesReviewFilter(record))
     ? "Adjust the search or filters to see more items."
     : `No ${stateText}items in this category.`;
