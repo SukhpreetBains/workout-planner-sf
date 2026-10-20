@@ -1,0 +1,86 @@
+{
+  "schema_version": "ascent.workspace-collect-fixture.v1",
+  "note": "Synthetic. The account, channel, meeting, people, and messages are invented for this eval.",
+  "sentinels": {
+    "passcode": "EVALPASSCODE123",
+    "message_text": "SENTINEL_MESSAGE_BODY_MUST_STAY_OUT_OF_STATE"
+  },
+  "source_context": {
+    "schema_version": 1,
+    "account": "Fictional Foods",
+    "project": "Pantry Modernization",
+    "last_verified": "2026-10-01",
+    "sharepoint_locations": [
+      {"id": "sp-engagement", "name": "Engagement folder", "locator": "https://fictional.sharepoint.com/sites/x", "collect": true}
+    ],
+    "messaging_platforms": [
+      {
+        "name": "Slack",
+        "connection_state": "usable",
+        "locations": [
+          {"id": "slack-pod", "name": "#pantry-pod", "locator": "slack://T0/C0POD", "identifiers": {"channel_id": "C0POD"},
+           "collect": true, "access": {"state": "available", "reason": "Synthetic."}},
+          {"id": "slack-decision-thread", "name": "Pricing decision thread", "locator": "slack://T0/C0POD/1790000000.000100",
+           "identifiers": {"channel_id": "C0POD", "thread_ts": "1790000000.000100"}, "location_type": "thread",
+           "collect": true, "access": {"state": "available", "reason": "Synthetic."}},
+          {"id": "slack-paused", "name": "#pantry-archive", "locator": "slack://T0/C0ARC", "collect": true, "enabled": false},
+          {"id": "slack-not-collected", "name": "#random", "locator": "slack://T0/C0RND"}
+        ]
+      },
+      {
+        "name": "Microsoft Teams",
+        "connection_state": "usable",
+        "locations": [
+          {"id": "teams-standup", "name": "Pantry Standup",
+           "locator": "https://teams.microsoft.com/meet/9990001?p=EVALPASSCODE123",
+           "identifiers": {"online_meeting_id": "MEET-EVAL-1"}, "location_type": "meeting_series",
+           "collect": true, "access": {"state": "available", "reason": "Synthetic."}}
+        ]
+      }
+    ],
+    "project_sources": []
+  },
+  "expected_plan": {
+    "sources": ["slack-pod", "slack-decision-thread", "teams-standup"],
+    "skipped": {"slack-paused": "disabled", "sp-engagement": "No collection contract"}
+  },
+  "start": "2026-10-19T14:00:00Z",
+  "slack_runs": [
+    {
+      "id": "first",
+      "documents": [{"entries": [
+        {"id": "1790000000.000100", "at": "2026-10-19T12:00:00Z", "author": "Avery Stone", "text": "Pricing options for review", "context": true},
+        {"id": "1792000000.000200", "at": "2026-10-19T14:30:00Z", "author": "Blake Rivers", "text": "Option B looks right SENTINEL_MESSAGE_BODY_MUST_STAY_OUT_OF_STATE", "parent": "1790000000.000100"},
+        {"id": "1792000000.000300", "at": "2026-10-19T15:00:00Z", "author": "Casey Lin", "text": "Kickoff moved to Thursday"},
+        {"id": "1791000000.000050", "at": "2026-10-19T13:00:00Z", "author": "Drew Park", "text": "Before the start point; must not be collected"}
+      ]}],
+      "expect": {"files": 1, "cursor": "2026-10-19T15:00:00.000000Z",
+                 "contains": ["Pricing options for review", "shown for context", "Reply from Blake Rivers", "Kickoff moved to Thursday"],
+                 "excludes": ["Before the start point"]}
+    },
+    {
+      "id": "repeat",
+      "same_as": "first",
+      "expect": {"files": 0, "cursor": "2026-10-19T15:00:00.000000Z", "outcome": "nothing_new"}
+    },
+    {
+      "id": "later",
+      "documents": [{"entries": [
+        {"id": "1792000000.000300", "at": "2026-10-19T15:00:00Z", "author": "Casey Lin", "text": "Kickoff moved to Thursday"},
+        {"id": "1792100000.000400", "at": "2026-10-20T09:15:00Z", "author": "Avery Stone", "text": "Agenda posted"}
+      ]}],
+      "expect": {"files": 1, "cursor": "2026-10-20T09:15:00.000000Z", "contains": ["Agenda posted"], "excludes": ["Kickoff moved to Thursday"]}
+    }
+  ],
+  "teams_run": {
+    "documents": [{
+      "key": "TRANSCRIPT-EVAL-1", "title": "Pantry Standup transcript", "format": "transcript",
+      "started_at": "2026-10-20T14:32:00.0040879Z", "cursor_at": "2026-10-20T14:32:00.0040879Z",
+      "entries": [
+        {"offset": "00:00:05.100", "author": "Avery Stone", "text": "Morning, everyone."},
+        {"offset": "00:01:10.000", "author": "Blake Rivers", "text": "Pricing is ready for sign-off."}
+      ]
+    }],
+    "expect": {"files": 1, "cursor": "2026-10-20T14:32:00.004087Z", "first_line_time": "10:32:05", "timezone": "America/New_York"}
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "ascent.skill-eval-plan.v1",
+  "skill_id": "workspace-collect",
+  "questions": {
+    "correctness": {"status": "measured", "how": "run_deterministic.py drives the shipped collection, source-record, and inbox-selector scripts over a synthetic Project, and proves grade_trajectory.py against synthetic Codex logs. grade_trajectory.py then grades real scheduled runs from Codex session logs for forbidden behavior.", "reported": ["outcome", "checks_total", "checks_passed", "failed_check_ids", "evaluated_task_count", "outcome_pass_rate", "graded_runs", "failed_runs", "violations"]},
+    "cost": {"status": "partial", "how": "grade_trajectory.py reports total, input, cached-input, and output tokens per graded scheduled run from the Codex log's token counts.", "reported": ["tokens_per_run"], "note": "Tokens only: no dollar pricing is applied, and no baseline arm exists to compare against."},
+    "time": {"status": "not-instrumented", "how": "unknown", "reported": ["harness_wall_clock_seconds"], "note": "Harness duration is runner performance, not a saving. No human baseline has been recorded."}
+  },
+  "arms": {
+    "with-skills": {"status": "implemented", "note": "The deterministic runner exercises the shipped scripts; the trajectory grader reads real runs of the shipped skill."},
+    "baseline-no-skills": {"status": "not-implemented", "note": "No unaided model has been asked to check sources and fill the inbox on a schedule."}
+  },
+  "runs_per_arm": 3,
+  "consistency": {"metric": "coefficient_of_variation(total_tokens)", "verdict": "unknown", "thresholds": {"predictable": "< 0.10", "variable": "0.10-0.30", "unpredictable": "> 0.30"}, "thresholds_status": "provisional", "note": "Token spread needs more graded scheduled runs of the same fixture-like workload; real runs differ in how much new material they find."},
+  "coverage": {"mode": "regression", "rationale": "Protect the collection guarantees and the scheduled-run behavior boundary established during the Codex spike and end-to-end test."},
+  "trials": {"count": 1, "reliability_metric": "outcome_pass_rate", "rationale": "Each run uses a fresh synthetic workspace; the scripts are deterministic."},
+  "graders": [
+    {"id": "collection-contract", "type": "code", "required": true, "rationale": "File and state checks directly grade source selection, cursor handling, de-duplication, safe writes, passcode stripping, and failure handling."},
+    {"id": "trajectory-contract", "type": "code", "required": true, "rationale": "Tool calls in the Codex session log directly show whether a scheduled run stayed inside its contract. The grader is proven on synthetic clean and violating logs before it is trusted on real ones."}
+  ],
+  "behavior_checks": {
+    "skills_invoked": {"status": "measured", "expected": ["workspace-collect"], "note": "grade_trajectory.py grades only scheduled turns whose prompt invokes $workspace-collect."},
+    "never_runs_workspace_add": {"status": "measured", "note": "Graded on scheduled turns only; a later turn where the user replies ingest is expected to run workspace-add."},
+    "never_uses_browser_or_search": {"status": "measured", "note": "Browser, desktop, and screen tools, Slack and Teams search, and connector tools absent from the contracts fail the run."},
+    "clarifying_questions": {"status": "not-observable", "required": ["Which sources to collect", "Weekly or daily, and when"], "note": "Setup conversations are not graded yet."}
+  },
+  "metrics": ["outcome", "checks_total", "checks_passed", "failed_check_ids", "evaluated_task_count", "outcome_pass_rate", "harness_wall_clock_seconds", "graded_runs", "failed_runs", "tokens_per_run"],
+  "gaps": [
+    {"id": "no-baseline-arm", "question": "cost", "statement": "The collection task has not been run with Ascent skills withheld.", "unblocked_by": "Schedule the same prompt on the same host and model without the plugin and grade its log."},
+    {"id": "no-dollar-pricing", "question": "cost", "statement": "Token counts are reported without a price.", "unblocked_by": "Apply the host model's published per-token prices, separating cached input."},
+    {"id": "no-human-baseline", "question": "time", "statement": "No one has recorded how long checking Slack and Teams and filling the inbox takes by hand.", "unblocked_by": "Time a person doing one week's check, or record a dated delivery-lead estimate."},
+    {"id": "no-automated-agent-arm", "question": "correctness", "statement": "The trajectory grader reads real runs; nothing launches model runs against fake connectors on demand.", "unblocked_by": "Add a headless host run against stub Slack and Teams servers and grade its log."},
+    {"id": "setup-conversation-not-graded", "question": "correctness", "statement": "Source selection and schedule questions in the setup conversation are not graded.", "unblocked_by": "Extend the trajectory grader to composer turns that create the schedule."}
+  ],
+  "aggregation": {"command": "python3 -m evals.lib.aggregate --suite workspace-collect", "status": "not-implemented", "note": "The runner prints its summary but does not yet write run records under results/runs."},
+  "taxonomy": {"eval_type": "regression", "interaction_scope": "multi-turn", "graded_surface": ["outcome", "trajectory"], "grader_types": ["code-based"], "scoring": "binary", "reliability_estimator": "repeated-whole-suite-runs", "execution_context": "local", "failure_mode_provenance": "observed-and-contract-enumeration", "reference_dependence": "reference-free", "note": "Several failure modes come from the 2026-10-19 Codex spike: Slack search, browser fallback on a failed connector, and an interactive stall."}
+}
