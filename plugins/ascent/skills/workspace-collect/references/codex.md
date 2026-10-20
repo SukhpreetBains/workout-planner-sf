@@ -15,7 +15,11 @@ Read this when workspace-collect runs in the Codex app.
 - Medium reasoning effort is enough for a collection run.
 - The task's ID is the `--task-id` for `COLLECT schedule`.
 - Tell the user that runs happen only while the Codex app is open and the
-  computer is awake.
+  computer is awake. Codex warns about this when the user quits. A run
+  missed while Codex was closed happens once, shortly after it reopens; the
+  cursors make that late run collect exactly what arrived since the last one.
+- Name the task without its frequency (for example "Ascent collection —
+  <Project>"). Codex keeps a task's ID when its schedule changes.
 
 ## Notifications
 

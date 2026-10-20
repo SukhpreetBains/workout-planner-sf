@@ -311,7 +311,8 @@ def write_document(source: dict, document: dict, entries: list[dict], zone: Any)
         body += render_transcript(entries, zone)
     else:
         body += render_messages(entries, zone)
-    stem = f"{covered_to.astimezone(zone).strftime('%Y-%m-%d')}-{location.get('id')}"
+    # Date and time keep names distinct from files already filed out of the inbox.
+    stem = f"{covered_to.astimezone(zone).strftime('%Y-%m-%d-%H%M')}-{location.get('id')}"
     target = unique_name(stem)
     INBOX.mkdir(parents=True, exist_ok=True)
     partial = INBOX / f".{target.name}.partial"

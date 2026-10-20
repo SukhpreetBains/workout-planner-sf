@@ -12,8 +12,9 @@ ingests: `workspace-add` runs only when the user asks for it.
 Locate `shared/` at the installed Ascent plugin root. Set
 `ASCENT_PROJECT_ROOT` to the Project folder for every engine command, then
 run scripts through `shared/scripts/py` or `shared/scripts/py.cmd`.
-`COLLECT` below means `PY <shared-skill-dir>/scripts/collect_inbox.py`, and
-`<contracts>` means this skill's `contracts/` folder.
+`COLLECT` below means `PY <plugin root>/shared/scripts/collect_inbox.py`; the
+script lives in the plugin's shared folder, not in this skill. `<contracts>`
+means this skill's `contracts/` folder.
 
 Before anything else, confirm the workspace is initialized:
 
