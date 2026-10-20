@@ -1,0 +1,62 @@
+# Collection contract for Slack. workspace-collect loads this file for every
+# collect source saved under the Slack platform in source-context.yaml.
+system: slack
+display_name: Slack
+
+location_types:
+  channel:
+    identifiers: [channel_id]
+    new_material: >-
+      Top-level messages posted after the cursor, plus replies posted after
+      the cursor in any thread of the channel.
+  thread:
+    identifiers: [channel_id, thread_ts]
+    new_material: Replies posted after the cursor in this one thread.
+
+# The only operations a collection run may use for this platform.
+operations:
+  read_channel:
+    tool: slack_read_channel
+    use: >-
+      Channel history. Pass channel_id, oldest set to the start of the read
+      window as epoch seconds, response_format detailed, and the largest
+      supported limit. Follow the tool's paging until the window is covered.
+  read_thread:
+    tool: slack_read_thread
+    use: >-
+      Replies in one thread. Pass channel_id, message_ts set to the thread's
+      parent ts, response_format detailed, and the largest supported limit.
+
+read:
+  channel: >-
+    Read channel history with oldest set to the cursor minus
+    thread_lookback_days. Messages after the cursor are new top-level
+    messages. For every message in that window that has replies, unless its
+    reply metadata shows no reply after the cursor, read the thread and keep
+    the replies after the cursor. Replies to a parent older than the window
+    are not seen; say so if the user asks why a reply was missed.
+  thread: >-
+    Read the thread named by thread_ts and keep the replies after the cursor.
+
+settings:
+  thread_lookback_days: 14
+
+document:
+  shape: >-
+    One document per source per run. Each Slack message is one entry: id is
+    the message ts, at is its time as ISO 8601 UTC, author is the display
+    name, text is the full message text with links kept. A reply's parent is
+    the thread parent's ts. When a new reply's parent is not new, include the
+    parent as an entry with context true so the reply reads in place.
+  title: "Slack {label}: new messages"
+
+preflight: >-
+  Read channel history (or the thread) with limit 1 and confirm the call
+  succeeds. Report only success or the error; do not show message text.
+
+setup: >-
+  Resolve a channel the way the ascent-initial-setup Slack reference does,
+  and save its channel_id. For a thread, take the user's message link:
+  .../archives/<channel_id>/p<digits> gives thread_ts by putting a dot
+  before the last six digits (p1790966800982549 -> 1790966800.982549).
+  Confirm the thread with read_thread limited to the parent message.

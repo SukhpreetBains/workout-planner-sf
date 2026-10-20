@@ -1,0 +1,45 @@
+# Collection contract for Microsoft Teams. workspace-collect loads this file
+# for every collect source saved under the Microsoft Teams platform in
+# source-context.yaml.
+system: microsoft-teams
+display_name: Microsoft Teams
+
+location_types:
+  meeting_series:
+    identifiers: [online_meeting_id]
+    new_material: Transcripts of the recurring meeting created after the cursor.
+
+# The only operations a collection run may use for this platform.
+operations:
+  list_transcripts:
+    tool: list_online_meeting_transcripts
+    use: >-
+      Pass online_meeting_id and the largest supported page size. Follow
+      page_token until every page is read.
+  read_transcript:
+    tool: get_online_meeting_transcript_content
+    use: Pass online_meeting_id and the transcript_id of one new transcript.
+
+read:
+  meeting_series: >-
+    List the transcripts and keep those whose created time is after the
+    cursor. Fetch the content of each one, oldest first.
+
+document:
+  shape: >-
+    One document per transcript. key is the transcript ID. started_at and
+    cursor_at are both the transcript's created time. Each caption cue is one
+    entry: offset is the cue's start offset (HH:MM:SS.fff), author is the
+    speaker's name, text is the spoken text. format is transcript.
+  title: "{label} transcript"
+
+preflight: >-
+  List the transcripts with the smallest page size and confirm the call
+  succeeds. Report only success or the error; do not fetch transcript content.
+
+setup: >-
+  Ask the user for the meeting's join link from the calendar invite. Resolve
+  it once with get_online_meeting (join_url) and save the returned online
+  meeting ID as the online_meeting_id identifier and the meeting subject as
+  the name. Save the join link without its query string as the locator; the
+  query string holds the meeting passcode and must never be stored.

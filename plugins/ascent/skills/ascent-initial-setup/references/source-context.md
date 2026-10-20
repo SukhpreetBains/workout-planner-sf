@@ -55,6 +55,8 @@ project_sources: []
 - Use `access.state` values `available`, `unavailable`, or `unknown`; keep the reason short and non-sensitive.
 - For SharePoint, retain the canonical URL plus every identifier exposed by the runtime: `hostname`, `site_path`, `drive_id`, `drive_name`, and `folder_path`. Omit unavailable identifiers rather than inventing them.
 - Optional retrieval fields are `authority`, `priority`, `query_hints`, `include`, `exclude`, `time_window`, `freshness_hours`, `sensitivity`, and `enabled`.
+- A messaging location is a `channel` by default. Set `location_type: thread` for one Slack thread (identifiers `channel_id` and `thread_ts`) or `location_type: meeting_series` for a recurring Teams meeting (identifier `online_meeting_id`). Never store a Teams join link's query string; it contains the meeting passcode.
+- Set `collect: true` only on locations the user chose for scheduled collection. `workspace-collect` reads no other location.
 - Keep candidates and excluded locations in the conversational report. Persist only confirmed locations or previously confirmed locations whose current scope is no longer verified.
 
 Use `scripts/manage-source-context.py` to initialize, validate, update, or export this record. The script accepts the original minimal messaging-only shape and preserves compatible fields while adding the extended SharePoint and retrieval metadata.
