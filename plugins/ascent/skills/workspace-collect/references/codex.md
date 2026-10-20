@@ -4,6 +4,9 @@ Read this when workspace-collect runs in the Codex app.
 
 ## Scheduling
 
+- A task can target only a folder Codex lists as a project. If the Project
+  folder is not one yet (for example, setup ran from another project's
+  chat), ask the user to open it in Codex first, then create the task.
 - Create and update the task with the Codex app's scheduled-task tool
   (`automation_update`). Use a standalone cron task, not a check-in attached
   to the current conversation, targeted at this Project and run locally.
