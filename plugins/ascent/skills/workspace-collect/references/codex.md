@@ -14,6 +14,8 @@ Read this when workspace-collect runs in the Codex app.
   writes inside the Project folder.
 - Medium reasoning effort is enough for a collection run.
 - The task's ID is the `--task-id` for `COLLECT schedule`.
+- Delete a task with the same tool, never by removing its folder under
+  `~/.codex/automations/`; Codex restores task folders from its own records.
 - Tell the user that runs happen only while the Codex app is open and the
   computer is awake. Codex warns about this when the user quits. A run
   missed while Codex was closed happens once, shortly after it reopens; the
@@ -36,6 +38,16 @@ Use one of these titles:
 - `Collection needs attention` when any source failed.
 - `No new material` when nothing was new and nothing failed.
 
+## Running a collection
+
+- Handle each source in one code-execution step: call its connector
+  operations, build the payload, run `COLLECT write --input -` (or a payload
+  file with `--delete-input`) through the shell tool, and return only the
+  counts and file names. Connector results then stay out of the
+  conversation, which keeps every later step small.
+- Codex asks each task to keep a `memory.md`. One short line at the end of
+  the run is enough; do not read it back for collection decisions.
+
 ## Known behaviors
 
 - A connector that needs reconnecting can pause a scheduled run until the
@@ -44,5 +56,5 @@ Use one of these titles:
 - Never fall back to the in-app browser or desktop tools when a connector
   fails. They need sign-in and screen-recording permission, and they reach
   beyond the saved scope.
-- Codex gives each task a `memory.md`. Do not rely on it; collection state
-  lives in `workspace/.system/collection-state.yaml`.
+- Collection state lives in `workspace/.system/collection-state.yaml`, not
+  in the task's `memory.md`.

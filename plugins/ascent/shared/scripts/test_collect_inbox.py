@@ -118,6 +118,30 @@ class CollectInboxTest(unittest.TestCase):
         self.assertNotIn("slack-uncollected", skipped)
         self.assertEqual(plan["needs_start"], ["slack-pod", "teams-standup"])
 
+    def test_plan_carries_contract_instructions_and_payload_format(self):
+        real_contracts = SCRIPTS.parents[1] / "skills" / "workspace-collect" / "contracts"
+        plan = self.collect("plan", "--contracts-dir", str(real_contracts))
+        by_id = {s["id"]: s for s in plan["sources"]}
+        slack = by_id["slack-pod"]["instructions"]
+        self.assertEqual(slack["operations"]["read_channel"]["tool"], "slack_read_channel")
+        self.assertIn("thread_lookback_days", slack["read"])
+        self.assertEqual(slack["settings"]["thread_lookback_days"], 14)
+        teams = by_id["teams-standup"]["instructions"]
+        self.assertIn("transcript", teams["new_material"].lower())
+        self.assertIn("cursor_at", plan["payload_format"])
+
+    def test_write_reads_stdin_and_deletes_input_file(self):
+        self.set_cursor("slack-pod", "2026-10-19T14:00:00Z")
+        piped = subprocess.run(
+            [sys.executable, str(SCRIPT), "write", "--input", "-"], input=json.dumps(self.slack_payload()),
+            capture_output=True, text=True, check=True, env={**os.environ, "ASCENT_PROJECT_ROOT": str(self.root)}, cwd=self.root)
+        self.assertEqual(len(json.loads(piped.stdout)["files"]), 1)
+        self.set_cursor("slack-pod", "2026-10-19T14:00:00Z")
+        path = self.system / ".collect-slack-pod.json"
+        path.write_text(json.dumps(self.slack_payload()), encoding="utf-8")
+        self.collect("write", "--input", str(path), "--delete-input")
+        self.assertFalse(path.exists())
+
     def test_plan_since_starts_only_missing_cursors(self):
         self.set_cursor("slack-pod", "2026-10-19T14:00:00Z")
         plan = self.collect("plan", "--contracts-dir", str(self.contracts), "--since", "2026-10-01T00:00:00-04:00")

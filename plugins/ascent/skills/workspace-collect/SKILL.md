@@ -42,12 +42,12 @@ message to the user once, in plain words, and carry on.
 - Never run `workspace-add`, never move, rename, or delete inbox files, and
   never write trackers.
 - Keep message and transcript text out of `workspace/.system/` except the
-  temporary payload file, which `write` consumes and you delete. Never store
-  credentials or meeting passcodes.
+  temporary payload file, which `write --delete-input` consumes and removes.
+  Never store credentials or meeting passcodes.
 
 When the current host has its own notes in `references/` (Codex:
 [codex.md](references/codex.md)), read them before scheduling or ending a
-run.
+run. Read them together with this file, in one step.
 
 ## Choose what to do
 
@@ -125,18 +125,24 @@ again. To stop it, delete the host task and run `COLLECT unschedule`.
    point; set up the schedule again"`. Mention every `skipped` source and
    its reason in the final message.
 2. For each planned source, in order:
-   1. Load `<contracts>/<system>.yaml`. Use its `read` entry for the
-      source's `location_type`, its `operations`, and the source's `cursor`
-      (`cursor_epoch` is the same moment in epoch seconds).
-   2. Build the payload described in
-      [collection-payload.md](references/collection-payload.md) and save it
-      as `workspace/.system/.collect-<source id>.json`.
-   3. Run `COLLECT write --input workspace/.system/.collect-<source id>.json`,
-      then delete the payload file. `write` drops anything at or before the
-      cursor, writes each new file to the inbox safely, and advances the
-      cursor.
-   4. If reading failed, run `COLLECT fail --source-id <id> --reason
+   1. Follow its `instructions` from the plan: `read` says what to read for
+      this location, `operations` the only tools allowed, and `document`
+      how to shape the payload. Use the source's `cursor` (`cursor_epoch`
+      is the same moment in epoch seconds).
+   2. Build the payload in the plan's `payload_format` (full detail in
+      [collection-payload.md](references/collection-payload.md), needed only
+      when something is unclear) and run `COLLECT write --input -` with the
+      payload on standard input, or save it as
+      `workspace/.system/.collect-<source id>.json` and run `COLLECT write
+      --input <that file> --delete-input`. `write` drops anything at or
+      before the cursor, writes each new file to the inbox safely, advances
+      the cursor, and reports the files it wrote.
+   3. If reading failed, run `COLLECT fail --source-id <id> --reason
       "<short reason>"` instead.
+
+   When the host can run a tool call and a command in one step, handle each
+   source in one step: read, build the payload, run `write`, and keep only
+   its result.
 3. Finish with a short message:
    - Files written: "**N new files** from <sources> are in your review
      inbox. Nothing has been ingested." (Singular for one file.) List each file as a link, then say:
@@ -148,3 +154,13 @@ again. To stop it, delete the host task and run `COLLECT unschedule`.
    - Add the host's notification, per its reference.
 4. If the user replies to ingest, run `workspace-add` in this conversation.
    Any other reply leaves the files where they are.
+
+### Keep scheduled runs lean
+
+Every step re-sends the whole conversation, so each one counts.
+
+- This file, the host notes, and the plan output are all a run needs. Do
+  not open the contracts, look for files, or list folders: the paths here
+  are exact.
+- Do not reread or list inbox files after `write`; its output is the
+  record of what was collected.

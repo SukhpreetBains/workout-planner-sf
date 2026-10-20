@@ -4,10 +4,13 @@
 Every command prints JSON.
 
   plan        List the sources marked `collect: true` in source-context.yaml,
-              with each source's cursor. These are the only sources a
+              with each source's cursor and its contract's read instructions,
+              plus the payload format. These are the only sources a
               collection run may read. `--since` starts missing cursors.
-  write       Render collected items from a JSON file into new inbox files,
-              then advance that source's cursor. Never overwrites a file.
+  write       Render collected items from a JSON file (or `-` for stdin)
+              into new inbox files, then advance that source's cursor.
+              Never overwrites a file. `--delete-input` removes the payload
+              file once it is consumed.
   fail        Record that a source could not be read. Its cursor is unchanged.
   schedule    Record the host schedule and start missing cursors at now, so the
               first scheduled run collects only material that arrives later.
@@ -48,6 +51,17 @@ from paths import (  # noqa: E402
 SYSTEMS = {"slack": "Slack", "microsoft-teams": "Microsoft Teams"}
 LOCATION_TYPES = {"channel", "thread", "meeting_series"}
 SEEN_LIMIT = 500
+CONTRACT_KEYS = ("operations", "settings", "document")
+# Compact form of references/collection-payload.md in the workspace-collect
+# skill, printed by `plan` so a run needs no other file. Keep the two aligned.
+PAYLOAD_FORMAT = (
+    '{"source_id": "<id from plan>", "documents": [{"key": "<optional stable ID>", '
+    '"title": "<optional>", "format": "messages|transcript", "started_at": "<optional ISO base for offsets>", '
+    '"cursor_at": "<optional ISO; marks the whole document new>", "entries": [{"id": "<message id>", '
+    '"at": "<ISO with timezone>" or "offset": "HH:MM:SS.fff", "author": "<name>", "text": "<full text>", '
+    '"parent": "<optional thread parent id>", "context": false}]}]}. Without cursor_at, only entries after the '
+    'cursor are kept; context entries appear only as a kept reply\'s parent. Never summarize or trim text.'
+)
 
 
 # ---- time ----
@@ -209,11 +223,26 @@ def source_entry(source: dict, state: dict, contracts_dir: Path | None) -> dict:
         skipped = f"No collection contract exists for {system}."
     if skipped:
         entry["skipped"] = skipped
+    elif contract is not None and contract.exists():
+        entry["instructions"] = contract_instructions(contract, entry["location_type"])
     cursor = ((state.get("sources") or {}).get(source_id) or {}).get("cursor")
     entry["cursor"] = cursor
     if cursor:
         entry["cursor_epoch"] = f"{parse_time(cursor).timestamp():.6f}"
     return entry
+
+
+def contract_instructions(contract: Path, location_type: str) -> dict:
+    """The parts of a contract a run needs for one location type."""
+    terms = load_yaml(contract)
+    instructions = {key: terms[key] for key in CONTRACT_KEYS if key in terms}
+    read = terms.get("read")
+    if isinstance(read, dict) and location_type in read:
+        instructions["read"] = read[location_type]
+    types = terms.get("location_types")
+    if isinstance(types, dict) and isinstance(types.get(location_type), dict):
+        instructions["new_material"] = types[location_type].get("new_material")
+    return instructions
 
 
 def find_source(source_id: str) -> dict:
@@ -342,12 +371,16 @@ def command_plan(args: argparse.Namespace) -> dict:
         "skipped": [e for e in entries if "skipped" in e],
         "needs_start": [e["id"] for e in entries if "skipped" not in e and not e["cursor"]],
         "schedule": load_yaml(COLLECTION_FILE).get("schedule"),
+        "payload_format": PAYLOAD_FORMAT,
     }
 
 
 def command_write(args: argparse.Namespace) -> dict:
-    with open(args.input, encoding="utf-8") as handle:
-        payload = json.load(handle)
+    if args.input == "-":
+        payload = json.load(sys.stdin)
+    else:
+        with open(args.input, encoding="utf-8") as handle:
+            payload = json.load(handle)
     source_id = str(payload.get("source_id", ""))
     source = find_source(source_id)
     state = load_yaml(COLLECTION_STATE_FILE)
@@ -399,6 +432,8 @@ def command_write(args: argparse.Namespace) -> dict:
         "files": written,
     }
     write_yaml(COLLECTION_STATE_FILE, state)
+    if args.delete_input and args.input != "-":
+        Path(args.input).unlink(missing_ok=True)
     return {"source_id": source_id, "files": written, "cursor": current["cursor"]}
 
 
@@ -472,7 +507,8 @@ def build_parser() -> argparse.ArgumentParser:
     plan.add_argument("--since", help="ISO time to start any source that has no cursor yet")
     plan.set_defaults(func=command_plan)
     write = commands.add_parser("write")
-    write.add_argument("--input", required=True, help="JSON file of collected documents for one source")
+    write.add_argument("--input", required=True, help="JSON file of collected documents for one source, or - for stdin")
+    write.add_argument("--delete-input", action="store_true", help="Remove the input file after it is consumed")
     write.set_defaults(func=command_write)
     fail = commands.add_parser("fail")
     fail.add_argument("--source-id", required=True)
