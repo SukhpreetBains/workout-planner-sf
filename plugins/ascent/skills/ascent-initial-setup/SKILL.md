@@ -35,7 +35,8 @@ Explain a script's effect before running it. Obtain approval before package-mana
 8. Follow [messaging confirmation](references/messaging-confirmation.md) for relevant enterprise storage and messaging locations. Offer to save confirmed locations in the project communications record.
 9. Run the orchestrated workspace setup in [project workspace setup](references/project-workspace-setup.md). It initializes the runtime, trackers, identity, and search index.
 10. Ask whether an available industry flavor applies to this Project, per **Confirm industry flavor** below.
-11. Report readiness and end with the first-document action from [the authoritative readiness contract](references/setup-readiness.md). Hand document work to a fresh agent chat scoped to the Project.
+11. If step 8 saved at least one Slack or Microsoft Teams location, offer scheduled collection once, per **Offer scheduled collection** below.
+12. Report readiness and end with the first-document action from [the authoritative readiness contract](references/setup-readiness.md). Hand document work to a fresh agent chat scoped to the Project.
 
 ## Prepare the Project folder
 
@@ -148,6 +149,21 @@ in the answer is what tells `workspace-add`, `workspace-review`, and
 automatically. See
 [../../shared/industry/README.md](../../shared/industry/README.md) for the
 full contract.
+
+## Offer scheduled collection
+
+Ask once, in the same closed-question style as the storage and messaging
+questions above: **"Would you like Ascent to check your saved Slack and
+Teams sources for new material and put it in your review inbox?"**,
+offering **"Yes, weekly (recommended)"**, **"Yes, daily"**, and **"No"**.
+
+If yes, follow the **Choose sources** and **Schedule** sections of the
+installed `workspace-collect` skill in this conversation, carrying the
+chosen frequency. Its preflight confirms access only and shows no message
+text, so it stays within this setup's messaging rules. Collection fills
+the inbox later; it does not change the document boundary below.
+
+If no, do not ask again this session. The user can ask for it any time.
 
 ## Document boundary
 

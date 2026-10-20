@@ -28,6 +28,7 @@ EXPECTED_SKILLS = {
     "recursive-improvement",
     "utilities-ui-generation",
     "workspace-add",
+    "workspace-collect",
     "workspace-review",
     "workspace-summarize",
 }

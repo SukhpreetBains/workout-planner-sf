@@ -67,6 +67,11 @@ modification time first, filename breaking ties — and how many originals
 counts as a separate source. Work only on `selected`; everything else stays
 in the inbox until its own batch.
 
+On the first selection only, if `collected` is not empty, tell the user in
+one short sentence that those files were collected automatically by
+`workspace-collect` (name their sources) and are being ingested with the
+rest. Do not ask; carry on.
+
 Run Steps 2–4 for this batch, then run the selector again and repeat until
 `selected` comes back empty. Proceed to Step 5 once, after the last batch.
 If the selector returns a document that was already selected earlier in

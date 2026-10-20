@@ -13,6 +13,7 @@ SKILLS = (
     "ascent-initial-setup",
     "investigate-project",
     "workspace-add",
+    "workspace-collect",
     "workspace-review",
     "workspace-summarize",
 )

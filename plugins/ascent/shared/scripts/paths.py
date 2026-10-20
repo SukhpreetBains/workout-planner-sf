@@ -30,6 +30,12 @@ SEARCH_DB = SYSTEM_DIR / "search" / "index.sqlite"
 SYNC_STATE = SYSTEM_DIR / "sync-state.json"
 SOURCES_FILE = SYSTEM_DIR / "sources.yaml"
 PROJECT_FILE = SYSTEM_DIR / "project.yaml"
+SOURCE_CONTEXT_FILE = SYSTEM_DIR / "source-context.yaml"
+COLLECTION_FILE = SYSTEM_DIR / "collection.yaml"
+COLLECTION_STATE_FILE = SYSTEM_DIR / "collection-state.yaml"
+
+# Front-matter marker workspace-collect writes on every inbox file it creates
+COLLECTED_BY = "workspace-collect"
 
 SCHEMA_FILE = Path(__file__).resolve().parents[1] / "schema" / "trackers.yaml"
 

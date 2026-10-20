@@ -41,6 +41,7 @@ Run deterministic packages with their documented Python command, then aggregate 
 | ------- | --------------------- |
 | [`context-skills`](context-skills/README.md) | Correctness and reproducibility of the project-context scripts. No cost, no time, no baseline arm, and structurally none possible — eight named gaps, none closed |
 | [`ascent-initial-setup`](ascent-initial-setup/README.md) | Storage-decision coverage and fresh-workspace readiness, including the missing-identity negative case. No cost, time, baseline, or agent-behavior claims |
+| [`workspace-collect`](workspace-collect/README.md) | Collection-script correctness and reproducibility, plus trajectory grading of real scheduled Codex runs (never `workspace-add`, never a browser or search) with tokens per run. No baseline arm, pricing, or human time baseline |
 | [`inspect-poc`](inspect-poc/README.md) | An assessment of Inspect AI as an implementation option. Not adopted |
 
 The enforced requirements and the plain-language glossary are in [the evaluation contract](../plugins/ascent/skills/design-skill-evals/references/evaluation-contract.md).

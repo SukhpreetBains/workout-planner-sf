@@ -17,7 +17,7 @@
 ## Current implementation state
 
 The following skills are implemented: `ascent-initial-setup`, `investigate-project`,
-`workspace-add`, `workspace-review`,
+`workspace-collect`, `workspace-add`, `workspace-review`,
 `workspace-summarize`, `create-deliverables`, `update-deliverable-structure`, and
 `utilities-ui-generation`.
 

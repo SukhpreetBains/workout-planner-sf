@@ -17,6 +17,10 @@ KINDS = {"local", "slack", "teams", "sharepoint", "web", "other"}
 ACCESS_STATES = {"available", "unavailable", "unknown"}
 AUTHORITIES = {"canonical", "supporting", "historical"}
 SENSITIVITIES = {"public", "internal", "confidential", "restricted"}
+# Messaging location shapes. `channel` is the default; workspace-collect also
+# reads a single Slack thread or a recurring Teams meeting's transcripts.
+LOCATION_TYPES = {"channel", "thread", "meeting_series"}
+REQUIRED_IDENTIFIERS = {"thread": ("channel_id", "thread_ts"), "meeting_series": ("online_meeting_id",)}
 
 
 def slugify(value: str) -> str:
@@ -270,6 +274,8 @@ def normalize_location(kind: str, location: dict[str, Any], platform: str = "", 
         "freshness_hours": int(location.get("freshness_hours", 168)),
         "sensitivity": location.get("sensitivity", "internal"),
         "enabled": bool(location.get("enabled", True)),
+        "location_type": str(location.get("location_type", "channel")),
+        "collect": location.get("collect") is True,
         "access": access_from(location, connection_state),
         "last_confirmed_at": str(location.get("last_confirmed_at") or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")),
     }
@@ -321,7 +327,27 @@ def validate(record: dict[str, Any]) -> list[str]:
             errors.append(f"source {source_id} priority must be from 1 to 5")
         if source["sensitivity"] not in SENSITIVITIES:
             errors.append(f"source {source_id} has invalid sensitivity")
+        if source["location_type"] not in LOCATION_TYPES:
+            errors.append(f"source {source_id} has invalid location_type")
+        if source["location_type"] != "channel" and source["kind"] not in {"slack", "teams"}:
+            errors.append(f"source {source_id} location_type {source['location_type']} requires a messaging location")
+        if "teams.microsoft.com" in source["locator"] and "?" in source["locator"]:
+            errors.append(f"source {source_id} locator must not include a Teams query string or meeting passcode")
+    for location in messaging_locations(record):
+        location_type = str(location.get("location_type", "channel"))
+        identifiers = location.get("identifiers") if isinstance(location.get("identifiers"), dict) else {}
+        missing = [key for key in REQUIRED_IDENTIFIERS.get(location_type, ()) if not identifiers.get(key)]
+        if missing:
+            errors.append(f"source {location.get('id')} {location_type} needs identifiers: {', '.join(missing)}")
     return errors
+
+
+def messaging_locations(record: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        location
+        for platform in record.get("messaging_platforms", []) or [] if isinstance(platform, dict)
+        for location in platform.get("locations", []) or [] if isinstance(location, dict)
+    ]
 
 
 def parse_identifiers(values: list[str] | None) -> dict[str, str]:
@@ -337,7 +363,7 @@ def parse_identifiers(values: list[str] | None) -> dict[str, str]:
 
 
 def location_from_args(args: argparse.Namespace) -> dict[str, Any]:
-    return {
+    location = {
         "id": slugify(args.id),
         "name": args.name,
         "parent_name": args.parent_name,
@@ -358,6 +384,11 @@ def location_from_args(args: argparse.Namespace) -> dict[str, Any]:
         "access": {"state": args.access_state, "reason": args.access_reason},
         "last_confirmed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
     }
+    if args.location_type != "channel":
+        location["location_type"] = args.location_type
+    if args.collect:
+        location["collect"] = True
+    return location
 
 
 def upsert(items: list[dict[str, Any]], location: dict[str, Any]) -> None:
@@ -462,6 +493,8 @@ def build_parser() -> argparse.ArgumentParser:
     source.add_argument("--access-state", choices=sorted(ACCESS_STATES), default="available")
     source.add_argument("--access-reason", default="Location was confirmed for project context retrieval.")
     source.add_argument("--disabled", action="store_true")
+    source.add_argument("--location-type", choices=sorted(LOCATION_TYPES), default="channel")
+    source.add_argument("--collect", action="store_true", help="Check this location for new material in scheduled collection")
     source.add_argument("--platform-name")
     source.add_argument("--connection-state", choices=("usable", "authenticated—scope not verified", "not connected", "not yet supported"), default="usable")
     source.set_defaults(func=command_upsert)

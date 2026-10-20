@@ -16,6 +16,7 @@ Use workspace-add to ingest the documents I attached or placed in this project w
 
 ## Knowledge lifecycle
 
+0. **Collect new material (optional):** `workspace-collect` checks the saved Slack channels and threads and recurring Teams meetings marked for collection, weekly or daily, and places new material in `workspace/inbox/`. It tells the user what arrived and never ingests on its own.
 1. **Ingest documents:** `workspace-add` files new material, records its provenance, extracts evidence-backed findings, proposes tracker updates, and refreshes search. It does not change trackers.
 2. **Review proposed updates:** `workspace-review` lets a person approve, edit, or reject each proposal with its source evidence. It is the only workflow that writes approved changes into trackers.
 3. **Investigate or summarize governed evidence:** `investigate-project` maps confirmed knowledge locations or retrieves bounded, cited evidence for a specific task. `workspace-summarize` turns approved tracker knowledge and filed sources into evidence-grounded narratives without changing trackers.

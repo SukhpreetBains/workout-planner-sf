@@ -1,0 +1,54 @@
+{
+  "schema_version": "ascent.skill-eval-profile.v1",
+  "skill_id": "workspace-collect",
+  "purpose": "On a weekly or daily schedule, check only the saved Slack and Microsoft Teams sources marked for collection, place new material in workspace/inbox/, and tell the user, without ingesting it.",
+  "deliverable": {
+    "name": "Collected inbox files, collection state, and a notification",
+    "kind": "workspace",
+    "client_facing": false,
+    "path_or_form": "workspace/inbox/ files with collection front matter, workspace/.system/collection.yaml and collection-state.yaml",
+    "note": "The fixture is synthetic and contains no client data."
+  },
+  "human_baseline": {
+    "recorded": false,
+    "minutes": "unknown",
+    "source": "unknown",
+    "note": "The user has no current figure for the weekly time spent checking Slack and Teams and filling the inbox by hand. Record a timed manual check or a dated estimate before any time saving is reported."
+  },
+  "golden_reference": {"available": false, "reference_id": null, "owner": null, "note": "Graded against explicit state and trajectory contracts, not a human-written file."},
+  "expected_skill_invocations": ["workspace-collect"],
+  "expected_skill_invocations_note": "Observable in real scheduled runs through grade_trajectory.py.",
+  "required_clarifying_questions": ["Which saved sources to collect.", "Weekly or daily, and the day and time."],
+  "required_clarifying_questions_note": "Not graded yet; see the setup-conversation-not-graded gap.",
+  "interfaces": {
+    "inputs": ["workspace/.system/source-context.yaml locations marked collect: true", "Platform contracts in workspace-collect/contracts/", "Connector results normalized into the collection payload"],
+    "outputs": ["Inbox files with collected_by front matter", "Per-source cursors and last results", "Schedule record", "A final message and host notification"],
+    "tools": ["collect_inbox.py", "manage-source-context.py", "select_inbox_batch.py", "Slack and Teams read connectors", "The host scheduling tool"],
+    "environment": ["Fresh temporary workspace", "Temporary HOME", "Network blocked in subprocesses", "Real Codex session logs for trajectory grading"]
+  },
+  "success_conditions": [
+    "Only locations marked for collection, enabled, and covered by a contract are read.",
+    "Material at or before a source's cursor is never collected again; a transcript is never collected twice.",
+    "Inbox files appear complete or not at all, with collection front matter.",
+    "Meeting passcodes and message text never reach the source record or collection state.",
+    "A failed source keeps its cursor.",
+    "A scheduled run never runs workspace-add, uses a browser, or searches."
+  ],
+  "trajectory_requirements": [
+    "Use only contract operations for Slack and Teams.",
+    "Never run workspace-add, move inbox files, or write trackers in a scheduled turn.",
+    "Never change the schedule from inside a scheduled run."
+  ],
+  "known_failure_modes": [
+    "Broad Slack search instead of the saved channel",
+    "Falling back to the in-app browser when a connector fails, triggering a screen-recording prompt",
+    "A connector reconnect stalling an unattended run",
+    "Recollecting messages already collected",
+    "A half-written file picked up by workspace-add",
+    "A Teams join link's passcode saved to disk",
+    "Collected filenames colliding with files already filed"
+  ],
+  "failure_mode_provenance": "observed-and-contract-enumeration",
+  "failure_mode_provenance_note": "The first three were observed in the 2026-10-19 Codex spike and the last in the 2026-10-20 end-to-end test; the rest come from the skill's contract.",
+  "unknowns": ["Dollar cost per run", "Behavior on hosts other than Codex"]
+}

@@ -5,7 +5,9 @@ Prints JSON: up to three original sources, oldest modification time first
 with filename as the tie breaker. A Markdown file whose stem matches a
 convertible original (for example `Report.md` beside `Report.pdf`) is that
 original's converted copy: it is attached to the original and never counted
-as a separate source. Hidden files are ignored. Read-only.
+as a separate source. Hidden files are ignored. `collected` lists every
+inbox source that workspace-collect wrote, so workspace-add can mention them.
+Read-only.
 """
 
 from __future__ import annotations
@@ -16,7 +18,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from paths import INBOX, rel  # noqa: E402
+from collect_inbox import collected_marker  # noqa: E402
+from paths import INBOX, REPO_ROOT, rel  # noqa: E402
 from read_document import READERS  # noqa: E402
 
 BATCH_SIZE = 3
@@ -43,10 +46,16 @@ def inbox_sources(inbox: Path) -> list[dict]:
 def main() -> int:
     sources = inbox_sources(INBOX)
     selected = sources[:BATCH_SIZE]
+    collected = []
+    for item in sources:
+        front = collected_marker(REPO_ROOT / item["path"])
+        if front:
+            collected.append({"path": item["path"], "source": front.get("source")})
     print(json.dumps({
         "batch_size": BATCH_SIZE,
         "selected": selected,
         "remaining": len(sources) - len(selected),
+        "collected": collected,
     }, indent=2))
     return 0
 
