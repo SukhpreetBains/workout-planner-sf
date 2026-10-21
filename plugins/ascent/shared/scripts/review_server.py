@@ -282,6 +282,14 @@ class ReviewHandler(BaseHTTPRequestHandler):
         if path == "/api/sync-status":
             self.json(200, self.server.cache.status_json())
             return
+        if path == "/api/sync-preview":
+            if not self.require_token():
+                return
+            try:
+                self.json(200, self.server.cache.sync_preview())
+            except OSError as exc:
+                self.json(503, {"error": f"Could not compare local and cloud files: {exc}"})
+            return
         if path == "/api/inbox":
             self.json(200, review_store.list_cards())
             return
@@ -364,10 +372,18 @@ class ReviewHandler(BaseHTTPRequestHandler):
         self.json(404, {"error": "not found"})
 
     def do_POST(self) -> None:
-        with self.server.cache.work_lock:
+        path = self.parsed()[0]
+        if path == "/api/sync-overwrite-all":
             self._do_POST()
-            if getattr(self, "response_status", 500) < 300 and self.parsed()[0] not in ("/api/stop", "/api/sync-now"):
-                self.server.cache.mark_local_change()
+            return
+        with self.server.cache.work_lock:
+            from review_cache import file_stamps
+            before = file_stamps(self.server.cache.local_root) if path not in ("/api/stop", "/api/sync-now") else {}
+            self._do_POST()
+            if getattr(self, "response_status", 500) < 300 and path not in ("/api/stop", "/api/sync-now"):
+                after = file_stamps(self.server.cache.local_root)
+                changed = {name for name in set(before) | set(after) if before.get(name) != after.get(name)}
+                self.server.cache.mark_local_change(changed)
 
     def _do_POST(self) -> None:
         if not self.require_token():
@@ -379,6 +395,8 @@ class ReviewHandler(BaseHTTPRequestHandler):
         routes = {
             "/api/autosave": lambda body: review_store.autosave(
                 body.get("proposal_id", ""), body.get("revision"), body.get("fields")),
+            "/api/change-category": lambda body: review_store.change_category(
+                body.get("proposal_id", ""), body.get("revision"), str(body.get("category", ""))),
             "/api/accept": lambda body: review_store.accept(
                 body.get("proposal_id", ""), body.get("revision"),
                 self.headers.get("Idempotency-Key", "")),
@@ -400,6 +418,19 @@ class ReviewHandler(BaseHTTPRequestHandler):
         if path == "/api/sync-now":
             self.server.cache.request_sync()
             self.json(202, self.server.cache.status_json())
+            return
+        if path == "/api/sync-overwrite-all":
+            from review_cache import SyncConflictError
+            try:
+                body = self.body()
+                result = self.server.cache.overwrite_all(body.get("items"))
+                self.json(200, result)
+            except SyncConflictError as exc:
+                self.json(409, {"error": str(exc)})
+            except ValueError as exc:
+                self.json(400, {"error": str(exc)})
+            except OSError as exc:
+                self.json(503, {"error": f"Could not overwrite the cloud files: {exc}"})
             return
         if path == "/api/stop":
             self.json(200, {"stopping": True})

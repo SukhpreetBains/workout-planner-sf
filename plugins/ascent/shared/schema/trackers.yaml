@@ -66,8 +66,8 @@ ontology:
       Standalone progress and health snapshots are not tracked; revisit for
       the weekly status report.
     uncategorized: >-
-      The review inbox cannot move an item between categories. A finding that
-      cannot be classified is listed in the handoff instead of proposed.
+      A finding that cannot be classified is listed in the handoff instead of
+      proposed. Reviewers can correct the category of a proposed item.
   dropped_relationships:
     duplicates: Duplicates are merged into one proposal before review.
     supersedes: Records are updated in place, so there is no replaced record to point at.

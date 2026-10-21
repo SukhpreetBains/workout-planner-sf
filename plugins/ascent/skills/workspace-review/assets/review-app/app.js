@@ -914,12 +914,44 @@ function recordNotice(record) {
   return null;
 }
 
+function categoryControl(record) {
+  if (record.state !== "pending" || record.action !== "add") return null;
+  const select = el("select", { id: "tracker-type", "aria-label": "Tracker type" });
+  categories.forEach(category => select.append(el("option", {
+    value: category.id, selected: category.id === record.category ? "" : undefined,
+  }, category.label)));
+  select.addEventListener("change", async () => {
+    const category = select.value;
+    select.disabled = true;
+    try {
+      await ensureSaved(record);
+      await api("/api/change-category", { method: "POST", body: JSON.stringify({
+        proposal_id: record.proposal_id, revision: record.revision, category,
+      }) });
+      await refreshRecords();
+      activeCategory = category;
+      selectedKey = record.key;
+      renderCategory();
+      showToast(`Moved to ${categoryLabel(category)}. Review its fields before accepting.`);
+    } catch (error) {
+      select.value = record.category;
+      select.disabled = false;
+      showToast(error.message || "Could not change the tracker type.");
+    }
+  });
+  return el("div", { class: "tracker-type-control" }, [
+    el("label", { for: "tracker-type" }, "Tracker type"), select,
+  ]);
+}
+
 function expandedCardContent(record) {
   const content = el("section", { class: `expanded-card-content category-${record.category} state-${record.state}`, "aria-label": `${record.category_label} details` });
+  const trackerType = categoryControl(record);
   const stickyHeader = el("header", { class: "review-sticky-header" }, [
     el("div", { class: "review-heading" }, [
       el("p", { class: "eyebrow review-state-line" }, ["Review state ", stateBadge(record)]),
       el("h2", { title: recordTitle(record) }, recordTitle(record)),
+      ...(trackerType ? [trackerType] : []),
     ]),
     el("div", { class: "review-sticky-actions" }, [
       el("span", { class: "save-state", id: "save-state", role: "status" }, record.state === "rejected" ? "Read-only" : "All changes saved"),
@@ -1119,14 +1151,70 @@ async function loadInbox() {
 }
 
 const syncIndicator = el("span", { class: "sync-indicator", role: "status" }, "Working locally");
+const syncTime = value => value ? new Date(value).toLocaleString() : "Not present";
+
+function openSyncModal(preview, trigger) {
+  const modal = el("div", { class: "review-note-modal sync-modal", role: "dialog",
+    "aria-modal": "true", "aria-labelledby": "sync-modal-title" });
+  const close = el("button", { class: "quiet", type: "button",
+    onclick: () => closeModal(modal, trigger) }, "Close");
+  const list = el("div", { class: "sync-file-list" });
+  const intro = el("p", {}, "Review the local and cloud versions, then overwrite the cloud with every available local copy.");
+  const action = el("button", { type: "button" }, "Overwrite cloud with all local files");
+  let comparedItems = [];
+  const render = items => {
+    comparedItems = items;
+    list.replaceChildren();
+    action.disabled = !items.some(item => item.local.exists);
+    if (!items.length) {
+      list.append(el("p", { class: "sync-empty" }, "Local and cloud review files match."));
+      return;
+    }
+    items.forEach(item => {
+      const local = item.local;
+      const cloud = item.cloud;
+      const details = el("div", { class: "sync-versions" }, [
+        el("div", {}, [el("strong", {}, "Local"),
+          el("span", {}, syncTime(local.modified_at)),
+          el("span", {}, `By ${local.modified_by}`)]),
+        el("div", {}, [el("strong", {}, "Cloud"),
+          el("span", {}, syncTime(cloud.modified_at)),
+          el("span", {}, `By ${cloud.modified_by}`)]),
+      ]);
+      list.append(el("section", { class: "sync-file" }, [
+        el("h3", {}, item.path), details,
+        ...(!local.exists ? [el("p", { class: "sync-file-note" }, "No local copy to upload.")] : []),
+      ]));
+    });
+  };
+  action.addEventListener("click", async () => {
+    action.disabled = true;
+    try {
+      const result = await api("/api/sync-overwrite-all", { method: "POST",
+        body: JSON.stringify({ items: comparedItems }) });
+      showToast(`${result.updated.length} cloud file${result.updated.length === 1 ? "" : "s"} updated.`);
+      render((await api("/api/sync-preview")).items || []);
+      refreshSyncStatus();
+    } catch (error) {
+      showToast(error.message || "The cloud files were not updated.");
+      try { render((await api("/api/sync-preview")).items || []); }
+      catch { action.disabled = false; }
+    }
+  });
+  const form = el("form", {}, [el("h2", { id: "sync-modal-title" }, "Review sync"), intro, list,
+    el("div", { class: "modal-actions" }, close, action)]);
+  form.addEventListener("submit", event => event.preventDefault());
+  modal.append(form);
+  render(preview.items || []);
+  showModal(modal, close, trigger);
+}
+
 const syncButton = el("button", { class: "quiet sync-button", type: "button", onclick: async () => {
   syncButton.disabled = true;
   try {
-    await api("/api/sync-now", { method: "POST", body: "{}" });
-    syncIndicator.textContent = "Sync requested";
-    setTimeout(refreshSyncStatus, 1500);
+    openSyncModal(await api("/api/sync-preview"), syncButton);
   } catch (error) {
-    showToast(error.message || "Could not request sync.");
+    showToast(error.message || "Could not compare local and cloud files.");
   } finally {
     syncButton.disabled = false;
   }
