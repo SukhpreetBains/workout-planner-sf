@@ -14,7 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_ROOT = REPO_ROOT / "plugins" / "ascent"
 SKILLS_ROOT = PLUGIN_ROOT / "skills"
 PLUGIN_NAME = "ascent"
-PLUGIN_VERSION = "0.1.1"
+PLUGIN_VERSION = json.loads((PLUGIN_ROOT / "plugin.json").read_text())["version"].split("+", 1)[0]
 EXPECTED_SKILLS = {
     "analyze-org",
     "compose-deliverable",
@@ -188,6 +188,8 @@ def validate_marketplace_entry(path: Path, expected_name: str, expected_source: 
     entry = plugins[0]
     if entry.get("source") != expected_source:
         errors.append(f"{label}: plugin source must be {expected_source}")
+    if not check_codex_fields and entry.get("version") != PLUGIN_VERSION:
+        errors.append(f"{label}: plugin version must be {PLUGIN_VERSION}")
     if check_codex_fields:
         if entry.get("policy") != CODEX_POLICY:
             errors.append(f"{label}: Codex policy fields are invalid")

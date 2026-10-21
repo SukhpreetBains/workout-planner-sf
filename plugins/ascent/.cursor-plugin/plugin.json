@@ -1,14 +1,25 @@
 {
   "name": "ascent",
   "displayName": "Ascent",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Governed, evidence-backed skills for accelerated Discovery engagements and Project delivery.",
-  "author": {"name": "Slalom"},
+  "author": {
+    "name": "Slalom"
+  },
   "publisher": "Slalom",
   "homepage": "https://github.com/Slalom/ascent",
   "repository": "https://github.com/Slalom/ascent",
-  "keywords": ["discovery", "project", "delivery", "agent-skills"],
+  "keywords": [
+    "discovery",
+    "project",
+    "delivery",
+    "agent-skills"
+  ],
   "category": "productivity",
-  "tags": ["discovery", "delivery", "workspace"],
+  "tags": [
+    "discovery",
+    "delivery",
+    "workspace"
+  ],
   "skills": "./skills/"
 }

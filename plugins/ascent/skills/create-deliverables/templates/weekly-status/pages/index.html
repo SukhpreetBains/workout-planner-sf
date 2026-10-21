@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Weekly status</title>
+  <style>
+    @font-face{font-family:Slalom Sans;src:url('../assets/regular.woff2') format('woff2');font-weight:400;font-display:swap}
+    @font-face{font-family:Slalom Sans;src:url('../assets/bold.woff2') format('woff2');font-weight:700;font-display:swap}
+    :root{font-family:'Slalom Sans',Arial,sans-serif;color:#000000;background:#E6E6E6;font-synthesis:none;text-rendering:optimizeLegibility;--blue:#0c62fb;--dark-blue:#002faf;--line:#E6E6E6;--muted:#666666}
+    *{box-sizing:border-box}
+    body{margin:0;min-width:320px}
+    .shell{min-height:100vh;display:flex;flex-direction:column}
+    header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem clamp(1rem,4vw,3.5rem);background:white;border-bottom:1px solid var(--line)}
+    .brand{width:112px;height:auto;max-height:38px;object-fit:contain;object-position:left center}
+    .topline{font-size:.9rem;color:var(--muted);text-align:right}
+    .sample{display:none;margin:0;padding:.6rem 1rem;background:#E6E6E6;color:#002faf;text-align:center;font-weight:700}
+    .sample.visible{display:block}
+    main{width:min(100%,1120px);margin:0 auto;padding:clamp(1.25rem,4vw,3rem) clamp(1rem,4vw,3.5rem);flex:1}
+    .page{background:#fff;border:1px solid var(--line);border-radius:16px;padding:clamp(1.25rem,4vw,3rem);box-shadow:0 12px 36px rgba(18,39,76,.06);margin-bottom:1.25rem;min-width:0}
+    .page h1,.page h2{color:var(--dark-blue);margin:0 0 .65rem;line-height:1.08;letter-spacing:-.025em}
+    .page h1{font-size:clamp(2rem,5vw,3.5rem)}.page h2{font-size:clamp(1.65rem,4vw,2.4rem)}
+    .eyebrow{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--blue);margin:0 0 .8rem}
+    .lede{font-size:clamp(1.05rem,2.2vw,1.3rem);line-height:1.45;max-width:68ch;margin:.8rem 0 1.4rem;overflow-wrap:anywhere}
+    .meta{display:flex;flex-wrap:wrap;gap:.65rem;margin:1rem 0 1.6rem}
+    .pill{border-radius:999px;padding:.45rem .8rem;background:#E6E6E6;color:#002faf;font-weight:700;font-size:.9rem}
+    .pill.health{background:#E6E6E6;color:#002faf}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:1.4rem}
+    .card{border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;min-width:0;background:#fff}
+    .card h3{font-size:1.05rem;line-height:1.25;margin:0 0 .45rem;color:#002faf;overflow-wrap:anywhere}
+    .card p{line-height:1.45;margin:.35rem 0;overflow-wrap:anywhere;white-space:pre-wrap}
+    .label{color:var(--muted);font-size:.82rem;font-weight:700}
+    .source{border-top:1px solid #E6E6E6;padding-top:.55rem;margin-top:.75rem!important;color:var(--muted);font-size:.88rem}
+    .empty{color:var(--muted);font-style:italic}
+    .nav{display:none;align-items:center;justify-content:center;gap:1rem;padding:0 1rem 1.4rem}
+    body.enhanced .nav{display:flex}body.enhanced .page{display:none;margin:0}body.enhanced .page.active{display:block}
+    button{font:inherit;min-height:44px;border:1px solid #666666;border-radius:8px;padding:.55rem 1rem;background:white;color:var(--dark-blue);font-weight:700;cursor:pointer}
+    button:hover:not(:disabled){border-color:var(--blue);background:#E6E6E6}
+    button:focus-visible{outline:3px solid #002faf;outline-offset:3px}
+    button:disabled{opacity:.48;cursor:not-allowed}
+    #counter{min-width:6.5rem;text-align:center;color:var(--muted);font-variant-numeric:tabular-nums}
+    footer{text-align:center;color:var(--muted);font-size:.85rem;padding:0 1rem 1.2rem}
+    @media(max-width:640px){header{padding:.85rem 1rem}.brand{width:90px}.topline{font-size:.8rem}.grid{grid-template-columns:1fr}.page{border-radius:12px}.nav{gap:.55rem}.nav button{padding:.5rem .7rem}#counter{min-width:5.5rem}}
+    @media print{body{background:white}.shell{display:block}header{padding:0 0 1rem;border:0}.brand{width:100px}main{width:auto;padding:0}.page,body.enhanced .page,body.enhanced .page.active{display:block!important;box-shadow:none;border:0;border-radius:0;padding:1rem 0;break-after:page}.page:last-child{break-after:auto}.nav,footer{display:none!important}.sample.visible{border:1px solid #666666;background:white;color:#000}button{display:none}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <img class="brand" src="../assets/logo.svg" alt="Slalom">
+      <div class="topline">Weekly status <span id="header-project"></span></div>
+    </header>
+    <div id="sample-banner" class="sample" role="note">Sample content for illustration</div>
+    <main id="report" aria-label="Weekly status report">
+      <section class="page active" aria-labelledby="page-title-0">
+        <p class="eyebrow">Weekly status</p><h1 id="page-title-0" tabindex="-1">Project summary</h1>
+        <div class="meta"><span class="pill">Project: Not provided</span><span class="pill">Period: Not provided</span><span class="pill health">Health: Not provided</span></div>
+        <p class="lede">Not provided</p><div class="grid"><div class="card"><h3>Accomplishments</h3><p class="empty">Not provided</p></div><div class="card"><h3>Next steps</h3><p class="empty">Not provided</p></div></div>
+      </section>
+      <section class="page" aria-labelledby="page-title-1"><p class="eyebrow">Delivery progress</p><h2 id="page-title-1" tabindex="-1">Accomplishments and next steps</h2><div class="grid"><div class="card"><h3>Accomplishments</h3><p class="empty">Not provided</p></div><div class="card"><h3>Next steps</h3><p class="empty">Not provided</p></div></div></section>
+      <section class="page" aria-labelledby="page-title-2"><p class="eyebrow">Plan</p><h2 id="page-title-2" tabindex="-1">Milestones</h2><div class="grid"><div class="card"><p class="empty">Not provided</p></div></div></section>
+      <section class="page" aria-labelledby="page-title-3"><p class="eyebrow">Watch items</p><h2 id="page-title-3" tabindex="-1">Risks</h2><div class="grid"><div class="card"><p class="empty">Not provided</p></div></div></section>
+      <section class="page" aria-labelledby="page-title-4"><p class="eyebrow">For resolution</p><h2 id="page-title-4" tabindex="-1">Decisions</h2><div class="grid"><div class="card"><p class="empty">Not provided</p></div></div></section>
+    </main>
+    <nav class="nav" aria-label="Report pages">
+      <button id="previous" type="button" aria-label="Previous page">Previous</button><span id="counter" aria-live="polite">1 of 5</span><button id="next" type="button" aria-label="Next page">Next</button>
+    </nav>
+    <footer>Use the arrow keys to move between pages.</footer>
+  </div>
+  <script src="../report.js"></script>
+  <script>
+    (() => {
+      'use strict';
+      const data = window.weeklyStatus && typeof window.weeklyStatus === 'object' ? window.weeklyStatus : {};
+      const text = value => value === undefined || value === null || String(value).trim() === '' ? 'Not provided' : String(value);
+      const node = (tag, content, className) => { const el = document.createElement(tag); if (className) el.className = className; el.textContent = text(content); return el; };
+      const optionalLine = (label, value) => { const p = document.createElement('p'); p.append(node('span', label + ': ', 'label'), document.createTextNode(text(value))); return p; };
+      const addSource = (card, source) => { const p = node('p', 'Source: ' + text(source), 'source'); card.append(p); };
+      const list = value => Array.isArray(value) ? value : [];
+      const entry = item => item && typeof item === 'object' ? item : {text:item};
+      const card = (title, content, fields, source) => {
+        const el = document.createElement('article'); el.className = 'card'; el.append(node('h3', title));
+        if (content !== undefined) el.append(node('p', content));
+        (fields || []).forEach(([label, value]) => el.append(optionalLine(label, value)));
+        addSource(el, source); return el;
+      };
+      const sectionGrid = index => document.querySelectorAll('.page')[index].querySelector('.grid');
+      const appendList = (grid, items, title, fields) => {
+        grid.replaceChildren();
+        if (!items.length) { grid.append(card(title, 'Not provided')); return; }
+        items.forEach(raw => { const item = entry(raw); grid.append(card(item.name || item.text || title, undefined, fields(item), item.source)); });
+      };
+
+      const pages = [...document.querySelectorAll('.page')];
+      const summary = pages[0];
+      document.title = text(data.project) === 'Not provided' ? 'Weekly status' : text(data.project) + ' | Weekly status';
+      document.querySelector('#header-project').textContent = text(data.project);
+      document.querySelector('#sample-banner').classList.toggle('visible', data.sample === true);
+      summary.querySelector('.meta').replaceChildren(
+        node('span', 'Project: ' + text(data.project), 'pill'),
+        node('span', 'Period: ' + text(data.period), 'pill'),
+        node('span', 'Health: ' + text(data.health), 'pill health')
+      );
+      summary.querySelector('.lede').textContent = text(data.summary);
+      const sumGrid = sectionGrid(0); sumGrid.replaceChildren();
+      const accomplishments = list(data.accomplishments), nextSteps = list(data.nextSteps);
+      const addSummary = (title, items, fields) => {
+        const wrapper = document.createElement('div'); wrapper.className = 'card'; wrapper.append(node('h3', title));
+        if (!items.length) wrapper.append(node('p', 'Not provided', 'empty'));
+        else items.slice(0, 2).forEach(raw => { const item=entry(raw); wrapper.append(node('p', item.text), optionalLine(fields[0][0], item[fields[0][1]])); });
+        sumGrid.append(wrapper);
+      };
+      addSummary('Accomplishments', accomplishments, [['Source','source']]);
+      addSummary('Next steps', nextSteps, [['Owner','owner']]);
+      const progress = sectionGrid(1); progress.replaceChildren();
+      const progressCol = document.createElement('div'); progressCol.className='card'; progressCol.append(node('h3','Accomplishments'));
+      if (!accomplishments.length) progressCol.append(node('p','Not provided','empty'));
+      else accomplishments.forEach(item => progressCol.append(card('Accomplishment',entry(item).text,[],entry(item).source)));
+      const nextCol = document.createElement('div'); nextCol.className='card'; nextCol.append(node('h3','Next steps'));
+      if (!nextSteps.length) nextCol.append(node('p','Not provided','empty'));
+      else nextSteps.forEach(raw => {const item=entry(raw);nextCol.append(card(item.text,undefined,[['Owner',item.owner],['Due',item.due]],item.source));});
+      progress.append(progressCol,nextCol);
+      appendList(sectionGrid(2), list(data.milestones), 'Milestone', item => [['Date',item.date],['Status',item.status]]);
+      appendList(sectionGrid(3), list(data.risks), 'Risk', item => [['Impact',item.impact],['Owner',item.owner],['Action',item.action]]);
+      appendList(sectionGrid(4), list(data.decisions), 'Decision', item => [['Owner',item.owner],['Due',item.due]]);
+
+      document.body.classList.add('enhanced');
+      let current = 0;
+      const previous = document.querySelector('#previous'), next = document.querySelector('#next'), counter = document.querySelector('#counter');
+      function show(index, moveFocus = true) {
+        current = Math.max(0, Math.min(pages.length - 1, index));
+        pages.forEach((page, i) => { page.classList.toggle('active', i === current); page.setAttribute('aria-hidden', i === current ? 'false' : 'true'); });
+        previous.disabled = current === 0; next.disabled = current === pages.length - 1;
+        counter.textContent = (current + 1) + ' of ' + pages.length;
+        if (moveFocus) pages[current].querySelector('h1,h2').focus();
+        window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+      }
+      previous.addEventListener('click', () => show(current - 1)); next.addEventListener('click', () => show(current + 1));
+      document.addEventListener('keydown', event => {
+        if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+        const target = event.target;
+        if (target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(target.tagName))) return;
+        if (event.key === 'ArrowLeft') { event.preventDefault(); show(current - 1); }
+        if (event.key === 'ArrowRight') { event.preventDefault(); show(current + 1); }
+      });
+      show(0, false);
+    })();
+  </script>
+</body>
+</html>

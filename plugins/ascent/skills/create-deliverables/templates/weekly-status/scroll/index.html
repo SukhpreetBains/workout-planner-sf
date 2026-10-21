@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Weekly status</title>
+  <style>
+    @font-face { font-family: "Slalom Sans"; src: url("../assets/regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+    @font-face { font-family: "Slalom Sans"; src: url("../assets/bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+    :root { font-family: "Slalom Sans", Arial, sans-serif; color: #000000; background: #FFFFFF; font-synthesis: none; --blue: #0C62FB; --dark-blue: #002FAF; --muted: #666666; --line: #E6E6E6; }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.5; }
+    .page { max-width: 920px; margin: 0 auto; padding: 34px 28px 56px; }
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-bottom: 22px; border-bottom: 3px solid var(--blue); }
+    .brand { display: block; width: 108px; height: auto; }
+    .sample { margin: 0; color: var(--dark-blue); font-size: .82rem; font-weight: 700; }
+    header { padding: 28px 0 24px; }
+    h1 { margin: 0; color: var(--dark-blue); font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.08; letter-spacing: -.025em; }
+    .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; color: var(--muted); }
+    .meta p { margin: 0; }
+    .health { display: inline-flex; align-items: center; min-height: 28px; padding: 3px 10px; border: 1px solid var(--dark-blue); border-radius: 3px; color: var(--dark-blue); font-size: .9rem; font-weight: 700; }
+    .summary { padding: 18px 20px; border-left: 4px solid var(--blue); background: #fff; }
+    .summary h2 { margin: 0 0 6px; color: var(--dark-blue); font-size: 1.12rem; }
+    .summary p { margin: 0; }
+    main { display: grid; gap: 26px; margin-top: 30px; }
+    section { min-width: 0; }
+    h2.section-title { margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); color: var(--dark-blue); font-size: 1.32rem; }
+    .records { display: grid; gap: 10px; }
+    .record { padding: 14px 16px; border: 1px solid var(--line); background: #fff; }
+    .record h3 { margin: 0 0 5px; font-size: 1.02rem; line-height: 1.35; }
+    .record p { margin: 5px 0 0; }
+    .detail-label { font-weight: 700; }
+    .source { margin-top: 10px !important; color: var(--muted); font-size: .88rem; }
+    .empty { margin: 0; padding: 14px 16px; border: 1px solid var(--line); color: var(--muted); background: #fff; }
+    @media (max-width: 560px) { .page { padding: 22px 16px 36px; } .topline { padding-bottom: 16px; } .brand { width: 92px; } header { padding-top: 22px; } .record { padding: 12px; } }
+    @media print {
+      :root { background: #fff; }
+      body { background: #fff; font-size: 10.5pt; }
+      .page { max-width: none; padding: 0; }
+      .topline { padding-bottom: 12px; }
+      header { padding: 18px 0; }
+      main { gap: 18px; }
+      section, .record, .summary { break-inside: avoid; }
+      .record, .summary, .empty { background: #fff; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topline">
+      <img class="brand" src="../assets/logo.svg" alt="Slalom">
+      <p class="sample" id="sample-label" hidden>Sample</p>
+    </div>
+    <header>
+      <h1 id="project">Weekly status</h1>
+      <div class="meta">
+        <p id="period"></p>
+        <span class="health" id="health"></span>
+      </div>
+    </header>
+    <section class="summary" aria-labelledby="summary-heading">
+      <h2 id="summary-heading">Summary</h2>
+      <p id="summary"></p>
+    </section>
+    <main>
+      <section aria-labelledby="accomplishments-heading"><h2 class="section-title" id="accomplishments-heading">Accomplishments</h2><div class="records" id="accomplishments"></div></section>
+      <section aria-labelledby="next-steps-heading"><h2 class="section-title" id="next-steps-heading">Next steps</h2><div class="records" id="nextSteps"></div></section>
+      <section aria-labelledby="milestones-heading"><h2 class="section-title" id="milestones-heading">Milestones</h2><div class="records" id="milestones"></div></section>
+      <section aria-labelledby="risks-heading"><h2 class="section-title" id="risks-heading">Risks</h2><div class="records" id="risks"></div></section>
+      <section aria-labelledby="decisions-heading"><h2 class="section-title" id="decisions-heading">Decisions</h2><div class="records" id="decisions"></div></section>
+    </main>
+  </div>
+  <script src="../report.js"></script>
+  <script>
+    (() => {
+      const data = window.weeklyStatus && typeof window.weeklyStatus === "object" ? window.weeklyStatus : {};
+      const value = (input) => input === undefined || input === null || String(input).trim() === "" ? "Not provided" : String(input);
+      const setText = (id, input) => { document.getElementById(id).textContent = value(input); };
+      const addDetail = (card, label, input) => {
+        const row = document.createElement("p");
+        const name = document.createElement("span");
+        name.className = "detail-label";
+        name.textContent = label + ": ";
+        row.append(name, document.createTextNode(value(input)));
+        card.append(row);
+      };
+      const addSource = (card, input) => {
+        const source = document.createElement("p");
+        source.className = "source";
+        source.textContent = "Source: " + value(input);
+        card.append(source);
+      };
+      const renderList = (id, items, fields, titleField) => {
+        const container = document.getElementById(id);
+        const list = Array.isArray(items) ? items : [];
+        if (list.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = "Not provided";
+          container.append(empty);
+          return;
+        }
+        list.forEach((item) => {
+          const record = item && typeof item === "object" ? item : {};
+          const card = document.createElement("article");
+          card.className = "record";
+          const heading = document.createElement("h3");
+          heading.textContent = value(record[titleField]);
+          card.append(heading);
+          fields.forEach(([label, key]) => addDetail(card, label, record[key]));
+          addSource(card, record.source);
+          container.append(card);
+        });
+      };
+      document.title = value(data.project) + " | Weekly status";
+      setText("project", data.project);
+      setText("period", data.period);
+      setText("health", data.health);
+      setText("summary", data.summary);
+      document.getElementById("sample-label").hidden = data.sample !== true;
+      renderList("accomplishments", data.accomplishments, [], "text");
+      renderList("nextSteps", data.nextSteps, [["Owner", "owner"], ["Due", "due"]], "text");
+      renderList("milestones", data.milestones, [["Date", "date"], ["Status", "status"]], "name");
+      renderList("risks", data.risks, [["Impact", "impact"], ["Owner", "owner"], ["Action", "action"]], "text");
+      renderList("decisions", data.decisions, [["Owner", "owner"], ["Due", "due"]], "text");
+    })();
+  </script>
+</body>
+</html>
