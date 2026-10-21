@@ -13,10 +13,11 @@ import shutil
 import tempfile
 import threading
 import time
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
 from xml.etree import ElementTree
 from datetime import datetime, timezone
 from pathlib import Path
+from pathlib import PurePosixPath
 
 SYNC_INTERVAL = 300
 SKIP = {
@@ -88,6 +89,8 @@ def atomic_copy(source: Path, destination: Path) -> None:
             shutil.copyfileobj(input_file, output)
             output.flush()
             os.fsync(output.fileno())
+        source_stat = source.stat()
+        os.utime(temporary, ns=(source_stat.st_atime_ns, source_stat.st_mtime_ns))
         os.replace(temporary, destination)
     finally:
         if os.path.exists(temporary):
@@ -96,6 +99,35 @@ def atomic_copy(source: Path, destination: Path) -> None:
 
 def now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+class SyncConflictError(RuntimeError):
+    """A file changed after the reviewer opened the sync comparison."""
+
+
+def version(path: Path) -> dict:
+    if not path.is_file():
+        return {"exists": False, "fingerprint": None, "modified_at": None,
+                "modified_ns": None, "modified_by": "Unknown"}
+    stat = path.stat()
+    modified_by = "Unknown"
+    if path.suffix.lower() == ".xlsx":
+        try:
+            with ZipFile(path) as workbook:
+                core = ElementTree.fromstring(workbook.read("docProps/core.xml"))
+                modified_by = next((element.text.strip() for element in core.iter()
+                                    if element.tag.endswith("}lastModifiedBy") and element.text
+                                    and element.text.strip()), "Unknown")
+        except (BadZipFile, KeyError, OSError, ElementTree.ParseError):
+            pass
+    return {"exists": True, "fingerprint": digest(path),
+            "modified_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
+            "modified_ns": stat.st_mtime_ns, "modified_by": modified_by}
+
+
+def safe_review_path(relative: str) -> bool:
+    parts = PurePosixPath(relative).parts
+    return bool(parts) and "." not in parts and ".." not in parts and review_owned(relative)
 
 
 def same_workbook_content(left: Path, right: Path) -> bool:
@@ -124,6 +156,7 @@ class ReviewCache:
         self.manifest_path = self.directory / "manifest.json"
         self.lock = threading.RLock()
         self.work_lock = threading.RLock()
+        self.sync_lock = threading.Lock()
         self.wake = threading.Event()
         self.stop_event = threading.Event()
         self.baseline: dict[str, str] = {}
@@ -182,6 +215,70 @@ class ReviewCache:
     def request_sync(self) -> None:
         self.wake.set()
 
+    def sync_preview(self) -> dict:
+        """Compare differing review files without publishing either version."""
+        remote = snapshot(self.project_root)
+        with self.work_lock:
+            local = snapshot(self.local_root)
+            baseline = dict(self.baseline)
+        items = []
+        for relative in sorted(set(remote) | set(local)):
+            if not safe_review_path(relative) or local.get(relative) == remote.get(relative):
+                continue
+            local_path, cloud_path = self.local_root / relative, self.project_root / relative
+            if (relative.endswith(".xlsx") and local_path.is_file() and cloud_path.is_file()
+                    and same_workbook_content(local_path, cloud_path)):
+                continue
+            local_version, cloud_version = version(local_path), version(cloud_path)
+            items.append({"path": relative, "local": local_version, "cloud": cloud_version,
+                          "local_changed": local.get(relative) != baseline.get(relative),
+                          "cloud_changed": remote.get(relative) != baseline.get(relative)})
+        return {"items": items}
+
+    def overwrite_cloud(self, relative: str, local_expected: dict, cloud_expected: dict) -> dict:
+        """Publish one chosen local version after rechecking both files."""
+        if not safe_review_path(relative):
+            raise ValueError("invalid review file path")
+        if not isinstance(local_expected, dict) or not isinstance(cloud_expected, dict):
+            raise ValueError("both file versions are required")
+        local_path, cloud_path = self.local_root / relative, self.project_root / relative
+        for root, path in ((self.local_root, local_path), (self.project_root, cloud_path)):
+            try:
+                path.resolve().relative_to(root.resolve())
+            except ValueError as exc:
+                raise ValueError("review file path leaves the workspace") from exc
+            if path.is_symlink():
+                raise ValueError("review file path cannot be a link")
+        with self.sync_lock:
+            with self.work_lock:
+                current_local = version(local_path)
+                if not current_local["exists"]:
+                    raise ValueError("the local file is no longer available")
+                if any(current_local[key] != local_expected.get(key)
+                       for key in ("fingerprint", "modified_ns")):
+                    raise SyncConflictError("The local file changed. Reopen Sync now to compare again.")
+                staging = self.directory / "manual-outbound" / relative
+                atomic_copy(local_path, staging)
+            try:
+                if digest(staging) != current_local["fingerprint"]:
+                    raise SyncConflictError("The local file changed during copy. Reopen Sync now.")
+                current_cloud = version(cloud_path)
+                if any(current_cloud[key] != cloud_expected.get(key)
+                       for key in ("fingerprint", "modified_ns")):
+                    raise SyncConflictError("The cloud file changed. Reopen Sync now to compare again.")
+                atomic_copy(staging, cloud_path)
+                if digest(cloud_path) != current_local["fingerprint"]:
+                    raise OSError("The cloud copy did not match the selected local version")
+                with self.work_lock:
+                    self.baseline[relative] = current_local["fingerprint"]
+                    self.status.update({"state": "local", "error": None,
+                                        "last_success": now()})
+                    self._save_manifest()
+            finally:
+                staging.unlink(missing_ok=True)
+        self.request_sync()
+        return {"path": relative, "cloud": version(cloud_path)}
+
     def mark_local_change(self) -> None:
         with self.lock:
             if self.status["state"] not in ("conflict", "offline"):
@@ -211,6 +308,10 @@ class ReviewCache:
             self.wake.clear()
 
     def sync_once(self) -> None:
+        with self.sync_lock:
+            self._sync_once()
+
+    def _sync_once(self) -> None:
         # OneDrive scans and transfers stay outside the request lock. A slow or
         # unavailable OneDrive folder therefore cannot stall local UI requests.
         remote = snapshot(self.project_root)

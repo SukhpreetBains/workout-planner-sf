@@ -1151,14 +1151,72 @@ async function loadInbox() {
 }
 
 const syncIndicator = el("span", { class: "sync-indicator", role: "status" }, "Working locally");
+const syncTime = value => value ? new Date(value).toLocaleString() : "Not present";
+
+function openSyncModal(preview, trigger) {
+  const modal = el("div", { class: "review-note-modal sync-modal", role: "dialog",
+    "aria-modal": "true", "aria-labelledby": "sync-modal-title" });
+  const close = el("button", { class: "quiet", type: "button",
+    onclick: () => closeModal(modal, trigger) }, "Close");
+  const list = el("div", { class: "sync-file-list" });
+  const intro = el("p", {}, "Compare each file before replacing its cloud copy. An editor is shown as Unknown when the synced folder does not provide that information.");
+  const render = items => {
+    list.replaceChildren();
+    if (!items.length) {
+      list.append(el("p", { class: "sync-empty" }, "Local and cloud review files match."));
+      return;
+    }
+    items.forEach(item => {
+      const local = item.local;
+      const cloud = item.cloud;
+      const details = el("div", { class: "sync-versions" }, [
+        el("div", {}, [el("strong", {}, "Local"),
+          el("span", {}, `Modified: ${syncTime(local.modified_at)}`),
+          el("span", {}, `Modified by: ${local.modified_by}`)]),
+        el("div", {}, [el("strong", {}, "Cloud"),
+          el("span", {}, `Modified: ${syncTime(cloud.modified_at)}`),
+          el("span", {}, `Modified by: ${cloud.modified_by}`)]),
+      ]);
+      const action = el("button", { type: "button" }, cloud.exists ? "Overwrite cloud with local" : "Upload local to cloud");
+      action.disabled = !local.exists;
+      action.addEventListener("click", async () => {
+        action.disabled = true;
+        try {
+          await api("/api/sync-overwrite", { method: "POST", body: JSON.stringify({
+            path: item.path, local, cloud,
+          }) });
+          showToast(`Cloud copy updated: ${item.path}`);
+          render((await api("/api/sync-preview")).items || []);
+          refreshSyncStatus();
+        } catch (error) {
+          showToast(error.message || "The cloud copy was not updated.");
+          try { render((await api("/api/sync-preview")).items || []); }
+          catch { action.disabled = false; }
+        }
+      });
+      list.append(el("section", { class: "sync-file" }, [
+        el("h3", {}, item.path), details,
+        el("p", { class: "sync-file-note" }, item.local_changed && item.cloud_changed
+          ? "Both copies changed since the last sync." : item.cloud_changed
+            ? "The cloud copy changed since the last sync." : "The local copy changed since the last sync."),
+        ...(local.exists ? [action] : [el("p", {}, "The local file is unavailable, so it cannot overwrite the cloud copy.")]),
+      ]));
+    });
+  };
+  const form = el("form", {}, [el("h2", { id: "sync-modal-title" }, "Review sync"), intro, list,
+    el("div", { class: "modal-actions" }, close)]);
+  form.addEventListener("submit", event => event.preventDefault());
+  modal.append(form);
+  render(preview.items || []);
+  showModal(modal, close, trigger);
+}
+
 const syncButton = el("button", { class: "quiet sync-button", type: "button", onclick: async () => {
   syncButton.disabled = true;
   try {
-    await api("/api/sync-now", { method: "POST", body: "{}" });
-    syncIndicator.textContent = "Sync requested";
-    setTimeout(refreshSyncStatus, 1500);
+    openSyncModal(await api("/api/sync-preview"), syncButton);
   } catch (error) {
-    showToast(error.message || "Could not request sync.");
+    showToast(error.message || "Could not compare local and cloud files.");
   } finally {
     syncButton.disabled = false;
   }

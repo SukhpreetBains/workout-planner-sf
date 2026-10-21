@@ -282,6 +282,14 @@ class ReviewHandler(BaseHTTPRequestHandler):
         if path == "/api/sync-status":
             self.json(200, self.server.cache.status_json())
             return
+        if path == "/api/sync-preview":
+            if not self.require_token():
+                return
+            try:
+                self.json(200, self.server.cache.sync_preview())
+            except OSError as exc:
+                self.json(503, {"error": f"Could not compare local and cloud files: {exc}"})
+            return
         if path == "/api/inbox":
             self.json(200, review_store.list_cards())
             return
@@ -364,6 +372,9 @@ class ReviewHandler(BaseHTTPRequestHandler):
         self.json(404, {"error": "not found"})
 
     def do_POST(self) -> None:
+        if self.parsed()[0] == "/api/sync-overwrite":
+            self._do_POST()
+            return
         with self.server.cache.work_lock:
             self._do_POST()
             if getattr(self, "response_status", 500) < 300 and self.parsed()[0] not in ("/api/stop", "/api/sync-now"):
@@ -402,6 +413,20 @@ class ReviewHandler(BaseHTTPRequestHandler):
         if path == "/api/sync-now":
             self.server.cache.request_sync()
             self.json(202, self.server.cache.status_json())
+            return
+        if path == "/api/sync-overwrite":
+            from review_cache import SyncConflictError
+            try:
+                body = self.body()
+                result = self.server.cache.overwrite_cloud(
+                    str(body.get("path", "")), body.get("local"), body.get("cloud"))
+                self.json(200, result)
+            except SyncConflictError as exc:
+                self.json(409, {"error": str(exc)})
+            except ValueError as exc:
+                self.json(400, {"error": str(exc)})
+            except OSError as exc:
+                self.json(503, {"error": f"Could not overwrite the cloud file: {exc}"})
             return
         if path == "/api/stop":
             self.json(200, {"stopping": True})
