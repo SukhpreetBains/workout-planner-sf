@@ -372,13 +372,18 @@ class ReviewHandler(BaseHTTPRequestHandler):
         self.json(404, {"error": "not found"})
 
     def do_POST(self) -> None:
-        if self.parsed()[0] == "/api/sync-overwrite":
+        path = self.parsed()[0]
+        if path == "/api/sync-overwrite-all":
             self._do_POST()
             return
         with self.server.cache.work_lock:
+            from review_cache import file_stamps
+            before = file_stamps(self.server.cache.local_root) if path not in ("/api/stop", "/api/sync-now") else {}
             self._do_POST()
-            if getattr(self, "response_status", 500) < 300 and self.parsed()[0] not in ("/api/stop", "/api/sync-now"):
-                self.server.cache.mark_local_change()
+            if getattr(self, "response_status", 500) < 300 and path not in ("/api/stop", "/api/sync-now"):
+                after = file_stamps(self.server.cache.local_root)
+                changed = {name for name in set(before) | set(after) if before.get(name) != after.get(name)}
+                self.server.cache.mark_local_change(changed)
 
     def _do_POST(self) -> None:
         if not self.require_token():
@@ -414,19 +419,18 @@ class ReviewHandler(BaseHTTPRequestHandler):
             self.server.cache.request_sync()
             self.json(202, self.server.cache.status_json())
             return
-        if path == "/api/sync-overwrite":
+        if path == "/api/sync-overwrite-all":
             from review_cache import SyncConflictError
             try:
                 body = self.body()
-                result = self.server.cache.overwrite_cloud(
-                    str(body.get("path", "")), body.get("local"), body.get("cloud"))
+                result = self.server.cache.overwrite_all(body.get("items"))
                 self.json(200, result)
             except SyncConflictError as exc:
                 self.json(409, {"error": str(exc)})
             except ValueError as exc:
                 self.json(400, {"error": str(exc)})
             except OSError as exc:
-                self.json(503, {"error": f"Could not overwrite the cloud file: {exc}"})
+                self.json(503, {"error": f"Could not overwrite the cloud files: {exc}"})
             return
         if path == "/api/stop":
             self.json(200, {"stopping": True})

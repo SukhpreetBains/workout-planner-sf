@@ -7,6 +7,7 @@ this module reconciles review-owned files to OneDrive in the background.
 from __future__ import annotations
 
 import hashlib
+import getpass
 import json
 import os
 import shutil
@@ -20,6 +21,7 @@ from pathlib import Path
 from pathlib import PurePosixPath
 
 SYNC_INTERVAL = 300
+EDITOR_LEDGER = "workspace/.system/review-file-editors.json"
 SKIP = {
     "workspace/.system/review-server.json",
     "workspace/.system/review-server.log",
@@ -81,6 +83,12 @@ def snapshot(root: Path) -> dict[str, str]:
     return {name: digest(path) for name, path in files(root, review_only=True).items()}
 
 
+def file_stamps(root: Path) -> dict[str, tuple[int, int]]:
+    """Cheap before-and-after check for files touched by one review action."""
+    return {name: (path.stat().st_mtime_ns, path.stat().st_size)
+            for name, path in files(root, review_only=True).items()}
+
+
 def atomic_copy(source: Path, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(prefix=f".{destination.name}.", dir=destination.parent)
@@ -101,11 +109,53 @@ def now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 
+def current_editor() -> str:
+    """Use the signed-in person's full OS display name when available."""
+    try:
+        import pwd
+        name = pwd.getpwuid(os.getuid()).pw_gecos.split(",", 1)[0].strip()
+        if name:
+            return name
+    except (ImportError, KeyError, OSError, AttributeError):
+        pass
+    return getpass.getuser()
+
+
+def read_editors(root: Path) -> dict[str, dict]:
+    try:
+        value = json.loads((root / EDITOR_LEDGER).read_text(encoding="utf-8"))
+    except (FileNotFoundError, OSError, ValueError):
+        return {}
+    entries = value.get("files", {}) if isinstance(value, dict) else {}
+    return entries if isinstance(entries, dict) else {}
+
+
+def write_editors(root: Path, updates: dict[str, dict | None]) -> None:
+    entries = read_editors(root)
+    for relative, entry in updates.items():
+        if entry:
+            entries[relative] = entry
+        else:
+            entries.pop(relative, None)
+    path = root / EDITOR_LEDGER
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=".review-file-editors.", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+            json.dump({"files": entries}, output, indent=2)
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
 class SyncConflictError(RuntimeError):
     """A file changed after the reviewer opened the sync comparison."""
 
 
-def version(path: Path) -> dict:
+def version(path: Path, editor: dict | None = None) -> dict:
     if not path.is_file():
         return {"exists": False, "fingerprint": None, "modified_at": None,
                 "modified_ns": None, "modified_by": "Unknown"}
@@ -120,8 +170,13 @@ def version(path: Path) -> dict:
                                     and element.text.strip()), "Unknown")
         except (BadZipFile, KeyError, OSError, ElementTree.ParseError):
             pass
-    return {"exists": True, "fingerprint": digest(path),
-            "modified_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
+    fingerprint = digest(path)
+    modified_at = datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat()
+    if isinstance(editor, dict) and editor.get("fingerprint") == fingerprint:
+        modified_by = str(editor.get("modified_by") or modified_by)
+        modified_at = str(editor.get("modified_at") or modified_at)
+    return {"exists": True, "fingerprint": fingerprint,
+            "modified_at": modified_at,
             "modified_ns": stat.st_mtime_ns, "modified_by": modified_by}
 
 
@@ -160,6 +215,7 @@ class ReviewCache:
         self.wake = threading.Event()
         self.stop_event = threading.Event()
         self.baseline: dict[str, str] = {}
+        self.editors: dict[str, dict] = {}
         self.status = {"state": "starting", "pending": 0, "conflicts": [],
                        "last_success": None, "error": None}
         self.thread: threading.Thread | None = None
@@ -173,6 +229,13 @@ class ReviewCache:
                 raise RuntimeError("review cache belongs to another project")
             self.baseline = {name: value for name, value in value.get("files", {}).items()
                              if review_owned(name)}
+            self.editors = {name: editor for name, editor in value.get("editors", {}).items()
+                            if review_owned(name) and isinstance(editor, dict)}
+            for name, editor in read_editors(self.project_root).items():
+                if (review_owned(name) and name not in self.editors
+                        and isinstance(editor, dict)
+                        and editor.get("fingerprint") == self.baseline.get(name)):
+                    self.editors[name] = editor
             self.status.update(value.get("status", {}))
             self.status["state"] = "local"
             return
@@ -187,6 +250,9 @@ class ReviewCache:
             baseline = snapshot(staging)
             os.replace(staging, self.local_root)
             self.baseline = baseline
+            self.editors = {name: editor for name, editor in read_editors(self.project_root).items()
+                            if review_owned(name) and isinstance(editor, dict)
+                            and editor.get("fingerprint") == baseline.get(name)}
             self.status.update({"state": "synced", "last_success": now()})
             self._save_manifest()
         except Exception:
@@ -200,7 +266,7 @@ class ReviewCache:
             try:
                 with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
                     json.dump({"project_root": str(self.project_root), "files": self.baseline,
-                               "status": self.status}, handle, indent=2)
+                               "editors": self.editors, "status": self.status}, handle, indent=2)
                     handle.flush()
                     os.fsync(handle.fileno())
                 os.replace(temporary, self.manifest_path)
@@ -221,6 +287,8 @@ class ReviewCache:
         with self.work_lock:
             local = snapshot(self.local_root)
             baseline = dict(self.baseline)
+            local_editors = dict(self.editors)
+        cloud_editors = read_editors(self.project_root)
         items = []
         for relative in sorted(set(remote) | set(local)):
             if not safe_review_path(relative) or local.get(relative) == remote.get(relative):
@@ -229,62 +297,152 @@ class ReviewCache:
             if (relative.endswith(".xlsx") and local_path.is_file() and cloud_path.is_file()
                     and same_workbook_content(local_path, cloud_path)):
                 continue
-            local_version, cloud_version = version(local_path), version(cloud_path)
+            local_version = version(local_path, local_editors.get(relative))
+            cloud_version = version(cloud_path, cloud_editors.get(relative))
             items.append({"path": relative, "local": local_version, "cloud": cloud_version,
                           "local_changed": local.get(relative) != baseline.get(relative),
                           "cloud_changed": remote.get(relative) != baseline.get(relative)})
         return {"items": items}
 
-    def overwrite_cloud(self, relative: str, local_expected: dict, cloud_expected: dict) -> dict:
-        """Publish one chosen local version after rechecking both files."""
-        if not safe_review_path(relative):
-            raise ValueError("invalid review file path")
-        if not isinstance(local_expected, dict) or not isinstance(cloud_expected, dict):
-            raise ValueError("both file versions are required")
-        local_path, cloud_path = self.local_root / relative, self.project_root / relative
-        for root, path in ((self.local_root, local_path), (self.project_root, cloud_path)):
-            try:
-                path.resolve().relative_to(root.resolve())
-            except ValueError as exc:
-                raise ValueError("review file path leaves the workspace") from exc
-            if path.is_symlink():
-                raise ValueError("review file path cannot be a link")
+    def overwrite_all(self, requested: list[dict]) -> dict:
+        """Publish every available local difference after one complete preflight."""
+        if not isinstance(requested, list):
+            raise ValueError("file comparisons are required")
         with self.sync_lock:
-            with self.work_lock:
-                current_local = version(local_path)
-                if not current_local["exists"]:
-                    raise ValueError("the local file is no longer available")
-                if any(current_local[key] != local_expected.get(key)
-                       for key in ("fingerprint", "modified_ns")):
-                    raise SyncConflictError("The local file changed. Reopen Sync now to compare again.")
-                staging = self.directory / "manual-outbound" / relative
-                atomic_copy(local_path, staging)
-            try:
-                if digest(staging) != current_local["fingerprint"]:
-                    raise SyncConflictError("The local file changed during copy. Reopen Sync now.")
-                current_cloud = version(cloud_path)
-                if any(current_cloud[key] != cloud_expected.get(key)
-                       for key in ("fingerprint", "modified_ns")):
-                    raise SyncConflictError("The cloud file changed. Reopen Sync now to compare again.")
-                atomic_copy(staging, cloud_path)
-                if digest(cloud_path) != current_local["fingerprint"]:
-                    raise OSError("The cloud copy did not match the selected local version")
-                with self.work_lock:
-                    self.baseline[relative] = current_local["fingerprint"]
-                    self.status.update({"state": "local", "error": None,
-                                        "last_success": now()})
-                    self._save_manifest()
-            finally:
-                staging.unlink(missing_ok=True)
-        self.request_sync()
-        return {"path": relative, "cloud": version(cloud_path)}
+            current = self.sync_preview()["items"]
+            observed = {item["path"]: item for item in current}
+            available = {name: item for name, item in observed.items() if item["local"]["exists"]}
+            supplied = {item.get("path"): item for item in requested if isinstance(item, dict)}
+            if set(supplied) != set(observed) or len(supplied) != len(requested):
+                raise SyncConflictError("The file list changed. Reopen Sync now to compare again.")
+            for relative, item in supplied.items():
+                if not safe_review_path(relative):
+                    raise ValueError("invalid review file path")
+                for side in ("local", "cloud"):
+                    expected, actual = item.get(side), observed[relative][side]
+                    if not isinstance(expected, dict) or any(
+                        expected.get(key) != actual[key] for key in ("fingerprint", "modified_ns")
+                    ):
+                        raise SyncConflictError("A file changed. Reopen Sync now to compare again.")
+                for root in (self.local_root, self.project_root):
+                    path = root / relative
+                    try:
+                        path.resolve().relative_to(root.resolve())
+                    except ValueError as exc:
+                        raise ValueError("review file path leaves the workspace") from exc
+                    if path.is_symlink():
+                        raise ValueError("review file path cannot be a link")
+            if not available:
+                return {"updated": []}
 
-    def mark_local_change(self) -> None:
+            staging = Path(tempfile.mkdtemp(prefix="manual-batch-", dir=self.directory))
+            published = []
+            try:
+                with self.work_lock:
+                    local_editors = dict(self.editors)
+                    for relative, item in available.items():
+                        source = self.local_root / relative
+                        if any(version(source)[key] != item["local"][key]
+                               for key in ("fingerprint", "modified_ns")):
+                            raise SyncConflictError("A local file changed. Reopen Sync now to compare again.")
+                        atomic_copy(source, staging / "local" / relative)
+                        if digest(staging / "local" / relative) != item["local"]["fingerprint"]:
+                            raise SyncConflictError("A local file changed during copy. Reopen Sync now.")
+                for relative, item in available.items():
+                    cloud_path = self.project_root / relative
+                    if item["cloud"]["exists"]:
+                        atomic_copy(cloud_path, staging / "cloud" / relative)
+                    if any(version(cloud_path)[key] != item["cloud"][key]
+                           for key in ("fingerprint", "modified_ns")):
+                        raise SyncConflictError("A cloud file changed. Reopen Sync now to compare again.")
+                for relative, item in available.items():
+                    if any(version(self.local_root / relative)[key] != item["local"][key]
+                           for key in ("fingerprint", "modified_ns")):
+                        raise SyncConflictError("A local file changed. Reopen Sync now to compare again.")
+                    if any(version(self.project_root / relative)[key] != item["cloud"][key]
+                           for key in ("fingerprint", "modified_ns")):
+                        raise SyncConflictError("A cloud file changed. Reopen Sync now to compare again.")
+                for relative, item in available.items():
+                    destination = self.project_root / relative
+                    if any(version(destination)[key] != item["cloud"][key]
+                           for key in ("fingerprint", "modified_ns")):
+                        raise SyncConflictError("A cloud file changed. Reopen Sync now to compare again.")
+                    atomic_copy(staging / "local" / relative, destination)
+                    published.append(relative)
+                    if digest(destination) != item["local"]["fingerprint"]:
+                        raise OSError(f"Cloud copy did not match the local version: {relative}")
+                for relative, item in available.items():
+                    if any(version(self.local_root / relative)[key] != item["local"][key]
+                           for key in ("fingerprint", "modified_ns")):
+                        raise SyncConflictError("A local file changed. Reopen Sync now to compare again.")
+                    if digest(self.project_root / relative) != item["local"]["fingerprint"]:
+                        raise SyncConflictError("A cloud file changed. Reopen Sync now to compare again.")
+                editor_updates = {}
+                for relative, item in available.items():
+                    editor = local_editors.get(relative)
+                    editor_updates[relative] = editor if isinstance(editor, dict) and editor.get(
+                        "fingerprint") == item["local"]["fingerprint"] else {
+                            "fingerprint": item["local"]["fingerprint"],
+                        "modified_at": item["local"]["modified_at"], "modified_by": "Unknown",
+                        }
+                write_editors(self.project_root, editor_updates)
+            except Exception:
+                for relative in reversed(published):
+                    backup = staging / "cloud" / relative
+                    destination = self.project_root / relative
+                    if backup.is_file():
+                        atomic_copy(backup, destination)
+                    else:
+                        destination.unlink(missing_ok=True)
+                raise
+            finally:
+                shutil.rmtree(staging, ignore_errors=True)
+            with self.work_lock:
+                for relative, item in available.items():
+                    self.baseline[relative] = item["local"]["fingerprint"]
+                self.status.update({"state": "local", "error": None, "last_success": now()})
+                self._save_manifest()
+        self.request_sync()
+        return {"updated": sorted(available)}
+
+    def mark_local_change(self, changed: set[str] | None = None) -> None:
         with self.lock:
+            for relative in changed or set():
+                if not review_owned(relative):
+                    continue
+                file_version = version(self.local_root / relative)
+                if file_version["exists"]:
+                    self.editors[relative] = {
+                        "fingerprint": file_version["fingerprint"],
+                        "modified_at": file_version["modified_at"],
+                        "modified_by": current_editor(),
+                    }
+                else:
+                    self.editors.pop(relative, None)
             if self.status["state"] not in ("conflict", "offline"):
                 self.status["state"] = "local"
             self.status["pending"] = max(1, self.status["pending"])
             self._save_manifest()
+
+    def publish_cloud_editors(self) -> None:
+        """Share verified inbox editor records with other synced workstations."""
+        cloud = snapshot(self.project_root)
+        with self.work_lock:
+            local = snapshot(self.local_root)
+            editors = dict(self.editors)
+        published = read_editors(self.project_root)
+        updates = {}
+        for relative, editor in editors.items():
+            fingerprint = editor.get("fingerprint")
+            if not fingerprint or local.get(relative) != fingerprint or cloud.get(relative) != fingerprint:
+                continue
+            existing = published.get(relative, {})
+            if (existing.get("fingerprint") == fingerprint
+                    and str(existing.get("modified_at", "")) >= str(editor.get("modified_at", ""))):
+                continue
+            updates[relative] = editor
+        if updates:
+            write_editors(self.project_root, updates)
 
     def start(self) -> None:
         self.thread = threading.Thread(target=self._loop, name="review-onedrive-sync", daemon=True)
@@ -315,6 +473,7 @@ class ReviewCache:
         # OneDrive scans and transfers stay outside the request lock. A slow or
         # unavailable OneDrive folder therefore cannot stall local UI requests.
         remote = snapshot(self.project_root)
+        cloud_editors = read_editors(self.project_root)
         with self.work_lock:
             local = snapshot(self.local_root)
             baseline = dict(self.baseline)
@@ -370,6 +529,11 @@ class ReviewCache:
                     raise RuntimeError(f"Local review changed during sync: {relative}")
                 atomic_copy(temporary, destination)
                 self.baseline[relative] = remote[relative]
+                editor = cloud_editors.get(relative)
+                if isinstance(editor, dict) and editor.get("fingerprint") == remote[relative]:
+                    self.editors[relative] = editor
+                else:
+                    self.editors.pop(relative, None)
                 self._save_manifest()
             temporary.unlink(missing_ok=True)
         with self.lock:
@@ -427,9 +591,15 @@ class ReviewCache:
                     if incoming is None:
                         destination.unlink(missing_ok=True)
                         self.baseline.pop(relative, None)
+                        self.editors.pop(relative, None)
                     else:
                         atomic_copy(temporary, destination)
                         self.baseline[relative] = incoming
+                        editor = cloud_editors.get(relative)
+                        if isinstance(editor, dict) and editor.get("fingerprint") == incoming:
+                            self.editors[relative] = editor
+                        else:
+                            self.editors.pop(relative, None)
                     self._save_manifest()
                 temporary.unlink(missing_ok=True)
         finally:
@@ -442,6 +612,7 @@ class ReviewCache:
             self.status.update({"state": "local" if pending else "synced", "pending": pending,
                                 "last_success": now(), "error": None})
             self._save_manifest()
+        self.publish_cloud_editors()
         self.refresh_sources()
 
     def refresh_sources(self) -> None:

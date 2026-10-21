@@ -42,7 +42,7 @@ class ReviewCacheSyncTest(unittest.TestCase):
         self.assertEqual(item["local"]["modified_by"], "Unknown")
         self.assertIsNotNone(item["cloud"]["modified_at"])
 
-        self.cache.overwrite_cloud(self.relative, item["local"], item["cloud"])
+        self.cache.overwrite_all(preview)
         self.assertEqual(self.cloud.read_text(encoding="utf-8"), "local revision")
         self.assertEqual(self.cache.sync_preview()["items"], [])
         self.assertEqual(self.cache.baseline[self.relative], review_cache.digest(self.cloud))
@@ -53,7 +53,7 @@ class ReviewCacheSyncTest(unittest.TestCase):
         item = self.cache.sync_preview()["items"][0]
         self.cloud.write_text("newer cloud revision", encoding="utf-8")
         with self.assertRaises(review_cache.SyncConflictError):
-            self.cache.overwrite_cloud(self.relative, item["local"], item["cloud"])
+            self.cache.overwrite_all([item])
         self.assertEqual(self.cloud.read_text(encoding="utf-8"), "newer cloud revision")
 
     def test_rejects_stale_local_version(self):
@@ -62,14 +62,76 @@ class ReviewCacheSyncTest(unittest.TestCase):
         item = self.cache.sync_preview()["items"][0]
         self.local.write_text("newer local revision", encoding="utf-8")
         with self.assertRaises(review_cache.SyncConflictError):
-            self.cache.overwrite_cloud(self.relative, item["local"], item["cloud"])
+            self.cache.overwrite_all([item])
         self.assertEqual(self.cloud.read_text(encoding="utf-8"), "cloud revision")
 
     def test_matching_contents_do_not_prompt_and_paths_are_scoped(self):
         self.local.write_text("base", encoding="utf-8")
         self.assertEqual(self.cache.sync_preview()["items"], [])
-        with self.assertRaises(ValueError):
-            self.cache.overwrite_cloud("workspace/trackers/../../secret", {}, {})
+        with self.assertRaises(review_cache.SyncConflictError):
+            self.cache.overwrite_all([{"path": "workspace/trackers/../../secret", "local": {}, "cloud": {}}])
+
+    def test_overwrite_all_files_and_track_signed_in_editor(self):
+        second = "workspace/trackers/another.txt"
+        cloud_second = self.root / second
+        cloud_second.write_text("other base", encoding="utf-8")
+        local_second = self.cache.local_root / second
+        local_second.write_text("another local revision", encoding="utf-8")
+        self.local.write_text("local revision", encoding="utf-8")
+        self.cloud.write_text("newer cloud revision", encoding="utf-8")
+        with mock.patch.object(review_cache, "current_editor", return_value="Alex Reviewer"):
+            self.cache.mark_local_change({self.relative, second})
+        preview = self.cache.sync_preview()["items"]
+        self.assertEqual({item["path"] for item in preview}, {self.relative, second})
+        self.assertTrue(all(item["local"]["modified_by"] == "Alex Reviewer" for item in preview))
+        self.cache.overwrite_all(preview)
+        self.assertEqual(self.cloud.read_text(encoding="utf-8"), "local revision")
+        self.assertEqual(cloud_second.read_text(encoding="utf-8"), "another local revision")
+        editors = review_cache.read_editors(self.root)
+        self.assertEqual(editors[self.relative]["modified_by"], "Alex Reviewer")
+        self.assertEqual(editors[second]["modified_by"], "Alex Reviewer")
+
+    def test_stale_file_stops_entire_batch(self):
+        second = "workspace/trackers/another.txt"
+        cloud_second = self.root / second
+        cloud_second.write_text("other base", encoding="utf-8")
+        self.cache.local_root.joinpath(second).write_text("other local", encoding="utf-8")
+        self.local.write_text("local revision", encoding="utf-8")
+        preview = self.cache.sync_preview()["items"]
+        cloud_second.write_text("changed after comparison", encoding="utf-8")
+        with self.assertRaises(review_cache.SyncConflictError):
+            self.cache.overwrite_all(preview)
+        self.assertEqual(self.cloud.read_text(encoding="utf-8"), "base")
+        self.assertEqual(cloud_second.read_text(encoding="utf-8"), "changed after comparison")
+
+    def test_failed_publish_restores_every_cloud_copy(self):
+        second = "workspace/trackers/another.txt"
+        cloud_second = self.root / second
+        cloud_second.write_text("other base", encoding="utf-8")
+        self.cache.local_root.joinpath(second).write_text("other local", encoding="utf-8")
+        self.local.write_text("local revision", encoding="utf-8")
+        preview = self.cache.sync_preview()["items"]
+        copy = review_cache.atomic_copy
+
+        def fail_second_publish(source, destination):
+            if destination.resolve() == self.cloud.resolve():
+                raise OSError("test write failure")
+            return copy(source, destination)
+
+        with mock.patch.object(review_cache, "atomic_copy", side_effect=fail_second_publish):
+            with self.assertRaises(OSError):
+                self.cache.overwrite_all(preview)
+        self.assertEqual(self.cloud.read_text(encoding="utf-8"), "base")
+        self.assertEqual(cloud_second.read_text(encoding="utf-8"), "other base")
+        self.assertEqual(review_cache.read_editors(self.root), {})
+
+    def test_background_sync_publishes_editor_record(self):
+        self.local.write_text("local revision", encoding="utf-8")
+        with mock.patch.object(review_cache, "current_editor", return_value="Alex Reviewer"):
+            self.cache.mark_local_change({self.relative})
+        self.cache._sync_once()
+        self.assertEqual(self.cloud.read_text(encoding="utf-8"), "local revision")
+        self.assertEqual(review_cache.read_editors(self.root)[self.relative]["modified_by"], "Alex Reviewer")
 
     def test_workbook_last_editor_is_read_when_available(self):
         workbook = self.root / "workspace" / "trackers" / "example.xlsx"

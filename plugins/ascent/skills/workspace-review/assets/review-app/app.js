@@ -1159,9 +1159,13 @@ function openSyncModal(preview, trigger) {
   const close = el("button", { class: "quiet", type: "button",
     onclick: () => closeModal(modal, trigger) }, "Close");
   const list = el("div", { class: "sync-file-list" });
-  const intro = el("p", {}, "Compare each file before replacing its cloud copy. An editor is shown as Unknown when the synced folder does not provide that information.");
+  const intro = el("p", {}, "Review the local and cloud versions, then overwrite the cloud with every available local copy.");
+  const action = el("button", { type: "button" }, "Overwrite cloud with all local files");
+  let comparedItems = [];
   const render = items => {
+    comparedItems = items;
     list.replaceChildren();
+    action.disabled = !items.some(item => item.local.exists);
     if (!items.length) {
       list.append(el("p", { class: "sync-empty" }, "Local and cloud review files match."));
       return;
@@ -1171,40 +1175,34 @@ function openSyncModal(preview, trigger) {
       const cloud = item.cloud;
       const details = el("div", { class: "sync-versions" }, [
         el("div", {}, [el("strong", {}, "Local"),
-          el("span", {}, `Modified: ${syncTime(local.modified_at)}`),
-          el("span", {}, `Modified by: ${local.modified_by}`)]),
+          el("span", {}, syncTime(local.modified_at)),
+          el("span", {}, `By ${local.modified_by}`)]),
         el("div", {}, [el("strong", {}, "Cloud"),
-          el("span", {}, `Modified: ${syncTime(cloud.modified_at)}`),
-          el("span", {}, `Modified by: ${cloud.modified_by}`)]),
+          el("span", {}, syncTime(cloud.modified_at)),
+          el("span", {}, `By ${cloud.modified_by}`)]),
       ]);
-      const action = el("button", { type: "button" }, cloud.exists ? "Overwrite cloud with local" : "Upload local to cloud");
-      action.disabled = !local.exists;
-      action.addEventListener("click", async () => {
-        action.disabled = true;
-        try {
-          await api("/api/sync-overwrite", { method: "POST", body: JSON.stringify({
-            path: item.path, local, cloud,
-          }) });
-          showToast(`Cloud copy updated: ${item.path}`);
-          render((await api("/api/sync-preview")).items || []);
-          refreshSyncStatus();
-        } catch (error) {
-          showToast(error.message || "The cloud copy was not updated.");
-          try { render((await api("/api/sync-preview")).items || []); }
-          catch { action.disabled = false; }
-        }
-      });
       list.append(el("section", { class: "sync-file" }, [
         el("h3", {}, item.path), details,
-        el("p", { class: "sync-file-note" }, item.local_changed && item.cloud_changed
-          ? "Both copies changed since the last sync." : item.cloud_changed
-            ? "The cloud copy changed since the last sync." : "The local copy changed since the last sync."),
-        ...(local.exists ? [action] : [el("p", {}, "The local file is unavailable, so it cannot overwrite the cloud copy.")]),
+        ...(!local.exists ? [el("p", { class: "sync-file-note" }, "No local copy to upload.")] : []),
       ]));
     });
   };
+  action.addEventListener("click", async () => {
+    action.disabled = true;
+    try {
+      const result = await api("/api/sync-overwrite-all", { method: "POST",
+        body: JSON.stringify({ items: comparedItems }) });
+      showToast(`${result.updated.length} cloud file${result.updated.length === 1 ? "" : "s"} updated.`);
+      render((await api("/api/sync-preview")).items || []);
+      refreshSyncStatus();
+    } catch (error) {
+      showToast(error.message || "The cloud files were not updated.");
+      try { render((await api("/api/sync-preview")).items || []); }
+      catch { action.disabled = false; }
+    }
+  });
   const form = el("form", {}, [el("h2", { id: "sync-modal-title" }, "Review sync"), intro, list,
-    el("div", { class: "modal-actions" }, close)]);
+    el("div", { class: "modal-actions" }, close, action)]);
   form.addEventListener("submit", event => event.preventDefault());
   modal.append(form);
   render(preview.items || []);

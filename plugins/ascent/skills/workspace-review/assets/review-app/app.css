@@ -331,19 +331,20 @@ button.source-ref { padding: 0; border: 0; background: transparent; cursor: poin
 .link-picker-modal .link-picker-list { flex: 1 1 auto; min-height: 6rem; max-height: none; margin-top: 0; }
 .review-note-modal h2, .review-note-modal p { margin-bottom: 0; }
 .sync-modal form { width: min(780px, 100%); max-height: calc(100dvh - 2rem); overflow: auto; }
-.sync-file-list { display: grid; gap: .85rem; max-height: 55dvh; overflow: auto; }
-.sync-file { display: grid; gap: .7rem; padding: 1rem; border: 1px solid var(--gray-200); border-radius: .6rem; }
-.sync-file h3 { margin: 0; overflow-wrap: anywhere; font-size: 1rem; }
+.sync-file-list { max-height: 55dvh; overflow: auto; border-top: 1px solid var(--gray-200); }
+.sync-file { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(0, 1.5fr); gap: .75rem; align-items: start; padding: .85rem 0; border-bottom: 1px solid var(--gray-200); }
+.sync-file h3 { margin: 0; overflow-wrap: anywhere; font-size: .95rem; }
 .sync-versions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
-.sync-versions > div { display: grid; gap: .2rem; padding: .75rem; background: var(--gray-100); }
-.sync-file-note { color: var(--gray-700); }
-.sync-file button { justify-self: start; }
+.sync-versions > div { display: grid; gap: .1rem; min-width: 0; font-size: .85rem; color: var(--gray-700); overflow-wrap: anywhere; }
+.sync-versions strong { color: var(--dark-blue); }
+.sync-file-note { grid-column: 1 / -1; color: var(--gray-700); font-size: .85rem; }
 .review-note-modal textarea { min-height: 130px; }
 .modal-actions { display: flex; justify-content: end; flex-wrap: wrap; gap: .75rem; }
 .modal-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: start; margin-bottom: 1.5rem; }
 .modal-heading h2, .modal-heading p { margin-bottom: 0; }
 
 @media (max-width: 760px) {
+  .sync-file { grid-template-columns: 1fr; }
   .sync-versions { grid-template-columns: 1fr; }
   .relationship-item { grid-template-columns: 1fr; }
   .site-header { flex-wrap: wrap; min-height: 76px; }
