@@ -379,6 +379,8 @@ class ReviewHandler(BaseHTTPRequestHandler):
         routes = {
             "/api/autosave": lambda body: review_store.autosave(
                 body.get("proposal_id", ""), body.get("revision"), body.get("fields")),
+            "/api/change-category": lambda body: review_store.change_category(
+                body.get("proposal_id", ""), body.get("revision"), str(body.get("category", ""))),
             "/api/accept": lambda body: review_store.accept(
                 body.get("proposal_id", ""), body.get("revision"),
                 self.headers.get("Idempotency-Key", "")),

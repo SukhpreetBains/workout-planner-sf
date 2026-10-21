@@ -914,12 +914,44 @@ function recordNotice(record) {
   return null;
 }
 
+function categoryControl(record) {
+  if (record.state !== "pending" || record.action !== "add") return null;
+  const select = el("select", { id: "tracker-type", "aria-label": "Tracker type" });
+  categories.forEach(category => select.append(el("option", {
+    value: category.id, selected: category.id === record.category ? "" : undefined,
+  }, category.label)));
+  select.addEventListener("change", async () => {
+    const category = select.value;
+    select.disabled = true;
+    try {
+      await ensureSaved(record);
+      await api("/api/change-category", { method: "POST", body: JSON.stringify({
+        proposal_id: record.proposal_id, revision: record.revision, category,
+      }) });
+      await refreshRecords();
+      activeCategory = category;
+      selectedKey = record.key;
+      renderCategory();
+      showToast(`Moved to ${categoryLabel(category)}. Review its fields before accepting.`);
+    } catch (error) {
+      select.value = record.category;
+      select.disabled = false;
+      showToast(error.message || "Could not change the tracker type.");
+    }
+  });
+  return el("div", { class: "tracker-type-control" }, [
+    el("label", { for: "tracker-type" }, "Tracker type"), select,
+  ]);
+}
+
 function expandedCardContent(record) {
   const content = el("section", { class: `expanded-card-content category-${record.category} state-${record.state}`, "aria-label": `${record.category_label} details` });
+  const trackerType = categoryControl(record);
   const stickyHeader = el("header", { class: "review-sticky-header" }, [
     el("div", { class: "review-heading" }, [
       el("p", { class: "eyebrow review-state-line" }, ["Review state ", stateBadge(record)]),
       el("h2", { title: recordTitle(record) }, recordTitle(record)),
+      ...(trackerType ? [trackerType] : []),
     ]),
     el("div", { class: "review-sticky-actions" }, [
       el("span", { class: "save-state", id: "save-state", role: "status" }, record.state === "rejected" ? "Read-only" : "All changes saved"),

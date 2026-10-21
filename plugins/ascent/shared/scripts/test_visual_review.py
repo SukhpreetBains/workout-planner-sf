@@ -247,6 +247,30 @@ class VisualReviewTest(unittest.TestCase):
         history = self.paths.REVIEW_HISTORY.read_text(encoding="utf-8")
         self.assertIn('"event": "edit"', history)
 
+    def test_change_category_preserves_evidence_and_requires_new_fields(self):
+        path = self.proposal([{
+            "category": "decision", "action": "add",
+            "fields": {"Name": "Late test data", "Description": "Test data may arrive late.",
+                       "Status": "decided", "Target Date": "2026-11-01"},
+            "evidence": [{"source_ref": "workspace/meetings/2026-08-27 - Review.md",
+                          "excerpt": "The release may slip if test data arrives late."}],
+        }])
+        card = self.store.list_cards()["cards"][0]
+        result = self.store.change_category(card["proposal_id"], card["revision"], "risk")
+        moved = self.store.list_cards()["cards"][0]
+        self.assertEqual(moved["proposal_id"], card["proposal_id"])
+        self.assertEqual(moved["category"], "risk")
+        self.assertEqual(moved["fields"]["Name"], "Late test data")
+        self.assertEqual(moved["fields"]["Status"], "identified")
+        self.assertEqual(moved["fields"]["Target Date"], "2026-11-01")
+        self.assertEqual(moved["evidence"], card["evidence"])
+        self.assertEqual(result["revision"], card["revision"] + 1)
+        self.assertEqual(yaml.safe_load(path.read_text())["updates"][0]["category"], "risk")
+        with self.assertRaises(self.store.RevisionConflict):
+            self.store.change_category(card["proposal_id"], card["revision"], "issue")
+        with self.assertRaises(self.store.ReviewError):
+            self.store.change_category(card["proposal_id"], result["revision"], "unknown")
+
     def test_accept_is_item_level_atomic_and_idempotent(self):
         self.proposal([self.risk(), {
             "category": "issue", "action": "add",

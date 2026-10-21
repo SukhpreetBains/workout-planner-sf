@@ -430,6 +430,40 @@ def autosave(proposal_id: str, revision: object, fields: dict) -> dict:
         return {"proposal_id": proposal_id, "revision": update["revision"], "validation": problems}
 
 
+def change_category(proposal_id: str, revision: object, category: str) -> dict:
+    """Move a pending new item to another tracker while retaining its evidence."""
+    schema = load_schema()
+    if category not in schema["categories"]:
+        raise ReviewError("unknown tracker category")
+    with review_lock():
+        path, document, _index, update = find_item(proposal_id)
+        check_revision(update, revision)
+        if update.get("action", "add") != "add":
+            raise ReviewError("only new pending items can change tracker type")
+        previous = update["category"]
+        if category == previous:
+            return {"proposal_id": proposal_id, "revision": update["revision"], "category": category}
+        columns = schema["categories"][category].get("columns", [])
+        fields = update.get("fields") or {}
+        moved = {column["name"]: fields[column["name"]] for column in columns
+                 if not column.get("computed") and column["name"] in fields}
+        for column in columns:
+            if column["name"] == "Status":
+                allowed = {str(value).casefold() for value in column.get("enum", [])}
+                if str(moved.get("Status", "")).casefold() not in allowed:
+                    moved["Status"] = column.get("default", "")
+        update["category"] = category
+        update["fields"] = moved
+        update["revision"] += 1
+        atomic_yaml(path, document)
+        problems = validate({"source_refs": document.get("source_refs") or [], "updates": [update]},
+                            schema, pending_link_ids())
+        append_history("change-category", update, {"previous_category": previous,
+                                                    "validation": problems})
+        return {"proposal_id": proposal_id, "revision": update["revision"],
+                "category": category, "validation": problems}
+
+
 def remove_and_archive(path: Path, document: dict, index: int, update: dict,
                        destination: Path, decision: str, note: str = "", tracker_id: str = "") -> None:
     destination.mkdir(parents=True, exist_ok=True)
