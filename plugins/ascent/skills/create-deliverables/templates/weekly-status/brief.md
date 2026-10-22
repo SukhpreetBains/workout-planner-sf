@@ -71,8 +71,10 @@ All three use the same sideways navigation contract: previous and next
 controls, keyboard left and right arrows, direct page buttons, page focus
 management, an accessible page announcement, and print-all behavior. Keep
 controls quiet until hover or focus and visible on touch. Let long pages
-scroll. The most animated version uses a source-order milestone timeline,
-not an elapsed-time or percent-complete chart. Dates and status remain verbatim.
+scroll. All three versions use a horizontal, source-order milestone timeline,
+not an elapsed-time or percent-complete chart. The timeline shows only evenly
+spaced dates; selecting one opens its milestone below, connected to the date.
+Every milestone prints expanded. Dates and status remain verbatim.
 Reduce motion on request and keep static content readable if JavaScript motion
 cannot load.
 

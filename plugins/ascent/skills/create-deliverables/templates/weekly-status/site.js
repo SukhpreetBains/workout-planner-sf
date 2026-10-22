@@ -115,19 +115,104 @@
       target.append(card);
     });
   }
-  const milestoneTarget = document.querySelector('#milestones');
-  const milestones = list(report.milestones);
-  if (document.body.dataset.variant === 'animated') {
-    const rail = element('span', undefined, 'timeline-rail');
-    rail.setAttribute('aria-hidden', 'true');
-    milestoneTarget.append(rail);
+  function buildMilestones(root, rows) {
+    if (!rows.length) {
+      root.append(element('p', 'No evidence selected for this section.', 'empty'));
+      return;
+    }
+    const track = element('ol', undefined, 'ms-track');
+    track.setAttribute('aria-label', 'Milestone dates in source order');
+    const stage = element('div', undefined, 'ms-stage');
+    ['ms-stem', 'ms-caret', 'ms-beam'].forEach(name => {
+      const connector = element('div', undefined, 'ms-connector ' + name);
+      connector.setAttribute('aria-hidden', 'true');
+      stage.append(connector);
+    });
+    const drawer = element('div', undefined, 'ms-panels');
+    const buttons = [];
+    const panels = [];
+    rows.forEach((item, index) => {
+      const node = element('li', undefined, 'ms-node');
+      const button = element('button', undefined, 'ms-date');
+      button.type = 'button';
+      button.setAttribute('aria-expanded', 'false');
+      button.setAttribute('aria-controls', 'ms-panel-' + index);
+      const dot = element('span', undefined, 'ms-dot');
+      dot.setAttribute('aria-hidden', 'true');
+      button.append(dot, element('span', item.date, 'ms-date-text'), element('span', ', ' + text(item.name), 'sr-only'));
+      button.addEventListener('click', () => toggle(index));
+      node.append(button);
+      track.append(node);
+      buttons.push(button);
+
+      const panel = element('section', undefined, 'ms-panel');
+      panel.id = 'ms-panel-' + index;
+      panel.hidden = true;
+      panel.setAttribute('aria-labelledby', 'ms-title-' + index);
+      const body = element('div', undefined, 'ms-panel-body');
+      addIcon(body, item);
+      const copy = element('div', undefined, 'ms-copy');
+      copy.append(element('p', 'Milestone ' + (index + 1) + ' of ' + rows.length, 'ms-kicker'));
+      const title = element('h3', item.name, 'ms-title');
+      title.id = 'ms-title-' + index;
+      copy.append(title);
+      detail(copy, 'Date', item.date);
+      detail(copy, 'Status', item.status);
+      cite(copy, item.source);
+      body.append(copy);
+      panel.append(body);
+      drawer.append(panel);
+      panels.push(panel);
+    });
+    stage.append(drawer, element('p', 'Select a date to open its milestone.', 'ms-hint'));
+    root.append(track, stage);
+
+    let open = -1;
+    function place() {
+      if (open < 0 || !root.offsetParent) return;
+      const box = stage.getBoundingClientRect();
+      const date = buttons[open].getBoundingClientRect();
+      const x = Math.max(14, Math.min(box.width - 14, date.left + date.width / 2 - box.left));
+      // Keep a narrower drawer near the open date without overflowing the stage.
+      const offset = Math.max(0, Math.min(box.width - drawer.offsetWidth, x - 40));
+      root.style.setProperty('--ms-x', x + 'px');
+      root.style.setProperty('--ms-panel-x', offset + 'px');
+    }
+    function toggle(index) {
+      const previous = open;
+      open = index === open ? -1 : index;
+      buttons.forEach((button, i) => button.setAttribute('aria-expanded', String(i === open)));
+      panels.forEach((panel, i) => { panel.hidden = i !== open; });
+      root.classList.toggle('has-open', open >= 0);
+      // The first open snaps into place; only moves between dates transition.
+      root.classList.toggle('ms-jump', previous < 0);
+      place();
+      void root.offsetWidth;
+      root.classList.remove('ms-jump');
+      root.dispatchEvent(new CustomEvent('milestonechange', {bubbles: true, detail: {previous, current: open, panel: panels[open] || null}}));
+    }
+    // Stop propagation so date navigation does not also turn the page.
+    track.addEventListener('keydown', event => {
+      const index = buttons.indexOf(document.activeElement);
+      const target = {ArrowLeft: index - 1, ArrowRight: index + 1, Home: 0, End: buttons.length - 1}[event.key];
+      if (index < 0 || target === undefined) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const next = buttons[Math.max(0, Math.min(buttons.length - 1, target))];
+      next.focus();
+      next.scrollIntoView({block: 'nearest', inline: 'nearest'});
+    });
+    root.addEventListener('keydown', event => {
+      if (event.key !== 'Escape' || open < 0) return;
+      const button = buttons[open];
+      toggle(open);
+      button.focus();
+    });
+    window.addEventListener('resize', place);
+    track.addEventListener('scroll', place, {passive: true});
+    document.addEventListener('reportpagechange', place);
   }
-  if (!milestones.length) milestoneTarget.append(element('li', 'No evidence selected for this section.', 'empty'));
-  milestones.forEach((item, index) => {
-    const li = element('li', undefined, 'checkpoint');
-    li.append(cardFor(item, [['Date', 'date'], ['Status', 'status']], index, 'name'));
-    milestoneTarget.append(li);
-  });
+  buildMilestones(document.querySelector('#milestones'), list(report.milestones));
   fill('#risks', list(report.risks), [['Impact', 'impact'], ['Owner', 'owner'], ['Action', 'action']]);
   fill('#decisions', list(report.decisions), [['Owner', 'owner'], ['Due', 'due']]);
 

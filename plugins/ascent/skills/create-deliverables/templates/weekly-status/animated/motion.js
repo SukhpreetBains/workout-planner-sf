@@ -16,16 +16,33 @@ if (!reduced.matches) {
         ease: 'outExpo'
       });
     }
-    const rail = page.querySelector('.timeline-rail');
-    if (rail) animate(rail, { scaleY: [0, 1], duration: 850, ease: 'outExpo' });
-    const checkpoints = [...page.querySelectorAll('.checkpoint')];
-    if (checkpoints.length) {
-      animate(checkpoints, { opacity: [0, 1], x: [-16, 0], delay: stagger(110), duration: 650, ease: 'outExpo' });
+    const dots = [...page.querySelectorAll('.ms-dot')];
+    if (dots.length) {
+      animate(dots, { scale: [0, 1], delay: stagger(90, { start: 200 }), duration: 520, ease: 'outBack' });
+      animate(page.querySelectorAll('.ms-date-text'), { opacity: [0, 1], y: [-8, 0], delay: stagger(90, { start: 320 }), duration: 520, ease: 'outExpo' });
     }
   }
 
   document.addEventListener('reportpagechange', event => enter(event.detail.page));
   enter(document.querySelector('.page.active'));
+
+  // The beam narrows to the open date at the top and spans the panel at the bottom.
+  let beamX = null;
+  document.addEventListener('milestonechange', event => {
+    const root = event.target;
+    const beam = root.querySelector('.ms-beam');
+    const { previous, current, panel } = event.detail;
+    if (!beam || current < 0) return;
+    const width = root.querySelector('.ms-stage').getBoundingClientRect().width;
+    const x = parseFloat(root.style.getPropertyValue('--ms-x'));
+    const shape = previous < 0 ? { x, left: x, right: x } : { x: beamX === null ? x : beamX, left: 0, right: width };
+    const draw = () => { beam.style.clipPath = `polygon(${shape.x - 7}px 0, ${shape.x + 7}px 0, ${shape.right}px 100%, ${shape.left}px 100%)`; };
+    draw();
+    animate(shape, { x, left: 0, right: width, duration: 560, ease: 'outExpo', onUpdate: draw, onComplete: () => { beam.style.clipPath = ''; } });
+    beamX = x;
+    const contents = panel.querySelectorAll('.icon,.ms-kicker,.ms-title,.detail,.citations');
+    animate(contents, { opacity: [0, 1], y: [10, 0], delay: stagger(50, { start: previous < 0 ? 260 : 80 }), duration: 420, ease: 'outExpo' });
+  });
 
   document.addEventListener('pointerenter', event => {
     const card = event.target.closest && event.target.closest('.card');

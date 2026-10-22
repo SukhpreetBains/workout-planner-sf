@@ -1,6 +1,6 @@
 ---
 name: create-deliverables
-description: Create three sideways Slalom-branded weekly status microsites from one source-backed synthesis using three Luna subagents, then refine the user's selected direction.
+description: Create three sideways Slalom-branded weekly status microsites from one source-backed synthesis using three subagents, then refine the user's selected direction.
 ---
 
 # Create deliverables
@@ -80,16 +80,20 @@ helper copies three editable starters, the shared report, Slalom Sans, approved
 starter imagery, Anime.js, and the complete approved icon library when enabled.
 There is no build step.
 
-## Dispatch exactly three Luna subagents
+## Dispatch exactly three subagents
 
-Use the host's subagent tool to launch three independent workers concurrently,
-each explicitly selecting the available Luna model (`gpt-6-luna` on Codex). Give
-each a fresh context, the identical shared report, this skill, the weekly status
-brief, the chosen palette and iconography settings, the brand guide, and one
-output folder. Each worker edits only its folder. Shared facts, assets, and
-navigation code remain read-only. Do not substitute a different model or claim
-a parallel run if Luna or subagents are unavailable; explain the limitation and
-ask for a supported alternative.
+Use the host's subagent tool to launch three independent workers concurrently.
+At dispatch time, inspect the available model options and select the newest
+available model in the lowest-cost tier that supports high reasoning or thinking;
+enable the highest available reasoning or thinking setting. Do not hardcode a
+model name, since availability, pricing, and controls change. If the host does
+not expose enough information to identify a qualifying model or configure high
+reasoning, explain the limitation and ask for a supported alternative rather
+than claiming the requirement was met. Give each worker a fresh context, the
+identical shared report, this skill, the weekly status brief, the chosen palette
+and iconography settings, the brand guide, and one output folder. Each worker
+edits only its folder. Shared facts, assets, and navigation code remain
+read-only.
 
 All workers preserve the same six pages and order: cover, summary,
 accomplishments, next steps, milestones, and risks with decisions. All keep
@@ -97,12 +101,14 @@ sideways previous and next controls, keyboard navigation, direct page buttons,
 focus management, a live page announcement, print-all behavior, and hidden
 numbered source links with an upper-right Show sources toggle. Long pages may
 scroll. Keep controls faint until hover or keyboard focus, and visible on touch.
+Milestones appear as a horizontal, source-order timeline that shows only dates.
+Selecting a date opens its milestone below, visibly connected to that date.
 
 | Worker / folder | Design brief |
 | --- | --- |
-| `business/` | Business-first and typographic. Dense information remains easy to scan. No decorative motion; use restrained blue, the selected accent, and neutral surfaces. |
-| `expressive/` | More visual hierarchy and selective approved imagery. Use restrained page and card transitions. Keep reading calm and clear. |
-| `animated/` | Use approved Slalom imagery liberally when relevant. Use local Anime.js v4 for entrances, staggered cards, milestone rail and checkpoints, and pointer responses. Keep all content readable if motion or modules are unavailable, and respect reduced motion. Read the [motion reference](../utilities-ui-generation/references/animejs.md). |
+| `business/` | Business-first and typographic. Dense information remains easy to scan. No decorative motion; use restrained blue, the selected accent, and neutral surfaces. Milestones use the rail and caret timeline. |
+| `expressive/` | More visual hierarchy and selective approved imagery. Use restrained page and card transitions. Keep reading calm and clear. Milestones use the stem and drawer timeline. |
+| `animated/` | Use approved Slalom imagery liberally when relevant. Use local Anime.js v4 for entrances, staggered cards, the spotlight beam milestone timeline, and pointer responses. Keep all content readable if motion or modules are unavailable, and respect reduced motion. Read the [motion reference](../utilities-ui-generation/references/animejs.md). |
 
 Every worker must render report values with `textContent`, preserve citations and
 qualifications, use responsive semantic HTML, working relative asset paths,

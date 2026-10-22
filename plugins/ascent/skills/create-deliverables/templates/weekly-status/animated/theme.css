@@ -9,9 +9,15 @@
 .card.accent{background:rgb(var(--accent-rgb) / .11)}
 .health{border-radius:0 1rem 0 0}
 .progress-art,.milestone-art{max-height:130px;display:block;margin:-1rem 0 .5rem auto}
-.milestones .timeline:before{display:none}
-.timeline-rail{position:absolute;left:.58rem;top:.45rem;bottom:.45rem;width:3px;background:linear-gradient(var(--blue),var(--accent));transform-origin:top}
+.ms-date{flex-direction:column-reverse;padding:.4rem .5rem .5rem;font-size:1rem}
+.ms-node:before,.ms-node:after{bottom:calc(.5rem + 3px);height:6px;background:rgb(12 98 251 / .14)}
+.ms-dot{width:12px;height:12px;border-radius:50%;background:var(--blue);transition:transform .2s ease,background-color .2s ease,box-shadow .2s ease}
+.ms-date:hover .ms-dot{transform:scale(1.2)}
+.ms-date[aria-expanded='true'] .ms-dot{background:var(--accent);box-shadow:0 0 0 3px var(--blue);transform:scale(1.35)}
+.ms-stage{padding-top:2.6rem}
+.ms-beam{display:block;z-index:0;top:calc(-.5rem - 6px);left:0;right:0;height:calc(2.6rem + .5rem + 6px);background:rgb(var(--accent-rgb) / .2);clip-path:polygon(calc(var(--ms-x) - 7px) 0,calc(var(--ms-x) + 7px) 0,100% 100%,0 100%)}
+.ms-panel{background:rgb(var(--accent-rgb) / .2);border-radius:0 0 1.4rem 1.4rem;padding:1.5rem 1.8rem 1.7rem}
 .motion-ready .page.active .motion-item{will-change:transform,opacity}
 @media(max-width:700px){.progress-art,.milestone-art{max-height:80px;margin:0 0 .7rem auto}}
 @media(prefers-reduced-motion:reduce){.motion-ready .page.active .motion-item{will-change:auto}}
-@media print{.progress-art,.milestone-art{max-height:70px}.cover:before{display:none}}
+@media print{.progress-art,.milestone-art{max-height:70px}.cover:before{display:none}.ms-panel{background:transparent;border:1px solid var(--line);border-radius:0 1.2rem 0 0}}

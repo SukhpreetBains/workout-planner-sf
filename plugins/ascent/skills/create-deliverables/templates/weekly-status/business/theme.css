@@ -8,5 +8,12 @@ body{--canvas:#fff}
 .cards{grid-template-columns:1fr;max-width:940px;gap:.8rem}
 .next-steps .card,.risks-decisions .card{padding:1rem 1.1rem}
 .summary .lead{max-width:80ch}
-.timeline .card{border-top-color:var(--blue)}
+.ms-node:before,.ms-node:after{top:calc(.4rem + 6px);height:2px;background:rgb(12 98 251 / .3)}
+.ms-dot{width:14px;height:14px;border-radius:50%;background:var(--paper);border:2px solid var(--blue)}
+.ms-date[aria-expanded='true'] .ms-dot{background:var(--blue);box-shadow:0 0 0 4px rgb(var(--accent-rgb) / .5)}
+.ms-stage{padding-top:1.7rem}
+.ms-stem{display:block;top:0;left:calc(var(--ms-x) - 1px);width:2px;height:calc(1.7rem - 8px);background:var(--blue)}
+.ms-caret{display:block;top:calc(1.7rem - 8px);left:calc(var(--ms-x) - 8px);width:16px;height:16px}
+.ms-caret:before{content:'';position:absolute;inset:0;background:var(--paper);border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.ms-panel{background:var(--paper);border:1px solid var(--line);border-radius:0 1rem 0 0;padding:1.3rem 1.5rem}
 @media print{.card{border:1px solid var(--line);border-top:2px solid var(--blue)}}
