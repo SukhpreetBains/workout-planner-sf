@@ -1,0 +1,13 @@
+.page{position:relative}
+.cover h1{max-width:8ch}
+.cover-art{max-height:385px}
+.summary-grid{grid-template-columns:minmax(0,1.25fr) minmax(160px,.7fr)}
+.summary .lead{padding:1.5rem 1.6rem;background:var(--blue);color:#fff;border-radius:0 1.5rem 0 0;box-shadow:0 14px 34px rgb(12 98 251 / .13)}
+.card{border-radius:0 1.2rem 0 0;transition:transform .28s ease,box-shadow .28s ease}
+.card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgb(0 0 0 / .08)}
+.page.active{animation:arrive .38s ease both}
+@keyframes arrive{from{opacity:.7;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.health{border-radius:0 1rem 0 0}
+.timeline .card{border-left:3px solid var(--blue)}
+@media(prefers-reduced-motion:reduce){.page.active{animation:none}.card:hover{transform:none}}
+@media print{.page.active{animation:none}.card:hover{transform:none}}

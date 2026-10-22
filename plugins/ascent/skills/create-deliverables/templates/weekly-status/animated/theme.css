@@ -1,0 +1,17 @@
+.page{position:relative}
+.cover h1{max-width:8ch}
+.cover-art{max-height:420px}
+.cover:before{content:'';position:absolute;z-index:-1;right:3%;bottom:4%;width:min(26vw,280px);aspect-ratio:1;border-radius:50%;background:rgb(var(--accent-rgb) / .14)}
+.summary .lead{background:var(--blue);color:#fff;padding:1.8rem 2rem;border-radius:0 2rem 0 0;box-shadow:0 20px 48px rgb(12 98 251 / .18)}
+.summary-grid{grid-template-columns:minmax(0,1.35fr) minmax(180px,.65fr)}
+.card{border-radius:0 1.45rem 0 0;transition:box-shadow .22s ease,transform .22s ease}
+.card:hover{box-shadow:0 16px 32px rgb(0 0 0 / .1)}
+.card.accent{background:rgb(var(--accent-rgb) / .11)}
+.health{border-radius:0 1rem 0 0}
+.progress-art,.milestone-art{max-height:130px;display:block;margin:-1rem 0 .5rem auto}
+.milestones .timeline:before{display:none}
+.timeline-rail{position:absolute;left:.58rem;top:.45rem;bottom:.45rem;width:3px;background:linear-gradient(var(--blue),var(--accent));transform-origin:top}
+.motion-ready .page.active .motion-item{will-change:transform,opacity}
+@media(max-width:700px){.progress-art,.milestone-art{max-height:80px;margin:0 0 .7rem auto}}
+@media(prefers-reduced-motion:reduce){.motion-ready .page.active .motion-item{will-change:auto}}
+@media print{.progress-art,.milestone-art{max-height:70px}.cover:before{display:none}}

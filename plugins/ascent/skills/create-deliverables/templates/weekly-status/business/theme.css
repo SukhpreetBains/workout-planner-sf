@@ -1,0 +1,12 @@
+body{--canvas:#fff}
+.page h1,.page h2{color:var(--dark-blue)}
+.cover-grid,.summary-grid{grid-template-columns:1fr}
+.cover-art,.summary-art,.section-art{display:none}
+.health{box-shadow:none;border:1px solid var(--line);border-radius:0 1rem 0 0}
+.card{border-radius:0 1rem 0 0;box-shadow:none;border-top:2px solid var(--blue)}
+.card.accent{background:var(--paper);border-color:var(--line);border-top-color:var(--accent)}
+.cards{grid-template-columns:1fr;max-width:940px;gap:.8rem}
+.next-steps .card,.risks-decisions .card{padding:1rem 1.1rem}
+.summary .lead{max-width:80ch}
+.timeline .card{border-top-color:var(--blue)}
+@media print{.card{border:1px solid var(--line);border-top:2px solid var(--blue)}}

@@ -1,115 +1,124 @@
 ---
 name: create-deliverables
-description: Create three Slalom-branded weekly status microsites from the same project evidence using three Luna subagents, then refine the user's selected direction.
+description: Create three sideways Slalom-branded weekly status microsites from one source-backed synthesis using three Luna subagents, then refine the user's selected direction.
 ---
 
 # Create deliverables
 
-Create three distinct weekly status options: a straightforward scrolling report,
-a business presentation with page navigation, and a colorful animated report.
-Use the same facts in all three. Start with [the weekly status brief](templates/weekly-status/brief.md).
+Create three six-page HTML presentations from one weekly status report. All three
+keep the sideways navigation, quiet previous and next controls, direct page
+navigation, and sources hidden until the user selects Show sources. The directions
+are business, expressive, and animated. Start with the [weekly status brief](templates/weekly-status/brief.md).
 
-## Choose the secondary color
+## Set the visual inputs
 
-Before generating a new report, show the user the [Slalom secondary color swatches](assets/secondary-colors.svg)
-inline and ask: "Which secondary color would you like for this report?"
-Resolve the image path from this skill's installed directory when embedding it.
-Also provide these labeled choices so the selection works without images:
+Before generating a new report, show the [Slalom secondary color swatches](assets/secondary-colors.svg)
+inline and ask which secondary color the user wants. Offer Cyan `#1BE1F2`, Coral
+Red `#FF4D5F`, Purple `#C7B9FF`, and Chartreuse `#DEFF4D`. Ask whether to use
+approved Slalom icons, with Yes and No choices. Ask together when both choices are
+unknown, and reuse choices already made for this report. Continue evidence work
+while waiting, but wait for the selections before visual generation or dispatch.
+Save the choices as `secondaryColor: {name, hex}` and `useIconography` in `report.json`.
 
-| Color | Hex |
-| --- | --- |
-| Cyan | `#1BE1F2` |
-| Coral Red | `#FF4D5F` |
-| Purple | `#C7B9FF` |
-| Chartreuse | `#DEFF4D` |
+Use Slalom Blue `#0C62FB`, the selected secondary hue at any opacity, and white,
+black, or neutral grays. Slalom Dark Blue `#002FAF` is permitted. Do not invent
+other hues, alter supplied artwork, or reduce a content container's opacity.
+Check contrast against the composited background. Use Slalom Sans for all three.
+Read the [Slalom brand guide](../utilities-ui-generation/branding/packs/slalom/docs/README.md),
+especially color, typography, imagery, graphic elements, and accessibility.
 
-Wait for the selection before visual generation or dispatching the workers.
-Continue gathering evidence while waiting. If the user already selected a color
-for this report, reuse it without asking again. Do not silently default to Cyan.
-Save the selection in `report.json` as `secondaryColor: {name, hex}` and pass it
-to all three workers. For refinements, retain the saved selection unless changed
-by the user.
+When iconography is enabled, the preparation helper packages all 102 approved
+icons from the [icon index](../utilities-ui-generation/branding/packs/slalom/assets/iconography/README.md).
+Choose icons for their meaning. When disabled, do not show decorative icons.
+Navigation controls, timelines, and separately selected imagery remain available.
 
-Use Slalom Blue (`#0C62FB`) and that one secondary hue. The agent may use any
-opacity from 0% to 100% of the selected secondary color, including translucent
-surfaces, borders, gradients, and decorative accents. White, black, and neutral
-grays remain available for readable text and backgrounds. Do not introduce other
-secondary hues or arbitrary hue shifts. This workflow explicitly permits opacity
-variants rather than restricting the selection to the guide's listed tint values.
-Check text and controls against their actual composited backgrounds for contrast;
-never lower an entire content container's opacity to tint its background.
-Keep supplied artwork unaltered.
+For the animated direction, inspect approved illustrations and photography in the
+branding pack. Show the user a short, relevant asset shortlist when imagery will
+shape the story. Use approved people illustrations and icons when they fit the
+content. Use approved photography only when the project topic gives it a clear
+reason to be there. Keep assets unaltered and local to the output package.
 
-## Ask about iconography
+## Prepare one editorial synthesis
 
-Before dispatching workers, ask: "Would you like to include Slalom iconography?"
-Offer two choices: "Yes, use approved Slalom icons" and "No, keep it typographic."
-Ask alongside the secondary-color choice when both are unknown. Reuse an explicit
-choice already made for this report. Record `useIconography` as a boolean in
-`report.json` and pass it to every worker.
+Read project instructions and confirm the reporting period when unclear. For an
+initialized Ascent workspace, use `workspace-summarize`. Start with approved
+tracker rows. Read filed source documents directly when a row is incomplete,
+ambiguous, contradictory, or needs context for a connection. Do not reproduce
+review-inbox wording mechanically. Select the material updates for the reader,
+group related evidence, paraphrase, and explain grounded connections in the
+narrative. Cite every material claim with the tracker IDs or underlying sources
+that support it. Keep a coverage note about material omissions and evidence gaps.
+Keep unresolved proposals separate from approved facts.
 
-When enabled, consult the [approved icon index](../utilities-ui-generation/branding/packs/slalom/assets/iconography/README.md)
-and select only relevant supplied icons. Copy selected assets into the output;
-keep them unaltered and accessible. When disabled, use text and ordinary interface
-controls, with no decorative icons. This preference does not remove charts,
-timeline checkpoints, navigation controls, or separately requested brand imagery.
+Create one `report.json` with the fields in the brief. All three workers use this
+same synthesis. A connection may blend into fluent prose when the citations make
+its basis clear. Never invent completion, owners, dates, or decisions. The agent
+may make a reasoned health assessment when the evidence supports it. Mark it
+`healthAssessment: "reasoned"`, state the reasoning and source refs, and label it
+provisional in the report. After creating the three drafts, explicitly tell the
+user in chat that a reasoned rating was used and ask whether they have additional
+information that should change it. If the evidence does not support a rating,
+use `Not assessed`.
 
-## Prepare one report
+Grounded suggested actions may appear in `suggestedNextSteps`, clearly separate
+from recorded commitments. Do not assign an owner or due date that the source
+does not provide. Do not automatically apply suggestions to trackers or other
+systems. Retain source qualifications and the evidence cutoff. Use local source
+snapshots for cited files as described in the brief. Do not put client data into
+skill templates. Ascent outputs belong in
+`workspace/draft-deliverables/<report-name>/`; elsewhere follow the user's
+destination and repository file organization.
 
-Read the project's instructions and relevant supplied evidence. For an initialized
-Ascent workspace, use `workspace-summarize` to ground the report in approved
-trackers and source documents. Keep unresolved proposals distinct from approved
-facts. Confirm the reporting period when it cannot be inferred; state the evidence
-cutoff and gaps. Never infer health, completion, owners, dates, or decisions.
-
-Write `report.json` using the fields in the weekly status brief. Retain source
-references per item. Do not put client data into skill templates. All agent-created
-outputs for an Ascent project belong in `workspace/draft-deliverables/<report-name>/`.
-Elsewhere follow the user's destination and repository file organization.
-
-Read the Slalom pack's [brand guide](../utilities-ui-generation/branding/packs/slalom/docs/README.md),
-color, typography, and imagery guidance. These are web experiences, including the
-page-based option, so use Slalom Sans. Use the supplied Slalom assets unaltered.
-
-Initialize a new output directory (existing directories are refused):
+Initialize a new output directory, which the helper refuses to overwrite:
 
 ```sh
 python3 scripts/prepare.py /absolute/output/path --report /absolute/report.json
 ```
 
-Run the command from this skill directory, or use its absolute script path.
-The helper copies three editable starters, the shared report, and only the needed
-brand and Anime.js assets. There is no build step.
+Run the command from this skill directory, or use its absolute script path. The
+helper copies three editable starters, the shared report, Slalom Sans, approved
+starter imagery, Anime.js, and the complete approved icon library when enabled.
+There is no build step.
 
 ## Dispatch exactly three Luna subagents
 
 Use the host's subagent tool to launch three independent workers concurrently,
-each explicitly selecting the available Luna model (`gpt-6-luna` on Codex).
-Give each a fresh context, the identical `report.js`, this skill, the weekly status
-brief, the chosen secondary color and opacity rules, the brand guide, and its own output folder. Each worker reads its starter
-and edits only its assigned folder. Shared facts and assets remain read-only. Adapt starter color tokens to the selected palette; starter Cyan values are examples, not a user choice.
-Do not substitute another model or claim a parallel run if Luna or subagents are
-unavailable; explain the limitation and ask for a supported alternative.
+each explicitly selecting the available Luna model (`gpt-6-luna` on Codex). Give
+each a fresh context, the identical shared report, this skill, the weekly status
+brief, the chosen palette and iconography settings, the brand guide, and one
+output folder. Each worker edits only its folder. Shared facts, assets, and
+navigation code remain read-only. Do not substitute a different model or claim
+a parallel run if Luna or subagents are unavailable; explain the limitation and
+ask for a supported alternative.
 
-Use these distinct briefs, allowing layout adaptation to the actual content:
+All workers preserve the same six pages and order: cover, summary,
+accomplishments, next steps, milestones, and risks with decisions. All keep
+sideways previous and next controls, keyboard navigation, direct page buttons,
+focus management, a live page announcement, print-all behavior, and hidden
+numbered source links with an upper-right Show sources toggle. Long pages may
+scroll. Keep controls faint until hover or keyboard focus, and visible on touch.
 
 | Worker / folder | Design brief |
 | --- | --- |
-| `scroll/` | Vertical scrolling business report. Prioritize clarity and scanning, with restrained blue and neutral surfaces, explicit health, useful tables, and no decorative motion. |
-| `pages/` | Business presentation experience. One topic per page, previous/next buttons, keyboard navigation, page counter and focus management. Let long pages scroll. Print all pages. This is an HTML microsite, not a PowerPoint file. |
-| `expressive/` | Colorful paginated presentation with previous/next, keyboard navigation, and a page counter. Keep numbered source links hidden by default with an upper-right Show sources toggle. Use Slalom Blue plus the user-selected secondary color at any opacity, approved Slalom imagery as accents, and Anime.js v4 liberally for entrances, staggered cards, scroll reveals, and pointer interactions. Read the [motion reference](../utilities-ui-generation/references/animejs.md). Respect reduced motion and keep all information available without animation. |
+| `business/` | Business-first and typographic. Dense information remains easy to scan. No decorative motion; use restrained blue, the selected accent, and neutral surfaces. |
+| `expressive/` | More visual hierarchy and selective approved imagery. Use restrained page and card transitions. Keep reading calm and clear. |
+| `animated/` | Use approved Slalom imagery liberally when relevant. Use local Anime.js v4 for entrances, staggered cards, milestone rail and checkpoints, and pointer responses. Keep all content readable if motion or modules are unavailable, and respect reduced motion. Read the [motion reference](../utilities-ui-generation/references/animejs.md). |
 
-Every worker must preserve source qualifications, unknowns, and the same coverage:
-summary, accomplishments, next steps, milestones, risks, and decisions needed.
-Use textContent for report values. Each delivers responsive semantic HTML, working
-relative asset paths, visible keyboard focus, and a short account of checks and gaps.
+Every worker must render report values with `textContent`, preserve citations and
+qualifications, use responsive semantic HTML, working relative asset paths,
+visible keyboard focus, and accessible controls. Workers may vary layout and
+wording only within the shared synthesis, with no new factual claims.
 
-## Compare and refine
+## Verify and compare
 
-Wait for all workers. Check factual parity against `report.json`, sources, asset
-loading, navigation, small-screen overflow, keyboard access, print, and reduced
-motion. Use browser checks only when permitted by the user's environment. Report
-checks that could not run; do not describe static inspection as visual validation.
+Wait for all workers. Run `python3 scripts/verify_assets.py /absolute/output/path`.
+It checks packaged icons and local asset references, including icon names used
+inside scripts. Also open each version in a browser and check that every rendered
+`img` has loaded (`complete` and `naturalWidth > 0`); this catches missing dynamic
+icons. Check factual parity against `report.json`, all six pages, source labels,
+navigation, small-screen overflow, keyboard access, print, and reduced motion.
+Report checks that could not run; do not describe static inspection as visual
+validation.
 
 Serve only the output directory on loopback, for example:
 
@@ -117,9 +126,9 @@ Serve only the output directory on loopback, for example:
 python3 -m http.server 8765 --bind 127.0.0.1 --directory /absolute/output/path
 ```
 
-Return links to `index.html` and all three options. Briefly compare readability,
-presentation flow, and motion, recording observations in the output's comparison
-page. Ask which direction the user wants to refine. Apply follow-on edits only to
-that option unless asked otherwise, keeping factual corrections consistent across
-all options. Leave the other versions available for comparison. Publishing or
-promoting a draft requires the user's instruction.
+Return links to the comparison page and all three options. Record concrete
+readability, flow, and motion observations on the comparison page. Ask which
+direction the user wants to refine. Apply follow-on design edits only to that
+option unless asked otherwise. Keep factual corrections consistent across all
+versions. Leave other drafts available for comparison. Publishing or promoting a
+draft requires the user's instruction.
