@@ -18,9 +18,6 @@ window.weeklyStatus = {
   "nextSteps": [
     {"text": "Validate the pilot with operations after access is confirmed.", "owner": "Delivery lead", "due": "26 October 2026", "source": "Fictional sample plan", "icon": "target"}
   ],
-  "suggestedNextSteps": [
-    {"text": "Prepare an alternate validation window if access remains unresolved.", "rationale": "The pending access item could affect the planned validation date.", "source": "Fictional sample plan; Fictional sample risk log", "icon": "calendar"}
-  ],
   "milestones": [
     {"name": "Pilot review", "date": "23 October 2026", "status": "Ready for review, not yet approved", "source": "Fictional sample plan", "icon": "presentation"},
     {"name": "Operations validation", "date": "26 October 2026", "status": "Planned; access dependency open", "source": "Fictional sample plan; Fictional sample risk log", "icon": "roadmap"}

@@ -14,6 +14,15 @@ a{color:var(--dark-blue)}
 .top-actions{display:flex;gap:.35rem}
 .quiet{border:1px solid transparent;border-radius:99px;background:transparent;padding:.55rem .75rem;color:var(--blue);font-weight:700;cursor:pointer;opacity:.18;transition:opacity .2s ease,background-color .2s ease}
 .quiet:hover,.quiet:focus-visible{background:var(--paper);opacity:1}
+.color-picker{position:relative}
+.color-picker .quiet{border:2px solid var(--accent);padding:calc(.55rem - 1px) calc(.75rem - 1px);color:var(--blue);opacity:.18}
+.color-picker .quiet:hover,.color-picker .quiet:focus-visible{opacity:1}
+.color-menu{position:absolute;right:0;top:calc(100% + .35rem);z-index:20;min-width:12rem;padding:.35rem;background:var(--paper);border:1px solid var(--line);border-radius:.8rem;box-shadow:0 12px 28px rgb(0 0 0 / .14)}
+.color-menu[hidden]{display:none}
+.color-option{display:flex;align-items:center;gap:.65rem;width:100%;padding:.55rem .65rem;border:0;border-radius:.5rem;background:transparent;color:var(--ink);text-align:left;cursor:pointer}
+.color-option:before{content:'';width:1rem;height:1rem;flex:none;border-radius:50%;background:var(--swatch);border:1px solid rgb(0 0 0 / .16)}
+.color-option:hover,.color-option:focus-visible{background:#F3F3F3}
+.color-option[aria-checked='true']{font-weight:700;background:#F3F3F3}
 .shell{min-height:calc(100svh - 5rem);padding:1rem clamp(2.6rem,6vw,6rem) 4.7rem}
 .sample-banner{display:inline-block;margin:0;padding:.35rem .55rem;border-left:3px solid var(--accent);font-size:.78rem;font-weight:700;color:var(--dark-blue);background:rgb(var(--accent-rgb) / .08)}
 .sample-banner[hidden]{display:none}
@@ -43,8 +52,6 @@ body.enhanced .page:not(.active){display:none}
 .detail{font-size:.88rem;color:var(--muted)}
 .detail strong{color:var(--ink)}
 .subhead{font-size:1.12rem;margin:1.45rem 0 .75rem;color:var(--dark-blue)}
-.suggestions .card{border-left:4px solid var(--accent)}
-.suggestion-label{display:inline-block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--dark-blue)}
 .timeline-note{font-size:.9rem;color:var(--muted);margin:.1rem 0 .9rem}
 .ms{position:relative;margin-top:1.4rem;--ms-x:50%;--ms-panel-x:0px}
 .ms-track{list-style:none;margin:0;padding:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(6.75rem,1fr);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}

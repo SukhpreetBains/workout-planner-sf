@@ -21,6 +21,16 @@
     <section class="comparison"><h2>Comparison notes</h2><p>All three versions use sideways navigation, the same six-page order, and hidden sources that can be revealed. Compare readability, flow, and whether motion improves understanding.</p><p class="note">Draft for review. Source links remain available in each version. Evidence coverage and assessment reasoning are explained in chat.</p></section>
   </main>
   <script src="report.js"></script>
-  <script>if(window.weeklyStatus && window.weeklyStatus.secondaryColor){document.documentElement.style.setProperty('--accent',window.weeklyStatus.secondaryColor.hex)}</script>
+  <script>
+    const palette = ['#1BE1F2','#FF4D5F','#C7B9FF','#DEFF4D'];
+    const colorKey = 'weekly-status-secondary-color:' + new URL('./', location.href).pathname;
+    let selected;
+    try { selected = localStorage.getItem(colorKey); } catch (_) { /* Storage can be unavailable. */ }
+    const initial = window.weeklyStatus && window.weeklyStatus.secondaryColor && window.weeklyStatus.secondaryColor.hex;
+    document.documentElement.style.setProperty('--accent', palette.includes(selected) ? selected : palette.includes(initial) ? initial : '#FF4D5F');
+    window.addEventListener('storage', event => {
+      if (event.key === colorKey && palette.includes(event.newValue)) document.documentElement.style.setProperty('--accent', event.newValue);
+    });
+  </script>
 </body>
 </html>

@@ -14,10 +14,70 @@
   const sourceDialog = document.querySelector('#source-dialog');
   let lastCitation = null;
 
-  const accent = report.secondaryColor && /^#[0-9A-Fa-f]{6}$/.test(report.secondaryColor.hex) ? report.secondaryColor.hex : '#FF4D5F';
-  const channels = [1, 3, 5].map(index => parseInt(accent.slice(index, index + 2), 16));
-  document.documentElement.style.setProperty('--accent', accent);
-  document.documentElement.style.setProperty('--accent-rgb', channels.join(' '));
+  const palette = [
+    {name: 'Cyan', hex: '#1BE1F2'},
+    {name: 'Coral Red', hex: '#FF4D5F'},
+    {name: 'Purple', hex: '#C7B9FF'},
+    {name: 'Chartreuse', hex: '#DEFF4D'}
+  ];
+  const colorKey = 'weekly-status-secondary-color:' + new URL('../', location.href).pathname;
+  const initialColor = palette.find(color => color.hex === report.secondaryColor?.hex) || palette[1];
+  let savedColor;
+  try { savedColor = localStorage.getItem(colorKey); } catch (_) { /* Storage can be unavailable. */ }
+  const selectedColor = palette.find(color => color.hex === savedColor) || initialColor;
+  function applyColor(color) {
+    document.documentElement.style.setProperty('--accent', color.hex);
+    document.documentElement.style.setProperty('--accent-rgb', [1, 3, 5].map(index => parseInt(color.hex.slice(index, index + 2), 16)).join(' '));
+    document.querySelector('#color-toggle').setAttribute('aria-label', 'Secondary color: ' + color.name);
+    document.querySelectorAll('.color-option').forEach(button => button.setAttribute('aria-checked', String(button.dataset.color === color.hex)));
+    try { localStorage.setItem(colorKey, color.hex); } catch (_) { /* The page still updates. */ }
+  }
+  const colorToggle = document.querySelector('#color-toggle');
+  const colorMenu = document.querySelector('#color-menu');
+  palette.forEach(color => {
+    const button = element('button', color.name, 'color-option');
+    button.type = 'button';
+    button.role = 'menuitemradio';
+    button.dataset.color = color.hex;
+    button.style.setProperty('--swatch', color.hex);
+    button.addEventListener('click', () => {
+      applyColor(color);
+      colorMenu.hidden = true;
+      colorToggle.setAttribute('aria-expanded', 'false');
+      colorToggle.focus();
+    });
+    colorMenu.append(button);
+  });
+  colorToggle.addEventListener('click', () => {
+    colorMenu.hidden = !colorMenu.hidden;
+    colorToggle.setAttribute('aria-expanded', String(!colorMenu.hidden));
+    if (!colorMenu.hidden) colorMenu.querySelector('.color-option[aria-checked="true"]').focus();
+  });
+  document.addEventListener('click', event => {
+    if (!event.target.closest('.color-picker')) {
+      colorMenu.hidden = true;
+      colorToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+  colorMenu.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      colorMenu.hidden = true;
+      colorToggle.setAttribute('aria-expanded', 'false');
+      colorToggle.focus();
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const options = [...colorMenu.querySelectorAll('.color-option')];
+      const index = options.indexOf(document.activeElement);
+      options[(index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length].focus();
+    }
+  });
+  applyColor(selectedColor);
+  window.addEventListener('storage', event => {
+    if (event.key === colorKey) {
+      const color = palette.find(option => option.hex === event.newValue);
+      if (color) applyColor(color);
+    }
+  });
 
   function cite(parent, source) {
     const labels = Array.isArray(source) ? source : text(source).split(';').map(part => part.trim()).filter(Boolean);
@@ -100,16 +160,6 @@
   }
   fill('#accomplishments', list(report.accomplishments), []);
   fill('#next-steps', list(report.nextSteps), [['Owner', 'owner'], ['Due', 'due']]);
-  const suggestions = list(report.suggestedNextSteps);
-  if (suggestions.length) {
-    document.querySelector('#suggestions-heading').hidden = false;
-    const target = document.querySelector('#suggestions');
-    suggestions.forEach((item, index) => {
-      const card = cardFor(item, [['Why this is suggested', 'rationale']], index);
-      card.prepend(element('span', 'Suggested, not committed', 'suggestion-label'));
-      target.append(card);
-    });
-  }
   function buildMilestones(root, rows) {
     if (!rows.length) {
       root.append(element('p', 'No evidence selected for this section.', 'empty'));
@@ -245,7 +295,7 @@
   previous.addEventListener('click', () => show(current - 1));
   next.addEventListener('click', () => show(current + 1));
   document.addEventListener('keydown', event => {
-    if (sourceDialog.open || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
+    if (sourceDialog.open || !colorMenu.hidden || event.altKey || event.ctrlKey || event.metaKey || event.isComposing) return;
     if (event.target && (event.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName))) return;
     if (event.key === 'ArrowLeft') { event.preventDefault(); show(current - 1); }
     if (event.key === 'ArrowRight') { event.preventDefault(); show(current + 1); }

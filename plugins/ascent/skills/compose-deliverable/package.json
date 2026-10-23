@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "postinstall": "node scripts/prune-bundled-skill.mjs",
     "build:demo": "node scripts/build.mjs examples/reference-informed-content.yaml --storyboard examples/reference-informed-storyboard.json --out build/reference-informed-demo.pptx",
     "validate:demo": "python3 scripts/validate_pptx.py build/reference-informed-demo.pptx --manifest build/reference-informed-demo.manifest.json",
     "validate:broken": "python3 scripts/test/validator_cases.py build/reference-informed-demo.pptx build/reference-informed-demo.manifest.json",

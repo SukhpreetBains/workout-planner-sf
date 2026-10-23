@@ -22,7 +22,6 @@ the same sourced meaning, qualifications, and coverage.
 | `coverageNote` | Evidence cutoff, material omissions, contradictions, and gaps for the chat handoff; never rendered on the pages. |
 | `accomplishments` | Array of `{text, source, icon?}`. Preserve whether progress is an agreement, reported implementation, or verified completion. |
 | `nextSteps` | Array of `{text, owner, due, source, icon?}` for recorded commitments. |
-| `suggestedNextSteps` | Array of `{text, rationale, source, icon?}` for grounded recommendations only. Do not write them to trackers. |
 | `milestones` | Array of `{name, date, status, source, icon?}`. |
 | `risks` | Array of `{text, impact, owner, action, source, icon?}`. |
 | `decisions` | Array of `{text, owner, due, source, icon?}` for decisions needed, not invented approvals. |
@@ -53,16 +52,15 @@ additional information that might change the assessment. Never treat a reasoned 
 tracker update. If evidence is insufficient, use `Not assessed` and
 `healthAssessment: "not_assessed"`.
 
-Keep suggested next steps visually separate from recorded commitments. A
-suggestion needs a source-backed rationale, but it has no implied approval,
-owner, or due date. Never apply it to trackers or other systems automatically.
 Never invent dates, decisions, or completion. State evidence gaps in
 `coverageNote`. The three designs must use the same report data.
 
 ## Sources and interface
 
 All three versions hide numbered citations by default. The upper-right Show
-sources control reveals them. Deduplicate citation numbers across the report.
+sources control reveals them. The adjacent Color button lets readers select one
+of the four approved secondary colors, with the choice saved across the report's
+three versions and page reloads. Deduplicate citation numbers across the report.
 For cited local documents or tracker rows, create escaped readable HTML
 snapshots inside `sources/` when possible, preserving source labels and original
 paths or row IDs. Copy only cited material. Never invent a document URL. A

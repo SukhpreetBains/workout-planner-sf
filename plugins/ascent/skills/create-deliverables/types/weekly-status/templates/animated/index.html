@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Weekly status, expressive</title>
+  <title>Weekly status, animated</title>
   <link rel="stylesheet" href="../site.css">
   <link rel="stylesheet" href="theme.css">
 </head>
-<body data-variant="expressive">
+<body data-variant="animated">
   <a class="skip" href="#presentation">Skip to report</a>
-  <header class="topbar"><a href="../index.html" aria-label="Weekly status options"><img class="wordmark" src="../assets/logo.svg" alt="Slalom"></a><div class="top-actions"><button class="quiet" id="sources-toggle" type="button" aria-pressed="false">Show sources</button><button class="quiet" id="print-button" type="button">Print</button></div></header>
+  <header class="topbar"><a href="../index.html" aria-label="Weekly status options"><img class="wordmark" src="../assets/logo.svg" alt="Slalom"></a><div class="top-actions"><button class="quiet" id="sources-toggle" type="button" aria-pressed="false">Show sources</button><div class="color-picker"><button class="quiet" id="color-toggle" type="button" aria-haspopup="menu" aria-controls="color-menu" aria-expanded="false">Color</button><div id="color-menu" class="color-menu" role="menu" aria-label="Secondary color" hidden></div></div><button class="quiet" id="print-button" type="button">Print</button></div></header>
   <main id="presentation" class="shell" aria-label="Weekly status presentation">
     <p id="sample-banner" class="sample-banner" hidden>Fictional sample report</p>
     <section class="page cover active" data-title="Weekly status"><div class="cover-grid"><div><p class="eyebrow">Weekly status</p><h1 id="project" tabindex="-1"></h1><p id="period" class="period"></p><p class="health"><span id="health"></span></p><div id="health-sources"></div></div><img class="cover-art" src="../assets/illustration.svg" alt="Approved Slalom illustration"></div></section>
     <section class="page summary" data-title="Summary"><div class="page-head"><span class="eyebrow">01 · At a glance</span><span class="eyebrow">Evidence summary</span></div><h2 tabindex="-1">Summary</h2><div class="summary-grid"><div><p id="summary" class="lead"></p><div id="summary-sources"></div></div><img class="summary-art" src="../assets/pointing.svg" alt="Approved Slalom presenter illustration"></div></section>
-    <section class="page accomplishments" data-title="Accomplishments"><div class="page-head"><span class="eyebrow">02 · Progress</span><span class="eyebrow">Reported updates</span></div><h2 tabindex="-1">What moved forward</h2><div id="accomplishments" class="cards"></div></section>
-    <section class="page next-steps" data-title="Next steps"><div class="page-head"><span class="eyebrow">03 · Coming up</span><span class="eyebrow">Actions and suggestions</span></div><h2 tabindex="-1">Next steps</h2><h3 class="subhead">Recorded commitments</h3><div id="next-steps" class="cards"></div><h3 id="suggestions-heading" class="subhead" hidden>Suggestions for consideration</h3><div id="suggestions" class="cards suggestions"></div></section>
-    <section class="page milestones" data-title="Milestones"><div class="page-head"><span class="eyebrow">04 · Checkpoints</span><span class="eyebrow">Source order</span></div><h2 tabindex="-1">Milestones</h2><p class="timeline-note">Dates are evenly spaced in source order. Spacing does not show elapsed time.</p><div id="milestones" class="ms"></div></section>
+    <section class="page accomplishments" data-title="Accomplishments"><div class="page-head"><span class="eyebrow">02 · Progress</span><span class="eyebrow">Reported updates</span></div><div class="progress-heading"><h2 tabindex="-1">What moved forward</h2><img class="section-art progress-art" src="../assets/high-five.svg" alt="Approved Slalom team illustration"></div><div id="accomplishments" class="cards"></div></section>
+    <section class="page next-steps" data-title="Next steps"><div class="page-head"><span class="eyebrow">03 · Coming up</span><span class="eyebrow">Recorded commitments</span></div><h2 tabindex="-1">Next steps</h2><div id="next-steps" class="cards"></div></section>
+    <section class="page milestones" data-title="Milestones"><div class="page-head"><span class="eyebrow">04 · Checkpoints</span><span class="eyebrow">Source order</span></div><div class="milestone-heading"><h2 tabindex="-1">Milestones</h2><img class="section-art milestone-art" src="../assets/telescope.svg" alt="Approved Slalom looking-ahead illustration"></div><p class="timeline-note">Dates are evenly spaced in source order. Spacing does not show elapsed time.</p><div id="milestones" class="ms"></div></section>
     <section class="page risks-decisions" data-title="Risks and decisions"><div class="page-head"><span class="eyebrow">05 · Attention</span><span class="eyebrow">Unresolved items</span></div><h2 tabindex="-1">Risks and decisions</h2><div class="risk-decision"><div class="stack"><h3>Risks and issues</h3><div id="risks" class="stack"></div></div><div class="stack"><h3>Decisions needed</h3><div id="decisions" class="stack"></div></div></div><img class="section-art" src="../assets/whiteboard.svg" alt="Approved Slalom whiteboard illustration"></section>
   </main>
   <nav class="nav" aria-label="Previous and next page"><button id="previous" type="button" aria-label="Previous page"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.5 5 8.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="next" type="button" aria-label="Next page"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8.5 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></nav>
@@ -25,5 +25,6 @@
   <dialog id="source-dialog" class="source-dialog" aria-labelledby="source-dialog-title"><h2 id="source-dialog-title">Source</h2><p id="source-label"></p><p id="source-unavailable">The document link is unavailable in this report package.</p><p><a id="source-document" href="#" target="_blank" rel="noopener" hidden>Open source document</a></p><button id="close-source" type="button">Close</button></dialog>
   <script src="../report.js"></script>
   <script src="../site.js" defer></script>
+  <script type="module" src="motion.js"></script>
 </body>
 </html>

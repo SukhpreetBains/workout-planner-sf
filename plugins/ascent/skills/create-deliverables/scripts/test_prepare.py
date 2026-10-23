@@ -12,7 +12,7 @@ class PrepareTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        script = (SKILL / 'templates/weekly-status/report.js').read_text()
+        script = (SKILL / 'types/weekly-status/templates/report.js').read_text()
         self.report = json.loads(script.removeprefix('window.weeklyStatus = ').strip().removesuffix(';'))
 
     def test_package_preserves_report_and_local_dependencies(self):

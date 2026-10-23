@@ -5,10 +5,8 @@ example should use, so worked examples across different templates and
 modules don't contradict each other. Entirely fictional — never real
 client information, per the base skill's non-negotiables.
 
-Already used as the fictional client for the `weekly-status-report`
-template's static example (`create-deliverables/templates/weekly-status-report/static-example.json`);
-this profile expands on the same entity for use elsewhere in the HLS
-pack, rather than inventing a second one.
+Use this profile for future HLS examples so they describe the same fictional
+client consistently.
 
 ## Profile
 

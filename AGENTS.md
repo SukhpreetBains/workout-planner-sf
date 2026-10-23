@@ -18,11 +18,10 @@
 
 The following skills are implemented: `ascent-initial-setup`, `investigate-project`,
 `workspace-collect`, `workspace-add`, `workspace-review`,
-`workspace-summarize`, `create-deliverables`, `update-deliverable-structure`, and
-`utilities-ui-generation`.
+`workspace-summarize`, `create-deliverables`, and `utilities-ui-generation`.
 
 Do not treat `analyze-org`, `compose-deliverable`, `design-skill-evals`,
-`download-teams-transcripts`, `interview-me`, or `recursive-improvement`,
+`interview-me`, or `recursive-improvement`,
 including their TODO-marked references or templates, as executable workflows
 or approved delivery guidance.
 
