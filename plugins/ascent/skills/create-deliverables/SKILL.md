@@ -47,17 +47,21 @@ ambiguous, contradictory, or needs context for a connection. Do not reproduce
 review-inbox wording mechanically. Select the material updates for the reader,
 group related evidence, paraphrase, and explain grounded connections in the
 narrative. Cite every material claim with the tracker IDs or underlying sources
-that support it. Keep a coverage note about material omissions and evidence gaps.
+that support it. Keep a coverage note about material omissions and evidence gaps in the report data for the chat handoff; do not render it in the presentation.
 Keep unresolved proposals separate from approved facts.
 
 Create one `report.json` with the fields in the brief. All three workers use this
 same synthesis. A connection may blend into fluent prose when the citations make
 its basis clear. Never invent completion, owners, dates, or decisions. The agent
 may make a reasoned health assessment when the evidence supports it. Mark it
-`healthAssessment: "reasoned"`, state the reasoning and source refs, and label it
-provisional in the report. After creating the three drafts, explicitly tell the
-user in chat that a reasoned rating was used and ask whether they have additional
-information that should change it. If the evidence does not support a rating,
+`healthAssessment: "reasoned"` and retain the reasoning and source refs in the
+report data. Show the health rating and its source links in the presentation,
+without a provisional label or reasoning paragraph. After creating the drafts,
+explain in chat how the report was derived: the sources used, reporting window,
+evidence cutoff, material gaps, and which conclusions are assessments rather
+than source-reported facts. For a reasoned health rating, explain its provisional
+nature and evidence-based rationale in chat and ask whether additional information
+should change it. Do not put this process explanation or coverage note on the pages. If the evidence does not support a rating,
 use `Not assessed`.
 
 Grounded suggested actions may appear in `suggestedNextSteps`, clearly separate

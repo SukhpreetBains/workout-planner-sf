@@ -63,12 +63,7 @@
   document.querySelector('#period').textContent = text(report.period);
   document.querySelector('#health').textContent = text(report.health);
   document.querySelector('#summary').textContent = text(report.summary);
-  document.querySelector('#coverage').textContent = text(report.coverageNote || 'Evidence gaps were not provided.');
   if (report.sample === true) document.querySelector('#sample-banner').hidden = false;
-  const assessment = report.healthAssessment || (report.health === 'Not assessed' ? 'not_assessed' : 'reported');
-  if (assessment === 'reasoned') document.querySelector('#provisional').hidden = false;
-  if (report.healthBasis) document.querySelector('#health-basis').textContent = text(report.healthBasis);
-  else document.querySelector('#health-basis').hidden = true;
   if (report.healthSource) cite(document.querySelector('#health-sources'), report.healthSource);
   if (report.summarySources) cite(document.querySelector('#summary-sources'), report.summarySources);
 

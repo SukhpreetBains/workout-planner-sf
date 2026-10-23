@@ -17,9 +17,9 @@ the same sourced meaning, qualifications, and coverage.
 | `useIconography`, `sample` | Booleans. Mark fictional demonstrations as samples. |
 | `health` | Reported rating, provisional reasoned rating, or `Not assessed`. |
 | `healthAssessment` | `reported`, `reasoned`, or `not_assessed`. |
-| `healthBasis`, `healthSource` | Explanation and source refs for a reported or reasoned rating. |
+| `healthBasis`, `healthSource` | Explanation for the chat handoff and source refs for a reported or reasoned rating. |
 | `summary`, `summarySources` | Concise editorial synthesis and supporting source labels. |
-| `coverageNote` | Evidence cutoff, material omissions, contradictions, and gaps. |
+| `coverageNote` | Evidence cutoff, material omissions, contradictions, and gaps for the chat handoff; never rendered on the pages. |
 | `accomplishments` | Array of `{text, source, icon?}`. Preserve whether progress is an agreement, reported implementation, or verified completion. |
 | `nextSteps` | Array of `{text, owner, due, source, icon?}` for recorded commitments. |
 | `suggestedNextSteps` | Array of `{text, rationale, source, icon?}` for grounded recommendations only. Do not write them to trackers. |
@@ -45,9 +45,11 @@ prose with enough citations for a reader to inspect the basis. Retain original
 qualifiers. Source-reported implementation is not verified completion.
 
 The agent may use `healthAssessment: "reasoned"` only with a cited basis that
-explains the rating. Show the rating as provisional in all three versions. After
-generation, tell the user that a reasoned rating was used and ask for additional
-information that might change it. Never treat a reasoned rating as an approved
+explains the rating. Show only the rating and its source links in the presentation,
+without a provisional label or assessment explanation. After generation, explain
+in chat how the report was derived, including sources, cutoff, material evidence
+gaps, and the rationale and provisional nature of any reasoned rating. Ask for
+additional information that might change the assessment. Never treat a reasoned rating as an approved
 tracker update. If evidence is insufficient, use `Not assessed` and
 `healthAssessment: "not_assessed"`.
 
