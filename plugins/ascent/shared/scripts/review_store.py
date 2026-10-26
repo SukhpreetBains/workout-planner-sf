@@ -38,6 +38,7 @@ from trackers import (
     is_relationships,
     is_workspace_timeout,
     parse_relationships,
+    preserve_retired_fields,
     read_rows,
     upsert_row,
 )
@@ -127,8 +128,21 @@ def stable_id(path: Path, index: int, update: dict) -> str:
 
 def upgrade_document(path: Path, document: dict) -> bool:
     changed = False
+    schema = load_schema()
     default_refs = document.get("source_refs") or []
     for index, update in enumerate(document["updates"]):
+        fields = update.get("fields")
+        if isinstance(fields, dict) and preserve_retired_fields(update.get("category", ""), fields, schema):
+            changed = True
+            update["revision"] = (update.get("revision") or 0) + 1
+        if not update.get("created_at"):
+            update["created_at"] = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).replace(microsecond=0).isoformat()
+            changed = True
+        if isinstance(fields, dict) and not fields.get("Date") and update.get("action") == "update":
+            original = current_row(update, schema)
+            if original and original.get("Date"):
+                fields["Date"] = original["Date"]
+                changed = True
         if not update.get("proposal_id"):
             update["proposal_id"] = stable_id(path, index, update)
             changed = True
@@ -324,6 +338,7 @@ def list_cards() -> dict:
                 cards.append({
                     "proposal_id": update["proposal_id"],
                     "revision": update["revision"],
+                    "created_at": update["created_at"],
                     "category": category,
                     "category_label": category_label(category, schema),
                     "action": update.get("action", "add"),
@@ -370,6 +385,7 @@ def create(category: str, source_ref: str) -> dict:
     proposal_id = str(uuid.uuid4())
     update = {
         "proposal_id": proposal_id,
+        "created_at": now_iso(),
         "revision": 1,
         "category": category,
         "action": "add",
@@ -742,6 +758,8 @@ def reject_accepted(category: str, tracker_id: str, reason: str = "") -> dict:
 
 def proposal_fields_from_row(category: str, row: dict, schema: dict) -> dict:
     """Keep editable, non-computed fields when returning an accepted row to pending."""
+    row = dict(row)
+    preserve_retired_fields(category, row, schema)
     return {
         column["name"]: row.get(column["name"], "")
         for column in schema["categories"][category].get("columns", [])
@@ -857,6 +875,7 @@ def list_rejected() -> list[dict]:
         fields = proposal_fields_from_row(category, update.get("fields") or {}, schema)
         items.append({
             "rejected_id": path.stem,
+            "created_at": update.get("created_at", document.get("reviewed_at", "")),
             "category": category,
             "category_label": category_label(category, schema),
             "title": display_label(category, fields, schema),

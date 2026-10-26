@@ -119,9 +119,10 @@ returns:
 
 - the classification;
 - candidate findings, each with its category, proposed field values,
-  any relationships the source states (meaning, the other finding or
-  record it points to, and the verbatim excerpt that states the
-  connection), and source-linked evidence — the `source_ref` plus
+  explicit or strongly supported contextual relationships (meaning, the
+  other finding or record it points to, supporting excerpts, and a short
+  explanation distinguishing stated from inferred connections), and
+  source-linked evidence: the `source_ref` plus
   a short verbatim `excerpt` that on its own supports the whole finding (a
   heading or label alone is not evidence; line numbers only when actually
   known);
@@ -142,10 +143,28 @@ one finding in one category; split a passage only when
 it states independent things. `ontology.dropped` lists kinds of content
 Ascent does not track and where that content goes instead.
 
-Fill only the fields the excerpt supports and leave the rest empty for the
-reviewer: no guessed owners, dates, statuses, probabilities, impacts, or
+When first creating a signal, determine its `Date` from source context:
+use the date of the finding, event, or decision, falling back to the dated
+source or meeting when that is the best supported context. Resolve relative
+dates only when the source supplies a clear anchor. Cite the basis and explain
+any contextual inference. If no date is supported, leave Date blank and flag
+it in the handoff. Never substitute the ingestion date, file modification
+time, or proposal creation timestamp.
+
+Preserve that initial contextual Date on later edits, merges, approvals, and
+status changes. An update proposal retains the existing signal's Date. Later
+evidence may fill an originally unknown Date or support an explicit correction;
+explain that correction and flag it if the item was previously reviewed.
+Entity dates (for example a session's Date) retain their existing meanings.
+
+Extract supported planned deadlines and actual outcomes separately. Use
+`Target Date` for a planned deadline and `Completed Date` for the actual
+completion, resolution, answer, validation, or achievement date, only on
+categories that expose those fields in the schema. Leave them blank until
+there is a basis for populating them. Fill other fields from supported
+evidence, with no guessed owners, statuses, probabilities, impacts, or
 sentiment. A finding whose category cannot be decided from the source is
-not proposed; it is listed in the handoff with the categories it could be.
+not proposed; list it in the handoff with the categories it could be.
 
 For meeting material, the subagent checks five categories deliberately:
 decisions, open questions, people, action items, and risks. It records
@@ -323,19 +342,55 @@ one that ends in "…".
 `relationships` in trackers.yaml (for example `owned_by: PER-003;
 impacts: MIL-002`). Store each relationship once, on its source record —
 the action carries `owned_by`, not the person — following the direction
-each meaning's definition gives. Add a relationship only when the source
-states the connection; appearing in the same document is not one. Use the
-most specific meaning that fits and `related_to` only when none does.
+each meaning's definition gives. Actively look for links between signals
+and entities, and between signals, across the new source, tracker copies,
+and pending proposals. Use the most specific meaning that fits and
+`related_to` only when none does.
 
-Every relationship must be visible in the item's own evidence: an excerpt
-has to state the connection itself ("the sponsor selected Option B"
-supports `decided_by` the sponsor; "Sam works for Acme Hosting" supports
-`part_of` Acme Hosting). When the connection is stated in a different
-sentence from the item's main excerpt, add that sentence as another
-evidence entry. A connection that is only implied, inferred from a section
-heading, or suggested by two things appearing near each other is left out;
-the reviewer can add it in the inbox. A wrong relationship is worse than a
-missing one.
+Propose explicit connections and strongly supported contextual connections.
+Resolve names, aliases, roles, and shared subject matter against existing
+records before adding entities. Cite the supporting excerpts from each
+relevant source and explain an inferred connection in the evidence entry's
+`rationale`; do not present it as a verbatim statement. Mere proximity or
+appearing in the same document is insufficient. Leave ambiguous identities
+unlinked and call out the uncertainty. This permission concerns relationships,
+not inventing unsupported findings or field values.
+
+**Reconcile signal lifecycles.** Compare new findings with existing open
+questions, proposals, risks, issues, dependencies, and actions. When evidence
+answers an open question, propose an update with `Status: answered` (the
+schema's closed outcome) and the answer in Description. When that answer
+records a choice, also create or reuse a decision and link it to the question
+with `addresses: <question ID>`. For example, a transcript selecting Okta
+answers the identity-provider question, creates the decision to use Okta,
+and connects the two. A factual answer without a choice closes the question
+without manufacturing a decision. Likewise propose supported completion,
+resolution, or supersession of other signals, using their allowed statuses.
+Preserve existing relationships and evidence while adding the new support.
+
+On every later ingestion, actively reassess `Target Date` and `Completed Date`
+against new evidence. Populate or revise Target Date when a deadline is agreed
+or changed. Populate Completed Date when the source establishes the actual
+outcome: an action completed, an issue or pain point resolved, a risk mitigated
+or closed, an assumption validated, a dependency satisfied, a question answered,
+a milestone achieved, a deliverable delivered, or an objective achieved.
+Use the actual outcome date, not today's ingestion date or a former target.
+Resolve relative dates only when the source date makes the calendar date clear;
+otherwise leave the date blank and preserve the timing in Description. Explain
+contextual inferences in evidence rationale. Never infer completion merely
+because a deadline passed. Keep the original Date and planned Target Date
+when adding Completed Date so planned and actual timing can be compared.
+These are proposed updates, with the same reviewed-item handoff below.
+
+For previously accepted tracker rows, create pending `action: update`
+proposals targeting their existing IDs. Do not edit or remove accepted rows
+or rewrite their applied archives during ingestion. Merge into an existing
+pending update for the same row instead of duplicating it. For pending items,
+revise the existing proposal and increment its revision. Record every
+previously reviewed item affected, including its ID, previous review state,
+old and proposed values, and supporting source, for the final handoff.
+Previously rejected findings are not silently revived; surface new evidence
+and the reason for reconsideration in a fresh pending proposal and the handoff.
 
 When a relationship points to a person, system, or other record that is
 not in the trackers, propose that record as well and use its
@@ -382,8 +437,10 @@ updates:
   - category: pain_point
     proposal_id: "<uuid>"    # stable across edits and review
     revision: 1
+    created_at: "2026-08-14T15:00:00Z" # actual proposal creation time
     action: add            # or: update (then also give `id: PAIN-003`)
     fields:
+      Date: 2026-08-14
       Name: Slow manual invoice approvals
       Description: Invoice approvals take 9 days because the handoff is manual.
       Status: active
@@ -402,8 +459,10 @@ Validate, and fix anything it reports:
 PY <shared-skill-dir>/scripts/validate_updates.py workspace/.system/proposed-updates/<file>.yaml
 ```
 
-Use a UUID for every `proposal_id`. Increment `revision` whenever an agent
-rewrites a proposal after it has been created. Evidence excerpts must be short,
+Use a UUID for every `proposal_id` and an ISO 8601 `created_at` timestamp for
+every proposal, including entities and updates. Preserve `created_at` across
+edits; it is separate from the signal's contextual `Date`. Increment
+`revision` whenever an agent rewrites a proposal after it has been created. Evidence excerpts must be short,
 verbatim support for the specific proposal. Do not manufacture line numbers.
 
 ## Step 5 — Sync and hand off
@@ -425,6 +484,11 @@ plain-English handoff. Do not merely mention a workflow or leave the next
 step implicit. State:
 
 - that the project trackers have **not** been changed yet;
+- a clearly labeled "Previously reviewed items affected" list naming every
+  accepted or rejected record with a proposed change, its ID, old and proposed
+  status or values, relationship changes, and the new evidence. State that
+  these modifications are pending approval, and say explicitly when there
+  are none;
 - how many documents were processed and in how many batches, and whether
   curation fell back to running without subagents;
 - the total number of evidence-backed items ready for their review, with

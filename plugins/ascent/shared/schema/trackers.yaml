@@ -21,7 +21,10 @@
 #     the agent.
 #   - required: true columns must be supplied when adding a row.
 #   - Every category has Name, Description, Status, and Relationships. A few
-#     add dates or risk scoring where deliverables depend on them.
+#     add risk scoring where deliverables depend on it. Every signal has Date,
+#     determined from source context when first proposed and preserved across
+#     later updates. Target Date is a planned
+#     deadline; Completed Date is an evidence-backed actual outcome date.
 #   - The Relationships column holds "; "-separated "<meaning>: <ID>" entries,
 #     e.g. "owned_by: PER-001; depends_on: DEP-004". The meaning is a key of
 #     `relationships` below; the ID is any row ID or pending proposal_id. A
@@ -656,6 +659,8 @@ categories:
       - '"Automation is expected to save approximately 600 hours annually." → objective stating the expected benefit.'
       - '"Automation has saved 200 staff hours this quarter." → update the objective it serves (realized benefit), or propose one naming the realized benefit if none exists.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
       - *name
       - &signal_description {name: Description, required: true}
       - {name: Status, required: true, default: active, enum: [active, achieved, dropped]}
@@ -684,6 +689,8 @@ categories:
       - '"Manual reconciliation consumes two days every month." (described as an inefficiency) → pain point.'
       - '"Today''s reconciliation failed and invoices cannot be issued until it succeeds." → issue plus dependency, not a pain point.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: active, enum: [active, mitigated, resolved]}
@@ -721,6 +728,7 @@ categories:
       - '"All integrations must use REST APIs." → requirement. "The architecture board mandated REST-only integration; other protocols are prohibited." → constraint.'
       - '"Finance needs access." → requirement, proposed. "We think Finance may need access." → not proposed; intent is unclear.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: proposed,
@@ -752,6 +760,7 @@ categories:
       - '"Phase 1 is limited to North America." → scope item stating the geography.'
       - '"Closed-case migration is excluded from Phase 1 and committed for Phase 2." → out_of_scope_item for Phase 1 plus scope item for Phase 2.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: proposed, enum: [proposed, confirmed]}
@@ -780,6 +789,7 @@ categories:
       - '"Closed-case migration is deferred; no later release is committed." → out of scope item, deferred.'
       - '"Historical migration is out of scope." with no boundary → out of scope item, excluded, boundary unstated.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: excluded, enum: [excluded, deferred]}
@@ -812,11 +822,13 @@ categories:
       - '"Limited SME availability may delay design validation." → risk; no probability inferred.'
       - '"Security approval might not arrive before Friday." in a risk register with no consequence → risk with the impact stated as unknown.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
+      - {name: Target Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: identified,
          enum: [identified, active, mitigated, realized, closed]}
-      - &target_date {name: Target Date, type: date}
       - {name: Probability, type: number, minimum: 0.1, maximum: 0.9}
       - {name: Impact, enum: [very_low, low, moderate, medium, high, very_high, critical],
          weights: {very_low: 0.05, low: 0.1, moderate: 0.2, medium: 0.2,
@@ -850,11 +862,13 @@ categories:
       - '"The export inspection confirmed the UTC assumption." → update that assumption to validated.'
       - '"We think Finance may need access." → not an assumption; not proposed.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
+      - {name: Target Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: unvalidated,
          enum: [unvalidated, validated, invalidated, superseded]}
-      - *target_date
       - *relationships
 
   issue:
@@ -881,10 +895,12 @@ categories:
       - '"The security review is late, but UAT does not require it." → issue; no dependency or block.'
       - '"Security approval is pending." → not an issue.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: open, enum: [open, in_progress, resolved, closed]}
-      - *target_date
+      - &target_date {name: Target Date, type: date}
       - *relationships
 
   dependency:
@@ -912,6 +928,8 @@ categories:
       - '"UAT requires the sandbox. The sandbox has not been provisioned, so UAT is blocked now." → dependency plus an issue that blocks UAT.'
       - '"If the sandbox is not available Monday, UAT may slip." → risk, not a dependency.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: pending, enum: [pending, satisfied, blocked, waived]}
@@ -955,6 +973,7 @@ categories:
       - '"Invoices will be submitted monthly." → constraint (contractual).'
       - '"Proposed commercial term: a 2% discount for payment within ten days." → constraint, proposed.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: active, enum: [proposed, active, lifted]}
@@ -962,6 +981,7 @@ categories:
 
   decision:
     group: signal
+    retired_fields: [Target Date]
     label: Decision
     tab: Decisions
     id_prefix: DEC-
@@ -988,10 +1008,10 @@ categories:
       - '"I recommend using a queue for invoice events." → proposal, not a decision.'
       - '"Key decisions: conservative identity-resolution mapping is recommended." → proposal; the heading does not make it a decision.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: decided, enum: [decided, superseded, reversed]}
-      - *target_date
       - *relationships
 
   open_question:
@@ -1018,6 +1038,8 @@ categories:
       - '"Could Finance get access?" (an unanswered feasibility question) → open question.'
       - '"Who fills the Experian technical lead role?" → open question about that role.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: open, enum: [open, answered, deferred, superseded]}
@@ -1053,6 +1075,7 @@ categories:
       - '"Amanda suggested documenting stream choices in Jira templates; no one was assigned." under a Key Decisions heading → proposal raised_by Amanda.'
       - '"The client says the screen is confusing and suggests grouping the fields." → feedback plus a proposal.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: proposed,
@@ -1086,6 +1109,7 @@ categories:
       - '"The sponsor approved CR-12." → update CR-12 to approved; CR-12 decided_by Sponsor.'
       - '"Contract rule: approval within ten days. Proposal: shorten that to five days." → the ten-day constraint stays; change request from ten to five days.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: proposed,
@@ -1116,6 +1140,8 @@ categories:
       - '"Maria will correct this dictionary entry Friday." → action owned_by Maria.'
       - '"Could you send the access list by noon?" recorded as an assignment to David → action owned_by David, assigned.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: assigned,
@@ -1146,6 +1172,8 @@ categories:
       - '"Security approval was due yesterday." → milestone with achievement unknown; Status stays planned.'
       - '"Design signoff is the checkpoint at the end of Discovery." → milestone part_of the Discovery phase.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: planned, enum: [planned, achieved, missed, cancelled]}
@@ -1175,6 +1203,8 @@ categories:
       - '"The runbook is a committed output; Maria will review it Friday." → deliverable plus an action.'
       - '"Solution Architecture" appearing as a heading → not a deliverable.'
     columns:
+      - {name: Date, type: date}
+      - {name: Completed Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: committed,
@@ -1216,6 +1246,7 @@ categories:
       - '"The data steward maintains the data dictionary." → governance rule owned_by Data Steward.'
       - '"The application requires a manager to approve purchases over $10,000." → requirement, not governance.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: active, enum: [proposed, active, retired]}
@@ -1241,6 +1272,7 @@ categories:
       - '"We agree to post standup notes by noon." → working agreement.'
       - '"We should post standup notes by noon." → proposal.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, required: true, default: agreed, enum: [agreed, retired]}
@@ -1272,6 +1304,7 @@ categories:
       - '"The sponsor praised Priya''s facilitation of the workshop." → feedback, recognition.'
       - '"Thanks, everyone." → nothing.'
     columns:
+      - {name: Date, type: date}
       - *name
       - *signal_description
       - {name: Status, label: Sentiment, enum: [positive, negative, neutral, recognition]}

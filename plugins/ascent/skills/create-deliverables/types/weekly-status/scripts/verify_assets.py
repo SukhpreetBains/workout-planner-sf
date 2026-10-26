@@ -70,6 +70,10 @@ def verify(root):
             for item in report.get(group, []):
                 if item.get('icon') and not (icon_dir / f"{item['icon']}.svg").is_file():
                     errors.append(f'{group}: missing icon {item["icon"]}.svg')
+        for section in report.get('sections', []):
+            for item in section.get('items', []):
+                if item.get('icon') and not (icon_dir / f"{item['icon']}.svg").is_file():
+                    errors.append(f'{section["id"]}: missing icon {item["icon"]}.svg')
 
     for error in errors:
         print(error, file=sys.stderr)

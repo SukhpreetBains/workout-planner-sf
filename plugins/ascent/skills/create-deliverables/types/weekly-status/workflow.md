@@ -1,9 +1,9 @@
 # Weekly status workflow
 
-Create three six-page HTML presentations from one weekly status report. All three
+Create three HTML presentations from one weekly status report. All three
 keep the sideways navigation, quiet previous and next controls, direct page
 navigation, and sources hidden until the user selects Show sources. The directions
-are business, expressive, and animated. Start with the [weekly status brief](templates/brief.md).
+are business, expressive, and animated. Start with the [weekly status brief](templates/brief.md) and [default outline](outline.md).
 
 ## Set the visual inputs
 
@@ -36,7 +36,7 @@ reason to be there. Keep assets unaltered and local to the output package.
 ## Prepare one editorial synthesis
 
 Read project instructions and confirm the reporting period when unclear. For an
-initialized Ascent workspace, use `workspace-summarize`. Start with approved
+initialized Ascent workspace, run `shared/scripts/sync.py --check-setup`, inspect `shared/scripts/sync.py --status` for unprocessed material, then run `shared/scripts/sync.py --trackers-only` for every fresh report. Stop if the tracker refresh fails. Use `shared/scripts/py` and `ASCENT_PROJECT_ROOT` for these commands. Read the current `workspace/.system/tracker-copies/` and `workspace/.system/applied-updates/` after refresh. Start with approved
 tracker rows. Read filed source documents directly when a row is incomplete,
 ambiguous, contradictory, or needs context for a connection. Do not reproduce
 review-inbox wording mechanically. Select the material updates for the reader,
@@ -45,7 +45,7 @@ narrative. Cite every material claim with the tracker IDs or underlying sources
 that support it. Keep a coverage note about material omissions and evidence gaps in the report data for the chat handoff; do not render it in the presentation.
 Keep unresolved proposals separate from approved facts.
 
-Create one `report.json` with the fields in the brief. All three workers use this
+Create one `report.json` with the fields in the brief. Read `workspace/.system/outlines/weekly-status.md` when present, otherwise read the legacy `weekly-status-outlined.md`, then fall back to this type's `outline.md`. Validate section names, layouts, categories, and editorial boundaries with `python3 types/weekly-status/scripts/outline.py /absolute/outline.md` before generating. Let the user add, remove, or reorder sections, then save their approved choices to `workspace/.system/outlines/weekly-status.md`. To reset, use `--reset-outline` for a draft and only change the saved outline when the user requests a lasting reset. Offer optional sections after a draft, without creating unsupported commitments. All three workers use this
 same synthesis. A connection may blend into fluent prose when the citations make
 its basis clear. Never invent completion, owners, dates, or decisions. The agent
 may make a reasoned health assessment when the evidence supports it. Mark it
@@ -66,13 +66,19 @@ skill templates. Ascent outputs belong in
 `workspace/draft-deliverables/<report-name>/`; elsewhere follow the user's
 destination and repository file organization.
 
-Initialize a new output directory, which the helper refuses to overwrite:
+Initialize a new output directory, which the helper refuses to overwrite. For
+an initialized Ascent workspace, set `ASCENT_PROJECT_ROOT` and use the plugin's
+managed Python launcher so tracker and accepted-evidence YAML can be read:
 
 ```sh
-python3 scripts/prepare.py /absolute/output/path --report /absolute/report.json
+ASCENT_PROJECT_ROOT=/absolute/project/path /absolute/plugin/shared/scripts/py scripts/prepare.py /absolute/output/path --report /absolute/report.json --project-root /absolute/project/path
 ```
 
-Run the command from the `create-deliverables` skill directory, or use its absolute script path. The
+For a sample or non-Ascent report without `--project-root`, use `python3
+scripts/prepare.py /absolute/output/path --report /absolute/report.json` (omit
+`--report` for the fictional sample). Run from the `create-deliverables` skill
+directory, or use its absolute script path. Use a new version folder for each
+draft because the helper refuses to overwrite an existing folder. The
 helper copies three editable starters, the shared report, Slalom Sans, approved
 starter imagery, Anime.js, and the complete approved icon library when enabled.
 There is no build step.
@@ -92,8 +98,7 @@ and iconography settings, the brand guide, and one output folder. Each worker
 edits only its folder. Shared facts, assets, and navigation code remain
 read-only.
 
-All workers preserve the same six pages and order: cover, summary,
-accomplishments, next steps, milestones, and risks with decisions. All keep
+All workers preserve cover and summary, followed by the ordered sections in the validated project outline. Default sections are accomplishments, next steps, milestones, and combined risks with decisions. Optional sections use the same layouts across all three styles. All keep
 sideways previous and next controls, keyboard navigation, direct page buttons,
 focus management, a live page announcement, print-all behavior, hidden
 numbered source links with an upper-right Show sources toggle, and an adjacent
@@ -120,7 +125,7 @@ Wait for all workers. Run `python3 scripts/verify_assets.py /absolute/output/pat
 It checks packaged icons and local asset references, including icon names used
 inside scripts. Also open each version in a browser and check that every rendered
 `img` has loaded (`complete` and `naturalWidth > 0`); this catches missing dynamic
-icons. Check factual parity against `report.json`, all six pages, source labels,
+icons. Check factual parity against `report.json`, all pages, source labels,
 navigation, small-screen overflow, keyboard access, print, and reduced motion.
 Report checks that could not run; do not describe static inspection as visual
 validation.

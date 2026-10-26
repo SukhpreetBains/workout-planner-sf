@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import shutil
 import tempfile
+from outline import load as load_outline
+from sources import package as package_sources
 
 TYPE = Path(__file__).resolve().parents[1]
 SKILL = TYPE.parents[1]
@@ -46,6 +48,8 @@ def validate(report):
               'risks': ('text', 'impact', 'owner', 'action', 'source'),
               'decisions': ('text', 'owner', 'due', 'source')}
     for key, fields in groups.items():
+        if key not in report and 'sections' in report:
+            continue
         if not isinstance(report.get(key), list):
             raise ValueError(f'{key} must be an array')
         for row in report[key]:
@@ -54,10 +58,59 @@ def validate(report):
             icon = row.get('icon')
             if icon is not None and (not isinstance(icon, str) or not (PACK / 'iconography' / f'{icon}.svg').is_file()):
                 raise ValueError(f'{key} uses an unavailable Slalom icon: {icon}')
+    if 'sections' in report:
+        if not isinstance(report['sections'], list):
+            raise ValueError('sections must be an ordered array')
+        seen = set()
+        for section in report['sections']:
+            if not isinstance(section, dict) or not isinstance(section.get('id'), str) or section['id'] in seen:
+                raise ValueError('section IDs must be unique strings')
+            seen.add(section['id'])
+            if not isinstance(section.get('items'), list):
+                raise ValueError(f'{section["id"]} needs an items array')
+            for item in section['items']:
+                if not isinstance(item, dict) or not isinstance(item.get('source'), (str, list)):
+                    raise ValueError(f'{section["id"]} items need source labels')
+                source = item['source']
+                if not (source.strip() if isinstance(source, str) else source and all(isinstance(x, str) and x.strip() for x in source)):
+                    raise ValueError(f'{section["id"]} items need nonempty source labels')
+                icon = item.get('icon')
+                if icon is not None and (not isinstance(icon, str) or not (PACK / 'iconography' / f'{icon}.svg').is_file()):
+                    raise ValueError(f'{section["id"]} uses an unavailable Slalom icon: {icon}')
     return report
 
 
-def prepare(output, report=None):
+def normalize(report, outline):
+    """Apply the selected outline and convert old report groups to section items."""
+    old = {
+        'accomplishments': report.get('accomplishments', []),
+        'next-steps': report.get('nextSteps', []),
+        'milestones': report.get('milestones', []),
+        'risks-and-decisions': [dict(item, kind='Risk') for item in report.get('risks', [])]
+                               + [dict(item, kind='Decision') for item in report.get('decisions', [])],
+    }
+    authored = {section['id']: section for section in report.get('sections', [])}
+    active = outline['sections']
+    if authored and set(authored) != {section['id'] for section in active}:
+        raise ValueError('report section IDs must match the active outline')
+    report['sections'] = []
+    for definition in active:
+        section = {key: definition[key] for key in ('id', 'title', 'layout', 'columns', 'label', 'cardLines')}
+        section['items'] = authored[section['id']]['items'] if authored else old.get(section['id'], [])
+        if section['layout'] == 'ask' and len(section['items']) > 1:
+            raise ValueError(f'{section["id"]} asks for one item at most')
+        for item in section['items']:
+            if section['layout'] == 'timeline' and any(not isinstance(item.get(key), str) or not item[key].strip() for key in ('name', 'date', 'status')):
+                raise ValueError(f'{section["id"]} timeline items need name, date, and status')
+            if section['layout'] in ('list', 'cards', 'ask') and not any(isinstance(item.get(key), str) and item[key].strip() for key in ('text', 'description')):
+                raise ValueError(f'{section["id"]} items need text or description')
+            if section['layout'] == 'table' and any(not isinstance(item.get(column), str) or not item[column].strip() for column in section['columns']):
+                raise ValueError(f'{section["id"]} table items need each outlined column')
+        report['sections'].append(section)
+    return report
+
+
+def prepare(output, report=None, project_root=None, reset_outline=False):
     output = Path(output).resolve()
     if output.exists():
         raise FileExistsError(f'Refusing to replace existing output: {output}')
@@ -65,6 +118,8 @@ def prepare(output, report=None):
         sample = (TYPE / 'templates/report.js').read_text(encoding='utf-8')
         report = json.loads(sample.removeprefix('window.weeklyStatus = ').strip().removesuffix(';'))
     validate(report)
+    outline = load_outline(project_root, reset_outline)
+    report = normalize(dict(report), outline)
     assets = {
         'regular.woff2': PACK / 'fonts/slalom-sans/Webfont Files/SlalomSans-Regular.woff2',
         'bold.woff2': PACK / 'fonts/slalom-sans/Webfont Files/SlalomSans-Bold.woff2',
@@ -92,6 +147,7 @@ def prepare(output, report=None):
             shutil.copy2(source, draft / 'assets' / name)
         if report['useIconography']:
             shutil.copytree(PACK / 'iconography', draft / 'assets' / 'iconography')
+        package_sources(report, project_root, draft)
         (draft / 'report.json').write_text(json.dumps(report, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
         (draft / 'report.js').write_text('window.weeklyStatus = ' + json.dumps(report, ensure_ascii=True) + ';\n', encoding='utf-8')
         draft.rename(output)
@@ -102,9 +158,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
     parser.add_argument('--report', type=Path, help='Report JSON; omitted for a labeled fictional sample')
+    parser.add_argument('--project-root', type=Path, help='Initialized project with tracker copies and saved outline')
+    parser.add_argument('--reset-outline', action='store_true', help='Use default sections for this run without editing saved outlines')
     args = parser.parse_args()
     try:
         report = json.loads(args.report.read_text(encoding='utf-8')) if args.report else None
-        print(prepare(args.output, report))
+        print(prepare(args.output, report, args.project_root, args.reset_outline))
     except (OSError, ValueError) as exc:
         parser.exit(1, f'{exc}\n')

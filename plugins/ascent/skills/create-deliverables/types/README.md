@@ -35,3 +35,13 @@ not copy weekly status rules into the parent skill or another type by default.
 The top-level `scripts/prepare.py` and `scripts/verify_assets.py` remain
 compatibility commands for weekly status. New types should use their own
 entry points and document them in their workflow.
+
+The weekly status type uses an ordered outline under its own type folder. To add a
+weekly status section, add a validated entry to `outline.md` with one of the
+supported layouts, real tracker categories, and clear `Contains` and `Leave out`
+guidance. Table entries need `Columns`; card entries need a `Label`. Keep it in
+the optional library until the user asks to include it in a project outline.
+The report author supplies section items and source labels. The preparer checks
+the outline and item shapes, then packages cited current tracker rows and accepted
+evidence. The section outline and source inspection design build on
+[PR #70](https://github.com/Slalom/ascent/pull/70).

@@ -11,6 +11,7 @@
   };
   const sourceNumbers = new Map();
   const sourceLinks = report.sourceLinks && typeof report.sourceLinks === 'object' ? report.sourceLinks : {};
+  const sourceDetails = report.sourceDetails && typeof report.sourceDetails === 'object' ? report.sourceDetails : {};
   const sourceDialog = document.querySelector('#source-dialog');
   let lastCitation = null;
 
@@ -94,7 +95,33 @@
       button.addEventListener('click', () => {
         lastCitation = button;
         document.querySelector('#source-label').textContent = label;
-        const href = sourceLinks[label];
+        const record = sourceDetails[label];
+        const detailRoot = document.querySelector('#source-details');
+        detailRoot.replaceChildren();
+        if (record) {
+          if (record.description) detailRoot.append(element('p', record.description));
+          const facts = element('dl', undefined, 'source-facts');
+          Object.entries(record.facts || {}).forEach(([key, value]) => facts.append(element('dt', key), element('dd', value)));
+          if (facts.children.length) detailRoot.append(element('h3', 'Current reviewed tracker row'), facts);
+          if (record.evidence?.length) {
+            const evidence = element('ul', undefined, 'source-evidence');
+            record.evidence.forEach(item => {
+              const li = element('li');
+              li.append(element('blockquote', item.excerpt));
+              li.append(sourceReference(item));
+              evidence.append(li);
+            });
+            detailRoot.append(element('h3', 'Historical accepted evidence excerpts'), evidence);
+          } else if (record.facts && Object.keys(record.facts).length) {
+            detailRoot.append(element('p', 'No accepted evidence excerpt is available for this row.'));
+          }
+          if (record.documents?.length) {
+            const documents = element('ul');
+            record.documents.forEach(item => { const li = element('li'); li.append(sourceReference(item)); documents.append(li); });
+            detailRoot.append(element('h3', 'Source documents'), documents);
+          }
+        }
+        const href = sourceLinks[label] || (record?.documents || []).find(item => item.link)?.link;
         const safe = typeof href === 'string' && (/^https:\/\//.test(href) || /^\.\.\/sources\/[A-Za-z0-9_.-]+\.html$/.test(href));
         const link = document.querySelector('#source-document');
         link.hidden = !safe;
@@ -107,6 +134,18 @@
       wrap.append(button);
     });
     parent.append(wrap);
+  }
+
+  function sourceReference(item) {
+    const link = item.link;
+    if (typeof link === 'string' && /^\.\.\/sources\/[A-Za-z0-9_.-]+\.html$/.test(link)) {
+      const anchor = element('a', item.sourceRef || 'Open source snapshot');
+      anchor.href = link;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener';
+      return anchor;
+    }
+    return element('span', (item.sourceRef || 'Source') + ' (document unavailable in this package)');
   }
 
   document.querySelector('#close-source').addEventListener('click', () => sourceDialog.close());
@@ -158,9 +197,7 @@
     }
     rows.forEach((item, index) => target.append(cardFor(item, fields, index, titleKey)));
   }
-  fill('#accomplishments', list(report.accomplishments), []);
-  fill('#next-steps', list(report.nextSteps), [['Owner', 'owner'], ['Due', 'due']]);
-  function buildMilestones(root, rows) {
+  function buildMilestones(root, rows, prefix) {
     if (!rows.length) {
       root.append(element('p', 'No evidence selected for this section.', 'empty'));
       return;
@@ -181,7 +218,7 @@
       const button = element('button', undefined, 'ms-date');
       button.type = 'button';
       button.setAttribute('aria-expanded', 'false');
-      button.setAttribute('aria-controls', 'ms-panel-' + index);
+      button.setAttribute('aria-controls', prefix + '-ms-panel-' + index);
       const dot = element('span', undefined, 'ms-dot');
       dot.setAttribute('aria-hidden', 'true');
       button.append(dot, element('span', item.date, 'ms-date-text'), element('span', ', ' + text(item.name), 'sr-only'));
@@ -191,15 +228,15 @@
       buttons.push(button);
 
       const panel = element('section', undefined, 'ms-panel');
-      panel.id = 'ms-panel-' + index;
+      panel.id = prefix + '-ms-panel-' + index;
       panel.hidden = true;
-      panel.setAttribute('aria-labelledby', 'ms-title-' + index);
+      panel.setAttribute('aria-labelledby', prefix + '-ms-title-' + index);
       const body = element('div', undefined, 'ms-panel-body');
       addIcon(body, item);
       const copy = element('div', undefined, 'ms-copy');
       copy.append(element('p', 'Milestone ' + (index + 1) + ' of ' + rows.length, 'ms-kicker'));
       const title = element('h3', item.name, 'ms-title');
-      title.id = 'ms-title-' + index;
+      title.id = prefix + '-ms-title-' + index;
       copy.append(title);
       detail(copy, 'Date', item.date);
       detail(copy, 'Status', item.status);
@@ -257,9 +294,62 @@
     track.addEventListener('scroll', place, {passive: true});
     document.addEventListener('reportpagechange', place);
   }
-  buildMilestones(document.querySelector('#milestones'), list(report.milestones));
-  fill('#risks', list(report.risks), [['Impact', 'impact'], ['Owner', 'owner'], ['Action', 'action']]);
-  fill('#decisions', list(report.decisions), [['Owner', 'owner'], ['Due', 'due']]);
+  const sectionPages = list(report.sections);
+  sectionPages.forEach((section, position) => {
+    const page = element('section', undefined, 'page section-page layout-' + section.layout);
+    page.dataset.title = text(section.title);
+    const header = element('div', undefined, 'page-head');
+    header.append(element('span', String(position + 2).padStart(2, '0') + ' · Weekly status', 'eyebrow'));
+    page.append(header);
+    const title = element('h2', section.title);
+    title.tabIndex = -1;
+    page.append(title);
+    const items = list(section.items);
+    if (section.layout === 'timeline') {
+      page.append(element('p', 'Dates are evenly spaced in source order. Spacing does not show elapsed time.', 'timeline-note'));
+      const root = element('div', undefined, 'ms');
+      buildMilestones(root, items, section.id);
+      page.append(root);
+    } else if (section.layout === 'table') {
+      if (!items.length) page.append(element('p', 'No evidence selected for this section.', 'empty'));
+      else {
+        const table = element('table', undefined, 'section-table');
+        const head = element('thead');
+        const headRow = element('tr');
+        list(section.columns).forEach(column => headRow.append(element('th', column)));
+        headRow.append(element('th', 'Sources'));
+        head.append(headRow);
+        const body = element('tbody');
+        items.forEach(item => {
+          const row = element('tr');
+          list(section.columns).forEach(column => row.append(element('td', item[column] ?? item[column.toLowerCase().replaceAll(' ', '')] ?? 'Not provided')));
+          const source = element('td');
+          cite(source, item.source);
+          row.append(source);
+          body.append(row);
+        });
+        table.append(head, body);
+        page.append(table);
+      }
+    } else {
+      const root = element('div', undefined, section.layout === 'list' || section.layout === 'ask' ? 'section-list' : 'cards');
+      if (!items.length) root.append(element('p', 'No evidence selected for this section.', 'empty'));
+      items.forEach((item, index) => {
+        const card = element('article', undefined, 'card' + (index % 2 ? ' accent' : ''));
+        addIcon(card, item);
+        const heading = item.name || item.title || item.kind || (section.layout === 'ask' ? 'Request' : null);
+        if (heading) card.append(element('h3', heading));
+        card.append(element('p', item.text || item.description || 'Not provided', 'item-text'));
+        Object.entries(item).forEach(([key, value]) => {
+          if (!['name', 'title', 'kind', 'text', 'description', 'source', 'icon'].includes(key) && typeof value === 'string') detail(card, key.charAt(0).toUpperCase() + key.slice(1), value);
+        });
+        cite(card, item.source);
+        root.append(card);
+      });
+      page.append(root);
+    }
+    document.querySelector('#presentation').append(page);
+  });
 
   const pages = [...document.querySelectorAll('.page')];
   const direct = document.querySelector('#direct');
