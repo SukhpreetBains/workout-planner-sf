@@ -306,6 +306,15 @@ extend Salesforce's standard model before building a custom one. The
 validator rejects a missing name, a name that repeats the description, and
 one that ends in "…".
 
+**Keep descriptions about the finding itself.** Do not append source-note
+metadata such as "Gada; timing not stated", "owner not assigned", "today",
+or "in progress" to Description. Put people in `owned_by` relationships,
+statuses in `Status`, and calendar deadlines in `Target Date`. Resolve a
+relative deadline such as "today" only when the dated source makes the
+calendar date clear. Otherwise leave Target Date blank and retain the exact
+timing in the evidence excerpt. Keep a dependency such as "after the merge"
+in Description when it explains the task's sequence or meaning.
+
 **Classify by what the finding is:**
 
 - Caps, limits, and commercial terms are constraints. "Up to" limits,
@@ -376,7 +385,7 @@ or closed, an assumption validated, a dependency satisfied, a question answered,
 a milestone achieved, a deliverable delivered, or an objective achieved.
 Use the actual outcome date, not today's ingestion date or a former target.
 Resolve relative dates only when the source date makes the calendar date clear;
-otherwise leave the date blank and preserve the timing in Description. Explain
+otherwise leave the date blank and preserve the timing in evidence. Explain
 contextual inferences in evidence rationale. Never infer completion merely
 because a deadline passed. Keep the original Date and planned Target Date
 when adding Completed Date so planned and actual timing can be compared.
@@ -415,7 +424,8 @@ deliberately; meetings are the richest source for those five.
   need to assign one. Link the owner with `owned_by`, using a pending
   person's `proposal_id` if needed. Fill `Target Date` whenever the source
   gives a calendar date ("at the August 17 onboarding"); keep relative
-  timing such as "before kickoff" in the Description.
+  timing such as "before kickoff" in evidence, and include it in Description
+  only when it explains a task dependency.
 - **Risks** — propose each stated risk that clears the bar, with any
   mitigation the source gives in its Description. Leave `Probability` and
   `Impact` empty unless the source supports them.

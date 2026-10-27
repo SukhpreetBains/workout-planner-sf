@@ -1128,15 +1128,17 @@ categories:
     bar_to_clear: >-
       A concrete, verb-led task with an owner, or with a clearly stated need
       to assign one. Link the owner with owned_by. Fill Target Date only when
-      the source gives a calendar date; keep relative timing ("by Thursday",
-      "before kickoff") in the Description.
+      the source gives a calendar date, including a relative date that can be
+      resolved from a dated source. Otherwise retain timing in the evidence
+      excerpt, not as a trailing Description annotation. Keep dependencies
+      such as "before kickoff" in Description when they explain the task.
     lookalikes:
       - governance_rule — a standing, repeated duty.
       - deliverable — naming a due output does not create an action to deliver it; propose an action only for a distinct activity such as preparing, reviewing, or sending it.
       - proposal — a casual suggestion with no assignment.
       - milestone — an event, not a task.
     examples:
-      - '"David will send the data dictionary by Thursday." → action owned_by David, committed, "by Thursday" in the Description.'
+      - '"David will send the data dictionary by Thursday." → action owned_by David, committed, with Target Date when the source date resolves Thursday; otherwise keep the timing in evidence.'
       - '"Maria will correct this dictionary entry Friday." → action owned_by Maria.'
       - '"Could you send the access list by noon?" recorded as an assignment to David → action owned_by David, assigned.'
     columns:

@@ -281,6 +281,16 @@ class ReviewCache:
     def request_sync(self) -> None:
         self.wake.set()
 
+    def sync_now(self) -> dict:
+        """Complete one sync attempt and return its final status to the caller."""
+        try:
+            self.sync_once()
+        except Exception as error:
+            with self.lock:
+                self.status.update({"state": "offline", "error": str(error)})
+                self._save_manifest()
+        return self.status_json()
+
     def sync_preview(self) -> dict:
         """Compare differing review files without publishing either version."""
         remote = snapshot(self.project_root)

@@ -1157,70 +1157,114 @@ async function loadInbox() {
 }
 
 const syncIndicator = el("span", { class: "sync-indicator", role: "status" }, "Working locally");
-const syncTime = value => value ? new Date(value).toLocaleString() : "Not present";
+async function syncPreview() {
+  try {
+    return await api("/api/sync-preview");
+  } catch (error) {
+    if (error.status !== 503) throw error;
+    return api("/api/sync-preview");
+  }
+}
 
-function openSyncModal(preview, trigger) {
+function reportSyncResult(status) {
+  if (status.state === "synced") showToast("Synced to OneDrive.");
+  else if (status.state === "conflict") showToast("Sync paused because OneDrive changed since the last sync. Your local work is saved.");
+  else if (status.state === "offline") showToast(`Sync failed: ${status.error || "OneDrive is unavailable."}`);
+  else showToast(`${status.pending || 0} local change${status.pending === 1 ? "" : "s"} still waiting to sync.`);
+}
+
+async function runSyncNow() {
+  syncIndicator.textContent = "Syncing to OneDrive";
+  const status = await api("/api/sync-now", { method: "POST", body: "{}" });
+  await refreshSyncStatus();
+  reportSyncResult(status);
+  return status;
+}
+
+function openSyncWarning(preview, trigger) {
   const modal = el("div", { class: "review-note-modal sync-modal", role: "dialog",
     "aria-modal": "true", "aria-labelledby": "sync-modal-title" });
   const close = el("button", { class: "quiet", type: "button",
     onclick: () => closeModal(modal, trigger) }, "Close");
-  const list = el("div", { class: "sync-file-list" });
-  const intro = el("p", {}, "Review the local and cloud versions, then overwrite the cloud with every available local copy.");
-  const action = el("button", { type: "button" }, "Overwrite cloud with all local files");
-  let comparedItems = [];
-  const render = items => {
+  const warning = el("p");
+  const safeSync = el("button", { class: "quiet", type: "button" }, "Sync safely");
+  const overwrite = el("button", { type: "button" }, "Overwrite OneDrive with local changes");
+  let comparedItems = preview.items || [];
+  const updateWarning = items => {
     comparedItems = items;
-    list.replaceChildren();
-    action.disabled = !items.some(item => item.local.exists);
-    if (!items.length) {
-      list.append(el("p", { class: "sync-empty" }, "Local and cloud review files match."));
-      return;
-    }
-    items.forEach(item => {
-      const local = item.local;
-      const cloud = item.cloud;
-      const details = el("div", { class: "sync-versions" }, [
-        el("div", {}, [el("strong", {}, "Local"),
-          el("span", {}, syncTime(local.modified_at)),
-          el("span", {}, `By ${local.modified_by}`)]),
-        el("div", {}, [el("strong", {}, "Cloud"),
-          el("span", {}, syncTime(cloud.modified_at)),
-          el("span", {}, `By ${cloud.modified_by}`)]),
-      ]);
-      list.append(el("section", { class: "sync-file" }, [
-        el("h3", {}, item.path), details,
-        ...(!local.exists ? [el("p", { class: "sync-file-note" }, "No local copy to upload.")] : []),
-      ]));
-    });
+    const changed = items.filter(item => item.cloud_changed).length;
+    warning.textContent = changed
+      ? `${changed} OneDrive file${changed === 1 ? " has" : "s have"} changed since the last sync. Your local changes are saved. You can try a safe sync or overwrite OneDrive with the local copies.`
+      : "The file list changed. Review the current sync status before overwriting OneDrive.";
+    overwrite.disabled = !items.some(item => item.local.exists);
   };
-  action.addEventListener("click", async () => {
-    action.disabled = true;
+  safeSync.addEventListener("click", async () => {
+    safeSync.disabled = true;
+    overwrite.disabled = true;
     try {
-      const result = await api("/api/sync-overwrite-all", { method: "POST",
-        body: JSON.stringify({ items: comparedItems }) });
-      showToast(`${result.updated.length} cloud file${result.updated.length === 1 ? "" : "s"} updated.`);
-      render((await api("/api/sync-preview")).items || []);
-      refreshSyncStatus();
+      const status = await runSyncNow();
+      if (status.state === "synced") closeModal(modal, trigger);
     } catch (error) {
-      showToast(error.message || "The cloud files were not updated.");
-      try { render((await api("/api/sync-preview")).items || []); }
-      catch { action.disabled = false; }
+      showToast(error.message || "Sync failed.");
+    } finally {
+      safeSync.disabled = false;
+      overwrite.disabled = !comparedItems.some(item => item.local.exists);
     }
   });
-  const form = el("form", {}, [el("h2", { id: "sync-modal-title" }, "Review sync"), intro, list,
-    el("div", { class: "modal-actions" }, close, action)]);
+  overwrite.addEventListener("click", async () => {
+    overwrite.disabled = true;
+    safeSync.disabled = true;
+    try {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          await api("/api/sync-overwrite-all", { method: "POST",
+            body: JSON.stringify({ items: comparedItems }) });
+          break;
+        } catch (error) {
+          if (error.status !== 409 || attempt === 2) throw error;
+          const latest = (await syncPreview()).items || [];
+          const priorCloud = new Map(comparedItems.map(item => [item.path, item.cloud.fingerprint]));
+          const newCloudChanges = latest.some(item => item.cloud_changed
+            && priorCloud.get(item.path) !== item.cloud.fingerprint);
+          if (newCloudChanges) {
+            updateWarning(latest);
+            throw new Error("OneDrive changed again. Review this warning before overwriting.");
+          }
+          comparedItems = latest;
+        }
+      }
+      const status = await runSyncNow();
+      if (status.state === "synced") closeModal(modal, trigger);
+    } catch (error) {
+      showToast(error.message || "OneDrive was not updated.");
+      try { updateWarning((await syncPreview()).items || []); }
+      catch { overwrite.disabled = false; }
+    } finally {
+      safeSync.disabled = false;
+    }
+  });
+  const form = el("form", {}, [el("h2", { id: "sync-modal-title" }, "OneDrive changed"), warning,
+    el("div", { class: "modal-actions" }, [close, safeSync, overwrite])]);
   form.addEventListener("submit", event => event.preventDefault());
   modal.append(form);
-  render(preview.items || []);
+  updateWarning(comparedItems);
   showModal(modal, close, trigger);
 }
 
 const syncButton = el("button", { class: "quiet sync-button", type: "button", onclick: async () => {
   syncButton.disabled = true;
   try {
-    openSyncModal(await api("/api/sync-preview"), syncButton);
+    const selected = records.find(record => record.key === selectedKey);
+    if (selected) await ensureSaved(selected);
+    const preview = await syncPreview();
+    if ((preview.items || []).some(item => item.cloud_changed)) {
+      openSyncWarning(preview, syncButton);
+    } else {
+      const status = await runSyncNow();
+      if (status.state === "conflict") openSyncWarning(await syncPreview(), syncButton);
+    }
   } catch (error) {
-    showToast(error.message || "Could not compare local and cloud files.");
+    showToast(error.message || "Could not sync with OneDrive.");
   } finally {
     syncButton.disabled = false;
   }
