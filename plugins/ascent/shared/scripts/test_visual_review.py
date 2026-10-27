@@ -269,6 +269,8 @@ class VisualReviewTest(unittest.TestCase):
         self.store.update_accepted("risk", accepted["tracker_id"], {"Description": "Test data may arrive two weeks late."})
         row = self.trackers.read_rows("risk", schema)[0]
         self.assertEqual(row["Description"], "Test data may arrive two weeks late.")
+        copy = yaml.safe_load((self.paths.TRACKER_COPIES_DIR / "risk.yaml").read_text())
+        self.assertEqual(copy["rows"][0]["Description"], row["Description"])
         for bad in ({"Status": "finished"}, {"Name": ""}, {"Relationships": "caused_by: RSK-001"}):
             with self.subTest(fields=bad), self.assertRaises(self.store.ValidationFailure):
                 self.store.update_accepted("risk", accepted["tracker_id"], bad)
