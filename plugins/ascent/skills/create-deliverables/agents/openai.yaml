@@ -1,6 +1,0 @@
-interface:
-  display_name: "Create Deliverables"
-  short_description: "Build a Slalom-branded deliverable as a microsite"
-  icon_small: "./assets/skill-icon.svg"
-  icon_large: "./assets/skill-icon.svg"
-  default_prompt: "Use $create-deliverables to turn this approved content into a Slalom-branded microsite."

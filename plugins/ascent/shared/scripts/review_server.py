@@ -181,12 +181,14 @@ def accepted_items(server: ReviewServer) -> list[dict]:
             source_refs = [ref.strip() for ref in str(row.get("Source Refs", "")).split(schema["list_delimiter"]) if ref.strip()]
             tracker_id = row.get(id_column(category, schema), "")
             title = review_store.display_label(category, row, schema)
+            archived = review_store.archived_update_for_accepted(category, tracker_id, row, evidence_index)
             items.append({
                 "category": category,
                 "category_label": review_store.category_label(category, schema),
                 "tracker_id": tracker_id,
                 "title": title,
                 "status": row.get("Status", ""),
+                "created_at": (archived[2].get("created_at") if archived else None) or row.get("Created At", ""),
                 "fields": row,
                 "field_schema": definition.get("columns", []),
                 "source_refs": source_refs,

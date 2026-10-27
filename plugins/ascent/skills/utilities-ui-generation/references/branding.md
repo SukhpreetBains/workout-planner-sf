@@ -64,19 +64,5 @@ guidance, then point `../branding/active.json` at it:
 { "pack": "<name>" }
 ```
 
-Nothing else in this skill, and nothing in `create-deliverables`,
-needs to change — both resolve the active pack at read or build time.
-
-## What switching packs does not yet do
-
-Switching the active pack changes which assets and guidance this
-skill and `create-deliverables` read. It does **not** change
-`create-deliverables/scripts/validate-brand.mjs`'s enforcement
-rules — its palette, approved color pairings, font weights, and copy
-checks are still hardcoded to Slalom's brand guide — see the
-`TODO(brand-packs)` note at that file's "Canonical brand values"
-section for what making it pack-aware would take. A deliverable built
-against a non-Slalom pack will still be checked against Slalom's
-rules until that validator is updated. Treat that as required
-follow-up work before deploying a non-Slalom pack through
-`create-deliverables`.
+Consumers that explicitly request Slalom branding, including `create-deliverables`,
+use the Slalom pack directly. Changing the active pack does not override that choice.

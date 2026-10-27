@@ -16,6 +16,22 @@ from paths import REPO_ROOT, load_schema
 MANAGED_COLUMNS = ["Source Refs", "Notes", "Created At", "Updated At"]
 
 
+def preserve_retired_fields(category: str, fields: dict, schema: dict) -> bool:
+    """Keep retired values as context without inventing a different date meaning."""
+    changed = False
+    for name in schema["categories"].get(category, {}).get("retired_fields", []):
+        if name not in fields:
+            continue
+        value = fields.pop(name)
+        if value not in (None, ""):
+            note = f"Previously recorded {name.lower()}: {value}."
+            description = str(fields.get("Description") or "")
+            if note not in description:
+                fields["Description"] = f"{description}\n\n{note}".strip()
+        changed = True
+    return changed
+
+
 def is_workspace_timeout(error: BaseException) -> bool:
     """Recognize OneDrive timeouts, including ones wrapped by ZIP parsing."""
     pending = [error]

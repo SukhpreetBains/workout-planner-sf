@@ -29,7 +29,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from paths import PROPOSED_UPDATES_DIR, REPO_ROOT, load_schema
-from trackers import id_column, is_relationships, normalize_enum, parse_relationships, read_rows
+from trackers import id_column, is_relationships, normalize_enum, parse_relationships, read_rows, preserve_retired_fields
 
 USER_SUBMITTED_SOURCE = "User Submitted"
 
@@ -132,6 +132,7 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
         if not isinstance(fields, dict):
             problems.append(f"{where}: fields must be a mapping")
             continue
+        preserve_retired_fields(cat_name, fields, schema)
         cols = {c["name"]: c for c in cat["columns"]}
         for name in fields:
             if name not in cols:

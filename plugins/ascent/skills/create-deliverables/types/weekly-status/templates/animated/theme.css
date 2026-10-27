@@ -1,0 +1,28 @@
+.page{position:relative}
+.cover h1{max-width:8ch}
+.cover-art{max-height:420px}
+.cover:before{content:'';position:absolute;z-index:-1;right:3%;bottom:4%;width:min(26vw,280px);aspect-ratio:1;border-radius:50%;background:rgb(var(--accent-rgb) / .14)}
+.summary .lead{background:var(--blue);color:#fff;padding:1.8rem 2rem;border-radius:0 2rem 0 0;box-shadow:0 20px 48px rgb(12 98 251 / .18)}
+.summary-grid{grid-template-columns:minmax(0,1.35fr) minmax(180px,.65fr)}
+.card{border-radius:0 1.45rem 0 0;transition:box-shadow .22s ease,transform .22s ease}
+.card:hover{box-shadow:0 16px 32px rgb(0 0 0 / .1)}
+.card.accent{background:rgb(var(--accent-rgb) / .11)}
+.health{border-radius:0 1rem 0 0}
+.progress-art,.milestone-art{max-height:130px;display:block;margin:-1rem 0 .5rem auto}
+.progress-heading,.milestone-heading{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;margin:0 0 1rem}
+.progress-heading h2,.milestone-heading h2{margin:0;min-width:0}
+.progress-heading .progress-art,.milestone-heading .milestone-art{width:min(24%,170px);max-height:130px;flex:none;margin:0;object-position:right center}
+.ms-date{flex-direction:column-reverse;padding:.4rem .5rem .5rem;font-size:1rem}
+.ms-node:before,.ms-node:after{bottom:calc(.5rem + 3px);height:6px;background:rgb(12 98 251 / .14)}
+.ms-dot{width:12px;height:12px;border-radius:50%;background:var(--blue);transition:transform .2s ease,background-color .2s ease,box-shadow .2s ease}
+.ms-date:hover{background:transparent}
+.ms-date:hover .ms-dot{background:var(--paper);box-shadow:0 0 0 4px var(--blue);transform:scale(1.25)}
+.ms-date[aria-expanded='true']:hover .ms-dot{background:var(--accent);box-shadow:0 0 0 5px var(--blue)}
+.ms-date[aria-expanded='true'] .ms-dot{background:var(--accent);box-shadow:0 0 0 3px var(--blue);transform:scale(1.35)}
+.ms-stage{padding-top:2.6rem}
+.ms-beam{display:block;z-index:0;top:calc(-.5rem - 6px);left:0;right:0;height:calc(2.6rem + .5rem + 8px);background:color-mix(in srgb,var(--accent) 20%,var(--canvas));clip-path:polygon(calc(var(--ms-x) - 7px) 0,calc(var(--ms-x) + 7px) 0,100% 100%,0 100%)}
+.ms-panel{background:color-mix(in srgb,var(--accent) 20%,var(--canvas));border-radius:0 0 1.4rem 1.4rem;padding:1.5rem 1.8rem 1.7rem}
+.motion-ready .page.active .motion-item{will-change:transform,opacity}
+@media(max-width:700px){.progress-heading,.milestone-heading{gap:.75rem}.progress-heading .progress-art,.milestone-heading .milestone-art{display:block;width:min(27%,90px);max-height:80px}}
+@media(prefers-reduced-motion:reduce){.motion-ready .page.active .motion-item{will-change:auto}}
+@media print{.progress-art,.milestone-art{max-height:70px}.cover:before{display:none}.ms-panel{background:transparent;border:1px solid var(--line);border-radius:0 1.2rem 0 0}}

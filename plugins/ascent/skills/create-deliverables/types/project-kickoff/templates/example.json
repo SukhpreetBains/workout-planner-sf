@@ -1,0 +1,459 @@
+{
+  "project": "Northstar / Service experience",
+  "date": "Kickoff date to agree",
+  "sample": true,
+  "depth": "core",
+  "secondaryColor": {
+    "name": "Purple",
+    "hex": "#C7B9FF"
+  },
+  "sections": [
+    {
+      "id": "opening",
+      "layout": "opening",
+      "label": "Our shared ambition",
+      "title": "A simpler path from need to service",
+      "intro": "Bring people, decisions, and delivery together.",
+      "items": [
+        {
+          "title": "One team. One clear direction.",
+          "text": "An illustrative kickoff for the fictional Northstar service experience project.",
+          "detail": "Align on the destination, boundaries, and first moves.",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "context",
+      "layout": "editorial",
+      "label": "Why now",
+      "title": "Make every handoff count",
+      "intro": "A shared experience begins with a shared understanding of the problem.",
+      "items": [
+        {
+          "title": "Today",
+          "text": "Teams receive service requests through disconnected channels.",
+          "detail": "Fictional discovery finding",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "The opportunity",
+          "text": "Give people a consistent way to request help and see what happens next.",
+          "detail": "Validate the baseline during discovery",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outcomes",
+      "layout": "outcomes",
+      "label": "What success looks like",
+      "title": "Define the change we want to see",
+      "intro": "Agree the measures before committing to targets.",
+      "items": [
+        {
+          "title": "Clarity",
+          "text": "People know where to start and what happens next.",
+          "detail": "Measure: task completion in usability research",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Confidence",
+          "text": "Teams can see who owns the next step.",
+          "detail": "Measure: requests with clear accountability",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Flow",
+          "text": "Reduce avoidable handoffs between service teams.",
+          "detail": "Target: to agree after baseline assessment",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scope",
+      "layout": "boundaries",
+      "label": "Our boundaries",
+      "title": "Start focused. Make room to learn.",
+      "intro": "Resolve open boundaries before expanding the work.",
+      "items": [
+        {
+          "title": "Included",
+          "text": "Explore the intake journey and test a shared service concept.",
+          "detail": "Focus: one agreed pilot journey",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Outside this phase",
+          "text": "Enterprise rollout and replacement of all service platforms.",
+          "detail": "Revisit after pilot learning",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "To agree",
+          "text": "Which service team and request types should lead the pilot?",
+          "detail": "Decision owner: to confirm",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "people",
+      "layout": "roster",
+      "label": "The people behind the work",
+      "title": "Pair expertise with accountability",
+      "intro": "Introduce the people who will shape the work together.",
+      "items": [
+        {
+          "title": "Client sponsor + engagement lead",
+          "text": "Align outcomes, remove barriers, and keep the engagement accountable.",
+          "detail": "Names: to confirm",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Product owner + experience lead",
+          "text": "Prioritize user needs and validate the service journey.",
+          "detail": "Names: to confirm",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Technology lead + delivery lead",
+          "text": "Connect feasibility with a clear, achievable delivery plan.",
+          "detail": "Names: to confirm",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "approach",
+      "layout": "journey",
+      "label": "How we will get there",
+      "title": "Learn. Shape. Test.",
+      "intro": "A proposed sequence, subject to agreement at kickoff.",
+      "items": [
+        {
+          "title": "Understand",
+          "text": "Map the current journey and establish a baseline.",
+          "detail": "Output: shared problem and evidence",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Shape",
+          "text": "Explore service concepts with users and delivery teams.",
+          "detail": "Output: prioritized concept",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Test",
+          "text": "Pilot the concept and assess what to change next.",
+          "detail": "Output: learning and recommendation",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "milestones",
+      "layout": "milestones",
+      "label": "Moments that matter",
+      "title": "Make the decisions visible",
+      "intro": "Select a milestone date to see its outcome. Positions show sequence, not elapsed time.",
+      "items": [
+        {
+          "title": "Kickoff alignment",
+          "text": "Agree scope, responsibilities, and immediate actions.",
+          "detail": "Owner: sponsor and engagement lead",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ],
+          "date": "Date to agree"
+        },
+        {
+          "title": "Concept review",
+          "text": "Choose the concept to test using research evidence.",
+          "detail": "Owner: product owner",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ],
+          "date": "Date to agree"
+        },
+        {
+          "title": "Pilot learning review",
+          "text": "Agree the next investment based on pilot learning.",
+          "detail": "Owner: sponsor",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ],
+          "date": "Date to agree"
+        }
+      ]
+    },
+    {
+      "id": "decisions",
+      "layout": "decision-flow",
+      "label": "How decisions happen",
+      "title": "Clear ownership keeps work moving",
+      "intro": "Confirm decision rights and an escalation path.",
+      "items": [
+        {
+          "title": "Team decisions",
+          "text": "Resolve day-to-day delivery questions within agreed scope.",
+          "detail": "Delivery lead coordinates",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Product decisions",
+          "text": "Resolve priority and experience tradeoffs.",
+          "detail": "Product owner decides",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Sponsor decisions",
+          "text": "Resolve scope, investment, and cross-team barriers.",
+          "detail": "Sponsor decides",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rhythm",
+      "layout": "rhythm",
+      "label": "Our working rhythm",
+      "title": "A few purposeful conversations",
+      "intro": "A proposed rhythm for collaboration, not a meeting inventory.",
+      "items": [
+        {
+          "title": "Working session",
+          "text": "Review evidence, work through options, and unblock delivery.",
+          "detail": "Core delivery team",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ],
+          "frequency": "Weekly"
+        },
+        {
+          "title": "Sponsor checkpoint",
+          "text": "Discuss outcomes, decisions, and material changes.",
+          "detail": "Sponsor and accountable leads",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ],
+          "frequency": "Fortnightly"
+        },
+        {
+          "title": "Shared workspace",
+          "text": "Keep decisions and evidence visible in the shared workspace.",
+          "detail": "Whole team",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ],
+          "frequency": "Every day"
+        }
+      ]
+    },
+    {
+      "id": "conditions",
+      "layout": "editorial",
+      "label": "What we need to resolve",
+      "title": "Surface the conditions for success",
+      "intro": "Make uncertainty discussable before it becomes a delivery surprise.",
+      "items": [
+        {
+          "title": "Access",
+          "text": "Research depends on access to service users and existing journey data.",
+          "detail": "Owner: to confirm",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Capacity",
+          "text": "Client partners need protected time for working sessions and decisions.",
+          "detail": "Owner: sponsor",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Baseline",
+          "text": "Success targets depend on a credible current-state baseline.",
+          "detail": "Owner: product owner",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "next",
+      "layout": "commitments",
+      "label": "Our first moves",
+      "title": "Leave with a shared next step",
+      "intro": "Close the kickoff with explicit commitments.",
+      "items": [
+        {
+          "title": "Confirm the pilot",
+          "text": "Agree the initial service journey and boundaries.",
+          "detail": "Owner and date: to agree",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Name the team",
+          "text": "Confirm accountable people and decision rights.",
+          "detail": "Owner and date: to agree",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Start discovery",
+          "text": "Arrange access to users, data, and working sessions.",
+          "detail": "Owner and date: to agree",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "logistics",
+      "layout": "rhythm",
+      "label": "Delivery detail",
+      "title": "Make it easy to get started",
+      "intro": "Resolve practical setup with the delivery team.",
+      "items": [
+        {
+          "title": "Workspace",
+          "text": "Confirm the shared location for evidence and decisions.",
+          "detail": "Access: to agree",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Tools",
+          "text": "Confirm approved collaboration and delivery tools.",
+          "detail": "Tool owners: to agree",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Onboarding",
+          "text": "Arrange access and introductions for the team.",
+          "detail": "Timing: to agree",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "deliverables",
+      "layout": "journey",
+      "label": "Delivery detail",
+      "title": "Agree what we will leave behind",
+      "intro": "Confirm outputs and who will review them.",
+      "items": [
+        {
+          "title": "Discovery synthesis",
+          "text": "A shared description of the current service journey.",
+          "detail": "Reviewer: product owner",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Testable concept",
+          "text": "A prototype of the proposed service experience.",
+          "detail": "Reviewer: experience and technology leads",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        },
+        {
+          "title": "Pilot recommendation",
+          "text": "Evidence-backed options for the next investment.",
+          "detail": "Reviewer: sponsor",
+          "state": "unconfirmed",
+          "source": [
+            "Fictional kickoff brief"
+          ]
+        }
+      ]
+    }
+  ]
+}

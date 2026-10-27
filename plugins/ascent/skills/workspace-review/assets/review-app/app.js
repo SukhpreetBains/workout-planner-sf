@@ -29,14 +29,14 @@ let relationshipTypes = [];
 let selectedKey = "";
 let activeCategory = "";
 let searchQuery = "";
-let reviewFilter = location.pathname === "/accepted" ? "accepted" : "pending";
-let completenessFilter = "all";
-let sortMode = "queue";
+let reviewFilter = new Set([location.pathname === "/accepted" ? "accepted" : "pending"]);
+let filtersInitialized = false;
+let sortMode = "oldest";
 let saveTimer = null;
 let pendingSaveRecord = null;
 let filterTimer = null;
 let scope = null;
-let filtersExpanded = false;
+let statusExpanded = false;
 let categoriesOpen = false;
 const collapsedGroups = new Set();
 const showEmptyGroups = new Set();
@@ -136,10 +136,6 @@ function ownIds(record) {
   return [];
 }
 
-function isFlagged(record) {
-  return record.state === "pending" && record.review?.state === "flagged";
-}
-
 function recordTitle(record) {
   return String(record.fields?.Name || record.title || "").trim() || `${record.category_label} item`;
 }
@@ -166,9 +162,17 @@ function recordSearchText(record) {
   ].join(" ").toLowerCase();
 }
 
+function defaultReviewFilter(items, pathname) {
+  return new Set([pathname !== "/accepted" && items.some(record => record.state === "pending") ? "pending" : "accepted"]);
+}
+
 function matchesReviewFilter(record) {
-  if (reviewFilter === "all") return true;
-  return record.state === reviewFilter;
+  return reviewFilter.has(record.state);
+}
+
+// Signal Date comes from source context; metadata keeps undated items sortable.
+function recordDate(record) {
+  return normalizeDate(record.fields?.Date || record.created_at || record.fields?.["Created At"] || "");
 }
 
 function visibleRecords() {
@@ -176,13 +180,15 @@ function visibleRecords() {
   const filtered = records.filter(record => {
     if (query && !recordSearchText(record).includes(query)) return false;
     if (!matchesReviewFilter(record)) return false;
-    const incomplete = missingRequired(record) > 0;
-    if (completenessFilter === "incomplete" && !incomplete) return false;
-    if (completenessFilter === "complete" && incomplete) return false;
+
     return true;
   });
-  if (sortMode === "title") filtered.sort((a, b) => recordTitle(a).localeCompare(recordTitle(b)));
-  if (sortMode === "attention") filtered.sort((a, b) => missingRequired(b) - missingRequired(a));
+  filtered.sort((a, b) => {
+    const first = recordDate(a), second = recordDate(b);
+    if (!first || !second) return first ? -1 : second ? 1 : a.key.localeCompare(b.key);
+    return (sortMode === "newest" ? second.localeCompare(first) : first.localeCompare(second))
+      || a.key.localeCompare(b.key);
+  });
   return filtered;
 }
 
@@ -214,37 +220,33 @@ function triageControls() {
     flushSave();
     scheduleFilterRender({ focusSearch: true });
   });
-  const review = enumPicker("filter-review-state", "review-filter", [
-    { value: "all", text: "All review states" }, { value: "pending", text: "Pending" },
-    { value: "accepted", text: "Accepted" }, { value: "rejected", text: "Rejected" },
-  ], reviewFilter, { ariaLabel: "Filter by review state", includeEmpty: false });
-  review.input.addEventListener("input", () => { reviewFilter = review.input.value; flushSave(); scheduleFilterRender(); });
-  const completeness = enumPicker("filter-completeness", "completeness-filter", [
-    { value: "all", text: "Any completeness" }, { value: "incomplete", text: "Needs required fields" }, { value: "complete", text: "Required fields complete" },
-  ], completenessFilter, { ariaLabel: "Filter by completeness", includeEmpty: false });
-  completeness.input.addEventListener("input", () => { completenessFilter = completeness.input.value; flushSave(); scheduleFilterRender(); });
-  const sort = enumPicker("filter-sort", "sort-filter", [
-    { value: "queue", text: "Queue order" }, { value: "attention", text: "Needs attention first" }, { value: "title", text: "Title A to Z" },
-  ], sortMode, { ariaLabel: "Sort items", includeEmpty: false });
-  sort.input.addEventListener("input", () => { sortMode = sort.input.value; flushSave(); scheduleFilterRender(); });
-  const reset = el("button", { class: "quiet filter-reset", type: "button", onclick: () => {
-    flushSave();
-    searchQuery = "";
-    reviewFilter = "pending";
-    completenessFilter = "all";
-    sortMode = "queue";
-    renderCategory({ focusSearch: true });
-  } }, "Reset");
-  const filterButton = el("button", {
-    class: "quiet filter-toggle", type: "button", "aria-expanded": String(filtersExpanded),
-    onclick: () => { filtersExpanded = !filtersExpanded; flushSave(); renderCategory({ focusFilter: true }); },
-  }, [filterIcon(), "Filters"]);
-  const filterPanel = el("div", { class: "triage-filter-panel", hidden: filtersExpanded ? undefined : "" }, [
-    el("div", { class: "triage-selects" }, [review.control, completeness.control, sort.control, reset]),
-  ]);
+  const statusButton = el("button", {
+    class: "quiet status-toggle", type: "button", "aria-expanded": String(statusExpanded),
+    "aria-controls": "status-options",
+    onclick: () => { statusExpanded = !statusExpanded; flushSave(); renderCategory({ focusFilter: true }); },
+  }, `Status (${reviewFilter.size})`);
+  const statusOptions = el("div", { id: "status-options", class: "status-options",
+    hidden: statusExpanded ? undefined : "", role: "group", "aria-label": "Statuses to show" });
+  Object.entries(reviewStates).forEach(([value, text]) => {
+    const checkbox = el("input", { type: "checkbox", value, checked: reviewFilter.has(value) ? "" : undefined });
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) reviewFilter.add(value); else reviewFilter.delete(value);
+      flushSave();
+      renderCategory({ focusStatus: value });
+    });
+    statusOptions.append(el("label", {}, [checkbox, text]));
+  });
   return el("section", { class: "triage-controls", "aria-label": "Find and organize review items" }, [
-    search, filterButton, filterPanel,
+    search, el("div", { class: "status-dropdown" }, [statusButton, statusOptions]),
   ]);
+}
+
+function dateSortControl() {
+  const sort = enumPicker("filter-sort", "sort-filter", [
+    { value: "oldest", text: "Date: oldest first" }, { value: "newest", text: "Date: newest first" },
+  ], sortMode, { ariaLabel: "Sort by date", includeEmpty: false });
+  sort.input.addEventListener("input", () => { sortMode = sort.input.value; flushSave(); scheduleFilterRender({ focusSort: true }); });
+  return sort.control;
 }
 
 // ---------------------------------------------------------------- update comparison
@@ -570,7 +572,7 @@ function fieldControl(record, definition) {
 }
 
 function fieldSection(definition) {
-  if (definition.type === "date") return "Dates";
+  if (definition.type === "date") return "Additional Dates";
   if (definition.computed || definition.weights || definition.name === "Probability") return "Assessment";
   return "Details";
 }
@@ -723,6 +725,7 @@ function evidence(record) {
     list.append(el("article", { class: "evidence-item" }, [
       source,
       el("p", { class: "excerpt" }, entry.excerpt || "No excerpt was captured for this older proposal."),
+      ...(entry.rationale ? [el("p", { class: "relationship-rationale" }, `Connection rationale: ${entry.rationale}`)] : []),
     ]));
   });
   section.append(list);
@@ -852,13 +855,14 @@ function listHeader(count) {
   const name = categoryLabel(activeCategory);
   return el("div", { class: "proposal-list-header" }, [
     el("h2", { class: "proposal-list-heading" }, [name, el("span", { class: "category-nav-count" }, String(count))]),
+    dateSortControl(),
     el("button", { class: "quiet proposal-list-new", type: "button", title: `Create a ${name} proposal`,
       "aria-label": `Create a ${name} proposal`, onclick: () => createManualProposal(activeCategory) }, "+ New"),
   ]);
 }
 
 function quickDefinitions(record) {
-  return ["Name", "Status", "Description"]
+  return ["Name", "Status", "Date", "Description"]
     .map(name => record.field_schema.find(definition => definition.name === name)).filter(Boolean);
 }
 
@@ -883,8 +887,9 @@ function renderProposalListItem(record, selected) {
     onclick: () => { flushSave(); selectedKey = record.key; renderCategory(); } }, [
     el("span", { class: "proposal-title-copy" }, recordTitle(record)),
     el("span", { class: "proposal-list-meta" }, [
-      ...(reviewFilter === "all" ? [stateBadge(record)] : []),
-      ...(isFlagged(record) ? [el("span", { class: "proposal-badge flagged" }, "Flagged")] : []),
+      ...(reviewFilter.size > 1 ? [stateBadge(record)] : []),
+      el("span", { class: "proposal-date" }, `Date: ${normalizeDate(record.fields?.Date) || "Unknown"}`),
+      ...(record.created_at ? [el("span", { class: "proposal-created" }, `Added: ${normalizeDate(record.created_at)}`)] : []),
       ...(missing ? [el("span", { class: "proposal-badge needs-attention" }, `${missing} required`)] : []),
       el("span", {}, `${sources} ${sources === 1 ? "source" : "sources"}`),
     ]),
@@ -893,12 +898,6 @@ function renderProposalListItem(record, selected) {
 }
 
 function recordNotice(record) {
-  if (isFlagged(record)) {
-    return el("div", { class: "flagged-state" }, [
-      el("strong", {}, "Flagged for AI review"),
-      el("p", {}, record.review.clarification_note || "No clarification note was supplied."),
-    ]);
-  }
   if (record.state === "rejected") {
     const when = record.reviewed_at ? ` on ${String(record.reviewed_at).slice(0, 10)}` : "";
     const details = [record.previous_tracker_id ? `It was previously accepted as ${record.previous_tracker_id}.` : "",
@@ -995,10 +994,11 @@ function expandedCardContent(record) {
   const formPane = el("div", { class: "form-pane" }, [
     ...(notice ? [notice] : []),
     form,
+    evidence(record),
     el("div", { id: "validation", class: "validation", hidden: "", role: "alert" }),
     comparison(record),
   ]);
-  content.append(stickyHeader, el("div", { class: "review-body" }, [formPane, evidence(record)]));
+  content.append(stickyHeader, el("div", { class: "review-body" }, [formPane]));
   return content;
 }
 
@@ -1040,7 +1040,7 @@ function showModal(modal, initialFocus, trigger) {
 }
 
 function emptyStateMessage() {
-  const stateText = { all: "", pending: "pending ", accepted: "accepted ", rejected: "rejected " }[reviewFilter];
+  const stateText = reviewFilter.size === 1 ? `${[...reviewFilter][0]} ` : "matching ";
   return records.some(record => record.category === activeCategory && matchesReviewFilter(record))
     ? "Adjust the search or filters to see more items."
     : `No ${stateText}items in this category.`;
@@ -1073,12 +1073,14 @@ function renderCategory(options = {}) {
     search?.focus();
     search?.setSelectionRange(search.value.length, search.value.length);
   }
-  if (options.focusFilter) headerControls.querySelector(".filter-toggle")?.focus();
+  if (options.focusFilter) headerControls.querySelector(".status-toggle")?.focus();
+  if (options.focusStatus) headerControls.querySelector(`input[value="${options.focusStatus}"]`)?.focus();
+  if (options.focusSort) flow.querySelector("#filter-sort-button")?.focus();
   if (!record) return;
   riskDerived(record, { ...record.fields });
   updateFieldGroupStatus();
   animateStack(flow.querySelector(".expanded-card-content"));
-  if (!options.focusSearch && !options.focusFilter && record.state !== "rejected") {
+  if (!options.focusSearch && !options.focusFilter && !options.focusStatus && !options.focusSort && record.state !== "rejected") {
     flow.querySelector("#proposal-form .quick-field-grid input, #proposal-form .quick-field-grid textarea")?.focus({ preventScroll: true });
   }
 }
@@ -1097,9 +1099,8 @@ function navigateTo(key) {
   if (!target) return;
   flushSave();
   if (!visibleRecords().includes(target)) {
-    reviewFilter = "all";
+    reviewFilter = new Set(Object.keys(reviewStates));
     searchQuery = "";
-    completenessFilter = "all";
   }
   activeCategory = target.category;
   selectedKey = target.key;
@@ -1112,7 +1113,7 @@ async function createManualProposal(category) {
     flushSave();
     const created = await api("/api/create", { method: "POST", body: JSON.stringify({ category, source_ref: userSubmittedSource }) });
     await refreshRecords();
-    if (!["all", "pending"].includes(reviewFilter)) reviewFilter = "pending";
+    reviewFilter.add("pending");
     activeCategory = category;
     selectedKey = `pending:${created.proposal_id}`;
     renderCategory();
@@ -1138,6 +1139,11 @@ async function loadInbox() {
   loading.hidden = false;
   try {
     await refreshRecords();
+    if (!filtersInitialized) {
+      reviewFilter = defaultReviewFilter(records, location.pathname);
+      filtersInitialized = true;
+      activeCategory = visibleRecords()[0]?.category || categories[0]?.id || "";
+    }
     loading.hidden = true;
     flow.hidden = false;
     renderCategory();

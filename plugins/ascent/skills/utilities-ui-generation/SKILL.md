@@ -22,33 +22,11 @@ composition per `references/branding.md`, then layer motion per
 
 ## Branding packs
 
-`references/branding.md` and everything it points to reads from the
-**active pack** under `branding/packs/<pack-name>/`, named in
-`branding/active.json`. Slalom's own brand ships as the default pack,
-`branding/packs/slalom/`. Deploying this skill library at a client
-means adding `branding/packs/<client-name>/` with the same
-`assets/` and `docs/` shape as `branding/packs/slalom/`, then pointing
-`branding/active.json` at it — nothing else in this skill, and nothing
-in `create-deliverables`, needs to change.
+`references/branding.md` resolves the active pack under `branding/packs/`.
+Slalom ships at `branding/packs/slalom/`. Other consumers may select another
+pack through `branding/active.json`.
 
-**What "hot-swappable" covers today, and what it doesn't**: swapping
-the active pack changes which colors, fonts, logos, icons,
-illustrations, and brand-voice guidance this skill and
-`create-deliverables` read and copy. It does **not** yet change
-`create-deliverables/scripts/validate-brand.mjs`'s enforcement rules —
-that validator's palette, approved color pairings, font weights, and
-copy checks are still hardcoded to Slalom's brand guide, so a
-client-pack deliverable is still checked against Slalom's rules until
-that validator is made pack-aware too. That is deliberately out of
-scope here; treat it as required follow-up before deploying a
-non-Slalom pack through `create-deliverables`.
-
-## Dependents
-
-`create-deliverables` resolves both utilities by relative path:
-`../utilities-ui-generation/assets/animejs/vendor/` for the vendored
-Anime.js bundle, and the active branding pack's `assets/` (resolved
-via `branding/active.json`) for fonts, logos, icons, and
-illustrations. Both are hard dependencies — its build fails with an
-actionable message rather than emit a deliverable with a missing
-asset.
+`create-deliverables` explicitly uses the Slalom pack for its weekly status
+starters and copies the required fonts, logo, and illustrations into each output.
+It also copies the pinned Anime.js bundle and license from `assets/animejs/vendor/`.
+Its preparation helper checks these files before creating an output directory.

@@ -116,9 +116,14 @@ block and continue the review in chat. If startup exits for another reason,
 inspect the current log error before choosing a fallback.
 
 The inbox is one view of every item with a read-only review state: pending,
-accepted, or rejected. It opens on pending items; the review-state filter
-shows accepted, rejected, flagged, or all items. Each pending card is one
-proposal item, even when its source YAML contains several updates.
+accepted, or rejected. It opens on pending items, or accepted items when there
+are no pending items.
+The Status dropdown allows any combination of pending, accepted, and rejected.
+Date sorting beside New defaults to oldest first and can switch to newest
+first. Signal Date is visible in the list and editor; undated items sort by
+proposal creation date (or tracker creation date), with unknown dates last.
+Each pending card is one proposal item, even when its source YAML contains
+several updates.
 
 - Pending edits autosave to pending YAML. Accept writes that one item to
   Excel, syncs derived copies and the search index, and marks it accepted.
@@ -129,19 +134,6 @@ proposal item, even when its source YAML contains several updates.
   re-review; Reject removes it from the tracker and marks it rejected.
 - Rejected items are read-only. Move to pending restores one for editing;
   Accept restores and accepts it in one step. The archive keeps the history.
-- Flag keeps the item pending and adds the clarification note to
-  `workspace/.system/ai-review-queue.yaml`.
-
-An active agent can wait for flags with:
-
-```
-PY <plugin-root>/shared/scripts/review_server.py wait --root "$ASCENT_PROJECT_ROOT" --timeout 60
-```
-
-If the returned `items` list is non-empty, resume the conversation with those
-items. If review happens later, read `workspace/.system/ai-review-queue.yaml`
-first on the user's next turn and work through unresolved flagged items before
-the rest of the inbox.
 
 ## Step 1, What is pending
 
@@ -150,8 +142,13 @@ run `PY <plugin-root>/shared/scripts/sync.py --status` to show whether
 any documents are waiting to be processed instead.
 
 Older pending files are upgraded in place the first time the inbox loads. The
-upgrade adds stable proposal IDs, revision `1`, and source-reference evidence
-entries without changing proposal fields.
+upgrade adds stable proposal IDs, revision `1`, creation timestamps, and
+source-reference evidence entries without changing proposal fields. Legacy
+proposal creation timestamps use the file modification time as a fallback;
+they never populate the signal Date. The agent determines Date from source
+context when first proposing the signal, leaving it blank if unsupported.
+Target Date and Completed Date carry planned and actual outcome dates when
+supported by later evidence. The original contextual Date is preserved.
 
 ## Step 2, Walk the updates
 

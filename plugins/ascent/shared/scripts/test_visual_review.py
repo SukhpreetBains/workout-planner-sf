@@ -73,6 +73,75 @@ class VisualReviewTest(unittest.TestCase):
         value.update(overrides)
         return value
 
+    def test_retired_target_dates_preserve_context_without_overwriting_date(self):
+        for category in ("decision",):
+            update = {"category": category, "action": "add", "fields": {
+                "Name": "Legacy finding", "Description": "Existing evidence.",
+                "Date": "2026-08-01", "Target Date": "2026-09-01"}}
+            path = self.proposal([update], name=f"{category}.yaml")
+            card = next(card for card in self.store.list_cards()["cards"] if card["category"] == category)
+            self.assertNotIn("Target Date", card["fields"])
+            self.assertNotIn("Target Date", [field["name"] for field in card["field_schema"]])
+            self.assertEqual(card["fields"]["Date"], "2026-08-01")
+            self.assertIn("Previously recorded target date: 2026-09-01.", card["fields"]["Description"])
+            self.assertEqual(self.validation.validate(yaml.safe_load(path.read_text()), self.paths.load_schema()), [])
+        fields = {"Description": "Legacy", "Target Date": "2026-09-01"}
+        self.trackers.preserve_retired_fields("decision", fields, self.paths.load_schema())
+        self.assertNotIn("Date", fields)
+        self.assertFalse(self.trackers.preserve_retired_fields("decision", fields, self.paths.load_schema()))
+
+    def test_contextual_signal_and_lifecycle_dates_are_independent(self):
+        created = self.store.create("action_item", self.store.USER_SUBMITTED_SOURCE)
+        card = next(card for card in self.store.list_cards()["cards"] if card["proposal_id"] == created["proposal_id"])
+        self.assertNotIn("Date", card["fields"])
+        fields = {"Name": "Send access list", "Description": "Send the approved access list.",
+                  "Status": "committed", "Date": "2026-08-01", "Target Date": "2026-08-10"}
+        self.store.autosave(card["proposal_id"], card["revision"], fields)
+        card = next(card for card in self.store.list_cards()["cards"] if card["proposal_id"] == created["proposal_id"])
+        accepted = self.store.accept(card["proposal_id"], card["revision"], "lifecycle-dates")
+        self.store.update_accepted("action_item", accepted["tracker_id"],
+                                   {"Status": "completed", "Completed Date": "2026-08-12"})
+        row = self.trackers.read_rows("action_item", self.paths.load_schema())[0]
+        self.assertEqual(row["Date"][:10], "2026-08-01")
+        self.assertEqual(row["Target Date"][:10], "2026-08-10")
+        self.assertEqual(row["Completed Date"][:10], "2026-08-12")
+        self.proposal([{"category": "action_item", "action": "update", "id": accepted["tracker_id"],
+                        "created_at": "2026-10-26T10:00:00Z", "fields": {"Status": "completed"}}])
+        self.assertEqual(self.store.list_cards()["cards"][0]["fields"]["Date"][:10], "2026-08-01")
+
+    def test_unknown_signal_date_is_not_invented_from_ingestion_metadata(self):
+        self.proposal([self.risk(created_at="2026-10-26T10:00:00Z")])
+        card = self.store.list_cards()["cards"][0]
+        self.assertNotIn("Date", card["fields"])
+        self.store.accept(card["proposal_id"], card["revision"], "unknown-context-date")
+        self.assertEqual(self.trackers.read_rows("risk", self.paths.load_schema())[0]["Date"], "")
+
+    def test_all_signals_have_date_and_migration_preserves_rows(self):
+        schema = self.paths.load_schema()
+        for category, definition in schema["categories"].items():
+            if definition["group"] == "signal":
+                self.assertEqual([column for column in definition["columns"] if column["name"] == "Date"],
+                                 [{"name": "Date", "type": "date"}], category)
+        self.proposal([self.risk(fields={"Name": "Dated risk", "Description": "Data may arrive late.",
+                                        "Date": "2026-08-27", "Status": "active"})])
+        card = self.store.list_cards()["cards"][0]
+        self.store.accept(card["proposal_id"], card["revision"], "accept-date")
+        self.trackers.init_trackers()
+        rows = self.trackers.read_rows("risk", schema)
+        self.assertEqual(rows[0]["Date"][:10], "2026-08-27")
+
+    def test_proposal_creation_date_is_stable_through_review(self):
+        path = self.proposal([self.risk()])
+        os.utime(path, (1750000000, 1750000000))
+        card = self.store.list_cards()["cards"][0]
+        self.assertEqual(card["created_at"], "2025-06-15T15:06:40+00:00")
+        self.assertEqual(self.store.list_cards()["cards"][0]["created_at"], card["created_at"])
+        self.store.reject(card["proposal_id"], card["revision"], "Outdated")
+        self.assertEqual(self.store.list_rejected()[0]["created_at"], card["created_at"])
+        created = self.store.create("proposal", self.store.USER_SUBMITTED_SOURCE)
+        manual = next(item for item in self.store.list_cards()["cards"] if item["proposal_id"] == created["proposal_id"])
+        self.assertTrue(manual["created_at"])
+
     def test_temporary_uv_python_cannot_start_review_server(self):
         temporary_python = "/Users/reviewer/.cache/uv/builds-v0/.tmpnZemgc/bin/python"
         with mock.patch.object(self.server_module.sys, "executable", temporary_python), \
@@ -123,7 +192,7 @@ class VisualReviewTest(unittest.TestCase):
 
     def test_typed_validation_and_path_containment(self):
         update = self.risk(fields={"Name": "Bad probability", "Description": "Risk", "Probability": 1.2,
-                                           "Impact": "Very High", "Target Date": "not-a-date"})
+                                           "Impact": "Very High", "Date": "not-a-date"})
         document = {"source_refs": ["../outside.md"], "updates": [update]}
         problems = self.validation.validate(document, self.paths.load_schema())
         self.assertTrue(any("at most 0.9" in problem for problem in problems))
@@ -251,7 +320,7 @@ class VisualReviewTest(unittest.TestCase):
         path = self.proposal([{
             "category": "decision", "action": "add",
             "fields": {"Name": "Late test data", "Description": "Test data may arrive late.",
-                       "Status": "decided", "Target Date": "2026-11-01"},
+                       "Status": "decided", "Date": "2026-11-01"},
             "evidence": [{"source_ref": "workspace/meetings/2026-08-27 - Review.md",
                           "excerpt": "The release may slip if test data arrives late."}],
         }])
@@ -262,7 +331,7 @@ class VisualReviewTest(unittest.TestCase):
         self.assertEqual(moved["category"], "risk")
         self.assertEqual(moved["fields"]["Name"], "Late test data")
         self.assertEqual(moved["fields"]["Status"], "identified")
-        self.assertEqual(moved["fields"]["Target Date"], "2026-11-01")
+        self.assertEqual(moved["fields"]["Date"], "2026-11-01")
         self.assertEqual(moved["evidence"], card["evidence"])
         self.assertEqual(result["revision"], card["revision"] + 1)
         self.assertEqual(yaml.safe_load(path.read_text())["updates"][0]["category"], "risk")
@@ -502,7 +571,8 @@ class VisualReviewTest(unittest.TestCase):
 
     def test_http_security_and_event_waiting(self):
         self.proposal([self.risk()])
-        server = self.server_module.ReviewServer(("127.0.0.1", 0), "secret", self.root, "test")
+        cache = mock.Mock(project_root=self.root, local_root=self.root, work_lock=threading.RLock())
+        server = self.server_module.ReviewServer(("127.0.0.1", 0), "secret", self.root, "test", cache)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         base = f"http://127.0.0.1:{server.server_port}"
