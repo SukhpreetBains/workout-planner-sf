@@ -418,8 +418,7 @@ class ReviewHandler(BaseHTTPRequestHandler):
                 str(body.get("rejected_id", ""))),
         }
         if path == "/api/sync-now":
-            self.server.cache.request_sync()
-            self.json(202, self.server.cache.status_json())
+            self.json(200, self.server.cache.sync_now())
             return
         if path == "/api/sync-overwrite-all":
             from review_cache import SyncConflictError

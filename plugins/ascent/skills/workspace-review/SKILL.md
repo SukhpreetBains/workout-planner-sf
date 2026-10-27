@@ -71,12 +71,16 @@ The server serves the inbox from a persistent local review cache at
 `~/.ascent/review-cache/<project-hash>/project/`. The Project folder in OneDrive
 remains canonical. Review actions save locally first, and a background task
 reconciles review-owned files to OneDrive every five minutes while the server is
-running. The page shows sync status and has a `Sync now` button. If OneDrive is
-unavailable, keep reviewing locally. Do not remove the cache or claim the work
-has reached OneDrive until sync status says `synced`. When both copies of the
-same review file changed, sync pauses and lists the conflicting paths. Preserve
-both versions, inspect the conflict, and ask the user which change to keep
-before resolving it. Source documents refresh independently, so a slow source
+running. The page shows sync status. `Sync now` completes a sync attempt and
+reports its result. When OneDrive changed since the last snapshot, it warns
+without showing a file diff and lets the reviewer sync safely or explicitly
+overwrite the cloud with local copies. If OneDrive is unavailable, keep
+reviewing locally. Do not remove the cache or claim the work has reached
+OneDrive until sync status says `synced`. When both copies of the same review
+file changed, sync pauses and lists the conflicting paths. Preserve both
+versions and inspect the conflict. Ask the user which change to keep unless
+they explicitly chose an overwrite in the inbox or conversation. Source
+documents refresh independently, so a slow source
 file cannot block tracker publishing.
 
 Before posting the URL, request that exact URL over loopback and confirm it
