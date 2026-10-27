@@ -1,0 +1,148 @@
+/* A presentation rhythm built from contrast, typography, and spatial grouping. */
+:root{--canvas:#fff}
+body{transition:background-color .25s ease}
+.shell{padding:1rem clamp(2.8rem,6vw,6rem) 5rem}
+.sample-banner{background:none;padding:0;font-size:.68rem;color:var(--muted)}
+.page{min-height:calc(100svh - 12rem);padding:2rem 0;align-content:center}
+.page-head{display:flex;justify-content:space-between;align-items:start;gap:2rem;margin-bottom:2.5rem}
+.project-label{font-size:.75rem;max-width:25ch;text-align:right;color:var(--muted)}
+.page h1,.page h2{color:var(--dark-blue);letter-spacing:-.055em;line-height:1.02;margin:0 0 1.25rem;overflow-wrap:anywhere}
+.page h1{font-size:clamp(3.3rem,7vw,7rem);max-width:12ch}
+.page h2{font-size:clamp(2.7rem,4.8vw,4.7rem);max-width:19ch}
+.intro{font-size:1.05rem;line-height:1.5;color:var(--muted);max-width:58ch;margin:0 0 2.25rem}
+.composition{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2.5rem}
+.story-item{position:relative;min-width:0;overflow-wrap:anywhere}
+.story-item h3{font-size:1.5rem;line-height:1.15;color:var(--dark-blue);margin:0 0 .8rem}
+.story-item p{font-size:1rem;line-height:1.5;margin:.5rem 0}
+.story-item .item-detail{font-size:.82rem;color:var(--muted);margin-top:1rem}
+.story-item .unconfirmed{font-size:.7rem;color:var(--muted);margin-top:.8rem}
+.item-number{display:none}
+/* Opening: a large typographic poster paired with an illustrated inset. */
+body[data-layout='opening']{background:rgb(var(--accent-rgb) / .2)}
+.layout-opening{display:grid;grid-template-columns:1.25fr 1fr;column-gap:3rem;align-items:center}
+.layout-opening .page-head{grid-column:1/-1}
+.layout-opening h1,.layout-opening>.intro{grid-column:1}
+.layout-opening>.intro{max-width:32ch}
+.layout-opening .composition{grid-column:2;grid-row:2/4;display:flex;flex-direction:column-reverse;gap:1.5rem}
+.opening-stamp{background:var(--accent);padding:2rem;min-height:240px;display:grid;grid-template-columns:1fr 1fr;align-items:start;border-radius:50% 50% 0 0}
+.opening-stamp .eyebrow,.kickoff-date{grid-column:1/-1;text-align:center;margin:.25rem 0;color:var(--ink)}
+.opening-art{grid-column:1/-1;width:100%;height:160px;object-fit:contain;margin-top:1rem}
+.layout-opening .story-item h3{font-size:1.2rem}
+.layout-opening .story-item p{font-size:.9rem}
+/* Context and conditions: an editorial margin with a lead story. */
+.layout-editorial{display:grid;grid-template-columns:.85fr 1.2fr;gap:0 4rem;align-items:start}
+.layout-editorial .page-head{grid-column:1/-1}
+.layout-editorial h2{grid-column:1;font-size:clamp(2.8rem,5.3vw,5.2rem)}
+.layout-editorial>.intro{grid-column:1}
+.layout-editorial .composition{grid-column:2;grid-row:2/4;display:grid;grid-template-columns:1fr;gap:1.75rem}
+.layout-editorial .story-item:first-child{background:rgb(var(--accent-rgb) / .25);padding:2rem}
+.layout-editorial .story-item:first-child h3{font-size:2.3rem}
+.layout-editorial .story-item:not(:first-child){padding:0 2rem}
+/* Outcomes: a wall of oversized words, without card chrome or rules. */
+.layout-outcomes h2{max-width:26ch;font-size:clamp(2rem,3.4vw,3.3rem)}
+.layout-outcomes .composition{margin-top:3rem;gap:2rem}
+.layout-outcomes .story-item{padding-top:0}
+.layout-outcomes .story-item:nth-child(2){margin-top:2.5rem}
+.layout-outcomes .story-item:nth-child(3){margin-top:5rem}
+.layout-outcomes .item-number{display:block;font-size:5rem;line-height:1;font-weight:700;color:var(--dark-blue);margin-bottom:1rem}
+.layout-outcomes .story-item h3{position:relative;font-size:clamp(2rem,3.5vw,3.5rem);margin-bottom:1.3rem}
+.layout-outcomes .story-item p{position:relative}
+/* Scope: two clear territories and a plain discussion prompt. */
+.layout-boundaries h2{max-width:25ch}
+.layout-boundaries .composition{grid-template-columns:1fr 1fr;gap:0}
+.layout-boundaries .story-item{padding:2rem;background:var(--dark-blue);color:white}
+.layout-boundaries .story-item h3{color:var(--accent);font-size:2rem}
+.layout-boundaries .story-item .item-detail,.layout-boundaries .story-item .unconfirmed{color:#fff;opacity:.8}
+.layout-boundaries .story-item:nth-child(2){background:rgb(var(--accent-rgb) / .28);color:var(--ink)}
+.layout-boundaries .story-item:nth-child(2) h3{color:var(--dark-blue)}
+.layout-boundaries .story-item:nth-child(2) .item-detail,.layout-boundaries .story-item:nth-child(2) .unconfirmed{color:var(--muted)}
+.layout-boundaries .story-item:last-child{grid-column:1/-1;background:transparent;color:var(--ink);padding:1.5rem 0 0;display:grid;grid-template-columns:1fr 2fr;column-gap:2rem}
+.layout-boundaries .story-item:last-child h3{color:var(--dark-blue);font-size:1.3rem}
+.layout-boundaries .story-item:last-child .item-detail,.layout-boundaries .story-item:last-child .unconfirmed{color:var(--muted);grid-column:2;margin:.2rem 0}
+/* People: generous role pairings, with a clear number for each partnership. */
+.layout-roster .composition{grid-template-columns:1fr;gap:1.5rem}
+.layout-roster .story-item{display:grid;grid-template-columns:3rem 1.1fr 1fr;gap:0 2rem;align-items:start}
+.layout-roster .item-number{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:var(--accent);color:var(--ink);font-size:.9rem}
+.layout-roster h3{font-size:1.35rem}.layout-roster .item-detail,.layout-roster .unconfirmed,.layout-roster .citations{grid-column:3;margin:.25rem 0}
+/* Delivery: rising steps indicate sequence, not quantitative duration. */
+.layout-journey .composition{align-items:start;gap:0;margin-top:2rem}
+.layout-journey .story-item{background:rgb(var(--accent-rgb) / .25);padding:2rem;min-height:260px}
+.layout-journey .story-item:nth-child(2){margin-top:2rem;background:rgb(var(--accent-rgb) / .5)}
+.layout-journey .story-item:nth-child(3){margin-top:4rem;background:var(--accent)}
+.layout-journey .item-number{display:block;font-size:2.6rem;margin-bottom:2rem;color:var(--dark-blue)}
+/* Milestones: date disclosures on a quiet, open stage. */
+.layout-milestones .composition{gap:1rem;margin-top:3rem}
+.layout-milestones details{background:rgb(var(--accent-rgb) / .18);padding:1.5rem;border-radius:1rem}
+.layout-milestones summary{font-size:1.4rem;color:var(--dark-blue);font-weight:700;cursor:pointer}
+.milestone-name{display:block;font-size:.9rem;font-weight:400;margin-top:.6rem}
+.layout-milestones .story-item{padding-top:1.5rem}
+/* Decision rights: a descending hierarchy with labels in distinct bands. */
+.layout-decision-flow{display:grid;grid-template-columns:1fr 1.1fr;gap:0 3rem}
+.layout-decision-flow .page-head{grid-column:1/-1}
+.layout-decision-flow h2,.layout-decision-flow>.intro{grid-column:1}
+.layout-decision-flow .composition{grid-column:2;grid-row:2/4;display:grid;grid-template-columns:1fr;gap:.7rem}
+.layout-decision-flow .story-item{padding:1.4rem;background:rgb(var(--accent-rgb) / .2)}
+.layout-decision-flow .story-item:nth-child(2){margin-left:1.5rem;background:rgb(var(--accent-rgb) / .4)}
+.layout-decision-flow .story-item:nth-child(3){margin-left:3rem;background:rgb(var(--accent-rgb) / .7)}
+.layout-decision-flow .story-item h3{font-size:1.3rem}.layout-decision-flow .story-item p{font-size:.88rem}
+/* Cadence: one anchor conversation and two supporting rhythms. */
+body[data-layout='rhythm']{background:rgb(var(--accent-rgb) / .12)}
+.layout-rhythm h2{max-width:22ch;font-size:clamp(2.7rem,4.5vw,4.4rem)}
+.layout-rhythm .composition{grid-template-columns:1.15fr 1fr;gap:1rem}
+.layout-rhythm .story-item{padding:1.5rem 2rem;background:white;border-radius:1rem}
+.layout-rhythm .story-item:first-child{grid-row:span 2;background:var(--dark-blue);color:white;display:flex;flex-direction:column;justify-content:center;padding:2.5rem}
+.layout-rhythm .story-item:first-child h3{color:white;font-size:2rem;max-width:12ch}
+.layout-rhythm .story-item:first-child .frequency{color:var(--accent);font-size:clamp(2.5rem,4vw,4rem);letter-spacing:-.05em;margin:0 0 2rem;font-weight:700;line-height:1}
+.layout-rhythm .story-item:first-child .item-detail,.layout-rhythm .story-item:first-child .unconfirmed{color:#ddd}
+.frequency{font-weight:700;font-size:.8rem!important;text-transform:uppercase;letter-spacing:.06em;color:var(--dark-blue);margin:0 0 .6rem!important}
+.layout-rhythm .story-item:first-child .frequency{font-size:clamp(2.5rem,4vw,4rem)!important;text-transform:none;letter-spacing:-.05em;margin-bottom:1.5rem!important}
+.layout-rhythm .story-item:not(:first-child) h3{font-size:1.25rem}.layout-rhythm .story-item:not(:first-child) p{font-size:.9rem}
+/* Closing: a change of atmosphere, with the commitments as the final focus. */
+body[data-layout='commitments']{background:var(--dark-blue)}
+body[data-layout='commitments'] .wordmark{filter:brightness(0) invert(1)}
+body[data-layout='commitments'] .topbar .quiet,body[data-layout='commitments'] .nav button{color:white}
+body[data-layout='commitments'] .sample-banner{color:#ddd}
+.layout-commitments{display:grid;grid-template-columns:1fr 1fr;gap:0 4rem}
+.layout-commitments .page-head{grid-column:1/-1}
+.layout-commitments .eyebrow,.layout-commitments h2{color:var(--accent)}
+.layout-commitments .project-label,.layout-commitments>.intro{color:#ddd}
+.layout-commitments h2{grid-column:1;font-size:clamp(3.5rem,6vw,6rem);max-width:11ch}
+.layout-commitments>.intro{grid-column:1;max-width:28ch}
+.layout-commitments .composition{grid-column:2;grid-row:2/4;grid-template-columns:1fr;gap:2rem}
+.layout-commitments .story-item{padding-left:3.5rem;color:white}
+.layout-commitments .item-number{display:block;position:absolute;left:0;top:.15rem;color:var(--accent);font-size:1.15rem}
+.layout-commitments h3{color:white;font-size:1.6rem}
+.layout-commitments .story-item .item-detail,.layout-commitments .story-item .unconfirmed{color:#ddd}
+.layout-commitments .cite,.layout-boundaries .story-item:first-child .cite,.layout-rhythm .story-item:first-child .cite{color:inherit}
+.direct{max-width:calc(100% - 1rem);overflow-x:auto;border-radius:1rem}.direct button{flex-shrink:0}
+.source-facts{grid-template-columns:minmax(0,1fr) minmax(0,2fr);overflow-wrap:anywhere}
+.quiet,.color-picker .quiet{opacity:.7}.nav button{opacity:.4}
+.page.active{animation:arrive .28s ease-out}
+@keyframes arrive{from{transform:translateX(var(--entry-x,25px));opacity:.65}to{transform:translateX(0);opacity:1}}
+@media(max-width:700px){
+ .page{padding:1.5rem 0;min-height:0}.page-head{gap:1rem;margin-bottom:2rem}.eyebrow{font-size:.65rem}.project-label{font-size:.65rem}
+ .page h1{font-size:3.2rem}.page h2{font-size:2.65rem}.intro{font-size:1rem}
+ .layout-opening,.layout-editorial,.layout-decision-flow,.layout-commitments{display:block}
+ .composition,.layout-boundaries .composition,.layout-rhythm .composition{grid-template-columns:1fr;gap:1.25rem}
+ .layout-opening .composition{display:flex}.opening-stamp{min-height:200px}.opening-art{height:120px}
+ .layout-editorial .story-item:first-child{padding:1.5rem}.layout-editorial .story-item:not(:first-child){padding:0}
+ .layout-outcomes .composition{margin-top:1rem}.layout-outcomes .story-item:nth-child(n){padding:1.5rem 0 0;margin-top:0}.layout-outcomes .item-number{font-size:5rem}
+ .layout-boundaries .story-item:last-child{display:block}.layout-boundaries .story-item{padding:1.5rem}
+ .layout-roster .story-item{display:block;padding-left:3.5rem}.layout-roster .item-number{position:absolute;left:0;top:0;width:2.5rem;height:2.5rem}
+ .layout-journey .story-item:nth-child(n){margin-top:0;min-height:0}.layout-journey .item-number{margin-bottom:1rem}
+ .layout-decision-flow .story-item:nth-child(n){margin-left:0}
+ .layout-rhythm .story-item:first-child{grid-row:auto;padding:2rem}.layout-rhythm .story-item{padding:1.5rem}
+ .layout-commitments .composition{margin-top:2rem}.layout-commitments h2{font-size:3.4rem}
+ .top-actions{gap:0}.quiet{font-size:.8rem;padding:.5rem}.source-facts{display:block}.source-facts dd{margin-bottom:.7rem}
+}
+@media print{
+ body{background:white!important}.page{animation:none!important;min-height:0;padding:1rem 0;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .page-head{margin-bottom:1rem}.page h1{font-size:40pt}.page h2{font-size:30pt}.intro{margin-bottom:1rem}.composition{gap:1rem}.story-item{break-inside:avoid}
+ .layout-commitments{background:var(--dark-blue)!important;padding:2rem!important}.layout-commitments h2{font-size:36pt}.layout-commitments .composition{margin-top:1rem}
+ .layout-journey .story-item:nth-child(n),.layout-outcomes .story-item:nth-child(n){margin-top:0;padding-top:1rem}
+ .layout-milestones details::details-content{content-visibility:visible!important}
+}
+
+.layout-commitments .citations,.layout-boundaries .story-item:first-child .citations,.layout-rhythm .story-item:first-child .citations{color:#ddd}
+body[data-layout="commitments"] .nav button:hover,body[data-layout="commitments"] .nav button:focus-visible,body[data-layout="commitments"] .topbar .quiet:hover,body[data-layout="commitments"] .topbar .quiet:focus-visible{color:var(--dark-blue)}
+@media print{body[data-layout="commitments"] .wordmark{filter:none}body[data-layout="commitments"] .sample-banner{color:var(--muted)}}

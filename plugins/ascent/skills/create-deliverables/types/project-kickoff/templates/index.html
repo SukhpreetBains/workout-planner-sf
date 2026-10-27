@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Project kickoff</title>
+  <link rel="stylesheet" href="../site.css">
+  <link rel="stylesheet" href="../kickoff.css">
+</head>
+<body data-variant="kickoff">
+  <a class="skip" href="#presentation">Skip to presentation</a>
+  <header class="topbar"><a href="index.html" aria-label="Project kickoff"><img class="wordmark" src="../assets/logo.svg" alt="Slalom"></a><div class="top-actions"><button class="quiet" id="sources-toggle" type="button" aria-pressed="false">Show sources</button><div class="color-picker"><button class="quiet" id="color-toggle" type="button" aria-haspopup="menu" aria-controls="color-menu" aria-expanded="false">Color</button><div id="color-menu" class="color-menu" role="menu" aria-label="Secondary color" hidden></div></div><button class="quiet" id="print-button" type="button">Print</button></div></header>
+  <main id="presentation" class="shell" aria-label="Project kickoff presentation">
+    <p id="sample-banner" class="sample-banner" hidden>Fictional kickoff example, not project evidence</p>
+    </main>
+  <nav class="nav" aria-label="Previous and next page"><button id="previous" type="button" aria-label="Previous page"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.5 5 8.5 12l7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="next" type="button" aria-label="Next page"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8.5 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button></nav>
+  <nav id="direct" class="direct" aria-label="Go to page"></nav>
+  <p id="page-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+  <dialog id="source-dialog" class="source-dialog" aria-labelledby="source-dialog-title"><h2 id="source-dialog-title">Source</h2><p id="source-label"></p><div id="source-details"></div><p id="source-unavailable">The document link is unavailable in this report package.</p><p><a id="source-document" href="#" target="_blank" rel="noopener" hidden>Open source document</a></p><button id="close-source" type="button">Close</button></dialog>
+  <script src="../report.js"></script>
+  <script src="../site.js" defer></script>
+</body>
+</html>

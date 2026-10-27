@@ -15,6 +15,7 @@ another type's format, data schema, or design process onto it.
 | Type | Use when | Workflow |
 | --- | --- | --- |
 | Weekly status | The user wants a status report for a reporting period. | [Weekly status](types/weekly-status/workflow.md) |
+| Project kickoff | The user wants to align sponsors and the delivery team at the start of an engagement. | [Project kickoff](types/project-kickoff/workflow.md) |
 
 Each type owns its editorial contract, visual directions, templates, assets,
 preparation, and verification. Follow only the selected type's instructions.
