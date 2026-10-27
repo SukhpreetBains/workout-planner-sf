@@ -179,7 +179,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .category-nav-list[hidden] { display: none; }
 .category-nav-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem; align-items: center; width: 100%; padding: .32rem .5rem .32rem .6rem; border: 0; border-radius: 6px; background: transparent; color: var(--black); font-size: .9rem; font-weight: 600; text-align: left; }
 .category-nav-item:hover { background: var(--gray-100); }
-.category-nav-item[aria-current="true"] { background: var(--category-tint); color: var(--dark-blue); box-shadow: inset 3px 0 0 var(--category-accent); }
+.category-nav-item[aria-current="true"] { background: var(--category-tint); color: var(--dark-blue); }
 .category-nav-label { line-height: 1.2; overflow-wrap: anywhere; }
 .category-nav-count { display: inline-grid; place-items: center; min-width: 1.4rem; padding: .05rem .3rem; border-radius: 999px; background: var(--gray-100); color: var(--gray-700); font-size: .72rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .category-nav-more { justify-self: start; padding: .2rem .6rem; border: 0; background: transparent; color: var(--gray-700); font-size: .8rem; text-decoration: underline; }
