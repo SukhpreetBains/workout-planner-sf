@@ -45,3 +45,8 @@ The report author supplies section items and source labels. The preparer checks
 the outline and item shapes, then packages cited current tracker rows and accepted
 evidence. The section outline and source inspection design build on
 [PR #70](https://github.com/Slalom/ascent/pull/70).
+
+Every new microsite type must follow the parent skill's shared content alignment
+and underlying-content update rules. Gather evidence for all included sections,
+hold a 3–5 question content conversation before building, and apply and flag
+clear user-supplied corrections through the supported workspace review workflow.

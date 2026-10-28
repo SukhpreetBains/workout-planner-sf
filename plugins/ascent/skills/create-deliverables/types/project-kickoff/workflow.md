@@ -22,6 +22,13 @@ Confirm the project and kickoff date from context. When the date is unknown,
 use `Kickoff date to agree`; never substitute the generation date. Use the
 mixed sponsor and delivery audience unless the user requests another audience.
 
+Before building, follow the parent skill's shared content alignment requirements:
+gather evidence for every included section, then hold a 3–5 question content
+conversation. Group the selected kickoff sections around context and outcomes,
+scope and people, approach and milestones, and decisions and commitments. Include
+optional sections in that discussion. Apply and flag underlying content changes
+using the shared review workflow rules.
+
 ## Evidence and outline
 
 For an initialized workspace, use `shared/scripts/py` and
@@ -31,7 +38,8 @@ For an initialized workspace, use `shared/scripts/py` and
 tracker refresh fails. Then read `workspace/.system/tracker-copies/` and
 `workspace/.system/applied-updates/`. Read original source documents where the reviewed
 record is ambiguous or incomplete. Do not ingest or approve pending proposals
-as part of creating a presentation.
+as part of creating a presentation, except for specific user-supplied corrections
+handled under the parent skill's shared content-update rules.
 
 Read [outline.md](outline.md). If present, use the project's editable
 `workspace/.system/outlines/project-kickoff.md`; otherwise save an editable copy

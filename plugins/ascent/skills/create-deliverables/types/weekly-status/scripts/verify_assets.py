@@ -29,9 +29,16 @@ def verify(root):
     root = Path(root).resolve()
     report = json.loads((root / 'report.json').read_text(encoding='utf-8'))
     errors = []
-    pages = [root / name / 'index.html' for name in ('business', 'expressive', 'animated')]
+    templates = ('business', 'expressive', 'animated')
+    selected = report.get('selectedTemplate')
+    if selected is not None and selected not in templates:
+        raise ValueError('Invalid selectedTemplate')
+    names = (selected,) if selected else templates
+    pages = [root / name / 'index.html' for name in names]
     if any(not page.is_file() for page in pages):
-        errors.append('business, expressive, and animated index.html files are required')
+        errors.append('Required template index.html files are missing')
+    if selected and any((root / name).exists() for name in templates if name != selected):
+        errors.append('Selected-template output contains unselected templates')
 
     assets = root / 'assets'
     icon_dir = assets / 'iconography'
