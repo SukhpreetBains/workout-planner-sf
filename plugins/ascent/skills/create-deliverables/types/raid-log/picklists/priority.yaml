@@ -1,0 +1,24 @@
+# Priority picklist. Fill and check it as described in README.md.
+label: Priority
+meaning: Level of management attention or action urgency.
+tabs: [risks, assumptions, issues, decisions, dependencies, actions]
+values:
+  - value: High
+    color: red
+    definition: >-
+      Needs action, a decision, or escalation before the next dated
+      checkpoint in the evidence, or currently blocks or directly
+      threatens a milestone, deliverable, or go-live date.
+    aliases: [high, urgent, p1, critical, top priority]
+  - value: Medium
+    color: amber
+    definition: >-
+      Needs action within the current phase. It affects work, but the
+      evidence shows float, a workaround, or no near-term date at risk.
+    aliases: [medium, med, p2, moderate, normal]
+  - value: Low
+    color: amber
+    definition: >-
+      Monitor only. No near-term action is needed, or the effect is minor
+      and contained.
+    aliases: [low, p3, minor]

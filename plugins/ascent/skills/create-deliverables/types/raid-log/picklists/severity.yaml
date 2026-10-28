@@ -1,0 +1,27 @@
+# Severity picklist. Fill and check it as described in README.md.
+label: Severity
+meaning: Qualitative level of impact for a risk if it occurs, or for an issue now.
+tabs: [risks, issues]
+# Calculated Severity on a risk row is recorded evidence; map it, never override it.
+from_tracker:
+  risk:
+    column: Calculated Severity
+    map: {Sev 1: High, Sev 2: Medium, Sev 3: Low}
+values:
+  - value: High
+    color: red
+    definition: >-
+      Stops or delays a milestone, deliverable, or go-live, or materially
+      affects scope, cost, compliance, or a core business outcome.
+    aliases: [high, critical, severe, major, sev 1, sev1]
+  - value: Medium
+    color: amber
+    definition: >-
+      Causes rework or delay that the current phase can absorb, or affects
+      one workstream without a stated milestone impact.
+    aliases: [medium, med, moderate, sev 2, sev2]
+  - value: Low
+    color: amber
+    definition: >-
+      Minor or contained effect, or a workaround exists.
+    aliases: [low, minor, sev 3, sev3]

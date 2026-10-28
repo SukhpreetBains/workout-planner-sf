@@ -1,0 +1,45 @@
+# Status values are not redefined here: each category's Status enum in
+# shared/schema/trackers.yaml stays the single source of truth. This file only
+# says whether each status counts as open or closed for the log's filters,
+# and which tone its status dot uses.
+# Every enum value must appear exactly once; test_picklists.py checks it.
+label: Status
+# Status dot tones. Every status maps to one tone; `color` names a template color.
+tones:
+  attention: {color: red, label: Needs attention, meaning: A live problem or blocker that needs action now.}
+  pending: {color: amber, label: Not started or waiting, meaning: Open, but no work or answer is under way yet.}
+  progress: {color: amber, label: In progress, meaning: Work toward closing it is under way.}
+  done: {color: green, label: Done, meaning: Closed with the intended outcome.}
+  inactive: {color: grey, hollow: true, label: No longer active, meaning: Closed without the intended outcome, or replaced.}
+status:
+  risk:
+    open: [identified, active]
+    # A realized risk has become a problem; track it from then on as an issue.
+    closed: [mitigated, realized, closed]
+    tone: {identified: pending, active: attention, mitigated: done, realized: inactive, closed: inactive}
+  assumption:
+    open: [unvalidated]
+    closed: [validated, invalidated, superseded]
+    tone: {unvalidated: pending, validated: done, invalidated: inactive, superseded: inactive}
+  issue:
+    open: [open, in_progress]
+    closed: [resolved, closed]
+    tone: {open: attention, in_progress: progress, resolved: done, closed: inactive}
+  decision:
+    open: []
+    closed: [decided, superseded, reversed]
+    tone: {decided: done, superseded: inactive, reversed: inactive}
+  open_question:
+    # A deferred question still needs an answer eventually.
+    open: [open, deferred]
+    closed: [answered, superseded]
+    tone: {open: pending, deferred: pending, answered: done, superseded: inactive}
+  dependency:
+    # A blocked dependency is still unsatisfied.
+    open: [pending, blocked]
+    closed: [satisfied, waived]
+    tone: {pending: pending, blocked: attention, satisfied: done, waived: inactive}
+  action_item:
+    open: [assigned, committed, in_progress]
+    closed: [completed, cancelled]
+    tone: {assigned: pending, committed: pending, in_progress: progress, completed: done, cancelled: inactive}

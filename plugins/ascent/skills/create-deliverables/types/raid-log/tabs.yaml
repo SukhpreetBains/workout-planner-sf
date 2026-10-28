@@ -1,0 +1,37 @@
+# RAID tabs, the fields each item carries, and which fields the table shows.
+# Every category's status grouping lives in picklists/status.yaml.
+tabs:
+  - {id: risks, label: Risks, categories: [risk]}
+  - {id: assumptions, label: Assumptions, categories: [assumption]}
+  - {id: issues, label: Issues, categories: [issue]}
+  - id: decisions
+    label: Decisions
+    categories: [decision, open_question]
+    # An Ascent decision is always a choice already made; an open question is
+    # a choice still to make. The log labels them so readers can tell them apart.
+    kinds: {decision: Decision made, open_question: Decision needed}
+  - {id: dependencies, label: Dependencies, categories: [dependency]}
+  - {id: actions, label: Actions, categories: [action_item]}
+
+# Item fields in display order, after the ID, title, description, and status.
+# `bases` lists how a value may be supplied (see picklists/README.md):
+# recorded from tracker data or links, stated by a cited source, or assessed.
+# Owners, dates, outcomes, and next steps are never assessed. A field with a
+# `picklist` takes its tabs from that picklist file; `only` and `except` limit
+# the others. Type is not a field here: the tab and the decision pills show it.
+fields:
+  - {key: owner, label: Owner, bases: [recorded, stated]}
+  - {key: impactArea, label: Category / impact area, bases: [recorded, stated, assessed]}
+  - {key: raisedBy, label: Raised by, bases: [recorded, stated]}
+  - {key: dateRaised, label: Date raised, type: date, bases: [recorded, stated]}
+  - {key: target, label: Target / required by, type: date, bases: [recorded, stated]}
+  - {key: priority, label: Priority, picklist: priority, bases: [recorded, stated, assessed]}
+  - {key: severity, label: Severity, picklist: severity, bases: [recorded, stated, assessed]}
+  - {key: importance, label: Importance, picklist: importance, bases: [recorded, stated, assessed]}
+  - {key: outcome, label: Resolution / outcome, bases: [recorded, stated]}
+  - {key: nextAction, label: Next action, except: [actions], bases: [recorded, stated]}
+  - {key: resolutionPlan, label: Resolution plan, only: [issues], bases: [recorded, stated]}
+
+# Table columns after ID, item, and status. A column the tab does not carry is
+# skipped. The expanded row shows every other field, so nothing repeats.
+columns: [owner, priority, severity, importance, target]
