@@ -31,6 +31,28 @@ class PrepareTests(unittest.TestCase):
         self.assertEqual(len(list((out / 'assets/iconography').glob('*.svg'))), 102)
         verify(out)
 
+    def test_selected_template_packages_only_the_chosen_presentation(self):
+        self.report['sample'] = False
+        for template in ('business', 'expressive', 'animated'):
+            with self.subTest(template=template):
+                out = prepare(self.root / template, self.report, template=template)
+                saved = json.loads((out / 'report.json').read_text())
+                self.assertEqual(saved['selectedTemplate'], template)
+                self.assertEqual(saved['summary'], self.report['summary'])
+                for name in ('business', 'expressive', 'animated'):
+                    self.assertEqual((out / name).exists(), name == template)
+                self.assertIn(f'url={template}/index.html', (out / 'index.html').read_text())
+                verify(out)
+
+    def test_real_report_requires_template_before_writing(self):
+        self.report['sample'] = False
+        with self.assertRaisesRegex(ValueError, 'Choose a --template'):
+            prepare(self.root / 'unselected', self.report)
+        self.assertFalse((self.root / 'unselected').exists())
+        with self.assertRaisesRegex(ValueError, 'template must be'):
+            prepare(self.root / 'invalid', self.report, template='../business')
+        self.assertFalse((self.root / 'invalid').exists())
+
     def test_existing_output_is_untouched(self):
         out = self.root / 'site'
         out.mkdir()
@@ -81,7 +103,7 @@ class PrepareTests(unittest.TestCase):
 
     def test_project_cli_explains_missing_yaml_dependency(self):
         out = self.root / 'needs-yaml'
-        command = [sys.executable, '-S', str(SKILL / 'scripts/prepare.py'), str(out), '--project-root', str(self.root)]
+        command = [sys.executable, '-S', str(SKILL / 'scripts/prepare.py'), str(out), '--project-root', str(self.root), '--template', 'business']
         result = subprocess.run(command, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('requires PyYAML', result.stderr)

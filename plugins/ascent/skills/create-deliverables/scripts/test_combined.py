@@ -32,7 +32,7 @@ class CombinedTests(unittest.TestCase):
         self.assertEqual(len(load(self.root)['sections']), 4)
         self.assertEqual(len(load(self.root, reset=True)['sections']), 4)
         (self.outlines / 'weekly-status.md').unlink()
-        out = prepare(self.root / 'v1', self.report, self.root)
+        out = prepare(self.root / 'v1', self.report, self.root, template='business')
         self.assertEqual([item['id'] for item in json.loads((out / 'report.json').read_text())['sections']], ['milestones', 'accomplishments'])
         self.assertTrue((self.outlines / 'weekly-status-outlined.md').is_file())
 
@@ -63,12 +63,12 @@ class CombinedTests(unittest.TestCase):
             {'id': 'milestones', 'items': self.report['milestones']},
             {'id': 'workstreams', 'items': [{'name': 'Pilot', 'text': 'Review prepared', 'Progress': 'Package ready', 'In the way': 'Access pending', 'source': 'Fictional sample notes'}]},
         ]
-        out = prepare(self.root / 'custom', self.report, self.root)
+        out = prepare(self.root / 'custom', self.report, self.root, template='business')
         data = json.loads((out / 'report.json').read_text())
         self.assertEqual([x['layout'] for x in data['sections']], ['table', 'timeline', 'cards'])
         self.assertEqual([x['id'] for x in data['sections']], ['action-items', 'milestones', 'workstreams'])
         with self.assertRaises(ValueError):
-            prepare(self.root / 'bad', dict(self.report, sections=self.report['sections'][:-1]), self.root)
+            prepare(self.root / 'bad', dict(self.report, sections=self.report['sections'][:-1]), self.root, template='business')
 
     def test_current_row_and_historical_excerpt_with_safe_snapshot(self):
         tracker = self.root / 'workspace/.system/tracker-copies'
@@ -82,7 +82,7 @@ class CombinedTests(unittest.TestCase):
         (self.root / 'workspace/notes.md').write_text('A <script>alert(1)</script> source')
         self.report['summarySources'] = ['PAIN-1001', 'workspace/notes.md']
         self.report['accomplishments'][0]['source'] = 'PAIN-1001'
-        out = prepare(self.root / 'sourced', self.report, self.root)
+        out = prepare(self.root / 'sourced', self.report, self.root, template='business')
         data = json.loads((out / 'report.json').read_text())
         detail = data['sourceDetails']['PAIN-1001']
         self.assertEqual(detail['facts']['Status'], 'Open')
@@ -94,18 +94,18 @@ class CombinedTests(unittest.TestCase):
         self.assertNotIn('<script>', page)
         self.assertEqual(data['sourceDetails']['workspace/notes.md']['documents'][0]['link'], link)
         with self.assertRaises(ValueError):
-            prepare(self.root / 'unknown', dict(self.report, summarySources=['PAIN-9999']), self.root)
+            prepare(self.root / 'unknown', dict(self.report, summarySources=['PAIN-9999']), self.root, template='business')
 
     def test_missing_documents_and_unsafe_links(self):
         tracker = self.root / 'workspace/.system/tracker-copies'
         tracker.mkdir(parents=True)
         (tracker / 'risk.yaml').write_text(yaml.safe_dump({'category': 'risk', 'rows': [{'Risk ID': 'RISK-1234', 'Name': 'Gap', 'Status': 'Open', 'Source Refs': 'workspace/missing.md; workspace/../secret.md'}]}))
         self.report['summarySources'] = ['RISK-1234']
-        out = prepare(self.root / 'missing', self.report, self.root)
+        out = prepare(self.root / 'missing', self.report, self.root, template='business')
         documents = json.loads((out / 'report.json').read_text())['sourceDetails']['RISK-1234']['documents']
         self.assertTrue(all(item['link'] is None for item in documents))
         with self.assertRaises(ValueError):
-            prepare(self.root / 'unsafe', dict(self.report, sourceLinks={'bad': 'javascript:alert(1)'}), self.root)
+            prepare(self.root / 'unsafe', dict(self.report, sourceLinks={'bad': 'javascript:alert(1)'}), self.root, template='business')
         self.assertFalse((self.root / 'unsafe').exists())
         with self.assertRaises(ValueError):
             prepare(self.root / 'broken-local', dict(self.report, sourceLinks={'bad': '../sources/missing.html'}))
@@ -117,17 +117,17 @@ class CombinedTests(unittest.TestCase):
         (self.outlines / 'weekly-status.md').write_text(custom)
         self.report['sections'] = [{'id': item['id'], 'items': []} for item in load(self.root)['sections']]
         self.report['sections'][-1]['items'] = [{'name': 'Access choice', 'date': 'Friday', 'status': 'Approved', 'source': 'Fictional sample notes'}]
-        out = prepare(self.root / 'timelines', self.report, self.root)
+        out = prepare(self.root / 'timelines', self.report, self.root, template='business')
         self.assertEqual([item['layout'] for item in json.loads((out / 'report.json').read_text())['sections']].count('timeline'), 2)
         self.assertIn("buildMilestones(root, items, section.id)", (out / 'site.js').read_text())
         broken = json.loads(json.dumps(self.report))
         broken['sections'][-1]['items'][0].pop('date')
         with self.assertRaises(ValueError):
-            prepare(self.root / 'invalid-timeline', broken, self.root)
+            prepare(self.root / 'invalid-timeline', broken, self.root, template='business')
         broken = json.loads(json.dumps(self.report))
         broken['sections'][-1]['items'][0]['source'] = []
         with self.assertRaises(ValueError):
-            prepare(self.root / 'invalid-source', broken, self.root)
+            prepare(self.root / 'invalid-source', broken, self.root, template='business')
 
 
 if __name__ == '__main__':
