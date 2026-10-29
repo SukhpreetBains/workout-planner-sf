@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Governed agent plugins for accelerated Discovery and Project delivery.",
-    "version": "0.1.16"
+    "version": "0.1.17"
   },
   "plugins": [
     {
       "name": "ascent",
       "source": "./plugins/ascent",
       "description": "Governed, evidence-backed skills for accelerated Discovery engagements and Project delivery.",
-      "version": "0.1.16"
+      "version": "0.1.17"
     }
   ]
 }

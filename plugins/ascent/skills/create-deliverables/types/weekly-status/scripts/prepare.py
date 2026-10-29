@@ -12,6 +12,7 @@ TYPE = Path(__file__).resolve().parents[1]
 SKILL = TYPE.parents[1]
 UTILITY = SKILL.parent / 'utilities-ui-generation'
 PACK = UTILITY / 'branding/packs/slalom/assets'
+TEMPLATES = ('business', 'expressive', 'animated')
 
 
 def validate(report):
@@ -110,7 +111,7 @@ def normalize(report, outline):
     return report
 
 
-def prepare(output, report=None, project_root=None, reset_outline=False):
+def prepare(output, report=None, project_root=None, reset_outline=False, template=None):
     output = Path(output).resolve()
     if output.exists():
         raise FileExistsError(f'Refusing to replace existing output: {output}')
@@ -118,6 +119,14 @@ def prepare(output, report=None, project_root=None, reset_outline=False):
         sample = (TYPE / 'templates/report.js').read_text(encoding='utf-8')
         report = json.loads(sample.removeprefix('window.weeklyStatus = ').strip().removesuffix(';'))
     validate(report)
+    if template is not None and template not in TEMPLATES:
+        raise ValueError('template must be business, expressive, or animated')
+    if template is None and (not report['sample'] or project_root is not None):
+        raise ValueError('Choose a --template before preparing a project report')
+    report = dict(report)
+    report.pop('selectedTemplate', None)
+    if template is not None:
+        report['selectedTemplate'] = template
     outline = load_outline(project_root, reset_outline)
     report = normalize(dict(report), outline)
     assets = {
@@ -142,6 +151,21 @@ def prepare(output, report=None, project_root=None, reset_outline=False):
         draft = Path(staging) / 'site'
         shutil.copytree(TYPE / 'templates', draft)
         (draft / 'brief.md').unlink()
+        if template is not None:
+            for name in TEMPLATES:
+                if name != template:
+                    shutil.rmtree(draft / name)
+            (draft / 'index.html').write_text(
+                '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+                '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                f'<meta http-equiv="refresh" content="0;url={template}/index.html">'
+                '<title>Weekly status</title></head><body>'
+                f'<a href="{template}/index.html">Open weekly status report</a>'
+                '</body></html>\n', encoding='utf-8')
+            page = draft / template / 'index.html'
+            page.write_text(page.read_text().replace(
+                'href="../index.html" aria-label="Weekly status options"',
+                'href="#presentation" aria-label="Weekly status report"'), encoding='utf-8')
         (draft / 'assets').mkdir()
         for name, source in assets.items():
             shutil.copy2(source, draft / 'assets' / name)
@@ -160,9 +184,10 @@ if __name__ == '__main__':
     parser.add_argument('--report', type=Path, help='Report JSON; omitted for a labeled fictional sample')
     parser.add_argument('--project-root', type=Path, help='Initialized project with tracker copies and saved outline')
     parser.add_argument('--reset-outline', action='store_true', help='Use default sections for this run without editing saved outlines')
+    parser.add_argument('--template', choices=TEMPLATES, help='Selected starting template; required for project reports')
     args = parser.parse_args()
     try:
         report = json.loads(args.report.read_text(encoding='utf-8')) if args.report else None
-        print(prepare(args.output, report, args.project_root, args.reset_outline))
+        print(prepare(args.output, report, args.project_root, args.reset_outline, args.template))
     except (OSError, ValueError) as exc:
         parser.exit(1, f'{exc}\n')

@@ -1,6 +1,8 @@
 # Weekly status editorial brief
 
-Create one report for three sideways presentations. The starter report
+Create one report using the user-selected sideways presentation template.
+Show the fictional templates first, then complete the workflow's 3–5 question
+content conversation before generating the project microsite. The starter report
 is fictional sample data, not evidence. Replace it before presenting a project
 report. Cover and summary come first. Remaining pages follow the validated outline, one section per page. The default pages are accomplishments, next steps, milestones, and risks with decisions. Each design may change visual emphasis but must keep
 the same sourced meaning, qualifications, and coverage.
@@ -11,6 +13,7 @@ the same sourced meaning, qualifications, and coverage.
 
 | Field | Shape and meaning |
 | --- | --- |
+| `selectedTemplate` | Generated from `--template`: `business`, `expressive`, or `animated`. Omitted only for the fictional gallery. |
 | `project`, `period` | Project and reporting window, including the evidence cutoff. |
 | `secondaryColor` | `{name, hex}` selected from the four Slalom secondary colors. |
 | `useIconography`, `sample` | Booleans. Mark fictional demonstrations as samples. |
@@ -54,23 +57,27 @@ tracker update. If evidence is insufficient, use `Not assessed` and
 `healthAssessment: "not_assessed"`.
 
 Never invent dates, decisions, or completion. State evidence gaps in
-`coverageNote`. The three designs must use the same report data.
+`coverageNote`. The chosen design must preserve the agreed report data. Multiple populated
+versions are allowed when explicitly requested and must share that agreed data.
+If a clarification changes an underlying review inbox entry, explain the exact
+change, apply it through workspace-review, and flag the resulting update to the
+user under the parent skill's shared content rules.
 
 ## Sources and interface
 
-All three versions hide numbered citations by default. The upper-right Show
+All templates hide numbered citations by default. The upper-right Show
 sources control reveals them. The adjacent Color button lets readers select one
 of the four approved secondary colors, with the choice saved across the report's
-three versions and page reloads. Deduplicate citation numbers across the report.
+page reloads. Deduplicate citation numbers across the report.
 The preparer packages escaped HTML snapshots of cited text documents inside `sources/` and current tracker values with latest accepted evidence excerpts in the report data. Current reviewed rows govern factual status, owners, dates, decisions, and commitments. Historical excerpts clarify context and remain visibly labeled as historical. Conflicts go in `coverageNote` until resolved. Missing source documents or excerpts show an explicit unavailable state. Copy only cited material. Never invent a document URL. A
 citation without a verified link must still reveal its exact label and explain
 that the document link is unavailable.
 
-All three use the same sideways navigation contract: previous and next
+All templates use the same sideways navigation contract: previous and next
 controls, keyboard left and right arrows, direct page buttons, page focus
 management, an accessible page announcement, and print-all behavior. Keep
 controls quiet until hover or focus and visible on touch. Let long pages
-scroll. All three versions use a horizontal, source-order milestone timeline,
+scroll. All templates use a horizontal, source-order milestone timeline,
 not an elapsed-time or percent-complete chart. The timeline shows only evenly
 spaced dates; selecting one opens its milestone below, connected to the date.
 Every milestone prints expanded. Dates and status remain verbatim.
