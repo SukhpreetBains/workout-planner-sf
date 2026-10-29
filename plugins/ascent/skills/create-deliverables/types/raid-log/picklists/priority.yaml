@@ -7,8 +7,10 @@ values:
     color: red
     definition: >-
       Needs action, a decision, or escalation before the next dated
-      checkpoint in the evidence, or currently blocks or directly
-      threatens a milestone, deliverable, or go-live date.
+      checkpoint in the evidence, currently blocks or directly threatens a
+      milestone, deliverable, or go-live date, or is still open after its
+      recorded target or required-by date. An overdue open item is always
+      High when its priority is assessed.
     aliases: [high, urgent, p1, critical, top priority]
   - value: Medium
     color: amber

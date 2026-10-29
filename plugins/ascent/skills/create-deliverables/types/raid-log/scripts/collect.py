@@ -17,6 +17,8 @@ OWNER_LINK = {'decision': 'decided_by'}
 CATEGORY_TARGETS = {'workstream', 'business_process', 'system'}
 DATE_TARGETS = {'milestone', 'deliverable'}
 PLAN_SOURCES = {'action_item', 'proposal'}
+# The standard accent; readers can switch it with the page's Color button.
+DEFAULT_COLOR = {'name': 'Coral Red', 'hex': '#FF4D5F'}
 
 
 def iso(value):
@@ -73,6 +75,23 @@ def records(root, schema):
         if update.get('action') == 'update' and update.get('id'):
             pending_changes.setdefault(str(update['id']), []).append(str(update.get('proposal_id') or ''))
     return found, pending_changes
+
+
+AREAS_FILE = 'workspace/.system/raid-impact-areas.yaml'
+
+
+def impact_areas(root, found=None):
+    """Allowed impact areas: tracked workstreams, systems, and processes plus the project's saved list."""
+    found = found if found is not None else records(root, tracker_schema())[0]
+    tracked = sorted({str(r['fields'].get('Name') or '').strip() for r in found.values()
+                      if r['category'] in CATEGORY_TARGETS and r['review'] == 'approved'} - {''})
+    path = Path(root) / AREAS_FILE
+    saved = None
+    if path.is_file():
+        data = yaml_reader()(path.read_text(encoding='utf-8')) or {}
+        saved = [{'name': str(a.get('name', '')).strip(), 'description': str(a.get('description', '')).strip()}
+                 for a in data.get('areas') or [] if isinstance(a, dict) and str(a.get('name', '')).strip()]
+    return {'file': AREAS_FILE, 'tracked': tracked, 'saved': saved}
 
 
 def collect(root, as_of=None):
@@ -136,9 +155,9 @@ def collect(root, as_of=None):
     order = {tab['id']: i for i, tab in enumerate(picklists['tabs'])}
     items.sort(key=lambda i: (order[i['tab']], i['review'] != 'approved', i['id'] or '', i['title']))
     project = yaml_reader()((Path(root) / 'workspace/.system/project.yaml').read_text(encoding='utf-8')) or {}
-    return {'project': str(project.get('opportunity') or project.get('account') or '').strip(),
-            'asOf': as_of or date.today().isoformat(), 'sample': False, 'secondaryColor': None,
-            'coverageNote': '', 'omitted': [], 'items': items}
+    return {'project': str(project.get('project') or project.get('opportunity') or project.get('account') or '').strip(),
+            'asOf': as_of or date.today().isoformat(), 'sample': False, 'secondaryColor': DEFAULT_COLOR,
+            'coverageNote': '', 'omitted': [], 'impactAreas': impact_areas(root, found), 'items': items}
 
 
 if __name__ == '__main__':

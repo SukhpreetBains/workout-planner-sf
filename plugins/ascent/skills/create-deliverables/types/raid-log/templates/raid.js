@@ -212,7 +212,16 @@
       row.append(title);
       const col = (label, cls) => { const td = row.appendChild(el('td', cls)); td.dataset.label = label; return td; };
       col('Status').append(status(item));
-      columns.forEach(f => value(col(f.key === 'target' ? 'Target date' : f.label, f.type === 'date' ? 'nowrap' : ''), f, item[f.key], 'short'));
+      const overdue = item.open && item.target && item.target.value < log.asOf;
+      columns.forEach(f => {
+        const td = value(col(f.key === 'target' ? 'Target date' : f.label, f.type === 'date' ? 'nowrap' : ''), f, item[f.key], 'short');
+        if (f.key === 'target' && overdue) {
+          // Red marks an open item past its target; the hidden text keeps that meaning for screen readers.
+          td.classList.add('overdue');
+          td.title = 'Overdue';
+          td.append(el('span', 'sr-only', ' (overdue)'));
+        }
+      });
       row.append(el('td', 'chev', '›'));
       const detail = el('tr', 'detail-row');
       detail.hidden = true;

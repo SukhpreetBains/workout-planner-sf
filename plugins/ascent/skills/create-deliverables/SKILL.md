@@ -1,6 +1,6 @@
 ---
 name: create-deliverables
-description: Create source-backed, reviewable draft deliverables using a deliverable-type workflow or helps creates new workflows when the asked for deliverable-type does not exist.
+description: Create source-backed, reviewable draft project deliverables from the Ascent workspace, including weekly status reports, project kickoff presentations, and RAID logs (risks, assumptions, issues, decisions, dependencies, and actions, with an Excel export). Use for any request to create, build, or refresh one of these. Also helps create a workflow when the requested deliverable type does not exist.
 ---
 
 # Create deliverables

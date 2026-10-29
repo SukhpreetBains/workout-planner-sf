@@ -8,12 +8,23 @@ weekly status or kickoff workflows. Read the [content brief](templates/brief.md)
 
 ## Intake
 
-Show the [secondary color swatches](../weekly-status/assets/secondary-colors.svg)
-and ask for Cyan, Coral Red, Purple, or Chartreuse unless already chosen for
-this log. Confirm the project from context. The evidence cutoff (`asOf`) is the
-day the trackers are refreshed unless the user names another date.
+Do not ask for an accent color. The starter uses the standard Coral Red, and
+readers can switch colors with the page's Color button. Use another approved
+color only when the user's request names one. Confirm the project from context.
+The evidence cutoff (`asOf`) is the day the trackers are refreshed unless the
+user names another date.
 
 ## Collect
+
+Every RAID log starts fresh. Do not open, validate, repair, or build on earlier
+RAID drafts in `workspace/draft-deliverables/`: they are not evidence, and they
+may hold superseded judgments. Never modify an earlier draft folder. Begin from
+a new starter written by `collect.py` into a new dated folder, and derive every
+value from the current trackers, inbox, and source documents.
+
+Keep the workspace clean. Write any helper scripts or scratch files to a
+temporary folder outside the workspace, such as one from `mktemp -d`. The new
+draft folder holds only the authored `raid.json` and the prepared site.
 
 For an initialized workspace, use `shared/scripts/py` and
 `ASCENT_PROJECT_ROOT` to run `shared/scripts/sync.py --check-setup`, inspect
@@ -38,15 +49,55 @@ row are listed in `pendingChanges`; the log shows the approved values.
 
 ## Fill the gaps
 
-Read the cited source documents for each item and fill empty fields in the
-order the [picklists README](picklists/README.md) gives: a value the source
-states (`basis: stated`, with `source`), then, where the field allows it, an
-assessed value (`basis: assessed`, with `source` and a `reason` naming the facts
-used). [tabs.yaml](tabs.yaml) lists which bases each field allows. Owners,
-raisers, dates, outcomes, next actions, and resolution plans are never
-assessed. Leave a field `null` when nothing supports it; the log shows "Not
-recorded". Use only canonical picklist values; map source wording such as "P1"
-or "Sev 2" with the aliases.
+Read each item's description and cited source documents, and fill every empty
+field the evidence supports. Use the order the
+[picklists README](picklists/README.md) gives: a value the source states
+(`basis: stated`, with `source`), then, where [tabs.yaml](tabs.yaml) allows it,
+an assessed value (`basis: assessed`, with `source` and a `reason` naming the
+facts used). Owners, raisers, dates, outcomes, next actions, and resolution
+plans are never assessed. Use only canonical picklist values; map source
+wording such as "P1" or "Sev 2" with the aliases.
+
+Work through these fields deliberately; they are rarely in the trackers:
+
+- **Priority**: assess every open item that has no recorded or stated value,
+  using the priority definitions. Leave closed items without a priority unless
+  one is recorded or stated. The preparer rejects assessed priority on closed
+  items.
+- **Severity** and **Importance**: assess every item on their tabs that has
+  no recorded or stated value, open or closed.
+- **Resolution / outcome**: for every closed item, look for how it closed:
+  the answer to an answered question, the choice a decision made, how a risk
+  was mitigated or an issue resolved, or what a completed action produced.
+  These are often in the description itself; cite the record's sources.
+- **Category / impact area**: use only names from the starter's
+  `impactAreas`: tracked workstreams, systems, and business processes, plus
+  the project's saved list in `workspace/.system/raid-impact-areas.yaml`.
+  Separate two areas with `; `. When the project has no saved list, draft a
+  short one first (about 5 to 10 areas, each `{name, description}` under
+  `areas:`), drawn from the project's evidence, and save it. When an item fits
+  no saved area, you may add one to the file. Then state or assess each
+  item's area from that list. The preparer rejects any other name.
+
+As Collect says, never copy values, assessments, or reasons from earlier
+drafts.
+
+Judge every assessed value item by item, from that item's own description
+and sources. Do not assign levels or areas in bulk, by keyword rules, or with
+a script that applies one default. Each `reason` must cite a fact specific to
+that item, such as a date, blocker, dependency, or stated impact, not restate
+its title or description. For a level, say which part of the level's
+definition the fact meets and, when the call is close, why the adjacent level
+does not fit. For an impact area, say why the item belongs to that area. Each
+assessed field on an item needs its own reason; the preparer rejects an item
+that reuses one reason for two fields, and an open item past its target date
+whose assessed priority is not High. The preparer rejects a reason template reused
+across more than three items, even with each item's title or description
+added to it.
+
+Leave a field `null` only when nothing supports it; the log shows "Not
+recorded". In `coverageNote`, count the open items left without a priority and
+say why.
 
 Do not change an item's tab, category, review state, or status: the preparer
 checks them against the current trackers and inbox. Keep titles and
@@ -75,9 +126,10 @@ are internal; it ignores on-screen filters.
 It refuses to replace existing output; use a new dated folder for each log.
 For a labeled fictional preview, omit `--log` and `--project-root`.
 
-Place drafts in `workspace/draft-deliverables/raid-log-<YYYY-MM-DD>/` for an
-initialized project. Keep the authored `raid.json` beside the output folder,
-not in the skill.
+For an initialized project, use a new folder
+`workspace/draft-deliverables/raid-log-<YYYY-MM-DD>/` (add `-2`, `-3`, and so on
+when one exists) holding `raid.json` and the prepared `site/`. Never put
+`raid.json` in the skill.
 
 ## Verify and hand off
 
@@ -102,5 +154,8 @@ Report any check that could not run.
 In chat, give the link and explain how the log was derived: the evidence
 cutoff, approved and pending counts, which fields were stated or assessed and
 why, fields left unrecorded, pending changes not shown, omitted items, and
-contradictions. Ask whether any assessed value should change. Do not publish
+contradictions. Tell the user about the impact-area list: where it is saved,
+whether this run created it or added areas, and that they can edit the file or
+ask you to change it, and later logs will reuse it. Ask whether any assessed
+value should change. Do not publish
 or promote the draft without the user's instruction.

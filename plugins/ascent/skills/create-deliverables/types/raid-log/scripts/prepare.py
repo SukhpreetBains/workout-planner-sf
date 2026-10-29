@@ -5,10 +5,11 @@ from copy import deepcopy
 from datetime import date
 import importlib.util
 import json
+import re
 from pathlib import Path
 import shutil
 import tempfile
-from collect import collect, records
+from collect import collect, impact_areas, records
 from export import workbook_name, write_workbook
 from picklists import TYPE, fields_for, is_open, level_value, load, tone, tracker_schema, tracker_statuses
 
@@ -108,7 +109,39 @@ def validate(log, picklists=None, statuses=None):
             raise ValueError(f'{where}: fields not used on {tab["label"]}: {", ".join(sorted(extra))}')
         for field in fields_for(picklists, tab['id']):
             validate_field(field, item.get(field['key']), where, picklists)
+        priority = item.get('priority')
+        open_item = is_open(picklists, item['category'], item['status'])
+        if priority and priority['basis'] == 'assessed':
+            if not open_item:
+                raise ValueError(f'{where}: assess priority only for open items')
+            target = item.get('target')
+            if target and target['value'] < log['asOf'] and priority['value'] != 'High':
+                raise ValueError(f'{where}: open past its target date {target["value"]}, so assessed priority must be High')
+        reasons = [v['reason'].strip().lower() for v in item.values() if isinstance(v, dict) and v.get('basis') == 'assessed']
+        if len(reasons) != len(set(reasons)):
+            raise ValueError(f'{where}: give each assessed field its own reason')
+    check_reasons(items)
     return log
+
+
+def check_reasons(items, limit=3):
+    """Assessments are judged item by item: reject one template reused across many items."""
+    seen = {}
+    for item in items:
+        for key, value in item.items():
+            if not isinstance(value, dict) or value.get('basis') != 'assessed':
+                continue
+            reason = value['reason'].lower()
+            # Remove the item's own words, so pasting its title or description does not disguise a template.
+            for own in (item['description'], item['title'], item.get('id') or '', item['key']):
+                if own:
+                    reason = reason.replace(own.lower(), '')
+            reason = re.sub(r'[\W_]+', ' ', reason).strip()
+            seen.setdefault((key, reason), []).append(item.get('id') or item['key'])
+    for (key, _), ids in seen.items():
+        if len(ids) > limit:
+            raise ValueError(f'{key}: the same assessment reason is used for {len(ids)} items ({", ".join(ids[:5])}); '
+                             'judge each item and cite a fact specific to it')
 
 
 def check_project(log, root):
@@ -122,6 +155,18 @@ def check_project(log, root):
     unknown = sorted(present - set(expected))
     if unknown:
         raise ValueError('Items not found in the trackers or review inbox: ' + ', '.join(unknown[:10]))
+    areas = impact_areas(root)
+    allowed = {name.lower() for name in areas['tracked'] + [a['name'] for a in areas['saved'] or []]}
+    for item in log['items']:
+        value = item.get('impactArea')
+        if not value or value['basis'] == 'recorded':
+            continue
+        if areas['saved'] is None and not areas['tracked']:
+            raise ValueError(f'Save the project\'s impact areas in {areas["file"]} before naming them')
+        unknown = [part for part in value['value'].split('; ') if part.strip().lower() not in allowed]
+        if unknown:
+            raise ValueError(f'{item.get("id") or item["key"]}: impact area must be on the saved list in {areas["file"]} '
+                             f'or a tracked workstream, system, or process: {", ".join(unknown)}')
     for item in log['items']:
         current = expected[item['key']]
         for name in ('review', 'category', 'status'):
@@ -147,8 +192,17 @@ def enrich(log, picklists):
         item['citations'] = list(dict.fromkeys(item['source'] + [label for field in fields_for(picklists, item['tab'])
                                                                  for value in [item.get(field['key'])] if value
                                                                  for label in value.get('from', []) + value.get('source', [])]))
+    log['items'].sort(key=lambda item: attention_order(item, log['asOf']))
     log['vocabulary'] = vocabulary(picklists)
     return log
+
+
+def attention_order(item, as_of):
+    """Open before closed; overdue first, most overdue on top; then oldest raised first."""
+    target = (item.get('target') or {}).get('value')
+    raised = (item.get('dateRaised') or {}).get('value')
+    overdue = bool(item['open'] and target and target < as_of)
+    return (not item['open'], not overdue, target if overdue else '', raised is None, raised or '', item.get('id') or '~' + item['key'])
 
 
 def weekly_sources():

@@ -42,5 +42,8 @@ this order and stop at the first that applies:
    value assessed and record a basis naming the facts used.
 4. Otherwise leave it empty; the log shows "Not recorded".
 
+Priority signals where attention is needed now, so assess it only for open
+items. A closed item keeps a priority only when one is recorded or stated.
+
 Never raise a level to make an item look urgent, and never infer an owner or
 a date while assessing a level.

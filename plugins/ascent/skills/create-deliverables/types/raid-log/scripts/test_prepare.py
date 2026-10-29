@@ -37,7 +37,7 @@ def project(root):
     for category, rows in ROWS.items():
         (system / 'tracker-copies' / f'{category}.yaml').write_text(yaml.safe_dump({'category': category, 'rows': rows}))
     (system / 'proposed-updates/2026-10-28-notes.yaml').write_text(yaml.safe_dump(PROPOSALS))
-    (system / 'project.yaml').write_text('account: Fictional client\nopportunity: Fictional programme\n')
+    (system / 'project.yaml').write_text('account: Fictional client\nproject: Fictional programme\n')
     (root / 'workspace/meetings').mkdir(parents=True)
     (root / 'workspace/meetings/notes.md').write_text('UAT cannot start until the sandbox exists.\n')
     return root
@@ -123,6 +123,79 @@ class RaidLogTests(unittest.TestCase):
             self.item(log, 'RSK-001')[key] = value
             with self.subTest(key=key), self.assertRaisesRegex(ValueError, message):
                 validate(log)
+
+    def test_priority_is_assessed_only_for_open_items_and_color_defaults(self):
+        log = completed(self.root)
+        self.assertEqual(collect(self.root)['secondaryColor'], {'name': 'Coral Red', 'hex': '#FF4D5F'})
+        risk = self.item(log, 'RSK-001')
+        risk['priority'] = {'value': 'High', 'basis': 'assessed', 'reason': 'Blocks UAT.', 'source': ['workspace/meetings/notes.md']}
+        validate(log)
+        risk['status'] = 'closed'
+        with self.assertRaisesRegex(ValueError, 'assess priority only for open items'):
+            validate(log)
+        risk['priority'] = {'value': 'High', 'basis': 'stated', 'source': ['workspace/meetings/notes.md']}
+        validate(log)
+
+    def test_impact_areas_come_from_the_saved_list_or_tracked_entities(self):
+        log = completed(self.root)
+        self.assertEqual(log['impactAreas'], {'file': 'workspace/.system/raid-impact-areas.yaml', 'tracked': ['Data migration'], 'saved': None})
+        dependency = self.item(log, 'p-dep')
+        dependency['impactArea'] = {'value': 'Test environments', 'basis': 'assessed', 'reason': 'UAT needs the sandbox.',
+                                    'source': ['workspace/meetings/notes.md']}
+        with self.assertRaisesRegex(ValueError, 'must be on the saved list'):
+            prepare(Path(self.temp.name) / 'a', log, self.root)
+        (self.root / 'workspace/.system/raid-impact-areas.yaml').write_text(
+            yaml.safe_dump({'areas': [{'name': 'Test environments', 'description': 'Sandboxes and UAT access.'}]}))
+        prepare(Path(self.temp.name) / 'b', log, self.root)
+        self.assertEqual(collect(self.root)['impactAreas']['saved'], [{'name': 'Test environments', 'description': 'Sandboxes and UAT access.'}])
+        dependency['impactArea']['value'] = 'Data migration; Test environments'
+        prepare(Path(self.temp.name) / 'c', log, self.root)
+
+    def test_overdue_open_items_are_high_and_each_field_has_its_own_reason(self):
+        log = completed(self.root)
+        log['asOf'] = '2026-11-12'
+        risk = self.item(log, 'RSK-001')
+        note = ['workspace/meetings/notes.md']
+        risk['priority'] = {'value': 'Medium', 'basis': 'assessed', 'reason': 'Access may slip UAT.', 'source': note}
+        with self.assertRaisesRegex(ValueError, 'past its target date 2026-11-10'):
+            validate(log)
+        risk['priority'] = {'value': 'Medium', 'basis': 'stated', 'source': note}
+        validate(log)
+        risk['priority'] = {'value': 'High', 'basis': 'assessed', 'reason': 'Open past its November 10 target.', 'source': note}
+        risk['impactArea'] = {'value': 'Data migration', 'basis': 'assessed', 'reason': 'open past its November 10 target. ', 'source': note}
+        with self.assertRaisesRegex(ValueError, 'its own reason'):
+            validate(log)
+        risk['impactArea']['reason'] = 'The credentials gate migration testing.'
+        validate(log)
+
+    def test_items_sort_open_overdue_then_oldest_first(self):
+        from prepare import attention_order
+        def item(key, is_open, target=None, raised=None):
+            date = lambda value: {'value': value, 'basis': 'recorded', 'from': [key]} if value else None
+            return {'key': key, 'id': key, 'open': is_open, 'target': date(target), 'dateRaised': date(raised)}
+        items = [item('C-1', False, raised='2026-01-01'), item('O-new', True, raised='2026-10-20'),
+                 item('O-undated', True), item('O-old', True, raised='2026-09-01'),
+                 item('O-late', True, target='2026-10-20', raised='2026-10-25'),
+                 item('O-later', True, target='2026-10-01', raised='2026-10-26'),
+                 item('O-future', True, target='2026-12-01', raised='2026-08-01')]
+        items.sort(key=lambda i: attention_order(i, '2026-10-28'))
+        self.assertEqual([i['key'] for i in items], ['O-later', 'O-late', 'O-future', 'O-old', 'O-new', 'O-undated', 'C-1'])
+
+    def test_one_assessment_template_cannot_cover_many_items(self):
+        log = completed(self.root)
+        open_items = [i for i in log['items'] if 'priority' in i and i['status'] not in ('closed', 'resolved')]
+        self.assertEqual(len(open_items), 4)
+        for item in open_items:
+            item['priority'] = {'value': 'Medium', 'basis': 'assessed', 'source': ['workspace/meetings/notes.md'],
+                                'reason': f'Work is needed in the current phase: {item["title"]}.'}
+        with self.assertRaisesRegex(ValueError, 'same assessment reason is used for 4 items'):
+            validate(log)
+        open_items[0]['priority']['reason'] = 'UAT starts November 10 and credentials are unconfirmed.'
+        validate(log)
+        for item in open_items:
+            item['priority']['reason'] = f'Work is needed in the current phase. Evidence: {item["description"]}'
+        with self.assertRaisesRegex(ValueError, 'same assessment reason'):
+            validate(log)
 
     def test_excel_export_has_one_sheet_per_tab_with_marked_values(self):
         from openpyxl import load_workbook

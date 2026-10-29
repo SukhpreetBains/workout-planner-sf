@@ -5,6 +5,7 @@ from picklists import fields_for
 
 HEADER_FILL = '002FAF'
 PENDING_FILL = 'FFE27A'
+OVERDUE_RED = 'D32F2F'
 
 
 def workbook_name(log):
@@ -69,9 +70,12 @@ def write_workbook(log, picklists, schema, path):
             row = sheet.max_row
             for column, reason in notes.items():
                 sheet.cell(row, column).comment = Comment('Assessed: ' + reason, 'Ascent', width=320, height=110)
+            overdue = item['open'] and item.get('target') and item['target']['value'] < log['asOf']
             for column, field in enumerate(fields, start=7):
                 if field.get('type') == 'date':
                     sheet.cell(row, column).number_format = 'mm/dd/yyyy'
+                if field['key'] == 'target' and overdue:
+                    sheet.cell(row, column).font = Font(color=OVERDUE_RED, bold=True)
             if item['review'] == 'pending':
                 sheet.cell(row, 6).fill = PatternFill('solid', fgColor=PENDING_FILL)
             for cell in sheet[row]:
