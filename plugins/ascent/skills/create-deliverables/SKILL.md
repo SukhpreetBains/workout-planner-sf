@@ -41,7 +41,7 @@ present an unimplemented type as available for generation.
 ## Align content before creating any microsite
 
 For every deliverable microsite, including weekly status, project kickoff, and
-new types, gather the relevant evidence for every planned section before visual
+new types, unless the type's workflow exempts itself (the RAID log does), gather the relevant evidence for every planned section before visual
 generation. Follow the type's source refresh and outline steps first. Present a
 concise section-by-section proposal with the intended message, supporting facts
 and sources, gaps, and unresolved proposals. Use available project information

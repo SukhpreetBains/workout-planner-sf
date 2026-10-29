@@ -14,6 +14,12 @@ color only when the user's request names one. Confirm the project from context.
 The evidence cutoff (`asOf`) is the day the trackers are refreshed unless the
 user names another date.
 
+The parent skill's content alignment conversation does not apply. A RAID log is
+a complete register of tracked items, not an editorial selection, so build it
+from the trackers without a section proposal or content questions. Ask only
+when the project or cutoff is unclear, and raise gaps and assessments in the
+handoff.
+
 ## Collect
 
 Every RAID log starts fresh. Do not open, validate, repair, or build on earlier
