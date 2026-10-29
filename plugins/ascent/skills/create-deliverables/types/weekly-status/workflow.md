@@ -23,19 +23,13 @@ templates from the same agreed content, in separate output directories.
 
 ## Set the visual inputs
 
-Before generating a new report, show the [Slalom secondary color swatches](assets/secondary-colors.svg)
-inline and ask which secondary color the user wants. Offer Cyan `#1BE1F2`, Coral
-Red `#FF4D5F`, Purple `#C7B9FF`, and Chartreuse `#DEFF4D`. Ask whether to use
-approved Slalom icons, with Yes and No choices. Ask together when both choices are
-unknown, and reuse choices already made for this report. Continue evidence work
-while waiting, but wait for the selections before project visual generation.
-Save the choices as `secondaryColor: {name, hex}` and `useIconography` in `report.json`.
+Ask whether to use approved Slalom icons, with Yes and No choices and reuse choices already made for this report. Default the secondary color to the following `secondaryColor: {'Purple', '#C7B9FF'}` and `useIconography` in `report.json`.
 
 Use Slalom Blue `#0C62FB`, the selected secondary hue at any opacity, and white,
 black, or neutral grays. Slalom Dark Blue `#002FAF` is permitted. Do not invent
 other hues, alter supplied artwork, or reduce a content container's opacity.
 Check contrast against the composited background. Use Slalom Sans for the selected template.
-Read the [Slalom brand guide](../../../utilities-ui-generation/branding/packs/slalom/docs/README.md),
+Unless the user supplies another example or branding pack default to using the [Slalom brand guide](../../../utilities-ui-generation/branding/packs/slalom/docs/README.md),
 especially color, typography, imagery, graphic elements, and accessibility.
 
 When iconography is enabled, the preparation helper packages all 102 approved
@@ -78,33 +72,35 @@ Do not add a suggested actions section to the report. Retain source
 qualifications and the evidence cutoff. Use local source
 snapshots for cited files as described in the brief. Do not put client data into
 skill templates. Ascent outputs belong in
-`workspace/draft-deliverables/<report-name>/`; elsewhere follow the user's
-destination and repository file organization.
+`workspace/draft-deliverables/<report-name>/`;
 
 ## Align section content before creating the microsite
 
 After gathering evidence and reading the active outline, prepare a concise
 section-by-section content proposal in chat. Cover the title/reporting period,
-summary and health, and every included outline section. For each, identify the
+project health, a summary of what occurred during the reporting period and every included outline section. For each, identify the
 intended message, supporting sources, relevant facts, gaps, and unresolved
 proposals. Gather all relevant available information before asking the user to
 fill gaps; do not ask them to repeat facts already available in the workspace.
+
+Don't assume anyone
 
 Have a 3–5 question conversation before creating the project microsite. Tailor
 questions to the evidence and outline, grouping related sections so every
 section is covered. Ask in short rounds, use the answers to shape the next
 question, and reuse answers already given. Template, color, and icon choices do
-not count as content questions. For the default outline, useful prompts are:
+not count as content questions. Ask the following:
 
 1. Does the proposed summary and health capture the message for this audience
    and reporting period, or should the emphasis change?
 2. Which sourced accomplishments should lead, and is any material progress missing?
 3. Are the proposed next steps and milestones correct, including owners, dates,
-   and the distinction between plans and completed work?
+   and the distinction between planned and completed work?
 4. Do the risks and decisions reflect the issues the audience needs to understand,
    and are any additions or exclusions needed?
 5. If needed, which optional sections or remaining gaps should be included or
    resolved before drafting?
+6. Any other clarifying questions that might be needed to better create a weekly status report from the data
 
 Adapt these prompts for custom sections rather than ignoring them. Show the
 revised section content and resolve material ambiguities with the user before
@@ -115,9 +111,15 @@ Apply the parent skill's shared underlying-content update rules during this
 conversation and subsequent revisions: apply clear user-supplied corrections
 through workspace-review and flag the exact changes to the user.
 
+## Show the user the agreed upon content
+Once you have taken the users feedback into account show them the content for each section one more time and confirm they are ready to create the deliverable from that content
+
+## Microsite subagent delegation
+Ask the user if they would like to use a lower cost model (like luna or haiku depending on what llm models they have access to) on high reasoning.  Inform them that the quality will be similar and will use a fraction of their token budget.  If they select yes spin up a subagent and give it the relevant information to create the microsite for the user and the entirety of the sections below (#prepare-the-selected-template, #customize-the-chosen-starting-point)
+
 ## Prepare the selected template
 
-Initialize a new output directory, which the helper refuses to overwrite. For
+Initialize a new output directory. For
 an initialized Ascent workspace, set `ASCENT_PROJECT_ROOT` and use the plugin's
 managed Python launcher so tracker and accepted-evidence YAML can be read:
 
