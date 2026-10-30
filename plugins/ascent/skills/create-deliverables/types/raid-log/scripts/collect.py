@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Build a starter RAID log from approved tracker rows and pending inbox items.
+"""Build a starter RAID log from approved tracker rows.
 
-Every RAID item in the project is included, with the values the trackers and
-their links already record. The agent then fills remaining fields from the
+Every approved RAID item in the project is included, with the values the
+trackers and their links already record. Review inbox proposals are not
+approved, so they never appear in the log. The agent then fills remaining fields from the
 cited sources before running prepare.py.
 """
 import argparse
@@ -39,14 +40,8 @@ def recorded(value, sources):
     return {'value': value, 'basis': 'recorded', 'from': sorted(set(sources))} if value else None
 
 
-def default_status(schema, category):
-    """The status a proposal takes when approved without one."""
-    column = next(c for c in schema['categories'][category]['columns'] if c['name'] == 'Status')
-    return column.get('default', '')
-
-
 def records(root, schema):
-    """Approved rows and live inbox proposals, keyed by tracker ID or proposal ID."""
+    """Approved tracker rows keyed by tracker ID, and the live proposals that would change each one."""
     read = yaml_reader()
     found = {}
     system = Path(root) / 'workspace/.system'
@@ -58,21 +53,13 @@ def records(root, schema):
         for row in data.get('rows') or []:
             key = next((row[k] for k in row if k.endswith(' ID') and row[k]), None)
             if key:
-                found[str(key)] = {'category': category, 'fields': row, 'review': 'approved'}
-    updates = []
+                found[str(key)] = {'category': category, 'fields': row}
+    pending_changes = {}
     for path in sorted((system / 'proposed-updates').glob('*.y*ml')):
         for update in (read(path.read_text(encoding='utf-8')) or {}).get('updates') or []:
-            if (update.get('review') or {}).get('state', 'pending') in LIVE_REVIEW:
-                updates.append(update)
-    for update in updates:
-        if update.get('action', 'add') == 'add' and update.get('proposal_id'):
-            found[str(update['proposal_id'])] = {'category': update.get('category'), 'fields': update.get('fields') or {},
-                                                 'review': 'pending', 'evidence': update.get('evidence') or [],
-                                                 'sourceRefs': update.get('source_refs') or []}
-    pending_changes = {}
-    for update in updates:
-        if update.get('action') == 'update' and update.get('id'):
-            pending_changes.setdefault(str(update['id']), []).append(str(update.get('proposal_id') or ''))
+            if ((update.get('review') or {}).get('state', 'pending') in LIVE_REVIEW
+                    and update.get('action') == 'update' and update.get('id')):
+                pending_changes.setdefault(str(update['id']), []).append(str(update.get('proposal_id') or ''))
     return found, pending_changes
 
 
@@ -125,18 +112,16 @@ def collect(root, as_of=None):
         values['addresses'] = recorded('; '.join(name(t) for t in addressed), addressed)
         values['outcome'] = recorded(str(row.get('Resolution') or '').strip(), [key])
         values['resolutionPlan'] = recorded('; '.join(name(s) for s in responders), responders)
-        item = {'key': key, 'id': key if record['review'] == 'approved' else None,
-                'review': record['review'], 'category': category, 'tab': tab['id'],
+        item = {'key': key, 'id': key, 'category': category, 'tab': tab['id'],
                 'title': str(row.get('Name') or '').strip(), 'description': str(row.get('Description') or '').strip(),
-                'status': str(row.get('Status') or default_status(schema, category)).strip(),
-                'source': [key if record['review'] == 'approved' else 'proposal:' + key]}
+                'status': str(row.get('Status') or '').strip(), 'source': [key]}
         if key in pending_changes:
             item['pendingChanges'] = pending_changes[key]
         for field in fields_for(picklists, tab['id']):
             item[field['key']] = values.get(field['key'])
         items.append(item)
     order = {tab['id']: i for i, tab in enumerate(picklists['tabs'])}
-    items.sort(key=lambda i: (order[i['tab']], i['review'] != 'approved', i['id'] or '', i['title']))
+    items.sort(key=lambda i: (order[i['tab']], i['id'], i['title']))
     project = yaml_reader()((Path(root) / 'workspace/.system/project.yaml').read_text(encoding='utf-8')) or {}
     return {'project': str(project.get('project') or project.get('opportunity') or project.get('account') or '').strip(),
             'asOf': as_of or date.today().isoformat(), 'sample': False, 'secondaryColor': DEFAULT_COLOR,

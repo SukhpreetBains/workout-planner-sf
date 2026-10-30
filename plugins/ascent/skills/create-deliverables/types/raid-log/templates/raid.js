@@ -6,7 +6,7 @@
   const palette = [['Cyan', '#1BE1F2'], ['Coral Red', '#FF4D5F'], ['Purple', '#C7B9FF'], ['Chartreuse', '#DEFF4D']];
   const colorKey = 'raid-log-secondary-color:' + new URL('./', location.href).pathname;
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const state = {tab: vocab.tabs[0].id, status: 'all', review: 'all', kind: 'all', query: ''};
+  const state = {tab: vocab.tabs[0].id, status: 'all', kind: 'all', query: ''};
   const citeNumbers = new Map();
   let tipCount = 0;
   let lastCitation = null;
@@ -94,7 +94,7 @@
       }
       const link = el('button', 'item-link', item.title);
       link.type = 'button';
-      link.append(el('span', 'link-id', item.id || 'Pending'));
+      link.append(el('span', 'link-id', item.id));
       link.addEventListener('click', event => { event.stopPropagation(); goTo(key); });
       target.append(link);
     });
@@ -105,9 +105,9 @@
     const item = log.items.find(i => i.key === key);
     const row = document.querySelector('.item-row[data-key="' + CSS.escape(key) + '"]');
     // Clear any filter that would hide the row, then open its tab and expand it.
-    Object.assign(state, {status: 'all', review: 'all', kind: 'all', query: ''});
+    Object.assign(state, {status: 'all', kind: 'all', query: ''});
     document.getElementById('search').value = '';
-    ['state-filter', 'review-filter', 'kind-filter'].forEach(id =>
+    ['state-filter', 'kind-filter'].forEach(id =>
       document.querySelectorAll('#' + id + ' button').forEach((b, n) => b.setAttribute('aria-pressed', String(n === 0))));
     select(item.tab);
     const toggle = row.querySelector('.row-toggle');
@@ -119,7 +119,6 @@
   function markers(tab, item) {
     const box = el('span', 'marks');
     if (tab.kinds && tab.kinds[item.category]) box.append(el('span', 'tag ' + (isNeeded(item) ? 'tag-needed' : 'tag-made'), tab.kinds[item.category]));
-    if (item.review === 'pending') box.append(el('span', 'tag tag-pending', 'Pending review'));
     return box;
   }
 
@@ -139,13 +138,12 @@
     const root = document.getElementById('source-details');
     root.replaceChildren();
     document.getElementById('source-dialog-title').textContent = 'Source ' + number;
-    document.getElementById('source-label').textContent = record && record.name !== label ? record.name + ' · ' + (label.startsWith('proposal:') ? 'review inbox item' : label) : label;
+    document.getElementById('source-label').textContent = record && record.name !== label ? record.name + ' · ' + label : label;
     if (record) {
-      if (record.review === 'pending') root.append(el('p', '', 'Pending review: this item has not been approved in the review inbox yet.'));
       if (record.description) root.append(el('p', '', record.description));
       const facts = el('dl', 'source-facts');
       Object.entries(record.facts || {}).forEach(([k, v]) => facts.append(el('dt', '', k), el('dd', '', v)));
-      if (facts.children.length) root.append(el('h3', '', record.review === 'pending' ? 'Proposed values' : 'Current reviewed tracker row'), facts);
+      if (facts.children.length) root.append(el('h3', '', 'Current reviewed tracker row'), facts);
       if (record.evidence && record.evidence.length) {
         const list = el('ul', 'source-evidence');
         record.evidence.forEach(entry => { const li = el('li'); li.append(el('blockquote', '', entry.excerpt), sourceLink(entry)); list.append(li); });
@@ -232,13 +230,12 @@
     table.appendChild(el('thead')).append(caption, head);
     const body = el('tbody');
     tabItems.forEach(item => {
-      const row = el('tr', 'item-row' + (item.review === 'pending' ? ' pending' : '') + (item.open ? '' : ' is-closed'));
+      const row = el('tr', 'item-row' + (item.open ? '' : ' is-closed'));
       row.dataset.key = item.key;
       row.dataset.open = item.open;
-      row.dataset.review = item.review;
       row.dataset.kind = isNeeded(item) ? 'needed' : 'made';
       row.dataset.text = [item.id, item.title, item.owner && item.owner.value, item.impactArea && item.impactArea.value].join(' ').toLowerCase();
-      row.append(el('td', 'rid', item.id || 'Pending'));
+      row.append(el('td', 'rid', item.id));
       const title = el('td', 'title-cell');
       const button = el('button', 'row-toggle', item.title);
       button.type = 'button';
@@ -308,7 +305,6 @@
       let shown = 0;
       panel.querySelectorAll('.item-row').forEach(row => {
         const ok = (state.status === 'all' || String(state.status === 'open') === row.dataset.open)
-          && (state.review === 'all' || state.review === row.dataset.review)
           && (!hasKinds || state.kind === 'all' || state.kind === row.dataset.kind)
           && (!state.query || row.dataset.text.includes(state.query));
         row.hidden = !ok;
@@ -331,13 +327,11 @@
   document.title = 'RAID log — ' + log.project;
   const totals = document.getElementById('totals');
   [['Open items', log.items.filter(i => i.open).length],
-   ['Pending review', log.items.filter(i => i.review === 'pending').length],
    ['Decisions needed', log.items.filter(i => isNeeded(i) && i.open).length]]
     .forEach(([label, n]) => { const d = el('div'); d.append(el('dt', '', label), el('dd', '', String(n))); totals.append(d); });
 
   // Controls
   segment('state-filter', [['all', 'All'], ['open', 'Open'], ['closed', 'Closed']], 'status');
-  segment('review-filter', [['all', 'All'], ['approved', 'Approved'], ['pending', 'Pending review']], 'review');
   segment('kind-filter', [['all', 'All'], ['made', 'Made'], ['needed', 'Needed']], 'kind');
   document.getElementById('search').addEventListener('input', e => { state.query = e.target.value.trim().toLowerCase(); filter(); });
   const sources = document.getElementById('sources-toggle');

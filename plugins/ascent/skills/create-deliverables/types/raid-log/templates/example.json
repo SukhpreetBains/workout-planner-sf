@@ -12,7 +12,6 @@
     {
       "key": "RSK-001",
       "id": "RSK-001",
-      "review": "approved",
       "category": "risk",
       "tab": "risks",
       "title": "Sandbox credentials may arrive after UAT starts",
@@ -83,7 +82,6 @@
     {
       "key": "RSK-002",
       "id": "RSK-002",
-      "review": "approved",
       "category": "risk",
       "tab": "risks",
       "title": "Limited SME availability during design validation",
@@ -142,49 +140,8 @@
       "nextAction": null
     },
     {
-      "key": "p-7f3a",
-      "id": null,
-      "review": "pending",
-      "category": "risk",
-      "tab": "risks",
-      "title": "Vendor data extract format could change before migration",
-      "description": "The billing vendor mentioned a planned upgrade that may change the extract format. Impact is unstated in the source.",
-      "status": "identified",
-      "source": [
-        "Fictional sample inbox item p-7f3a"
-      ],
-      "owner": null,
-      "impactArea": {
-        "value": "Solution & Design",
-        "basis": "stated",
-        "source": [
-          "Fictional sample vendor call, 24 Oct"
-        ]
-      },
-      "raisedBy": {
-        "value": "Billing vendor",
-        "basis": "stated",
-        "source": [
-          "Fictional sample vendor call, 24 Oct"
-        ]
-      },
-      "dateRaised": {
-        "value": "2026-10-24",
-        "basis": "stated",
-        "source": [
-          "Fictional sample vendor call, 24 Oct"
-        ]
-      },
-      "target": null,
-      "priority": null,
-      "severity": null,
-      "outcome": null,
-      "nextAction": null
-    },
-    {
       "key": "RSK-003",
       "id": "RSK-003",
-      "review": "approved",
       "category": "risk",
       "tab": "risks",
       "title": "Reporting tool licence renewal",
@@ -255,7 +212,6 @@
     {
       "key": "ASM-001",
       "id": "ASM-001",
-      "review": "approved",
       "category": "assumption",
       "tab": "assumptions",
       "title": "Every customer record has a unique enterprise ID",
@@ -319,7 +275,6 @@
     {
       "key": "ASM-002",
       "id": "ASM-002",
-      "review": "approved",
       "category": "assumption",
       "tab": "assumptions",
       "title": "Billing timestamps are in UTC",
@@ -383,7 +338,6 @@
     {
       "key": "ISS-001",
       "id": "ISS-001",
-      "review": "approved",
       "category": "issue",
       "tab": "issues",
       "title": "QA users cannot access the sandbox",
@@ -460,50 +414,8 @@
       }
     },
     {
-      "key": "p-91c2",
-      "id": null,
-      "review": "pending",
-      "category": "issue",
-      "tab": "issues",
-      "title": "Duplicate invoices in the October test load",
-      "description": "The October test load produced 212 duplicate invoices. The cause has not been identified.",
-      "status": "open",
-      "source": [
-        "Fictional sample inbox item p-91c2"
-      ],
-      "owner": null,
-      "impactArea": {
-        "value": "Solution & Design",
-        "basis": "stated",
-        "source": [
-          "Fictional sample defect report, 26 Oct"
-        ]
-      },
-      "raisedBy": {
-        "value": "Data lead",
-        "basis": "stated",
-        "source": [
-          "Fictional sample defect report, 26 Oct"
-        ]
-      },
-      "dateRaised": {
-        "value": "2026-10-26",
-        "basis": "stated",
-        "source": [
-          "Fictional sample defect report, 26 Oct"
-        ]
-      },
-      "target": null,
-      "priority": null,
-      "severity": null,
-      "outcome": null,
-      "nextAction": null,
-      "resolutionPlan": null
-    },
-    {
       "key": "ISS-002",
       "id": "ISS-002",
-      "review": "approved",
       "category": "issue",
       "tab": "issues",
       "title": "Design review room unavailable",
@@ -581,7 +493,6 @@
     {
       "key": "DEC-001",
       "id": "DEC-001",
-      "review": "approved",
       "category": "decision",
       "tab": "decisions",
       "title": "Use a message queue for invoice events",
@@ -639,7 +550,6 @@
     {
       "key": "QST-003",
       "id": "QST-003",
-      "review": "approved",
       "category": "open_question",
       "tab": "decisions",
       "title": "Migrate closed cases in Phase 1?",
@@ -702,48 +612,8 @@
       }
     },
     {
-      "key": "p-2b8e",
-      "id": null,
-      "review": "pending",
-      "category": "open_question",
-      "tab": "decisions",
-      "title": "Choose the identity provider for the portal",
-      "description": "The client has asked which identity provider the portal should use. No options have been compared yet.",
-      "status": "open",
-      "source": [
-        "Fictional sample inbox item p-2b8e"
-      ],
-      "owner": null,
-      "impactArea": {
-        "value": "Security & Compliance",
-        "basis": "stated",
-        "source": [
-          "Fictional sample meeting notes, 25 Oct"
-        ]
-      },
-      "raisedBy": {
-        "value": "Client IT",
-        "basis": "stated",
-        "source": [
-          "Fictional sample meeting notes, 25 Oct"
-        ]
-      },
-      "dateRaised": {
-        "value": "2026-10-25",
-        "basis": "stated",
-        "source": [
-          "Fictional sample meeting notes, 25 Oct"
-        ]
-      },
-      "target": null,
-      "priority": null,
-      "outcome": null,
-      "nextAction": null
-    },
-    {
       "key": "DEP-001",
       "id": "DEP-001",
-      "review": "approved",
       "category": "dependency",
       "tab": "dependencies",
       "title": "UAT requires a provisioned sandbox",
@@ -814,7 +684,6 @@
     {
       "key": "DEP-002",
       "id": "DEP-002",
-      "review": "approved",
       "category": "dependency",
       "tab": "dependencies",
       "title": "Data dictionary from the billing vendor",
@@ -886,7 +755,6 @@
     {
       "key": "ACT-004",
       "id": "ACT-004",
-      "review": "approved",
       "category": "action_item",
       "tab": "actions",
       "title": "Confirm QA sandbox access with client IT",
@@ -951,7 +819,6 @@
     {
       "key": "ACT-006",
       "id": "ACT-006",
-      "review": "approved",
       "category": "action_item",
       "tab": "actions",
       "title": "Prepare archive cost estimate for closed cases",
@@ -1015,7 +882,6 @@
     {
       "key": "ACT-007",
       "id": "ACT-007",
-      "review": "approved",
       "category": "action_item",
       "tab": "actions",
       "title": "Profile the first full export for duplicate IDs",
@@ -1079,7 +945,6 @@
     {
       "key": "ACT-008",
       "id": "ACT-008",
-      "review": "approved",
       "category": "action_item",
       "tab": "actions",
       "title": "Confirm the sandbox provisioning date with client IT",
@@ -1141,48 +1006,8 @@
       }
     },
     {
-      "key": "p-c40d",
-      "id": null,
-      "review": "pending",
-      "category": "action_item",
-      "tab": "actions",
-      "title": "Send revised migration runbook to the sponsor",
-      "description": "David will send the revised runbook once the duplicate invoice cause is known.",
-      "status": "assigned",
-      "source": [
-        "Fictional sample inbox item p-c40d"
-      ],
-      "owner": {
-        "value": "David Ortiz",
-        "basis": "stated",
-        "source": [
-          "Fictional sample meeting notes, 26 Oct"
-        ]
-      },
-      "impactArea": {
-        "value": "Solution & Design",
-        "basis": "stated",
-        "source": [
-          "Fictional sample meeting notes, 26 Oct"
-        ]
-      },
-      "raisedBy": null,
-      "dateRaised": {
-        "value": "2026-10-26",
-        "basis": "stated",
-        "source": [
-          "Fictional sample meeting notes, 26 Oct"
-        ]
-      },
-      "target": null,
-      "priority": null,
-      "outcome": null,
-      "addresses": null
-    },
-    {
       "key": "ACT-002",
       "id": "ACT-002",
-      "review": "approved",
       "category": "action_item",
       "tab": "actions",
       "title": "Share design review recording",

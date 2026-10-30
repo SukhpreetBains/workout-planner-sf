@@ -25,14 +25,12 @@ order, so item order in the authored file does not matter.
 
 | Field | Shape and meaning |
 | --- | --- |
-| `key` | Tracker ID for an approved row, or the inbox proposal ID for a pending item. |
-| `id` | Tracker ID, or `null` while pending review. The page shows "Pending". |
-| `review` | `approved` or `pending`. |
+| `key`, `id` | The approved row's tracker ID, the same in both. The log holds approved tracker rows only; review inbox proposals never appear. |
 | `category`, `tab` | Tracker category and its RAID tab from `tabs.yaml`. Open questions sit on Decisions as "Decision needed". |
 | `title`, `description` | The record's Name and Description. |
 | `status` | The record's tracker status value, such as `in_progress`. |
-| `source` | Source labels for the record itself: its tracker ID, or `proposal:<id>`. |
-| `pendingChanges` | Optional inbox proposal IDs that would change an approved row. |
+| `source` | Source labels for the record itself: its tracker ID. |
+| `pendingChanges` | Optional inbox proposal IDs that would change an approved row, for the chat handoff; the log shows the approved values. |
 | fields | One key per field `tabs.yaml` gives the tab, such as `owner`, `priority`, or `nextAction`. |
 
 A field is `null` (shown as "Not recorded") or an object:

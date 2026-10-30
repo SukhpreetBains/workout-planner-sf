@@ -1,7 +1,7 @@
 @font-face{font-family:Slalom Sans;src:url('assets/regular.woff2') format('woff2');font-weight:400;font-display:swap}
 @font-face{font-family:Slalom Sans;src:url('assets/bold.woff2') format('woff2');font-weight:700;font-display:swap}
 /* Status and level colors are a documented exception to the Slalom palette (see picklists/README.md). */
-:root{--blue:#0C62FB;--dark-blue:#002FAF;--accent:#FF4D5F;--accent-rgb:255 77 95;--ink:#141414;--muted:#606060;--line:#D9D9D9;--soft:#F3F3F3;--paper:#fff;--red:#D32F2F;--amber:#FFA000;--green:#2E7D32;--grey:#A6A6A6;--pending-yellow:#FFE27A;font-family:'Slalom Sans',Arial,sans-serif;color:var(--ink);font-synthesis:none}
+:root{--blue:#0C62FB;--dark-blue:#002FAF;--accent:#FF4D5F;--accent-rgb:255 77 95;--ink:#141414;--muted:#606060;--line:#D9D9D9;--soft:#F3F3F3;--paper:#fff;--red:#D32F2F;--amber:#FFA000;--green:#2E7D32;--grey:#A6A6A6;font-family:'Slalom Sans',Arial,sans-serif;color:var(--ink);font-synthesis:none}
 *{box-sizing:border-box}
 body{margin:0;min-width:320px;background:var(--paper)}
 button,input{font:inherit;color:inherit}
@@ -68,7 +68,6 @@ a.quiet[hidden]{display:none}
 .item-row.expanded{background:rgb(12 98 251 / .05)}
 .item-row.expanded td{border-bottom-color:transparent}
 .item-row.is-closed .row-toggle{color:var(--muted)}
-.item-row.pending .rid{color:var(--muted);font-style:italic}
 .rid{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .title-cell{min-width:18rem}
 .row-toggle{border:0;background:transparent;padding:0;text-align:left;font-weight:700;cursor:pointer;line-height:1.35}
@@ -90,7 +89,6 @@ a.quiet[hidden]{display:none}
 .panel.none .table-wrap{display:none}
 /* Pills, status dots, and level squares */
 .tag{display:inline-flex;align-items:center;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;line-height:1;padding:.32rem .5rem;border-radius:99px;white-space:nowrap}
-.tag-pending{color:var(--ink);background:var(--pending-yellow)}
 .tag-needed{color:var(--ink);background:rgb(var(--accent-rgb) / .22)}
 .tag-made{color:var(--muted);border:1px solid var(--line)}
 .status{display:inline-flex;align-items:center;gap:.4rem;font-weight:700;font-size:.88rem;white-space:nowrap}

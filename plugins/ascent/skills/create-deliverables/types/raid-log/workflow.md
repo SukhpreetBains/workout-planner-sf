@@ -26,7 +26,7 @@ Every RAID log starts fresh. Do not open, validate, repair, or build on earlier
 RAID drafts in `workspace/draft-deliverables/`: they are not evidence, and they
 may hold superseded judgments. Never modify an earlier draft folder. Begin from
 a new starter written by `collect.py` into a new dated folder, and derive every
-value from the current trackers, inbox, and source documents.
+value from the current approved trackers and source documents.
 
 Keep the workspace clean. Write any helper scripts or scratch files to a
 temporary folder outside the workspace, such as one from `mktemp -d`. The new
@@ -45,13 +45,16 @@ Build the starter log, which refuses to overwrite an existing file:
 ASCENT_PROJECT_ROOT=/absolute/project /absolute/plugin/shared/scripts/py types/raid-log/scripts/collect.py /absolute/draft/raid.json --project-root /absolute/project
 ```
 
-The starter holds every RAID item: approved tracker rows and pending or flagged
-review inbox proposals. Rejected proposals are excluded. Values the trackers
+The starter holds every approved RAID item: the rows in the trackers. A RAID
+log is a deliverable, so it holds approved items only. Review inbox proposals,
+whether pending, flagged, or rejected, never appear in it, and the preparer
+rejects any item that is not an approved tracker row. Values the trackers
 already record are filled with `basis: recorded`: owners and raisers from
 links, dates, a risk's calculated severity, outcomes from each row's
 Resolution column, next actions and resolution plans from the action items
 that address the item, and, on each action, the RAID items it addresses. Pending changes to an approved
-row are listed in `pendingChanges`; the log shows the approved values.
+row are listed in `pendingChanges` for the handoff; the log shows the approved
+values.
 
 ## Fill the gaps
 
@@ -80,7 +83,7 @@ Work through these fields deliberately; they are rarely in the trackers:
   completed action produced. These are often in the description itself;
   state them with the record's sources.
 - **Next action**: only ever an open action item that addresses the RAID
-  item, linked in the trackers or the review inbox. The starter fills it; it
+  item, linked in the trackers. The starter fills it; it
   is never stated or assessed, and the page links it to the action's row.
   When a source describes a next step that no tracked action covers, leave
   the field empty and list the step in `coverageNote` as an action to add
@@ -115,13 +118,14 @@ recorded". In `coverageNote`, count the open items left without a priority and
 say why, the open RAID items with no next action, and the items marked
 Unknown / TBD.
 
-Do not change an item's tab, category, review state, or status: the preparer
-checks them against the current trackers and inbox. Keep titles and
+Do not change an item's tab, category, or status: the preparer
+checks them against the current trackers. Keep titles and
 descriptions faithful to the record; tighten wording only when it stays
 accurate. Keep every item. To leave one out, add it to `omitted` with a reason
 the user can check, such as a duplicate. Write `coverageNote` for the chat
-handoff only: the evidence cutoff, how many items are pending review, fields
-left unrecorded, assessed values, pending changes, and contradictions.
+handoff only: the evidence cutoff, how many RAID proposals in the review inbox
+are waiting and so left out, fields left unrecorded, assessed values, pending
+changes, and contradictions.
 
 ## Prepare
 
@@ -132,11 +136,10 @@ ASCENT_PROJECT_ROOT=/absolute/project /absolute/plugin/shared/scripts/py types/r
 Run from the `create-deliverables` skill directory, or use absolute script
 paths. The preparer validates every value against the picklists and field
 rules, confirms every RAID item is present or omitted with a reason, computes
-open or closed and status colors, packages source details for tracker rows,
-inbox proposals, and safe document snapshots, copies fonts and the logo, and
+open or closed and status colors, packages source details for tracker rows
+and safe document snapshots, copies fonts and the logo, and
 writes the Excel export behind the page's Export to Excel link. The workbook has
-a Summary sheet and one sheet per tab with every item and field, including
-pending items marked "Pending review". Assessed values read "(assessed)" with
+a Summary sheet and one sheet per tab with every item and field. Assessed values read "(assessed)" with
 the reasoning as a cell comment. It has no source column, because source labels
 are internal; it ignores on-screen filters.
 It refuses to replace existing output; use a new dated folder for each log.
@@ -155,7 +158,7 @@ Serve only the output folder on loopback and open it in a browser at desktop
 and narrow widths. Check that:
 
 - every tab opens, and its count matches `raid.json`;
-- the Status, Review, and Decision filters and search work;
+- the Status and Decision filters and search work;
 - rows expand and collapse, and expanded rows do not repeat table columns;
 - a next action opens its action's row, and an action's Addresses opens the
   RAID item's row, even with filters set;
@@ -170,7 +173,9 @@ and narrow widths. Check that:
 Report any check that could not run.
 
 In chat, give the link and explain how the log was derived: the evidence
-cutoff, approved and pending counts, which fields were stated or assessed and
+cutoff, the item count, how many RAID proposals await review and are not in
+the log (approve them in the review inbox to include them), which fields were
+stated or assessed and
 why, fields left unrecorded, pending changes not shown, omitted items, and
 contradictions. Name the open RAID items with no next action and any next
 steps found in sources that are not yet tracked actions, and offer to add them

@@ -4,7 +4,6 @@ import re
 from picklists import fields_for
 
 HEADER_FILL = '002FAF'
-PENDING_FILL = 'FFE27A'
 OVERDUE_RED = 'D32F2F'
 
 
@@ -28,7 +27,6 @@ def write_workbook(log, picklists, schema, path):
         items = [i for i in log['items'] if i['tab'] == tab['id']]
         rows.append((tab['label'], f'{sum(i["open"] for i in items)} open of {len(items)}'))
     rows += [('', ''),
-             ('Pending review', 'Not yet approved in the project review inbox.'),
              ('(assessed)', 'A judgment against the RAID picklist definitions, not stated in the sources. The cell comment gives the reasoning.')]
     for row in rows:
         summary.append(row)
@@ -41,11 +39,11 @@ def write_workbook(log, picklists, schema, path):
     summary.column_dimensions['B'].width = 90
 
     # A link field names other items; give each one's ID so readers can find its row.
-    linked = {i['key']: f'{i["title"]} ({i["id"] or "pending review"})' for i in log['items']}
+    linked = {i['key']: f'{i["title"]} ({i["id"]})' for i in log['items']}
     for tab in picklists['tabs']:
         sheet = book.create_sheet(tab['label'])
         fields = fields_for(picklists, tab['id'])
-        headers = ['RAID ID', 'Type', 'Item', 'Description', 'Status', 'Review'] + [f['label'] for f in fields]
+        headers = ['RAID ID', 'Type', 'Item', 'Description', 'Status'] + [f['label'] for f in fields]
         sheet.append(headers)
         for cell in sheet[1]:
             cell.font = Font(bold=True, color='FFFFFF')
@@ -53,9 +51,7 @@ def write_workbook(log, picklists, schema, path):
             cell.alignment = Alignment(vertical='center', wrap_text=True)
         for item in (i for i in log['items'] if i['tab'] == tab['id']):
             kind = tab.get('kinds', {}).get(item['category']) or schema['categories'][item['category']]['label']
-            values = [item['id'] or 'Pending', kind, item['title'], item['description'],
-                      item['status'].replace('_', ' ').capitalize(),
-                      'Pending review' if item['review'] == 'pending' else 'Approved']
+            values = [item['id'], kind, item['title'], item['description'], item['status'].replace('_', ' ').capitalize()]
             notes = {}
             for column, field in enumerate(fields, start=len(values) + 1):
                 value = item.get(field['key'])
@@ -75,16 +71,14 @@ def write_workbook(log, picklists, schema, path):
             for column, reason in notes.items():
                 sheet.cell(row, column).comment = Comment('Assessed: ' + reason, 'Ascent', width=320, height=110)
             overdue = item['open'] and item.get('target') and item['target']['value'] < log['asOf']
-            for column, field in enumerate(fields, start=7):
+            for column, field in enumerate(fields, start=len(headers) - len(fields) + 1):
                 if field.get('type') == 'date':
                     sheet.cell(row, column).number_format = 'mm/dd/yyyy'
                 if field['key'] == 'target' and overdue:
                     sheet.cell(row, column).font = Font(color=OVERDUE_RED, bold=True)
-            if item['review'] == 'pending':
-                sheet.cell(row, 6).fill = PatternFill('solid', fgColor=PENDING_FILL)
             for cell in sheet[row]:
                 cell.alignment = Alignment(vertical='top', wrap_text=True)
-        widths = [12, 16, 36, 60, 14, 15] + [14 if f.get('type') == 'date' or 'picklist' in f else 30 for f in fields]
+        widths = [12, 16, 36, 60, 14] + [14 if f.get('type') == 'date' or 'picklist' in f else 30 for f in fields]
         for column, width in enumerate(widths, start=1):
             sheet.column_dimensions[sheet.cell(1, column).column_letter].width = width
         sheet.freeze_panes = 'C2'

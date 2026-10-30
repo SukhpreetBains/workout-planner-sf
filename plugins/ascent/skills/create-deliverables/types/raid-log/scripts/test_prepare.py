@@ -20,14 +20,19 @@ ROWS = {
     'issue': [{'Issue ID': 'ISS-001', 'Name': 'Sandbox login fails', 'Description': 'Testers see an authorization error.',
                'Status': 'resolved', 'Resolution': 'Client IT reissued the tester roles.',
                'Source Refs': 'workspace/meetings/notes.md'}],
+    'dependency': [{'Dependency ID': 'DEP-001', 'Name': 'UAT needs a sandbox', 'Description': 'UAT cannot start until the sandbox exists.',
+                    'Status': 'pending', 'Source Refs': 'workspace/meetings/notes.md'}],
+    'open_question': [{'Open Question ID': 'QST-001', 'Name': 'Migrate closed cases?', 'Description': 'Still to decide.',
+                       'Status': 'open'}],
 }
+# Review inbox proposals are not approved, so none of them may reach the log.
 PROPOSALS = {'updates': [
     {'category': 'dependency', 'proposal_id': 'p-dep', 'action': 'add',
-     'fields': {'Name': 'UAT needs a sandbox', 'Description': 'UAT cannot start until the sandbox exists.', 'Status': 'pending'},
+     'fields': {'Name': 'Vendor extract may change', 'Description': 'The vendor may change the extract format.', 'Status': 'pending'},
      'evidence': [{'source_ref': 'workspace/meetings/notes.md', 'excerpt': 'UAT cannot start until the sandbox exists.'}],
      'source_refs': ['workspace/meetings/notes.md'], 'review': {'state': 'pending'}},
     {'category': 'open_question', 'proposal_id': 'p-qst', 'action': 'add',
-     'fields': {'Name': 'Migrate closed cases?', 'Description': 'Still to decide.'}, 'review': {'state': 'flagged'}},
+     'fields': {'Name': 'Archive closed cases?', 'Description': 'Still to decide.'}, 'review': {'state': 'flagged'}},
     {'category': 'risk', 'proposal_id': 'p-chg', 'action': 'update', 'id': 'RSK-001',
      'fields': {'Status': 'mitigated'}, 'review': {'state': 'pending'}},
 ]}
@@ -64,7 +69,7 @@ class RaidLogTests(unittest.TestCase):
     def item(self, log, key):
         return next(i for i in log['items'] if i['key'] == key)
 
-    def test_collect_resolves_recorded_values_and_includes_pending_items(self):
+    def test_collect_resolves_recorded_values_and_excludes_inbox_proposals(self):
         log = collect(self.root, '2026-10-28')
         self.assertEqual(log['project'], 'Fictional programme')
         risk = self.item(log, 'RSK-001')
@@ -78,12 +83,23 @@ class RaidLogTests(unittest.TestCase):
                          {'value': 'Client IT reissued the tester roles.', 'basis': 'recorded', 'from': ['ISS-001']})
         self.assertIsNone(risk['outcome'])
         self.assertEqual(risk['pendingChanges'], ['p-chg'])
-        dependency = self.item(log, 'p-dep')
-        self.assertEqual((dependency['review'], dependency['id'], dependency['source']), ('pending', None, ['proposal:p-dep']))
-        question = self.item(log, 'p-qst')
+        dependency = self.item(log, 'DEP-001')
+        self.assertEqual((dependency['id'], dependency['source']), ('DEP-001', ['DEP-001']))
+        self.assertNotIn('review', dependency)
+        question = self.item(log, 'QST-001')
         self.assertEqual((question['tab'], question['status']), ('decisions', 'open'))
         self.assertNotIn('severity', question)
-        self.assertNotIn('p-chg', {i['key'] for i in log['items']})
+        self.assertFalse({'p-dep', 'p-qst', 'p-chg'} & {i['key'] for i in log['items']})
+
+    def test_inbox_proposals_are_rejected(self):
+        log = completed(self.root)
+        proposal = dict(self.item(log, 'DEP-001'), key='p-dep', id=None, source=['p-dep'])
+        log['items'].append(proposal)
+        with self.assertRaisesRegex(ValueError, 'approved items only'):
+            validate(log)
+        proposal['id'] = 'p-dep'
+        with self.assertRaisesRegex(ValueError, 'never included'):
+            prepare(Path(self.temp.name) / 'out', log, self.root)
 
     def test_project_log_packages_sources_with_tones_and_vocabulary(self):
         log = completed(self.root)
@@ -94,9 +110,9 @@ class RaidLogTests(unittest.TestCase):
         risk = self.item(built, 'RSK-001')
         self.assertEqual((risk['open'], risk['tone']), (True, 'attention'))
         self.assertEqual(built['vocabulary']['levels']['importance']['Critical'], {'color': 'red', 'squares': 2})
-        pending = built['sourceDetails']['proposal:p-dep']
-        self.assertEqual(pending['review'], 'pending')
-        link = pending['evidence'][0]['link']
+        source = built['sourceDetails']['DEP-001']
+        self.assertNotIn('review', source)
+        link = source['documents'][0]['link']
         self.assertTrue(link.startswith('sources/') and (output / link).is_file())
         for asset in ('regular.woff2', 'bold.woff2', 'logo.svg'):
             self.assertTrue((output / 'assets' / asset).is_file())
@@ -105,10 +121,10 @@ class RaidLogTests(unittest.TestCase):
 
     def test_every_item_must_appear_or_be_omitted_with_a_reason(self):
         log = completed(self.root)
-        log['items'] = [i for i in log['items'] if i['key'] != 'p-qst']
+        log['items'] = [i for i in log['items'] if i['key'] != 'QST-001']
         with self.assertRaisesRegex(ValueError, 'missing without an omitted reason'):
             prepare(Path(self.temp.name) / 'a', log, self.root)
-        log['omitted'] = [{'key': 'p-qst', 'reason': 'Duplicate of an approved question.'}]
+        log['omitted'] = [{'key': 'QST-001', 'reason': 'Duplicate of an approved question.'}]
         prepare(Path(self.temp.name) / 'b', log, self.root)
 
     def test_status_must_match_the_current_record(self):
@@ -146,14 +162,14 @@ class RaidLogTests(unittest.TestCase):
     def test_impact_areas_use_the_standard_categories(self):
         log = completed(self.root)
         self.assertNotIn('impactAreas', log)
-        dependency = self.item(log, 'p-dep')
+        dependency = self.item(log, 'DEP-001')
         dependency['impactArea'] = {'value': 'Test environments', 'basis': 'assessed', 'reason': 'UAT needs the sandbox.',
                                     'source': ['workspace/meetings/notes.md']}
         with self.assertRaisesRegex(ValueError, 'Category / impact area must be one of'):
             validate(log)
         dependency['impactArea']['value'] = 'Access & Onboarding'
         validate(log)
-        dependency['impactArea'] = {'value': 'Access & Onboarding', 'basis': 'recorded', 'from': ['p-dep']}
+        dependency['impactArea'] = {'value': 'Access & Onboarding', 'basis': 'recorded', 'from': ['DEP-001']}
         with self.assertRaisesRegex(ValueError, 'basis must be one of'):
             validate(log)
 
@@ -163,7 +179,7 @@ class RaidLogTests(unittest.TestCase):
         risk['nextAction'] = {'value': 'Ask client IT', 'basis': 'stated', 'source': ['workspace/meetings/notes.md']}
         with self.assertRaisesRegex(ValueError, 'nextAction basis must be one of recorded'):
             validate(log)
-        risk['nextAction'] = {'value': 'UAT needs a sandbox', 'basis': 'recorded', 'from': ['p-dep']}
+        risk['nextAction'] = {'value': 'UAT needs a sandbox', 'basis': 'recorded', 'from': ['DEP-001']}
         with self.assertRaisesRegex(ValueError, 'must link to a tracked action'):
             validate(log)
         risk['nextAction'] = {'value': 'Confirm access date', 'basis': 'recorded', 'from': ['ACT-404']}
@@ -239,8 +255,8 @@ class RaidLogTests(unittest.TestCase):
         self.assertIn('Blocks UAT start.', row['Priority'].comment.text)
         self.assertEqual(row['Target / required by'].number_format, 'mm/dd/yyyy')
         decisions = book['Decisions']
-        self.assertEqual([c.value for c in decisions[2]][:2], ['Pending', 'Decision needed'])
-        self.assertEqual(decisions.cell(2, 6).value, 'Pending review')
+        self.assertEqual([c.value for c in decisions[2]][:2], ['QST-001', 'Decision needed'])
+        self.assertNotIn('Review', [c.value for c in decisions[1]])
         self.assertEqual(row['Next action'].value, 'Confirm access date (ACT-001)')
         actions = book['Actions']
         action = {h.value: c.value for h, c in zip(actions[1], actions[2])}

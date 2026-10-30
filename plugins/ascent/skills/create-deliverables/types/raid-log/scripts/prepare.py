@@ -94,17 +94,15 @@ def validate(log, picklists=None, statuses=None):
         tab = tabs.get(item.get('tab'))
         if not tab or item.get('category') not in tab['categories']:
             raise ValueError(f'{where}: category must belong to its tab')
-        if item.get('review') not in ('approved', 'pending'):
-            raise ValueError(f'{where}: review must be approved or pending')
-        if (item['review'] == 'approved') != bool(item.get('id')):
-            raise ValueError(f'{where}: approved items need a tracker id; pending items have none')
+        if item.get('id') != key:
+            raise ValueError(f'{where}: id must be the tracker ID, the same as key; the log holds approved items only')
         for name in ('title', 'description'):
             text(item.get(name), f'{where}: {name}')
         if item.get('status') not in statuses[item['category']]:
             raise ValueError(f'{where}: status must be a {item["category"]} tracker status')
         labels(item.get('source'), f'{where}: source')
         allowed = {f['key'] for f in fields_for(picklists, tab['id'])}
-        extra = set(item) - allowed - {'key', 'id', 'review', 'category', 'tab', 'title', 'description', 'status', 'source', 'pendingChanges'}
+        extra = set(item) - allowed - {'key', 'id', 'category', 'tab', 'title', 'description', 'status', 'source', 'pendingChanges'}
         if extra:
             raise ValueError(f'{where}: fields not used on {tab["label"]}: {", ".join(sorted(extra))}')
         for field in fields_for(picklists, tab['id']):
@@ -171,12 +169,13 @@ def check_project(log, root):
         raise ValueError('RAID items missing without an omitted reason: ' + ', '.join(missing[:10]))
     unknown = sorted(present - set(expected))
     if unknown:
-        raise ValueError('Items not found in the trackers or review inbox: ' + ', '.join(unknown[:10]))
+        raise ValueError('Items not found in the approved trackers (review inbox items are never included): '
+                         + ', '.join(unknown[:10]))
     for item in log['items']:
         current = expected[item['key']]
-        for name in ('review', 'category', 'status'):
+        for name in ('category', 'status'):
             if item[name] != current[name]:
-                raise ValueError(f'{item.get("id") or item["key"]}: {name} must match the current tracker or inbox record ({current[name]})')
+                raise ValueError(f'{item.get("id") or item["key"]}: {name} must match the current tracker row ({current[name]})')
 
 
 def vocabulary(picklists):
@@ -218,7 +217,7 @@ def weekly_sources():
 
 
 def package_sources(log, root, output):
-    """Source details for every citation: tracker rows, inbox proposals, and documents."""
+    """Source details for every citation: tracker rows and documents."""
     cited = {label for item in log['items'] for label in item['citations']}
     if root is None:
         log['sourceDetails'] = {}
@@ -234,22 +233,19 @@ def package_sources(log, root, output):
         return {'sourceRef': ref, 'link': link.removeprefix('../') if link else None}
     details = {}
     for label in sorted(cited):
-        key = label.removeprefix('proposal:')
         if label.startswith('workspace/'):
             details[label] = {'name': label, 'documents': [document(label)], 'evidence': [], 'facts': {}}
             continue
-        if key not in found:
+        if label not in found:
             raise ValueError(f'Unknown source label: {label}')
-        record = found[key]
+        record = found[label]
         fields = record['fields']
-        pending = record['review'] == 'pending'
-        excerpts = record.get('evidence', []) if pending else evidence.get(key, [])
-        refs = record.get('sourceRefs', []) if pending else [r.strip() for r in str(fields.get('Source Refs') or '').split(';') if r.strip()]
+        refs = [r.strip() for r in str(fields.get('Source Refs') or '').split(';') if r.strip()]
         details[label] = {
-            'name': str(fields.get('Name') or key), 'category': record['category'], 'review': record['review'],
+            'name': str(fields.get('Name') or label), 'category': record['category'],
             'description': str(fields.get('Description') or ''),
             'facts': {k: str(v) for k, v in fields.items() if v not in (None, '') and k not in ('Name', 'Description', 'Source Refs', 'Relationships', 'Notes')},
-            'evidence': [{'excerpt': str(e.get('excerpt')), **document(str(e.get('source_ref') or ''))} for e in excerpts if isinstance(e, dict) and e.get('excerpt')],
+            'evidence': [{'excerpt': str(e.get('excerpt')), **document(str(e.get('source_ref') or ''))} for e in evidence.get(label, []) if isinstance(e, dict) and e.get('excerpt')],
             'documents': [document(str(ref)) for ref in refs]}
     log['sourceDetails'] = details
 
