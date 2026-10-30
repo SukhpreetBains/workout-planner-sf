@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 import shutil
 import tempfile
-from collect import collect, impact_areas, records
+from collect import collect, records
 from export import workbook_name, write_workbook
 from picklists import TYPE, fields_for, is_open, level_value, load, tone, tracker_schema, tracker_statuses
 
@@ -120,8 +120,25 @@ def validate(log, picklists=None, statuses=None):
         reasons = [v['reason'].strip().lower() for v in item.values() if isinstance(v, dict) and v.get('basis') == 'assessed']
         if len(reasons) != len(set(reasons)):
             raise ValueError(f'{where}: give each assessed field its own reason')
+    check_links(log, picklists)
     check_reasons(items)
     return log
+
+
+def check_links(log, picklists):
+    """A link field names other items in this log, such as the action a next action points to."""
+    tabs = {item['key']: item['tab'] for item in log['items']}
+    omitted = {o['key'] for o in log.get('omitted', [])}
+    for item in log['items']:
+        for field in fields_for(picklists, item['tab']):
+            value = item.get(field['key'])
+            if not field.get('link') or not value:
+                continue
+            for key in value['from']:
+                if key not in tabs and key not in omitted:
+                    raise ValueError(f'{item.get("id") or item["key"]}: {field["key"]} links to {key}, which is not in the log')
+                if field['key'] == 'nextAction' and key in tabs and tabs[key] != 'actions':
+                    raise ValueError(f'{item.get("id") or item["key"]}: nextAction must link to a tracked action, not {key}')
 
 
 def check_reasons(items, limit=3):
@@ -155,18 +172,6 @@ def check_project(log, root):
     unknown = sorted(present - set(expected))
     if unknown:
         raise ValueError('Items not found in the trackers or review inbox: ' + ', '.join(unknown[:10]))
-    areas = impact_areas(root)
-    allowed = {name.lower() for name in areas['tracked'] + [a['name'] for a in areas['saved'] or []]}
-    for item in log['items']:
-        value = item.get('impactArea')
-        if not value or value['basis'] == 'recorded':
-            continue
-        if areas['saved'] is None and not areas['tracked']:
-            raise ValueError(f'Save the project\'s impact areas in {areas["file"]} before naming them')
-        unknown = [part for part in value['value'].split('; ') if part.strip().lower() not in allowed]
-        if unknown:
-            raise ValueError(f'{item.get("id") or item["key"]}: impact area must be on the saved list in {areas["file"]} '
-                             f'or a tracked workstream, system, or process: {", ".join(unknown)}')
     for item in log['items']:
         current = expected[item['key']]
         for name in ('review', 'category', 'status'):
@@ -177,12 +182,12 @@ def check_project(log, root):
 def vocabulary(picklists):
     """What the page needs to render: tabs, fields, colors, and labels."""
     return {'tabs': [{'id': tab['id'], 'label': tab['label'], 'kinds': tab.get('kinds', {}),
-                      'fields': [{k: f[k] for k in ('key', 'label', 'type') if k in f} for f in fields_for(picklists, tab['id'])]}
+                      'fields': [{k: f[k] for k in ('key', 'label', 'type', 'link') if k in f} for f in fields_for(picklists, tab['id'])]}
                      for tab in picklists['tabs']],
             'columns': picklists['columns'],
             'tones': {name: {'color': t['color'], 'hollow': bool(t.get('hollow')), 'label': t['label']} for name, t in picklists['tones'].items()},
             'levels': {name: {v['value']: {'color': v['color'], 'squares': v.get('squares', 1)} for v in level['values']}
-                       for name, level in picklists['levels'].items()}}
+                       for name, level in picklists['levels'].items() if all('color' in v for v in level['values'])}}
 
 
 def enrich(log, picklists):

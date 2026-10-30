@@ -29,9 +29,10 @@
         ]
       },
       "impactArea": {
-        "value": "Environment access",
-        "basis": "recorded",
-        "from": [
+        "value": "Access & Onboarding",
+        "basis": "assessed",
+        "reason": "Testers cannot start UAT until their sandbox credentials arrive.",
+        "source": [
           "RSK-001"
         ]
       },
@@ -72,7 +73,7 @@
       },
       "outcome": null,
       "nextAction": {
-        "value": "Confirm the credential date with client IT at Thursday’s stand-up.",
+        "value": "Confirm QA sandbox access with client IT",
         "basis": "recorded",
         "from": [
           "ACT-004"
@@ -93,9 +94,10 @@
       ],
       "owner": null,
       "impactArea": {
-        "value": "Design validation",
-        "basis": "recorded",
-        "from": [
+        "value": "Solution & Design",
+        "basis": "assessed",
+        "reason": "The concern is whether the design holds up under validation.",
+        "source": [
           "RSK-002"
         ]
       },
@@ -153,7 +155,7 @@
       ],
       "owner": null,
       "impactArea": {
-        "value": "Data migration",
+        "value": "Solution & Design",
         "basis": "stated",
         "source": [
           "Fictional sample vendor call, 24 Oct"
@@ -199,9 +201,10 @@
         ]
       },
       "impactArea": {
-        "value": "Tooling",
-        "basis": "recorded",
-        "from": [
+        "value": "Budget & Resourcing",
+        "basis": "assessed",
+        "reason": "A lapsed licence would need new spend to restore the tool.",
+        "source": [
           "RSK-003"
         ]
       },
@@ -269,9 +272,10 @@
         ]
       },
       "impactArea": {
-        "value": "Data migration",
-        "basis": "recorded",
-        "from": [
+        "value": "Solution & Design",
+        "basis": "assessed",
+        "reason": "Matching-rule sizing depends on the quality of the customer identifiers.",
+        "source": [
           "ASM-001"
         ]
       },
@@ -305,10 +309,10 @@
       },
       "outcome": null,
       "nextAction": {
-        "value": "Profile the first full export for duplicate IDs.",
+        "value": "Profile the first full export for duplicate IDs",
         "basis": "recorded",
         "from": [
-          "ASM-001"
+          "ACT-007"
         ]
       }
     },
@@ -332,9 +336,10 @@
         ]
       },
       "impactArea": {
-        "value": "Data migration",
-        "basis": "recorded",
-        "from": [
+        "value": "Solution & Design",
+        "basis": "assessed",
+        "reason": "Concerned the structure of the source export.",
+        "source": [
           "ASM-002"
         ]
       },
@@ -395,9 +400,10 @@
         ]
       },
       "impactArea": {
-        "value": "Environment access",
-        "basis": "recorded",
-        "from": [
+        "value": "Access & Onboarding",
+        "basis": "assessed",
+        "reason": "An authorization error stops four testers from working.",
+        "source": [
           "ISS-001"
         ]
       },
@@ -439,7 +445,7 @@
       },
       "outcome": null,
       "nextAction": {
-        "value": "Confirm QA access with client IT.",
+        "value": "Confirm QA sandbox access with client IT",
         "basis": "recorded",
         "from": [
           "ACT-004"
@@ -467,7 +473,7 @@
       ],
       "owner": null,
       "impactArea": {
-        "value": "Data migration",
+        "value": "Solution & Design",
         "basis": "stated",
         "source": [
           "Fictional sample defect report, 26 Oct"
@@ -514,9 +520,10 @@
         ]
       },
       "impactArea": {
-        "value": "Logistics",
-        "basis": "recorded",
-        "from": [
+        "value": "Timeline / Schedule",
+        "basis": "assessed",
+        "reason": "Concerned how and when the review session could be held.",
+        "source": [
           "ISS-002"
         ]
       },
@@ -591,9 +598,10 @@
         ]
       },
       "impactArea": {
-        "value": "Integration",
-        "basis": "recorded",
-        "from": [
+        "value": "Solution & Design",
+        "basis": "assessed",
+        "reason": "Chooses how the two systems exchange data.",
+        "source": [
           "DEC-001"
         ]
       },
@@ -649,8 +657,9 @@
       },
       "impactArea": {
         "value": "Scope",
-        "basis": "recorded",
-        "from": [
+        "basis": "assessed",
+        "reason": "Decides whether old closed cases fall inside Phase 1 coverage.",
+        "source": [
           "QST-003"
         ]
       },
@@ -685,7 +694,7 @@
       },
       "outcome": null,
       "nextAction": {
-        "value": "Bring archive cost estimate to the November 4 steering meeting.",
+        "value": "Prepare archive cost estimate for closed cases",
         "basis": "recorded",
         "from": [
           "ACT-006"
@@ -706,7 +715,7 @@
       ],
       "owner": null,
       "impactArea": {
-        "value": "Security",
+        "value": "Security & Compliance",
         "basis": "stated",
         "source": [
           "Fictional sample meeting notes, 25 Oct"
@@ -751,9 +760,10 @@
         ]
       },
       "impactArea": {
-        "value": "Environment access",
-        "basis": "recorded",
-        "from": [
+        "value": "Access & Onboarding",
+        "basis": "assessed",
+        "reason": "UAT access waits on client IT provisioning the sandbox.",
+        "source": [
           "DEP-001"
         ]
       },
@@ -794,10 +804,10 @@
       },
       "outcome": null,
       "nextAction": {
-        "value": "Confirm provisioning date in the weekly IT sync.",
+        "value": "Confirm the sandbox provisioning date with client IT",
         "basis": "recorded",
         "from": [
-          "DEP-001"
+          "ACT-008"
         ]
       }
     },
@@ -821,9 +831,10 @@
         ]
       },
       "impactArea": {
-        "value": "Data migration",
-        "basis": "recorded",
-        "from": [
+        "value": "Solution & Design",
+        "basis": "assessed",
+        "reason": "The dictionary defines the data being migrated.",
+        "source": [
           "DEP-002"
         ]
       },
@@ -892,9 +903,10 @@
         ]
       },
       "impactArea": {
-        "value": "Environment access",
-        "basis": "recorded",
-        "from": [
+        "value": "Access & Onboarding",
+        "basis": "assessed",
+        "reason": "Follows up on the testers’ missing sandbox access.",
+        "source": [
           "ACT-004"
         ]
       },
@@ -926,7 +938,15 @@
           "ACT-004"
         ]
       },
-      "outcome": null
+      "outcome": null,
+      "addresses": {
+        "value": "Sandbox credentials may arrive after UAT starts; QA users cannot access the sandbox",
+        "basis": "recorded",
+        "from": [
+          "RSK-001",
+          "ISS-001"
+        ]
+      }
     },
     {
       "key": "ACT-006",
@@ -949,8 +969,9 @@
       },
       "impactArea": {
         "value": "Scope",
-        "basis": "recorded",
-        "from": [
+        "basis": "assessed",
+        "reason": "The estimate informs whether closed cases stay in scope.",
+        "source": [
           "ACT-006"
         ]
       },
@@ -982,7 +1003,142 @@
           "ACT-006"
         ]
       },
-      "outcome": null
+      "outcome": null,
+      "addresses": {
+        "value": "Migrate closed cases in Phase 1?",
+        "basis": "recorded",
+        "from": [
+          "QST-003"
+        ]
+      }
+    },
+    {
+      "key": "ACT-007",
+      "id": "ACT-007",
+      "review": "approved",
+      "category": "action_item",
+      "tab": "actions",
+      "title": "Profile the first full export for duplicate IDs",
+      "description": "Run a duplicate check on enterprise IDs in the first full customer export.",
+      "status": "assigned",
+      "source": [
+        "ACT-007"
+      ],
+      "owner": {
+        "value": "Data lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "impactArea": {
+        "value": "Solution & Design",
+        "basis": "assessed",
+        "reason": "Profiling tests the identifier quality that the sizing assumes.",
+        "source": [
+          "ACT-007"
+        ]
+      },
+      "raisedBy": {
+        "value": "Solution architect",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-27",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "target": {
+        "value": "2026-11-05",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "priority": {
+        "value": "Medium",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "outcome": null,
+      "addresses": {
+        "value": "Every customer record has a unique enterprise ID",
+        "basis": "recorded",
+        "from": [
+          "ASM-001"
+        ]
+      }
+    },
+    {
+      "key": "ACT-008",
+      "id": "ACT-008",
+      "review": "approved",
+      "category": "action_item",
+      "tab": "actions",
+      "title": "Confirm the sandbox provisioning date with client IT",
+      "description": "Ask for a firm provisioning date at the weekly IT sync.",
+      "status": "committed",
+      "source": [
+        "ACT-008"
+      ],
+      "owner": {
+        "value": "Testing lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "impactArea": {
+        "value": "Access & Onboarding",
+        "basis": "assessed",
+        "reason": "The date decides when testers can get into UAT.",
+        "source": [
+          "ACT-008"
+        ]
+      },
+      "raisedBy": {
+        "value": "Delivery lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-23",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "target": {
+        "value": "2026-10-30",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "priority": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "outcome": null,
+      "addresses": {
+        "value": "UAT requires a provisioned sandbox",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      }
     },
     {
       "key": "p-c40d",
@@ -1004,7 +1160,7 @@
         ]
       },
       "impactArea": {
-        "value": "Data migration",
+        "value": "Solution & Design",
         "basis": "stated",
         "source": [
           "Fictional sample meeting notes, 26 Oct"
@@ -1020,7 +1176,8 @@
       },
       "target": null,
       "priority": null,
-      "outcome": null
+      "outcome": null,
+      "addresses": null
     },
     {
       "key": "ACT-002",
@@ -1042,9 +1199,10 @@
         ]
       },
       "impactArea": {
-        "value": "Communication",
-        "basis": "recorded",
-        "from": [
+        "value": "Change Adoption & Training",
+        "basis": "assessed",
+        "reason": "Sharing the recording keeps the wider team informed about the design.",
+        "source": [
           "ACT-002"
         ]
       },
@@ -1082,7 +1240,8 @@
         "from": [
           "ACT-002"
         ]
-      }
+      },
+      "addresses": null
     }
   ]
 }

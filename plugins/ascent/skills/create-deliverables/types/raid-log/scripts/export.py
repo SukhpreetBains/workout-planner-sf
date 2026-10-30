@@ -40,6 +40,8 @@ def write_workbook(log, picklists, schema, path):
     summary.column_dimensions['A'].width = 18
     summary.column_dimensions['B'].width = 90
 
+    # A link field names other items; give each one's ID so readers can find its row.
+    linked = {i['key']: f'{i["title"]} ({i["id"] or "pending review"})' for i in log['items']}
     for tab in picklists['tabs']:
         sheet = book.create_sheet(tab['label'])
         fields = fields_for(picklists, tab['id'])
@@ -61,6 +63,8 @@ def write_workbook(log, picklists, schema, path):
                     values.append(None)
                 elif field.get('type') == 'date':
                     values.append(date.fromisoformat(value['value']))
+                elif field.get('link'):
+                    values.append('; '.join(linked.get(key, key) for key in value['from']))
                 elif value['basis'] == 'assessed':
                     values.append(value['value'] + ' (assessed)')
                     notes[column] = value['reason']

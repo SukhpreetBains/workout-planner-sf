@@ -47,10 +47,10 @@ ASCENT_PROJECT_ROOT=/absolute/project /absolute/plugin/shared/scripts/py types/r
 
 The starter holds every RAID item: approved tracker rows and pending or flagged
 review inbox proposals. Rejected proposals are excluded. Values the trackers
-already record are filled with `basis: recorded`, including owners and raisers
-from links, impact areas from linked workstreams, systems, and business
-processes, a risk's calculated severity, dates, and next actions or resolution
-plans from action items that address the item. Pending changes to an approved
+already record are filled with `basis: recorded`: owners and raisers from
+links, dates, a risk's calculated severity, outcomes from each row's
+Resolution column, next actions and resolution plans from the action items
+that address the item, and, on each action, the RAID items it addresses. Pending changes to an approved
 row are listed in `pendingChanges`; the log shows the approved values.
 
 ## Fill the gaps
@@ -62,7 +62,9 @@ field the evidence supports. Use the order the
 an assessed value (`basis: assessed`, with `source` and a `reason` naming the
 facts used). Owners, raisers, dates, outcomes, next actions, and resolution
 plans are never assessed. Use only canonical picklist values; map source
-wording such as "P1" or "Sev 2" with the aliases.
+wording such as "P1" or "Sev 2" with the aliases. The
+[picklists README](picklists/README.md) explains exactly how each level is
+recorded or assessed.
 
 Work through these fields deliberately; they are rarely in the trackers:
 
@@ -72,18 +74,25 @@ Work through these fields deliberately; they are rarely in the trackers:
   items.
 - **Severity** and **Importance**: assess every item on their tabs that has
   no recorded or stated value, open or closed.
-- **Resolution / outcome**: for every closed item, look for how it closed:
-  the answer to an answered question, the choice a decision made, how a risk
-  was mitigated or an issue resolved, or what a completed action produced.
-  These are often in the description itself; cite the record's sources.
-- **Category / impact area**: use only names from the starter's
-  `impactAreas`: tracked workstreams, systems, and business processes, plus
-  the project's saved list in `workspace/.system/raid-impact-areas.yaml`.
-  Separate two areas with `; `. When the project has no saved list, draft a
-  short one first (about 5 to 10 areas, each `{name, description}` under
-  `areas:`), drawn from the project's evidence, and save it. When an item fits
-  no saved area, you may add one to the file. Then state or assess each
-  item's area from that list. The preparer rejects any other name.
+- **Resolution / outcome**: recorded from the tracker's Resolution column.
+  For a closed item without one, look for how it closed: the choice a
+  decision made, how a risk was mitigated or an issue resolved, or what a
+  completed action produced. These are often in the description itself;
+  state them with the record's sources.
+- **Next action**: only ever an open action item that addresses the RAID
+  item, linked in the trackers or the review inbox. The starter fills it; it
+  is never stated or assessed, and the page links it to the action's row.
+  When a source describes a next step that no tracked action covers, leave
+  the field empty and list the step in `coverageNote` as an action to add
+  through `workspace-add` and review. Never write to the trackers while
+  creating a log.
+- **Category / impact area**: one value from the standard categories in
+  [impact-area.yaml](picklists/impact-area.yaml); choose the one whose
+  guidance matches the item's central concern. State it when a source names
+  the area; otherwise assess it with a reason saying why the item belongs
+  there. Use Unknown / TBD only when the evidence is insufficient or
+  contradictory, and name the clarification needed in the reason. The
+  preparer rejects any other value.
 
 As Collect says, never copy values, assessments, or reasons from earlier
 drafts.
@@ -94,7 +103,7 @@ a script that applies one default. Each `reason` must cite a fact specific to
 that item, such as a date, blocker, dependency, or stated impact, not restate
 its title or description. For a level, say which part of the level's
 definition the fact meets and, when the call is close, why the adjacent level
-does not fit. For an impact area, say why the item belongs to that area. Each
+does not fit. For an impact area, say why the item belongs to that category. Each
 assessed field on an item needs its own reason; the preparer rejects an item
 that reuses one reason for two fields, and an open item past its target date
 whose assessed priority is not High. The preparer rejects a reason template reused
@@ -103,7 +112,8 @@ added to it.
 
 Leave a field `null` only when nothing supports it; the log shows "Not
 recorded". In `coverageNote`, count the open items left without a priority and
-say why.
+say why, the open RAID items with no next action, and the items marked
+Unknown / TBD.
 
 Do not change an item's tab, category, review state, or status: the preparer
 checks them against the current trackers and inbox. Keep titles and
@@ -147,6 +157,8 @@ and narrow widths. Check that:
 - every tab opens, and its count matches `raid.json`;
 - the Status, Review, and Decision filters and search work;
 - rows expand and collapse, and expanded rows do not repeat table columns;
+- a next action opens its action's row, and an action's Addresses opens the
+  RAID item's row, even with filters set;
 - the assessed-value tooltip, Show sources, the source dialog, and focus
   return all work;
 - the color choice persists after a reload;
@@ -160,8 +172,8 @@ Report any check that could not run.
 In chat, give the link and explain how the log was derived: the evidence
 cutoff, approved and pending counts, which fields were stated or assessed and
 why, fields left unrecorded, pending changes not shown, omitted items, and
-contradictions. Tell the user about the impact-area list: where it is saved,
-whether this run created it or added areas, and that they can edit the file or
-ask you to change it, and later logs will reuse it. Ask whether any assessed
-value should change. Do not publish
+contradictions. Name the open RAID items with no next action and any next
+steps found in sources that are not yet tracked actions, and offer to add them
+through `workspace-add` and review. Ask whether any assessed value should
+change. Do not publish
 or promote the draft without the user's instruction.

@@ -25,6 +25,12 @@
 #     determined from source context when first proposed and preserved across
 #     later updates. Target Date is a planned
 #     deadline; Completed Date is an evidence-backed actual outcome date.
+#   - Signals that can close (risk, assumption, issue, dependency,
+#     open_question, action_item) have Resolution: how the item actually
+#     ended, as the source reports it, such as how a risk was mitigated, what
+#     fixed an issue, the answer to a question, or what a completed action
+#     produced. Fill it only with a closing status; a plan to respond is an
+#     action_item that addresses the item, not a Resolution.
 #   - The Relationships column holds "; "-separated "<meaning>: <ID>" entries,
 #     e.g. "owned_by: PER-001; depends_on: DEP-004". The meaning is a key of
 #     `relationships` below; the ID is any row ID or pending proposal_id. A
@@ -829,6 +835,7 @@ categories:
       - *signal_description
       - {name: Status, required: true, default: identified,
          enum: [identified, active, mitigated, realized, closed]}
+      - &resolution {name: Resolution}
       - {name: Probability, type: number, minimum: 0.1, maximum: 0.9}
       - {name: Impact, enum: [very_low, low, moderate, medium, high, very_high, critical],
          weights: {very_low: 0.05, low: 0.1, moderate: 0.2, medium: 0.2,
@@ -869,6 +876,7 @@ categories:
       - *signal_description
       - {name: Status, required: true, default: unvalidated,
          enum: [unvalidated, validated, invalidated, superseded]}
+      - *resolution
       - *relationships
 
   issue:
@@ -900,6 +908,7 @@ categories:
       - *name
       - *signal_description
       - {name: Status, required: true, default: open, enum: [open, in_progress, resolved, closed]}
+      - *resolution
       - &target_date {name: Target Date, type: date}
       - *relationships
 
@@ -933,6 +942,7 @@ categories:
       - *name
       - *signal_description
       - {name: Status, required: true, default: pending, enum: [pending, satisfied, blocked, waived]}
+      - *resolution
       - *target_date
       - *relationships
 
@@ -1027,7 +1037,7 @@ categories:
       Material and unresolved with a downstream effect. Judge by intent and
       context, not punctuation: a polite request that assigns a task is an
       action item. Casual brainstorming and rhetorical questions stay out.
-      Put the answer in the Description when it arrives; an answer does not
+      Put the answer in Resolution when it arrives; an answer does not
       automatically make a decision.
     lookalikes:
       - proposal — advocates an approach. "Could we use Okta?" can be either; if context cannot tell, do not propose it.
@@ -1043,6 +1053,7 @@ categories:
       - *name
       - *signal_description
       - {name: Status, required: true, default: open, enum: [open, answered, deferred, superseded]}
+      - *resolution
       - *target_date
       - *relationships
 
@@ -1148,6 +1159,7 @@ categories:
       - *signal_description
       - {name: Status, required: true, default: assigned,
          enum: [assigned, committed, in_progress, completed, cancelled]}
+      - *resolution
       - *target_date
       - *relationships
 

@@ -102,6 +102,9 @@ a.quiet[hidden]{display:none}
 .level:before{content:'';display:inline-block;width:.55rem;height:.55rem;margin-right:.35rem;background:var(--square);vertical-align:.05em}
 .level.double:before{box-shadow:.7rem 0 0 var(--square);margin-right:1.05rem}
 .not-recorded{color:var(--muted);font-style:italic;font-weight:400}
+/* Link fields: a next action or addressed item jumps to its own row */
+.item-link{border:0;background:none;padding:0;font:inherit;color:var(--dark-blue);text-align:left;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.item-link .link-id{margin-left:.4rem;color:var(--muted);font-size:.85em;font-weight:700;font-variant-numeric:tabular-nums;text-decoration:none;display:inline-block}
 /* Assessed values: dotted underline with a tooltip holding the reasoning */
 .assessed{position:relative;display:inline;border:0;background:none;padding:0;font:inherit;color:inherit;text-align:left;cursor:help;text-decoration:underline dotted 1.5px;text-decoration-color:var(--muted);text-underline-offset:4px}
 .assessed .tip{position:absolute;left:-.5rem;bottom:calc(100% + .55rem);z-index:15;width:max-content;max-width:min(17rem,calc(100vw - 2rem));padding:.6rem .75rem;border-radius:.5rem;background:var(--ink);color:#fff;font-size:.82rem;font-weight:400;line-height:1.4;text-transform:none;letter-spacing:0;white-space:normal;box-shadow:0 8px 24px rgb(0 0 0 / .18);opacity:0;visibility:hidden;transition:opacity .15s ease;pointer-events:none}

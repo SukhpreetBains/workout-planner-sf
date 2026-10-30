@@ -18,10 +18,12 @@ tabs:
 # recorded from tracker data or links, stated by a cited source, or assessed.
 # Owners, dates, outcomes, and next steps are never assessed. A field with a
 # `picklist` takes its tabs from that picklist file; `only` and `except` limit
-# the others. Type is not a field here: the tab and the decision pills show it.
+# the others. A `link` field's value names other items in the log; its `from`
+# keys are those items, and the page links to their rows. Type is not a field
+# here: the tab and the decision pills show it.
 fields:
   - {key: owner, label: Owner, bases: [recorded, stated]}
-  - {key: impactArea, label: Category / impact area, bases: [recorded, stated, assessed]}
+  - {key: impactArea, label: Category / impact area, picklist: impact-area, bases: [stated, assessed]}
   - {key: raisedBy, label: Raised by, bases: [recorded, stated]}
   - {key: dateRaised, label: Date raised, type: date, bases: [recorded, stated]}
   - {key: target, label: Target / required by, type: date, bases: [recorded, stated]}
@@ -29,7 +31,8 @@ fields:
   - {key: severity, label: Severity, picklist: severity, bases: [recorded, stated, assessed]}
   - {key: importance, label: Importance, picklist: importance, bases: [recorded, stated, assessed]}
   - {key: outcome, label: Resolution / outcome, bases: [recorded, stated]}
-  - {key: nextAction, label: Next action, except: [actions], bases: [recorded, stated]}
+  - {key: nextAction, label: Next action, except: [actions], link: true, bases: [recorded]}
+  - {key: addresses, label: Addresses, only: [actions], link: true, bases: [recorded]}
   - {key: resolutionPlan, label: Resolution plan, only: [issues], bases: [recorded, stated]}
 
 # Table columns after ID, item, and status. A column the tab does not carry is

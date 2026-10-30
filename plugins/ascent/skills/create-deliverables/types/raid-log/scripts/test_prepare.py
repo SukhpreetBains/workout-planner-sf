@@ -17,6 +17,9 @@ ROWS = {
     'action_item': [{'Action Item ID': 'ACT-001', 'Name': 'Confirm access date', 'Description': 'Ask client IT.',
                      'Status': 'assigned', 'Target Date': '2026-10-30 00:00:00',
                      'Relationships': 'addresses: RSK-001; owned_by: PER-001'}],
+    'issue': [{'Issue ID': 'ISS-001', 'Name': 'Sandbox login fails', 'Description': 'Testers see an authorization error.',
+               'Status': 'resolved', 'Resolution': 'Client IT reissued the tester roles.',
+               'Source Refs': 'workspace/meetings/notes.md'}],
 }
 PROPOSALS = {'updates': [
     {'category': 'dependency', 'proposal_id': 'p-dep', 'action': 'add',
@@ -66,10 +69,14 @@ class RaidLogTests(unittest.TestCase):
         self.assertEqual(log['project'], 'Fictional programme')
         risk = self.item(log, 'RSK-001')
         self.assertEqual(risk['owner'], {'value': 'Jordan Lee', 'basis': 'recorded', 'from': ['PER-001']})
-        self.assertEqual(risk['impactArea']['value'], 'Data migration')
+        self.assertIsNone(risk['impactArea'])
         self.assertEqual(risk['severity']['value'], 'High')
         self.assertEqual((risk['dateRaised']['value'], risk['target']['value']), ('2026-10-02', '2026-11-10'))
         self.assertEqual(risk['nextAction'], {'value': 'Confirm access date', 'basis': 'recorded', 'from': ['ACT-001']})
+        self.assertEqual(self.item(log, 'ACT-001')['addresses'], {'value': 'Credentials may be late', 'basis': 'recorded', 'from': ['RSK-001']})
+        self.assertEqual(self.item(log, 'ISS-001')['outcome'],
+                         {'value': 'Client IT reissued the tester roles.', 'basis': 'recorded', 'from': ['ISS-001']})
+        self.assertIsNone(risk['outcome'])
         self.assertEqual(risk['pendingChanges'], ['p-chg'])
         dependency = self.item(log, 'p-dep')
         self.assertEqual((dependency['review'], dependency['id'], dependency['source']), ('pending', None, ['proposal:p-dep']))
@@ -136,20 +143,34 @@ class RaidLogTests(unittest.TestCase):
         risk['priority'] = {'value': 'High', 'basis': 'stated', 'source': ['workspace/meetings/notes.md']}
         validate(log)
 
-    def test_impact_areas_come_from_the_saved_list_or_tracked_entities(self):
+    def test_impact_areas_use_the_standard_categories(self):
         log = completed(self.root)
-        self.assertEqual(log['impactAreas'], {'file': 'workspace/.system/raid-impact-areas.yaml', 'tracked': ['Data migration'], 'saved': None})
+        self.assertNotIn('impactAreas', log)
         dependency = self.item(log, 'p-dep')
         dependency['impactArea'] = {'value': 'Test environments', 'basis': 'assessed', 'reason': 'UAT needs the sandbox.',
                                     'source': ['workspace/meetings/notes.md']}
-        with self.assertRaisesRegex(ValueError, 'must be on the saved list'):
-            prepare(Path(self.temp.name) / 'a', log, self.root)
-        (self.root / 'workspace/.system/raid-impact-areas.yaml').write_text(
-            yaml.safe_dump({'areas': [{'name': 'Test environments', 'description': 'Sandboxes and UAT access.'}]}))
-        prepare(Path(self.temp.name) / 'b', log, self.root)
-        self.assertEqual(collect(self.root)['impactAreas']['saved'], [{'name': 'Test environments', 'description': 'Sandboxes and UAT access.'}])
-        dependency['impactArea']['value'] = 'Data migration; Test environments'
-        prepare(Path(self.temp.name) / 'c', log, self.root)
+        with self.assertRaisesRegex(ValueError, 'Category / impact area must be one of'):
+            validate(log)
+        dependency['impactArea']['value'] = 'Access & Onboarding'
+        validate(log)
+        dependency['impactArea'] = {'value': 'Access & Onboarding', 'basis': 'recorded', 'from': ['p-dep']}
+        with self.assertRaisesRegex(ValueError, 'basis must be one of'):
+            validate(log)
+
+    def test_next_actions_link_to_tracked_actions_in_the_log(self):
+        log = completed(self.root)
+        risk = self.item(log, 'RSK-001')
+        risk['nextAction'] = {'value': 'Ask client IT', 'basis': 'stated', 'source': ['workspace/meetings/notes.md']}
+        with self.assertRaisesRegex(ValueError, 'nextAction basis must be one of recorded'):
+            validate(log)
+        risk['nextAction'] = {'value': 'UAT needs a sandbox', 'basis': 'recorded', 'from': ['p-dep']}
+        with self.assertRaisesRegex(ValueError, 'must link to a tracked action'):
+            validate(log)
+        risk['nextAction'] = {'value': 'Confirm access date', 'basis': 'recorded', 'from': ['ACT-404']}
+        with self.assertRaisesRegex(ValueError, 'not in the log'):
+            validate(log)
+        risk['nextAction']['from'] = ['ACT-001']
+        validate(log)
 
     def test_overdue_open_items_are_high_and_each_field_has_its_own_reason(self):
         log = completed(self.root)
@@ -162,7 +183,7 @@ class RaidLogTests(unittest.TestCase):
         risk['priority'] = {'value': 'Medium', 'basis': 'stated', 'source': note}
         validate(log)
         risk['priority'] = {'value': 'High', 'basis': 'assessed', 'reason': 'Open past its November 10 target.', 'source': note}
-        risk['impactArea'] = {'value': 'Data migration', 'basis': 'assessed', 'reason': 'open past its November 10 target. ', 'source': note}
+        risk['impactArea'] = {'value': 'Access & Onboarding', 'basis': 'assessed', 'reason': 'open past its November 10 target. ', 'source': note}
         with self.assertRaisesRegex(ValueError, 'its own reason'):
             validate(log)
         risk['impactArea']['reason'] = 'The credentials gate migration testing.'
@@ -220,6 +241,10 @@ class RaidLogTests(unittest.TestCase):
         decisions = book['Decisions']
         self.assertEqual([c.value for c in decisions[2]][:2], ['Pending', 'Decision needed'])
         self.assertEqual(decisions.cell(2, 6).value, 'Pending review')
+        self.assertEqual(row['Next action'].value, 'Confirm access date (ACT-001)')
+        actions = book['Actions']
+        action = {h.value: c.value for h, c in zip(actions[1], actions[2])}
+        self.assertEqual(action['Addresses'], 'Credentials may be late (RSK-001)')
 
     def test_sample_needs_no_project_and_real_logs_do(self):
         output = Path(self.temp.name) / 'sample'

@@ -14,7 +14,6 @@ from picklists import fields_for, from_tracker, load, tab_for, tracker_schema, y
 
 LIVE_REVIEW = {'pending', 'flagged'}
 OWNER_LINK = {'decision': 'decided_by'}
-CATEGORY_TARGETS = {'workstream', 'business_process', 'system'}
 DATE_TARGETS = {'milestone', 'deliverable'}
 PLAN_SOURCES = {'action_item', 'proposal'}
 # The standard accent; readers can switch it with the page's Color button.
@@ -77,23 +76,6 @@ def records(root, schema):
     return found, pending_changes
 
 
-AREAS_FILE = 'workspace/.system/raid-impact-areas.yaml'
-
-
-def impact_areas(root, found=None):
-    """Allowed impact areas: tracked workstreams, systems, and processes plus the project's saved list."""
-    found = found if found is not None else records(root, tracker_schema())[0]
-    tracked = sorted({str(r['fields'].get('Name') or '').strip() for r in found.values()
-                      if r['category'] in CATEGORY_TARGETS and r['review'] == 'approved'} - {''})
-    path = Path(root) / AREAS_FILE
-    saved = None
-    if path.is_file():
-        data = yaml_reader()(path.read_text(encoding='utf-8')) or {}
-        saved = [{'name': str(a.get('name', '')).strip(), 'description': str(a.get('description', '')).strip()}
-                 for a in data.get('areas') or [] if isinstance(a, dict) and str(a.get('name', '')).strip()]
-    return {'file': AREAS_FILE, 'tracked': tracked, 'saved': saved}
-
-
 def collect(root, as_of=None):
     picklists = load()
     schema = tracker_schema()
@@ -124,8 +106,6 @@ def collect(root, as_of=None):
         values['owner'] = recorded('; '.join(name(t) for t in owners), owners)
         raisers = targets({'raised_by'})
         values['raisedBy'] = recorded('; '.join(name(t) for t in raisers), raisers)
-        areas = targets({'applies_to', 'impacts'}, CATEGORY_TARGETS)
-        values['impactArea'] = recorded('; '.join(name(t) for t in areas), areas)
         values['dateRaised'] = recorded(iso(row.get('Date')), [key])
         target = iso(row.get('Target Date'))
         if target:
@@ -141,6 +121,9 @@ def collect(root, as_of=None):
                               if found[s]['category'] == 'action_item'
                               and found[s]['fields'].get('Status') in picklists['status']['action_item']['open'])
         values['nextAction'] = recorded(name(open_actions[0][1]), [open_actions[0][1]]) if open_actions else None
+        addressed = targets({'addresses'}, raid - {'action_item'})
+        values['addresses'] = recorded('; '.join(name(t) for t in addressed), addressed)
+        values['outcome'] = recorded(str(row.get('Resolution') or '').strip(), [key])
         values['resolutionPlan'] = recorded('; '.join(name(s) for s in responders), responders)
         item = {'key': key, 'id': key if record['review'] == 'approved' else None,
                 'review': record['review'], 'category': category, 'tab': tab['id'],
@@ -157,7 +140,7 @@ def collect(root, as_of=None):
     project = yaml_reader()((Path(root) / 'workspace/.system/project.yaml').read_text(encoding='utf-8')) or {}
     return {'project': str(project.get('project') or project.get('opportunity') or project.get('account') or '').strip(),
             'asOf': as_of or date.today().isoformat(), 'sample': False, 'secondaryColor': DEFAULT_COLOR,
-            'coverageNote': '', 'omitted': [], 'impactAreas': impact_areas(root, found), 'items': items}
+            'coverageNote': '', 'omitted': [], 'items': items}
 
 
 if __name__ == '__main__':

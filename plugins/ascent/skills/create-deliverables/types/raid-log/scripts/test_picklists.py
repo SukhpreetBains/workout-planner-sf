@@ -33,9 +33,14 @@ class PicklistTests(unittest.TestCase):
             self.assertTrue(set(level['tabs']) <= tab_ids, name)
             aliases = [a for v in level['values'] for a in v['aliases']]
             self.assertEqual(len(aliases), len(set(aliases)), name)
+            # Levels are colored scales; a category picklist such as impact area has no colors.
+            colored = name in ('priority', 'severity', 'importance')
             for entry in level['values']:
                 self.assertTrue(entry['definition'].strip(), name)
-                self.assertIn(entry['color'], COLORS, name)
+                if colored:
+                    self.assertIn(entry['color'], COLORS, name)
+                else:
+                    self.assertNotIn('color', entry, name)
                 self.assertTrue(all(a == a.lower() for a in entry['aliases']), name)
             for category, rule in level.get('from_tracker', {}).items():
                 values = {v['value'] for v in level['values']}
@@ -51,6 +56,8 @@ class PicklistTests(unittest.TestCase):
         self.assertEqual(level_value(self.picklists, 'priority', 'P1'), 'High')
         self.assertEqual(level_value(self.picklists, 'severity', 'Sev 2'), 'Medium')
         self.assertEqual(level_value(self.picklists, 'importance', 'critical'), 'Critical')
+        self.assertEqual(level_value(self.picklists, 'impact-area', 'Data'), 'Solution & Design')
+        self.assertEqual(level_value(self.picklists, 'impact-area', 'Unknown / TBD'), 'Unknown / TBD')
         with self.assertRaisesRegex(ValueError, 'Priority must be one of'):
             level_value(self.picklists, 'priority', 'Critical-ish')
 

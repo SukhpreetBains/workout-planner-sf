@@ -53,6 +53,7 @@
       target.append(el('span', 'not-recorded', 'Not recorded'));
       return target;
     }
+    if (field.link) return links(target, v);
     const text = field.type === 'date' ? (display === 'short' ? shortDate(v.value) : longDate(v.value)) : v.value;
     const level = vocab.levels[field.key] && vocab.levels[field.key][v.value];
     const shown = el('span', level ? 'level' + (level.squares > 1 ? ' double' : '') : '', text);
@@ -80,6 +81,39 @@
     wrap.addEventListener('keydown', event => { if (event.key === 'Escape') wrap.blur(); });
     target.append(wrap);
     return target;
+  }
+
+  // A link field names other rows in the log, such as a next action; each name jumps to its row.
+  function links(target, v) {
+    v.from.forEach((key, n) => {
+      const item = log.items.find(i => i.key === key);
+      if (n) target.append('; ');
+      if (!item) {
+        target.append(el('span', '', key));
+        return;
+      }
+      const link = el('button', 'item-link', item.title);
+      link.type = 'button';
+      link.append(el('span', 'link-id', item.id || 'Pending'));
+      link.addEventListener('click', event => { event.stopPropagation(); goTo(key); });
+      target.append(link);
+    });
+    return target;
+  }
+
+  function goTo(key) {
+    const item = log.items.find(i => i.key === key);
+    const row = document.querySelector('.item-row[data-key="' + CSS.escape(key) + '"]');
+    // Clear any filter that would hide the row, then open its tab and expand it.
+    Object.assign(state, {status: 'all', review: 'all', kind: 'all', query: ''});
+    document.getElementById('search').value = '';
+    ['state-filter', 'review-filter', 'kind-filter'].forEach(id =>
+      document.querySelectorAll('#' + id + ' button').forEach((b, n) => b.setAttribute('aria-pressed', String(n === 0))));
+    select(item.tab);
+    const toggle = row.querySelector('.row-toggle');
+    if (toggle.getAttribute('aria-expanded') === 'false') toggle.click();
+    row.scrollIntoView({block: 'center'});
+    toggle.focus();
   }
 
   function markers(tab, item) {
@@ -199,6 +233,7 @@
     const body = el('tbody');
     tabItems.forEach(item => {
       const row = el('tr', 'item-row' + (item.review === 'pending' ? ' pending' : '') + (item.open ? '' : ' is-closed'));
+      row.dataset.key = item.key;
       row.dataset.open = item.open;
       row.dataset.review = item.review;
       row.dataset.kind = isNeeded(item) ? 'needed' : 'made';
@@ -229,7 +264,7 @@
       cell.colSpan = head.children.length;
       const list = el('dl', 'fields');
       tab.fields.filter(f => !vocab.columns.includes(f.key)).forEach(f => {
-        const box = el('div', ['outcome', 'nextAction', 'resolutionPlan'].includes(f.key) ? 'wide' : '');
+        const box = el('div', ['outcome', 'nextAction', 'addresses', 'resolutionPlan'].includes(f.key) ? 'wide' : '');
         box.append(el('dt', '', f.label));
         value(box.appendChild(el('dd')), f, item[f.key], 'long');
         list.append(box);

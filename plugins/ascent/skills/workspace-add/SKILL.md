@@ -368,14 +368,37 @@ not inventing unsupported findings or field values.
 **Reconcile signal lifecycles.** Compare new findings with existing open
 questions, proposals, risks, issues, dependencies, and actions. When evidence
 answers an open question, propose an update with `Status: answered` (the
-schema's closed outcome) and the answer in Description. When that answer
+schema's closed outcome) and the answer in Resolution. When that answer
 records a choice, also create or reuse a decision and link it to the question
 with `addresses: <question ID>`. For example, a transcript selecting Okta
 answers the identity-provider question, creates the decision to use Okta,
 and connects the two. A factual answer without a choice closes the question
 without manufacturing a decision. Likewise propose supported completion,
 resolution, or supersession of other signals, using their allowed statuses.
+Whenever you propose a closing status for a risk, assumption, issue,
+dependency, open question, or action item, also fill Resolution with how it
+ended, as the source reports it: how the risk was mitigated or what happened
+when it was realized, what the assumption was confirmed or replaced by, what
+fixed the issue, how the dependency was met or waived, the answer, or what the
+completed action produced. When the source confirms closure but not how, say
+so in Resolution ("Closed; the source gives no detail") rather than guessing.
+Never fill Resolution on an open item. A planned response is not a
+Resolution; it is an action item that addresses the item.
 Preserve existing relationships and evidence while adding the new support.
+
+**Link each RAID item to its response.** RAID items are risks, assumptions,
+issues, dependencies, and open questions. For each one you propose or
+reconcile, look for the action that responds to it: a task to mitigate the
+risk, validate the assumption, fix the issue, secure the dependency, or
+answer the question. When the action is tracked or proposed, put
+`addresses: <RAID item ID>` on the action. When the source states the response
+with an owner or a commitment but no action exists, propose the action too,
+following the action item bar. In the other direction, for every action item
+you propose, check open RAID items in the tracker copies and pending
+proposals, and link the action when it acts on one. Use `addresses` only when
+the action works on that item; an action that merely happens near it in a
+meeting gets no link. Do not invent an action to fill the gap: an open RAID
+item with no stated response stays unlinked.
 
 On every later ingestion, actively reassess `Target Date` and `Completed Date`
 against new evidence. Populate or revise Target Date when a deadline is agreed
@@ -508,6 +531,9 @@ step implicit. State:
   could not be decided;
 - any documents filed without proposals and why, and any milestones whose
   date has passed with no source confirming the outcome;
+- how many open RAID items (risks, assumptions, issues, dependencies, and open
+  questions, approved or pending) still have no action addressing them, so
+  the user can assign responses;
 - that these are proposed facts, not yet the project's official working
   record, and need their approval before they are added; and
 - the exact next action in user language: for example, “I have 16 items

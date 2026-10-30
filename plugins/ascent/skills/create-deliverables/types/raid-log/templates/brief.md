@@ -13,7 +13,6 @@ it; `prepare.py` validates it. `example.json` is fictional sample data only.
 | `secondaryColor` | `{name, hex}`; the starter sets the standard Coral Red/#FF4D5F. Change it to Cyan/#1BE1F2, Purple/#C7B9FF, or Chartreuse/#DEFF4D only when the user asks. |
 | `coverageNote` | Gaps, assessments, and contradictions for the chat handoff; never rendered. |
 | `omitted` | Array of `{key, reason}` for items deliberately left out. |
-| `impactAreas` | Written by `collect.py`: the saved list file, its areas (`null` until saved), and tracked workstream, system, and process names. Impact areas must use these names. |
 | `items` | Every RAID item; see below. |
 
 The preparer adds `vocabulary`, `sourceDetails`, `exportFile`, and each
@@ -40,11 +39,11 @@ A field is `null` (shown as "Not recorded") or an object:
 
 | Basis | Required keys | Meaning |
 | --- | --- | --- |
-| `recorded` | `value`, `from` | Taken from tracker data or links; `from` lists the record IDs used. |
+| `recorded` | `value`, `from` | Taken from tracker data or links; `from` lists the record IDs used. For a link field (`nextAction`, `addresses`), `from` lists the linked items' keys, which must be in the log. |
 | `stated` | `value`, `source` | Stated by cited documents; `source` lists workspace-relative paths. |
 | `assessed` | `value`, `source`, `reason` | Agent judgment against the picklist definitions; the page shows the reason in a tooltip. |
 
 Dates use `YYYY-MM-DD`; the page shows mm/dd/yyyy in the table and the long
-form in expanded rows. Priority, Severity, and Importance use the canonical
-values in their picklist files. Never invent owners, dates, outcomes, or
+form in expanded rows. Priority, Severity, Importance, and Category / impact
+area use the canonical values in their picklist files. Never invent owners, dates, outcomes, or
 commitments to fill a field.
