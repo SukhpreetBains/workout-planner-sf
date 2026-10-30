@@ -60,6 +60,12 @@ Start or reuse the loopback-only inbox with:
 PY <plugin-root>/shared/scripts/review_server.py start --root "$ASCENT_PROJECT_ROOT"
 ```
 
+On macOS and Windows, the first start registers a per-project user service
+(LaunchAgent or Scheduled Task). It keeps the inbox running outside this chat,
+restarts it after sign-in, and preserves the same localhost URL across service
+restarts. Starting from another chat reuses that service. `stop` removes the
+registration. On other systems, start uses a detached process.
+
 Always use `shared/scripts/py` or `py.cmd` for review server commands. A server
 started with `uv run` can inherit a temporary Python path that disappears while
 the inbox is open, causing approval to fail during tracker sync. Startup rejects
@@ -88,8 +94,8 @@ returns the HTML review page, not a JSON error. If the page fails this check,
 stop and start the server through the launcher above, then check the new URL.
 If it still fails, inspect `~/.ascent/review-cache/<project-hash>/review-server.log` and use the chat
 review fallback. Post only a working URL in chat and let the user open it.
-Never open the browser automatically. The server assigns an ephemeral port,
-recovers from stale state, and requires its session token for every mutation.
+Never open the browser automatically. The server selects a free port on first
+start, recovers from stale state, and requires its session token for every mutation.
 
 If an approval reports a missing Python executable, stop and start the inbox
 through the launcher above. Before retrying the approval, check the proposal,
