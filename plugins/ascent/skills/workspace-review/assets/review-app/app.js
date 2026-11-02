@@ -19,7 +19,6 @@ const loading = document.querySelector("#loading");
 const errorState = document.querySelector("#error-state");
 const toast = document.querySelector("#toast");
 const siteHeader = document.querySelector(".site-header");
-const headerCount = document.querySelector("#header-count");
 const headerControls = document.querySelector("#header-controls");
 const reviewStates = { pending: "Pending", accepted: "Accepted", rejected: "Rejected" };
 let records = [];
@@ -101,7 +100,7 @@ function icon(...paths) {
   });
   return svg;
 }
-const filterIcon = () => icon("M4 6h16M7 12h10M10 18h4");
+const funnelIcon = () => icon("M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z");
 const pencilIcon = () => icon("M4 20h4L19 9l-4-4L4 16v4z", "M13.5 6.5l4 4");
 const trashIcon = () => icon("M4 7h16", "M9 7V4h6v3", "M6 7l1 13h10l1-13", "M10 11v6", "M14 11v6");
 
@@ -156,8 +155,7 @@ function selectedRecord() {
 }
 
 function setHeaderCount(count) {
-  headerCount.textContent = String(count);
-  headerCount.setAttribute("aria-label", `${count} ${count === 1 ? "item" : "items"}`);
+  document.title = `Workspace review inbox (${count})`;
 }
 
 function missingRequired(record) {
@@ -255,8 +253,9 @@ function triageControls() {
 function dateSortControl() {
   const sort = enumPicker("filter-sort", "sort-filter", [
     { value: "oldest", text: "Date: oldest first" }, { value: "newest", text: "Date: newest first" },
-  ], sortMode, { ariaLabel: "Sort by date", includeEmpty: false });
+  ], sortMode, { ariaLabel: "Sort by date", includeEmpty: false, buttonIcon: funnelIcon });
   sort.input.addEventListener("input", () => { sortMode = sort.input.value; flushSave(); scheduleFilterRender({ focusSort: true }); });
+  sort.control.classList.add("sort-picker");
   return sort.control;
 }
 
@@ -456,6 +455,8 @@ function relationshipsSection(record, definition, onChange) {
   if (onChange) input.addEventListener("input", onChange);
   const outgoing = el("ul", { class: "relationship-list" });
   const incoming = el("ul", { class: "relationship-list" });
+  const outgoingHeading = el("p", { class: "relationship-subheading" }, "From this record");
+  const incomingHeading = el("p", { class: "relationship-subheading" }, "Pointing to this record");
   const add = el("button", { class: "quiet relationship-add", type: "button" }, "Add relationships");
   const change = entries => {
     input.value = formatRelationships(entries);
@@ -464,7 +465,8 @@ function relationshipsSection(record, definition, onChange) {
   };
   const render = () => {
     const entries = parseRelationships(input.value);
-    outgoing.replaceChildren(...(entries.length ? entries.map((entry, index) => {
+    outgoingHeading.hidden = outgoing.hidden = entries.length === 0;
+    outgoing.replaceChildren(...entries.map((entry, index) => {
       const meaningLabel = relationshipType(entry.meaning)?.label || entry.meaning || "Unspecified meaning";
       const actions = readOnly ? [] : [
         el("button", { class: "quiet icon-button", type: "button", title: "Edit relationship",
@@ -477,12 +479,12 @@ function relationshipsSection(record, definition, onChange) {
           onclick: () => change(entries.filter((_, position) => position !== index)) }, trashIcon()),
       ];
       return relationshipRow(meaningLabel, entry.target, actions);
-    }) : [el("li", { class: "relationship-empty" }, "This record does not point to any other record yet.")]));
+    }));
     const pointing = ids.length ? knownRecords().flatMap(other => parseRelationships(relationshipsValue(other.category, other.fields))
       .filter(entry => ids.includes(entry.target)).map(entry => ({ other, meaning: entry.meaning }))) : [];
-    incoming.replaceChildren(...(pointing.length ? pointing.map(({ other, meaning }) =>
-      relationshipRow(relationshipType(meaning)?.inverse_label || meaning, other.id, [], { incoming: true }))
-      : [el("li", { class: "relationship-empty" }, "No other record points to this one yet.")]));
+    incomingHeading.hidden = incoming.hidden = pointing.length === 0;
+    incoming.replaceChildren(...pointing.map(({ other, meaning }) =>
+      relationshipRow(relationshipType(meaning)?.inverse_label || meaning, other.id, [], { incoming: true })));
   };
   add.addEventListener("click", () => openRelationshipPicker({
     ownIds: ids, trigger: add,
@@ -492,14 +494,14 @@ function relationshipsSection(record, definition, onChange) {
   return el("section", { class: "relationships-section field-wide", "aria-label": "Relationships" }, [
     input,
     el("h3", {}, "Relationships"),
-    el("p", { class: "relationship-subheading" }, "From this record"), outgoing, ...(readOnly ? [] : [add]),
-    el("p", { class: "relationship-subheading" }, "Pointing to this record"), incoming,
+    outgoingHeading, outgoing, ...(readOnly ? [] : [add]),
+    incomingHeading, incoming,
   ]);
 }
 
 // ---------------------------------------------------------------- fields
 
-function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true, emptyLabel = "Select an option", disabled = false } = {}) {
+function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true, emptyLabel = "Select an option", disabled = false, buttonIcon = null } = {}) {
   const input = el("input", { id, name, type: "hidden", value });
   const button = el("button", {
     id: `${id}-button`, class: "field-picker-button", type: "button",
@@ -511,12 +513,15 @@ function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true, 
   const open = () => { list.hidden = false; button.setAttribute("aria-expanded", "true"); };
   const choices = options.map(option => typeof option === "string" ? { value: option, text: label(option) } : option);
   if (includeEmpty) choices.unshift({ value: "", text: emptyLabel });
-  button.textContent = choices.find(option => option.value === value)?.text || emptyLabel;
+  const selectedText = choices.find(option => option.value === value)?.text || emptyLabel;
+  button.replaceChildren(buttonIcon ? buttonIcon() : selectedText);
+  if (buttonIcon) button.title = selectedText;
   choices
     .forEach(option => list.append(el("button", {
       type: "button", role: "option", "aria-selected": String(option.value === value), title: option.title, onclick: () => {
         input.value = option.value;
-        button.textContent = option.text;
+        button.replaceChildren(buttonIcon ? buttonIcon() : option.text);
+        if (buttonIcon) button.title = option.text;
         input.dispatchEvent(new Event("input", { bubbles: true }));
         close();
         button.focus();
@@ -848,7 +853,6 @@ function categoryNavigation(visible) {
         if (collapsed) collapsedGroups.delete(group.id); else collapsedGroups.add(group.id);
         renderCategory();
       } }, [
-      el("span", { class: "category-nav-chevron", "aria-hidden": "true" }, collapsed ? "▸" : "▾"),
       el("span", {}, group.label),
       el("span", { class: "category-nav-count", "aria-label": `${total} shown` }, String(total)),
     ]);
@@ -877,7 +881,10 @@ function categoryNavigation(visible) {
 function listHeader(count) {
   const name = categoryLabel(activeCategory);
   return el("div", { class: "proposal-list-header" }, [
-    el("h2", { class: "proposal-list-heading" }, [name, el("span", { class: "category-nav-count" }, String(count))]),
+    el("h2", { class: "proposal-list-heading", title: name }, [
+      el("span", { class: "proposal-list-category-name" }, name),
+      el("span", { class: "category-nav-count" }, String(count)),
+    ]),
     dateSortControl(),
     el("button", { class: "quiet proposal-list-new", type: "button", title: `Create a ${name} proposal`,
       "aria-label": `Create a ${name} proposal`, onclick: () => createManualProposal(activeCategory) }, "+ New"),
@@ -904,17 +911,11 @@ function stateBadge(record) {
 function renderProposalListItem(record, selected) {
   const article = el("article", { class: `proposal-list-item category-${record.category} state-${record.state}${selected ? " is-selected" : ""}`,
     "aria-label": `${record.category_label} ${reviewStates[record.state].toLowerCase()} item: ${recordTitle(record)}` });
-  const missing = missingRequired(record);
-  const sources = (record.evidence?.length || record.source_refs?.length || 0);
   article.append(el("button", { class: "proposal-list-title", type: "button", "aria-current": selected ? "true" : undefined,
     onclick: () => { flushSave(); selectedKey = record.key; renderCategory(); } }, [
     el("span", { class: "proposal-title-copy" }, recordTitle(record)),
     el("span", { class: "proposal-list-meta" }, [
-      ...(reviewFilter.size > 1 ? [stateBadge(record)] : []),
-      el("span", { class: "proposal-date" }, `Date: ${normalizeDate(shownFields(record).Date) || "Unknown"}`),
-      ...(record.created_at ? [el("span", { class: "proposal-created" }, `Added: ${normalizeDate(record.created_at)}`)] : []),
-      ...(missing ? [el("span", { class: "proposal-badge needs-attention" }, `${missing} required`)] : []),
-      el("span", {}, `${sources} ${sources === 1 ? "source" : "sources"}`),
+        stateBadge(record),
     ]),
   ]));
   return article;
@@ -971,12 +972,13 @@ function expandedCardContent(record) {
   const trackerType = categoryControl(record);
   const stickyHeader = el("header", { class: "review-sticky-header" }, [
     el("div", { class: "review-heading" }, [
-      el("p", { class: "eyebrow review-state-line" }, ["Review state ", stateBadge(record)]),
-      el("h2", { title: recordTitle(record) }, recordTitle(record)),
-      ...(trackerType ? [trackerType] : []),
+      el("div", { class: "review-title-row" }, [
+        el("h2", { title: recordTitle(record) }, recordTitle(record)),
+        stateBadge(record),
+      ]),
     ]),
     el("div", { class: "review-sticky-actions" }, [
-      el("span", { class: "save-state", id: "save-state", role: "status" }, record.state === "rejected" ? "Read-only" : "All changes saved"),
+      el("span", { class: "save-state sr-only", id: "save-state", role: "status" }, record.state === "rejected" ? "Read-only" : "All changes saved"),
       reviewActions(record),
     ]),
   ]);
@@ -984,6 +986,7 @@ function expandedCardContent(record) {
   const quickGrid = el("div", { class: "quick-field-grid" });
   const quick = quickDefinitions(record);
   quick.forEach(definition => quickGrid.append(fieldControl(record, definition)));
+  if (trackerType) form.append(trackerType);
   form.append(quickGrid);
 
   const quickNames = new Set(quick.map(definition => definition.name));
@@ -1179,7 +1182,7 @@ async function loadInbox() {
   }
 }
 
-const syncIndicator = el("span", { class: "sync-indicator", role: "status" }, "Working locally");
+const syncIndicator = el("span", { class: "sync-indicator sr-only", role: "status" }, "Working locally");
 async function syncPreview() {
   try {
     return await api("/api/sync-preview");
@@ -1274,7 +1277,7 @@ function openSyncWarning(preview, trigger) {
   showModal(modal, close, trigger);
 }
 
-const syncButton = el("button", { class: "quiet sync-button", type: "button", onclick: async () => {
+const syncButton = el("button", { class: "quiet sync-button", type: "button", title: "Sync now with OneDrive", onclick: async () => {
   syncButton.disabled = true;
   try {
     const selected = records.find(record => record.key === selectedKey);
@@ -1291,7 +1294,7 @@ const syncButton = el("button", { class: "quiet sync-button", type: "button", on
   } finally {
     syncButton.disabled = false;
   }
-} }, "Sync now");
+} }, "Sync");
 siteHeader.append(syncIndicator, syncButton);
 
 async function refreshSyncStatus() {
