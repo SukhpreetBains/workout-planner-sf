@@ -295,6 +295,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .info-tip-text { position: absolute; z-index: 40; top: calc(100% + 6px); left: -10px; width: max-content; max-width: min(340px, 70vw); padding: .55rem .7rem; border-radius: 4px; background: var(--black); color: var(--white); font-size: .8rem; font-weight: 400; line-height: 1.4; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .12s ease; }
 .info-tip-wrap:hover .info-tip-text, .info-tip:focus-visible + .info-tip-text { opacity: 1; visibility: visible; }
 .required-marker { color: #e6154a; }
+.proposed-tag { margin-left: .5rem; padding: .05rem .4rem; border-radius: 4px; background: #e8efff; color: #002faf; font-size: .72rem; font-weight: 700; letter-spacing: .02em; }
 .sr-only {
   position: absolute;
   width: 1px;

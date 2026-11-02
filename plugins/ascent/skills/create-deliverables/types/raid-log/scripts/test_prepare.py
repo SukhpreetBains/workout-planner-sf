@@ -12,7 +12,7 @@ ROWS = {
     'workstream': [{'Workstream ID': 'WST-001', 'Name': 'Data migration', 'Status': 'active'}],
     'risk': [{'Risk ID': 'RSK-001', 'Name': 'Credentials may be late', 'Description': 'Access may slip UAT.',
               'Status': 'active', 'Date': '2026-10-02 00:00:00', 'Target Date': '2026-11-10 00:00:00',
-              'Calculated Severity': 'Sev 1', 'Relationships': 'owned_by: PER-001; impacts: WST-001',
+              'Calculated Severity': 'Sev 1', 'Category': 'access_onboarding', 'Relationships': 'owned_by: PER-001; impacts: WST-001',
               'Source Refs': 'workspace/meetings/notes.md'}],
     'action_item': [{'Action Item ID': 'ACT-001', 'Name': 'Confirm access date', 'Description': 'Ask client IT.',
                      'Status': 'assigned', 'Target Date': '2026-10-30 00:00:00',
@@ -74,7 +74,7 @@ class RaidLogTests(unittest.TestCase):
         self.assertEqual(log['project'], 'Fictional programme')
         risk = self.item(log, 'RSK-001')
         self.assertEqual(risk['owner'], {'value': 'Jordan Lee', 'basis': 'recorded', 'from': ['PER-001']})
-        self.assertIsNone(risk['impactArea'])
+        self.assertEqual(risk['impactArea'], {'value': 'Access & Onboarding', 'basis': 'recorded', 'from': ['RSK-001']})
         self.assertEqual(risk['severity']['value'], 'High')
         self.assertEqual((risk['dateRaised']['value'], risk['target']['value']), ('2026-10-02', '2026-11-10'))
         self.assertEqual(risk['nextAction'], {'value': 'Confirm access date', 'basis': 'recorded', 'from': ['ACT-001']})
@@ -86,6 +86,7 @@ class RaidLogTests(unittest.TestCase):
         dependency = self.item(log, 'DEP-001')
         self.assertEqual((dependency['id'], dependency['source']), ('DEP-001', ['DEP-001']))
         self.assertNotIn('review', dependency)
+        self.assertIsNone(dependency['impactArea'])
         question = self.item(log, 'QST-001')
         self.assertEqual((question['tab'], question['status']), ('decisions', 'open'))
         self.assertNotIn('severity', question)
@@ -159,19 +160,20 @@ class RaidLogTests(unittest.TestCase):
         risk['priority'] = {'value': 'High', 'basis': 'stated', 'source': ['workspace/meetings/notes.md']}
         validate(log)
 
-    def test_impact_areas_use_the_standard_categories(self):
+    def test_impact_areas_come_only_from_the_tracker_category(self):
         log = completed(self.root)
-        self.assertNotIn('impactAreas', log)
         dependency = self.item(log, 'DEP-001')
-        dependency['impactArea'] = {'value': 'Test environments', 'basis': 'assessed', 'reason': 'UAT needs the sandbox.',
+        dependency['impactArea'] = {'value': 'Access & Onboarding', 'basis': 'assessed', 'reason': 'UAT needs the sandbox.',
                                     'source': ['workspace/meetings/notes.md']}
+        with self.assertRaisesRegex(ValueError, 'basis must be one of recorded'):
+            validate(log)
+        dependency['impactArea'] = {'value': 'Test environments', 'basis': 'recorded', 'from': ['DEP-001']}
         with self.assertRaisesRegex(ValueError, 'Category / impact area must be one of'):
             validate(log)
         dependency['impactArea']['value'] = 'Access & Onboarding'
         validate(log)
-        dependency['impactArea'] = {'value': 'Access & Onboarding', 'basis': 'recorded', 'from': ['DEP-001']}
-        with self.assertRaisesRegex(ValueError, 'basis must be one of'):
-            validate(log)
+        with self.assertRaisesRegex(ValueError, 'impactArea must match the current tracker row'):
+            prepare(Path(self.temp.name) / 'out', log, self.root)
 
     def test_next_actions_link_to_tracked_actions_in_the_log(self):
         log = completed(self.root)
@@ -199,10 +201,10 @@ class RaidLogTests(unittest.TestCase):
         risk['priority'] = {'value': 'Medium', 'basis': 'stated', 'source': note}
         validate(log)
         risk['priority'] = {'value': 'High', 'basis': 'assessed', 'reason': 'Open past its November 10 target.', 'source': note}
-        risk['impactArea'] = {'value': 'Access & Onboarding', 'basis': 'assessed', 'reason': 'open past its November 10 target. ', 'source': note}
+        risk['severity'] = {'value': 'High', 'basis': 'assessed', 'reason': 'open past its November 10 target. ', 'source': note}
         with self.assertRaisesRegex(ValueError, 'its own reason'):
             validate(log)
-        risk['impactArea']['reason'] = 'The credentials gate migration testing.'
+        risk['severity']['reason'] = 'The credentials gate migration testing.'
         validate(log)
 
     def test_items_sort_open_overdue_then_oldest_first(self):

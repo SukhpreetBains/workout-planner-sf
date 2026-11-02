@@ -1,88 +1,9 @@
-# Category / impact area picklist. Fill and check it as described in README.md.
-# Values and definitions are the standard Ascent RAID category ontology; do
-# not add project-specific areas. Choose the one value whose guidance matches
-# the item's central concern.
+# Category / impact area picklist. The values and their definitions are the
+# standard Ascent RAID category ontology, kept in one place: the Category
+# column in shared/schema/trackers.yaml. picklists.py reads them from there.
+# The category is chosen at ingestion and approved in the review inbox, so the
+# log only ever records it; it is never stated or assessed here.
 label: Category / impact area
 meaning: The area of the project the item mainly concerns.
 tabs: [risks, assumptions, issues, decisions, dependencies, actions]
-values:
-  - value: Scope
-    definition: >-
-      Work, capabilities, deliverables, or populations included or excluded.
-      Choose when the central concern is an unclear boundary, disputed
-      inclusion, or change to agreed coverage.
-    aliases: [scope change, coverage]
-  - value: Timeline / Schedule
-    definition: >-
-      Timing, sequencing, milestones, or deadlines. Choose when the plan or
-      timing itself is the central concern.
-    aliases: [timeline, schedule, timing]
-  - value: Budget & Resourcing
-    definition: >-
-      Project funding, spending limits, cost estimates, or overruns. Choose
-      when the money available or required is the central concern.
-      Availability, capacity, skills, or allocation of people and delivery
-      resources. Choose for staffing shortages, unavailable specialists, or
-      insufficient allocated capacity.
-    aliases: [budget, cost, funding, resourcing, staffing, capacity]
-  - value: Solution & Design
-    definition: >-
-      Solution structure, component boundaries, design patterns, or technical
-      feasibility. Choose when the concern requires a structural design choice
-      or assessment. Application or platform functionality, configuration,
-      availability, compatibility, or technical limits. Choose for a technical
-      concern that does not fit a more specific category. Obtaining,
-      evaluating, or synthesizing evidence needed to understand users, needs,
-      or the current state. Choose for research execution, interview coverage,
-      or missing findings. Interfaces and exchanges between systems, including
-      API contracts, connectivity, synchronization, or orchestration. Choose
-      when the connection or exchange is the primary concern. Business
-      workflows, operating procedures, handoffs, or responsibilities within a
-      process. Choose when how work is performed or coordinated is the main
-      subject. Data quality, completeness, definitions, ownership, mapping,
-      lineage, or migration content. Choose when the information itself is
-      the concern.
-    aliases: [solution, architecture, technical, technology, integration, data, business process, research]
-  - value: Security & Compliance
-    definition: >-
-      Protection against unauthorized access, disclosure, modification, or
-      misuse. Choose for vulnerabilities, excessive permissions, or missing
-      security controls. Legal, regulatory, privacy, or mandatory policy
-      obligations and required reviews. Choose when satisfying a binding
-      obligation is the central concern.
-    aliases: [security, compliance, privacy, regulatory, legal]
-  - value: Access & Onboarding
-    definition: >-
-      Provisioning accounts, permissions, credentials, tools, or initial
-      working access. Choose when required access or onboarding prevents
-      someone from starting or performing work.
-    aliases: [access, onboarding, provisioning]
-  - value: Governance & Stakeholder Alignment
-    definition: >-
-      Decision rights, approvals, escalation routes, oversight, or stakeholder
-      authority and alignment. Choose when the concern is who decides, who
-      approves, or how decisions are reached.
-    aliases: [governance, stakeholder alignment, approvals, decision rights, escalation]
-  - value: Change Adoption & Training
-    definition: >-
-      Readiness and willingness to use a changed solution or way of working,
-      including training, communications, behavior change, and competing
-      change demands.
-    aliases: [change management, adoption, training, communications]
-  - value: Experience Strategy & Design
-    definition: >-
-      User journeys, interaction flows, usability, prototypes, or experience
-      direction. Choose when the concern is what users experience or how the
-      design meets their needs.
-    aliases: [experience, user experience, ux, usability]
-  - value: Delivery Quality
-    definition: >-
-      Verification, defects against expected behavior, test coverage,
-      acceptance evidence, or readiness to pass quality checks. Choose when
-      validation or demonstrated conformance is the central concern.
-    aliases: [quality, testing, defects, acceptance]
-  - value: Unknown / TBD
-    definition: >-
-      Evidence is insufficient, contradictory, or does not support a reliable
-      category. Use temporarily and record the clarification needed.
-    aliases: [unknown, tbd]
+tracker_column: Category

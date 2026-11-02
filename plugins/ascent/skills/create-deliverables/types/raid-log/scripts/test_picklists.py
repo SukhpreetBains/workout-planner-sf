@@ -56,13 +56,15 @@ class PicklistTests(unittest.TestCase):
         self.assertEqual(level_value(self.picklists, 'priority', 'P1'), 'High')
         self.assertEqual(level_value(self.picklists, 'severity', 'Sev 2'), 'Medium')
         self.assertEqual(level_value(self.picklists, 'importance', 'critical'), 'Critical')
-        self.assertEqual(level_value(self.picklists, 'impact-area', 'Data'), 'Solution & Design')
+        self.assertEqual(level_value(self.picklists, 'impact-area', 'timeline_schedule'), 'Timeline / Schedule')
         self.assertEqual(level_value(self.picklists, 'impact-area', 'Unknown / TBD'), 'Unknown / TBD')
         with self.assertRaisesRegex(ValueError, 'Priority must be one of'):
             level_value(self.picklists, 'priority', 'Critical-ish')
 
     def test_calculated_risk_severity_maps_and_status_groups_resolve(self):
         self.assertEqual(from_tracker(self.picklists, 'severity', 'risk', {'Calculated Severity': 'Sev 1'}), 'High')
+        self.assertEqual(from_tracker(self.picklists, 'impact-area', 'decision', {'Category': 'delivery_quality'}), 'Delivery Quality')
+        self.assertEqual(len(self.picklists['levels']['impact-area']['values']), 11)
         self.assertIsNone(from_tracker(self.picklists, 'severity', 'issue', {}))
         self.assertTrue(is_open(self.picklists, 'dependency', 'blocked'))
         self.assertFalse(is_open(self.picklists, 'risk', 'realized'))

@@ -102,6 +102,7 @@ def collect(root, as_of=None):
                            for t in targets({'impacts', 'blocks', 'depends_on', 'applies_to'}, DATE_TARGETS)
                            if iso(found[t]['fields'].get('Target Date')))
             values['target'] = recorded(dated[0][0], [dated[0][1]]) if dated else None
+        values['impactArea'] = recorded(from_tracker(picklists, 'impact-area', category, row), [key])
         values['severity'] = recorded(from_tracker(picklists, 'severity', category, row), [key])
         responders = [s for m, s in incoming.get(key, []) if m == 'addresses' and found[s]['category'] in PLAN_SOURCES]
         open_actions = sorted((iso(found[s]['fields'].get('Target Date')) or '9999', s) for s in responders

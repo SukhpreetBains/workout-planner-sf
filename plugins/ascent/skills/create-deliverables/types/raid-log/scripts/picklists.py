@@ -20,12 +20,28 @@ def load(root=TYPE):
     levels = {path.stem: read(path) for path in sorted((root / 'picklists').glob('*.yaml')) if path.stem != 'status'}
     status = read(root / 'picklists/status.yaml')
     layout = read(root / 'tabs.yaml')
+    for level in levels.values():
+        if 'tracker_column' in level:
+            from_schema(level, layout['tabs'])
     return {'tabs': layout['tabs'],
             'fields': layout['fields'],
             'columns': layout['columns'],
             'status': status['status'],
             'tones': status['tones'],
             'levels': levels}
+
+
+def from_schema(level, tabs, schema_path=SCHEMA):
+    """Fill a picklist kept in a tracker column: its values, and how each category's rows map to them."""
+    categories = tracker_schema(schema_path)['categories']
+    column = level['tracker_column']
+    raid = [c for tab in tabs for c in tab['categories']]
+    found = next(col for c in raid for col in categories[c]['columns'] if col['name'] == column)
+    labels = found['enum_labels']
+    level['values'] = [{'value': labels[key], 'definition': found['enum_definitions'][key], 'aliases': [key]}
+                       for key in found['enum']]
+    level['from_tracker'] = {c: {'column': column, 'map': labels} for c in raid
+                             if any(col['name'] == column for col in categories[c]['columns'])}
 
 
 def tracker_schema(schema_path=SCHEMA):

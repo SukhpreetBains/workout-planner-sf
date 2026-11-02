@@ -66,6 +66,14 @@ class EngineTest(unittest.TestCase):
                          f"{name} {args}: {result.stdout}\n{result.stderr}")
         return result.stdout
 
+    def test_enum_display_labels_map_to_keys(self):
+        sys.path.insert(0, str(SCRIPTS))
+        from trackers import coerce_value, enum_key
+        column = {"enum": ["timeline_schedule"], "enum_labels": {"timeline_schedule": "Timeline / Schedule"}}
+        self.assertEqual(enum_key(column, "timeline / schedule"), "timeline_schedule")
+        self.assertEqual(coerce_value(column, "Timeline / Schedule"), "timeline_schedule")
+        self.assertEqual(enum_key({"enum": ["very_high"]}, "Very High"), "very_high")
+
     def test_pipeline(self):
         proposed = self.root / "workspace" / ".system" / "proposed-updates"
 
@@ -107,6 +115,20 @@ class EngineTest(unittest.TestCase):
             "      Relationships: 'raised_by: PER-001'\n", encoding="utf-8")
         self.assertIn("update: pain_point PAIN-001",
                       self.run_script("apply_updates.py", str(upd)))
+
+        # An update replaces the whole Relationships cell, so it must keep existing links.
+        dropping = proposed / "dropping.yaml"
+        dropping.write_text(
+            'source_refs: ["workspace/meetings/2026-08-14 - Test.md"]\n'
+            "updates:\n"
+            "  - category: pain_point\n"
+            "    action: update\n"
+            "    id: PAIN-001\n"
+            "    fields:\n"
+            "      Relationships: 'impacts: PER-001'\n", encoding="utf-8")
+        out = self.run_script("validate_updates.py", str(dropping), expect=1)
+        self.assertIn("would remove existing entries (raised_by: PER-001)", out)
+        dropping.unlink()
 
         out = self.run_script("search.py", "invoice approval")
         self.assertIn("PAIN-001", out)

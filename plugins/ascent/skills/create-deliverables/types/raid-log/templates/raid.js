@@ -87,7 +87,7 @@
   function links(target, v) {
     v.from.forEach((key, n) => {
       const item = log.items.find(i => i.key === key);
-      if (n) target.append('; ');
+      if (n) target.append(el('span', 'link-sep', '; '));
       if (!item) {
         target.append(el('span', '', key));
         return;
@@ -246,7 +246,7 @@
       col('Status').append(status(item));
       const overdue = item.open && item.target && item.target.value < log.asOf;
       columns.forEach(f => {
-        const td = value(col(f.key === 'target' ? 'Target date' : f.label, f.type === 'date' ? 'nowrap' : ''), f, item[f.key], 'short');
+        const td = value(col(f.key === 'target' ? 'Target date' : f.label, f.type === 'date' ? 'nowrap' : f.link ? 'link-cell' : ''), f, item[f.key], 'short');
         if (f.key === 'target' && overdue) {
           // Red marks an open item past its target; the hidden text keeps that meaning for screen readers.
           td.classList.add('overdue');

@@ -11,7 +11,7 @@ it appears on.
 | `priority.yaml` | Priority | All |
 | `severity.yaml` | Severity | Risks, Issues |
 | `importance.yaml` | Importance | Dependencies |
-| `impact-area.yaml` | Category / impact area | All |
+| `impact-area.yaml` | Category / impact area, read from the tracker schema | All |
 
 ## Status
 
@@ -96,9 +96,16 @@ no reason template reused across more than three items.
 
 ## Category / impact area
 
-`impact-area.yaml` is the standard Ascent RAID category ontology. Choose the
-one value whose guidance matches the item's central concern. The value is
-stated when a source names the area, and otherwise assessed with a reason
-saying why the item belongs there. Use Unknown / TBD only when the evidence is
-insufficient or contradictory, and say in the reason what clarification is
-needed. Do not invent project-specific areas.
+The standard Ascent RAID category ontology lives in one place: the
+`Category` column in `shared/schema/trackers.yaml`, with each value's display
+name in `enum_labels` and its definition in `enum_definitions`.
+`impact-area.yaml` only names that column; `picklists.py` reads the values
+from the schema.
+
+The category is chosen once, when the item is proposed: `workspace-add` picks
+the value whose definition matches the item's central concern, and the user
+approves it in the review inbox with the rest of the item. The RAID log only
+records it from the tracker row. It is never stated or assessed while
+building a log, and the preparer rejects a value that differs from the
+tracker. An approved row with no Category shows "Not recorded"; to fill it,
+ask `workspace-add` to categorize existing items and approve the updates.

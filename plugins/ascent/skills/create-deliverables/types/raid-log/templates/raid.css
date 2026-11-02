@@ -69,7 +69,11 @@ a.quiet[hidden]{display:none}
 .item-row.expanded td{border-bottom-color:transparent}
 .item-row.is-closed .row-toggle{color:var(--muted)}
 .rid{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.title-cell{min-width:18rem}
+.title-cell{min-width:15rem}
+.link-cell{min-width:11rem}
+.link-cell .link-sep{display:none}
+.link-cell .item-link{display:block}
+.link-cell .item-link+.item-link{margin-top:.5rem}
 .row-toggle{border:0;background:transparent;padding:0;text-align:left;font-weight:700;cursor:pointer;line-height:1.35}
 .marks{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
 .marks:empty{display:none}
@@ -96,7 +100,7 @@ a.quiet[hidden]{display:none}
 .status.hollow:before{background:transparent;border:2px solid var(--dot);width:.5rem;height:.5rem}
 .status.closed{color:var(--muted)}
 .status.done{color:var(--ink)}
-.level{font-weight:700}
+.level{font-weight:700;white-space:nowrap}
 .level:before{content:'';display:inline-block;width:.55rem;height:.55rem;margin-right:.35rem;background:var(--square);vertical-align:.05em}
 .level.double:before{box-shadow:.7rem 0 0 var(--square);margin-right:1.05rem}
 .not-recorded{color:var(--muted);font-style:italic;font-weight:400}

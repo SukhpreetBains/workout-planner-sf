@@ -173,8 +173,8 @@ def check_project(log, root):
                          + ', '.join(unknown[:10]))
     for item in log['items']:
         current = expected[item['key']]
-        for name in ('category', 'status'):
-            if item[name] != current[name]:
+        for name in ('category', 'status', 'impactArea'):
+            if item.get(name) != current.get(name):
                 raise ValueError(f'{item.get("id") or item["key"]}: {name} must match the current tracker row ({current[name]})')
 
 

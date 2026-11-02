@@ -23,7 +23,7 @@ tabs:
 # here: the tab and the decision pills show it.
 fields:
   - {key: owner, label: Owner, bases: [recorded, stated]}
-  - {key: impactArea, label: Category / impact area, picklist: impact-area, bases: [stated, assessed]}
+  - {key: impactArea, label: Category / impact area, picklist: impact-area, bases: [recorded]}
   - {key: raisedBy, label: Raised by, bases: [recorded, stated]}
   - {key: dateRaised, label: Date raised, type: date, bases: [recorded, stated]}
   - {key: target, label: Target / required by, type: date, bases: [recorded, stated]}
@@ -36,5 +36,6 @@ fields:
   - {key: resolutionPlan, label: Resolution plan, only: [issues], bases: [recorded, stated]}
 
 # Table columns after ID, item, and status. A column the tab does not carry is
-# skipped. The expanded row shows every other field, so nothing repeats.
-columns: [owner, priority, severity, importance, target]
+# skipped: RAID tabs show Next action, and Actions shows Addresses instead. The
+# expanded row shows every other field, so nothing repeats.
+columns: [owner, priority, severity, importance, target, nextAction, addresses]

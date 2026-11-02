@@ -29,9 +29,8 @@
       },
       "impactArea": {
         "value": "Access & Onboarding",
-        "basis": "assessed",
-        "reason": "Testers cannot start UAT until their sandbox credentials arrive.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "RSK-001"
         ]
       },
@@ -93,9 +92,8 @@
       "owner": null,
       "impactArea": {
         "value": "Solution & Design",
-        "basis": "assessed",
-        "reason": "The concern is whether the design holds up under validation.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "RSK-002"
         ]
       },
@@ -159,9 +157,8 @@
       },
       "impactArea": {
         "value": "Budget & Resourcing",
-        "basis": "assessed",
-        "reason": "A lapsed licence would need new spend to restore the tool.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "RSK-003"
         ]
       },
@@ -229,9 +226,8 @@
       },
       "impactArea": {
         "value": "Solution & Design",
-        "basis": "assessed",
-        "reason": "Matching-rule sizing depends on the quality of the customer identifiers.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ASM-001"
         ]
       },
@@ -292,9 +288,8 @@
       },
       "impactArea": {
         "value": "Solution & Design",
-        "basis": "assessed",
-        "reason": "Concerned the structure of the source export.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ASM-002"
         ]
       },
@@ -355,9 +350,8 @@
       },
       "impactArea": {
         "value": "Access & Onboarding",
-        "basis": "assessed",
-        "reason": "An authorization error stops four testers from working.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ISS-001"
         ]
       },
@@ -433,9 +427,8 @@
       },
       "impactArea": {
         "value": "Timeline / Schedule",
-        "basis": "assessed",
-        "reason": "Concerned how and when the review session could be held.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ISS-002"
         ]
       },
@@ -510,9 +503,8 @@
       },
       "impactArea": {
         "value": "Solution & Design",
-        "basis": "assessed",
-        "reason": "Chooses how the two systems exchange data.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "DEC-001"
         ]
       },
@@ -567,9 +559,8 @@
       },
       "impactArea": {
         "value": "Scope",
-        "basis": "assessed",
-        "reason": "Decides whether old closed cases fall inside Phase 1 coverage.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "QST-003"
         ]
       },
@@ -631,9 +622,8 @@
       },
       "impactArea": {
         "value": "Access & Onboarding",
-        "basis": "assessed",
-        "reason": "UAT access waits on client IT provisioning the sandbox.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "DEP-001"
         ]
       },
@@ -701,9 +691,8 @@
       },
       "impactArea": {
         "value": "Solution & Design",
-        "basis": "assessed",
-        "reason": "The dictionary defines the data being migrated.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "DEP-002"
         ]
       },
@@ -772,9 +761,8 @@
       },
       "impactArea": {
         "value": "Access & Onboarding",
-        "basis": "assessed",
-        "reason": "Follows up on the testers’ missing sandbox access.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ACT-004"
         ]
       },
@@ -836,9 +824,8 @@
       },
       "impactArea": {
         "value": "Scope",
-        "basis": "assessed",
-        "reason": "The estimate informs whether closed cases stay in scope.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ACT-006"
         ]
       },
@@ -899,9 +886,8 @@
       },
       "impactArea": {
         "value": "Solution & Design",
-        "basis": "assessed",
-        "reason": "Profiling tests the identifier quality that the sizing assumes.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ACT-007"
         ]
       },
@@ -962,9 +948,8 @@
       },
       "impactArea": {
         "value": "Access & Onboarding",
-        "basis": "assessed",
-        "reason": "The date decides when testers can get into UAT.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ACT-008"
         ]
       },
@@ -1011,7 +996,7 @@
       "category": "action_item",
       "tab": "actions",
       "title": "Share design review recording",
-      "description": "Post the design review recording to the project site.",
+      "description": "Post the design review recording to the project site so finance subject matter experts who miss a validation session can catch up.",
       "status": "completed",
       "source": [
         "ACT-002"
@@ -1025,9 +1010,8 @@
       },
       "impactArea": {
         "value": "Change Adoption & Training",
-        "basis": "assessed",
-        "reason": "Sharing the recording keeps the wider team informed about the design.",
-        "source": [
+        "basis": "recorded",
+        "from": [
           "ACT-002"
         ]
       },
@@ -1066,7 +1050,13 @@
           "ACT-002"
         ]
       },
-      "addresses": null
+      "addresses": {
+        "value": "Limited SME availability during design validation",
+        "basis": "recorded",
+        "from": [
+          "RSK-002"
+        ]
+      }
     }
   ]
 }

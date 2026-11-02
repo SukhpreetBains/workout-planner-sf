@@ -50,7 +50,7 @@ log is a deliverable, so it holds approved items only. Review inbox proposals,
 whether pending, flagged, or rejected, never appear in it, and the preparer
 rejects any item that is not an approved tracker row. Values the trackers
 already record are filled with `basis: recorded`: owners and raisers from
-links, dates, a risk's calculated severity, outcomes from each row's
+links, dates, the category, a risk's calculated severity, outcomes from each row's
 Resolution column, next actions and resolution plans from the action items
 that address the item, and, on each action, the RAID items it addresses. Pending changes to an approved
 row are listed in `pendingChanges` for the handoff; the log shows the approved
@@ -89,24 +89,22 @@ Work through these fields deliberately; they are rarely in the trackers:
   the field empty and list the step in `coverageNote` as an action to add
   through `workspace-add` and review. Never write to the trackers while
   creating a log.
-- **Category / impact area**: one value from the standard categories in
-  [impact-area.yaml](picklists/impact-area.yaml); choose the one whose
-  guidance matches the item's central concern. State it when a source names
-  the area; otherwise assess it with a reason saying why the item belongs
-  there. Use Unknown / TBD only when the evidence is insufficient or
-  contradictory, and name the clarification needed in the reason. The
-  preparer rejects any other value.
+- **Category / impact area**: recorded only, from the row's approved
+  Category; the starter fills it. Never state or assess it: the category is
+  chosen at ingestion and approved in the review inbox, and the preparer
+  rejects a value that differs from the tracker. Leave an uncategorized item
+  empty.
 
 As Collect says, never copy values, assessments, or reasons from earlier
 drafts.
 
 Judge every assessed value item by item, from that item's own description
-and sources. Do not assign levels or areas in bulk, by keyword rules, or with
+and sources. Do not assign levels in bulk, by keyword rules, or with
 a script that applies one default. Each `reason` must cite a fact specific to
 that item, such as a date, blocker, dependency, or stated impact, not restate
 its title or description. For a level, say which part of the level's
 definition the fact meets and, when the call is close, why the adjacent level
-does not fit. For an impact area, say why the item belongs to that category. Each
+does not fit. Each
 assessed field on an item needs its own reason; the preparer rejects an item
 that reuses one reason for two fields, and an open item past its target date
 whose assessed priority is not High. The preparer rejects a reason template reused
@@ -115,7 +113,8 @@ added to it.
 
 Leave a field `null` only when nothing supports it; the log shows "Not
 recorded". In `coverageNote`, count the open items left without a priority and
-say why, the open RAID items with no next action, and the items marked
+say why, the open RAID items with no next action, the action items that
+address no RAID item, the items with no category, and the items categorized
 Unknown / TBD.
 
 Do not change an item's tab, category, or status: the preparer
@@ -160,8 +159,9 @@ and narrow widths. Check that:
 - every tab opens, and its count matches `raid.json`;
 - the Status and Decision filters and search work;
 - rows expand and collapse, and expanded rows do not repeat table columns;
-- a next action opens its action's row, and an action's Addresses opens the
-  RAID item's row, even with filters set;
+- the Next action and Addresses columns show in the table without expanding
+  a row; a next action opens its action's row, and an action's Addresses
+  opens the RAID item's row, even with filters set;
 - the assessed-value tooltip, Show sources, the source dialog, and focus
   return all work;
 - the color choice persists after a reload;
@@ -179,6 +179,9 @@ stated or assessed and
 why, fields left unrecorded, pending changes not shown, omitted items, and
 contradictions. Name the open RAID items with no next action and any next
 steps found in sources that are not yet tracked actions, and offer to add them
-through `workspace-add` and review. Ask whether any assessed value should
+through `workspace-add` and review. When items have no category, or actions
+address no RAID item, offer to categorize and link them through
+`workspace-add` for approval in the review inbox. Ask
+whether any assessed value should
 change. Do not publish
 or promote the draft without the user's instruction.

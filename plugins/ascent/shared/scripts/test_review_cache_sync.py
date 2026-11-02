@@ -31,6 +31,13 @@ class ReviewCacheSyncTest(unittest.TestCase):
         self.local = self.cache.local_root / self.relative
         self.assertEqual(self.local.stat().st_mtime_ns, self.cloud.stat().st_mtime_ns)
 
+    def test_recovery_backups_are_not_copied(self):
+        backup = self.root / "workspace/.system/backups/snapshot/raid.xlsx"
+        backup.parent.mkdir(parents=True)
+        backup.write_text("old", encoding="utf-8")
+        self.assertNotIn("workspace/.system/backups/snapshot/raid.xlsx", review_cache.files(self.root))
+        self.assertIn(self.relative, review_cache.files(self.root))
+
     def test_compare_and_overwrite_one_conflicting_file(self):
         self.local.write_text("local revision", encoding="utf-8")
         self.cloud.write_text("cloud revision", encoding="utf-8")

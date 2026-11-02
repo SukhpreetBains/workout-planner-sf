@@ -103,6 +103,15 @@ def normalize_enum(value: object) -> str:
     return str(value).strip().lower().replace("-", "_").replace(" ", "_")
 
 
+def enum_key(column: dict, value: object) -> str:
+    """Map a value to the column's enum key, accepting a display name from ``enum_labels``."""
+    text = str(value).strip().casefold()
+    for key, label in (column.get("enum_labels") or {}).items():
+        if text == str(label).casefold():
+            return key
+    return normalize_enum(value)
+
+
 def coerce_value(column: dict, value: object) -> object:
     """Convert schema-typed values before they are written to Excel."""
     if value in (None, ""):
@@ -116,7 +125,7 @@ def coerce_value(column: dict, value: object) -> object:
             return datetime.combine(value, datetime.min.time())
         return datetime.fromisoformat(str(value).strip())
     if "enum" in column:
-        return normalize_enum(value)
+        return enum_key(column, value)
     return value
 
 
