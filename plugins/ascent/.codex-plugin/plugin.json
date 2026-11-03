@@ -1,10 +1,6 @@
 {
   "name": "ascent",
-<<<<<<< HEAD
   "version": "0.1.21+codex.local-20261103-120000",
-=======
-  "version": "0.1.20+codex.local-20261103-120000",
->>>>>>> origin/main
   "description": "Governed, evidence-backed skills for accelerated Discovery engagements and Project delivery.",
   "author": {
     "name": "Slalom"
