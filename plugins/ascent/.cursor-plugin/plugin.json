@@ -1,7 +1,11 @@
 {
   "name": "ascent",
   "displayName": "Ascent",
+<<<<<<< HEAD
   "version": "0.1.21",
+=======
+  "version": "0.1.20",
+>>>>>>> origin/main
   "description": "Governed, evidence-backed skills for accelerated Discovery engagements and Project delivery.",
   "author": {
     "name": "Slalom"
