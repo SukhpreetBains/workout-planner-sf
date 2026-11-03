@@ -26,6 +26,12 @@ composition per `references/branding.md`, then layer motion per
 Slalom ships at `branding/packs/slalom/`. Other consumers may select another
 pack through `branding/active.json`.
 
+The Slalom pack also ships framework-free web components at
+`branding/packs/slalom/components/` — heroes, kinetic headlines, stat
+counters, roadmaps, timelines, accordions, team cards and quote carousels,
+plus buttons, cards and brand elements — with a live `gallery.html`. Use them
+for microsites and HTML deliverables.
+
 `create-deliverables` explicitly uses the Slalom pack for its weekly status
 starters and copies the required fonts, logo, and illustrations into each output.
 It also copies the pinned Anime.js bundle and license from `assets/animejs/vendor/`.

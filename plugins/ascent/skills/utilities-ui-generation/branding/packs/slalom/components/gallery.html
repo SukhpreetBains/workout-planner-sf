@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Slalom components</title>
+<script>document.documentElement.classList.add('sl-js')</script>
+<link rel="stylesheet" href="slalom-components.css">
+<style>
+  .g-wrap { max-width: 1120px; margin: 0 auto; padding: var(--space-6) var(--space-4); }
+  .g-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+  .g-nav { list-style: none; display: flex; flex-wrap: wrap; gap: var(--space-3); padding: 0; margin: var(--space-5) 0 var(--space-6); }
+  .g-group { margin-top: var(--space-7); }
+  .g-group > h2 { margin: 0 0 var(--space-4); }
+  .g-item { border-top: 1px solid var(--line); padding: var(--space-5) 0; }
+  .g-head { display: flex; align-items: baseline; gap: var(--space-3); }
+  .g-head h3 { margin: 0; }
+  .g-sum { color: var(--ink-muted); max-width: 640px; margin: var(--space-2) 0 var(--space-4); }
+  .g-demo { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-start; }
+  .g-demo > * { flex: 1 1 100%; }
+  .g-demo > .sl-btn, .g-demo > .sl-lbtn, .g-demo > .sl-push, .g-demo > .sl-icon, .g-demo > .sl-icon-mask, .g-demo > .sl-icon-circle, .g-demo > .sl-logo, .g-demo > .sl-cbloader, .g-demo > label, .g-demo > .sl-menu, .g-demo > .sl-card, .g-demo > .sl-hcard, .g-demo > .sl-pcard { flex: 0 0 auto; }
+  .g-code { margin-top: var(--space-4); }
+  .g-code pre { overflow-x: auto; background: var(--surface-raised); color: var(--ink); padding: var(--space-3); font-size: 12px; line-height: 1.4; }
+  .g-theme { font-family: var(--font-sans); }
+</style>
+</head>
+<body>
+<div class="g-wrap">
+  <div class="g-top">
+    <span class="sl-logo" style="--sl-logo-h:28px;padding-left:0"><img src="../assets/logos/slalom-logo-blue-RGB.svg" alt="Slalom"></span>
+    <label class="sl-toggle g-theme"><input class="sl-toggle-input" type="checkbox" role="switch" id="g-dark"><span class="sl-toggle-track" aria-hidden="true"><span class="sl-toggle-thumb"></span></span><span class="sl-toggle-label body-strong">Dark theme</span></label>
+  </div>
+  <header class="sl-headline" style="margin-top:var(--space-5)">
+    <p class="sl-eyebrow eyebrow">Slalom branding pack</p>
+    <h1 class="sl-headline-text headline-xl">Components</h1>
+    <p class="sl-dek body">32 framework-free patterns for microsites and HTML deliverables. Each one uses only the pack's tokens, Slalom Sans and approved assets. Copy the markup, load slalom-components.css and slalom-components.js, and set the composition's one secondary color with a sl-tone class.</p>
+  </header>
+  <ul class="g-nav"><li><a class="sl-link" href="#brand">Brand</a></li><li><a class="sl-link" href="#actions">Actions</a></li><li><a class="sl-link" href="#forms">Forms</a></li><li><a class="sl-link" href="#surfaces">Surfaces</a></li><li><a class="sl-link" href="#typography">Typography</a></li><li><a class="sl-link" href="#storytelling">Storytelling</a></li><li><a class="sl-link" href="#data">Data</a></li><li><a class="sl-link" href="#navigation">Navigation</a></li><li><a class="sl-link" href="#people">People</a></li></ul>
+  <section class="g-group" id="brand"><h2 class="headline-l">Brand</h2>
+<article class="g-item" id="Logo">
+  <header class="g-head"><h3 class="subhead">Logo</h3><a class="sl-link caption" href="reference/Logo.md">Reference</a></header>
+  <p class="body g-sum">The Slalom wordmark, one of the four approved files, with its clear space built in.</p>
+  <div class="g-demo">
+<span class="sl-logo" style="--sl-logo-h:32px"><img src="../assets/logos/slalom-logo-blue-RGB.svg" alt="Slalom"></span>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;span class=&quot;sl-logo&quot; style=&quot;--sl-logo-h:32px&quot;&gt;&lt;img src=&quot;../assets/logos/slalom-logo-blue-RGB.svg&quot; alt=&quot;Slalom&quot;&gt;&lt;/span&gt;</code></pre></details>
+</article>
+<article class="g-item" id="ColorBar">
+  <header class="g-head"><h3 class="subhead">ColorBar</h3><a class="sl-link caption" href="reference/ColorBar.md">Reference</a></header>
+  <p class="body g-sum">The official five-swatch bar: Slalom Blue, Cyan, Coral Red, Purple, Chartreuse, in that order, equal widths.</p>
+  <div class="g-demo">
+<div class="sl-bar" role="presentation" style="height:8px">
+  <span class="sl-bar-swatch" style="background:var(--slalom-blue)"></span>
+  <span class="sl-bar-swatch" style="background:var(--cyan)"></span>
+  <span class="sl-bar-swatch" style="background:var(--coral-red)"></span>
+  <span class="sl-bar-swatch" style="background:var(--purple)"></span>
+  <span class="sl-bar-swatch" style="background:var(--chartreuse)"></span>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-bar&quot; role=&quot;presentation&quot; style=&quot;height:8px&quot;&gt;
+  &lt;span class=&quot;sl-bar-swatch&quot; style=&quot;background:var(--slalom-blue)&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-bar-swatch&quot; style=&quot;background:var(--cyan)&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-bar-swatch&quot; style=&quot;background:var(--coral-red)&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-bar-swatch&quot; style=&quot;background:var(--purple)&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-bar-swatch&quot; style=&quot;background:var(--chartreuse)&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+<article class="g-item" id="ColorBarLoader">
+  <header class="g-head"><h3 class="subhead">ColorBarLoader</h3><a class="sl-link caption" href="reference/ColorBarLoader.md">Reference</a></header>
+  <p class="body g-sum">The color bar brought to life: five circles in the bar&#x27;s fixed order, bobbing in sequence.</p>
+  <div class="g-demo">
+<span class="sl-cbloader" role="status" aria-label="Loading" style="--sl-dot:12px">
+  <span class="sl-cbloader-dot" style="background:var(--slalom-blue)"></span>
+  <span class="sl-cbloader-dot" style="background:var(--cyan);animation-delay:.15s"></span>
+  <span class="sl-cbloader-dot" style="background:var(--coral-red);animation-delay:.3s"></span>
+  <span class="sl-cbloader-dot" style="background:var(--purple);animation-delay:.45s"></span>
+  <span class="sl-cbloader-dot" style="background:var(--chartreuse);animation-delay:.6s"></span>
+</span>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;span class=&quot;sl-cbloader&quot; role=&quot;status&quot; aria-label=&quot;Loading&quot; style=&quot;--sl-dot:12px&quot;&gt;
+  &lt;span class=&quot;sl-cbloader-dot&quot; style=&quot;background:var(--slalom-blue)&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-cbloader-dot&quot; style=&quot;background:var(--cyan);animation-delay:.15s&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-cbloader-dot&quot; style=&quot;background:var(--coral-red);animation-delay:.3s&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-cbloader-dot&quot; style=&quot;background:var(--purple);animation-delay:.45s&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-cbloader-dot&quot; style=&quot;background:var(--chartreuse);animation-delay:.6s&quot;&gt;&lt;/span&gt;
+&lt;/span&gt;</code></pre></details>
+</article>
+<article class="g-item" id="Icon">
+  <header class="g-head"><h3 class="subhead">Icon</h3><a class="sl-link caption" href="reference/Icon.md">Reference</a></header>
+  <p class="body g-sum">One approved icon from ../assets/iconography/ (index in its README) in one approved color.</p>
+  <div class="g-demo">
+<img class="sl-icon" src="../assets/iconography/bar-chart.svg" alt="" width="64" height="64">
+<span class="sl-icon-mask" role="img" aria-label="Results" style="--sl-icon:url('../assets/iconography/bar-chart.svg');--sl-icon-size:64px;background:var(--slalom-dark-blue)"></span>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;img class=&quot;sl-icon&quot; src=&quot;../assets/iconography/bar-chart.svg&quot; alt=&quot;&quot; width=&quot;64&quot; height=&quot;64&quot;&gt;
+&lt;span class=&quot;sl-icon-mask&quot; role=&quot;img&quot; aria-label=&quot;Results&quot; style=&quot;--sl-icon:url(&#x27;../assets/iconography/bar-chart.svg&#x27;);--sl-icon-size:64px;background:var(--slalom-dark-blue)&quot;&gt;&lt;/span&gt;</code></pre></details>
+</article>
+<article class="g-item" id="IconCircle">
+  <header class="g-head"><h3 class="subhead">IconCircle</h3><a class="sl-link caption" href="reference/IconCircle.md">Reference</a></header>
+  <p class="body g-sum">An approved icon on a colored circle, for use over images and busy layouts.</p>
+  <div class="g-demo">
+<span class="sl-icon-circle" style="width:96px;height:96px;background:var(--cyan)">
+  <span class="sl-icon-mask" aria-hidden="true" style="--sl-icon:url('../assets/iconography/award.svg');--sl-icon-size:54px"></span>
+</span>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;span class=&quot;sl-icon-circle&quot; style=&quot;width:96px;height:96px;background:var(--cyan)&quot;&gt;
+  &lt;span class=&quot;sl-icon-mask&quot; aria-hidden=&quot;true&quot; style=&quot;--sl-icon:url(&#x27;../assets/iconography/award.svg&#x27;);--sl-icon-size:54px&quot;&gt;&lt;/span&gt;
+&lt;/span&gt;</code></pre></details>
+</article>
+<article class="g-item" id="ColorSelector">
+  <header class="g-head"><h3 class="subhead">ColorSelector</h3><a class="sl-link caption" href="reference/ColorSelector.md">Reference</a></header>
+  <p class="body g-sum">The brand palette as a dock of swatches: hover magnifies a swatch and shows its token and hex; click copies the hex.</p>
+  <div class="g-demo">
+<div data-sl="color-selector"></div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div data-sl=&quot;color-selector&quot;&gt;&lt;/div&gt;</code></pre></details>
+</article>
+<article class="g-item" id="SecondaryColorSelector">
+  <header class="g-head"><h3 class="subhead">SecondaryColorSelector</h3><a class="sl-link caption" href="reference/SecondaryColorSelector.md">Reference</a></header>
+  <p class="body g-sum">The four secondary colors in one swatch row, with the same magnify, hex tooltip and click-to-copy as ColorSelector.</p>
+  <div class="g-demo">
+<div data-sl="color-selector" data-name="Secondary" data-tokens="cyan coral-red purple chartreuse"></div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div data-sl=&quot;color-selector&quot; data-name=&quot;Secondary&quot; data-tokens=&quot;cyan coral-red purple chartreuse&quot;&gt;&lt;/div&gt;</code></pre></details>
+</article>
+</section><section class="g-group" id="actions"><h2 class="headline-l">Actions</h2>
+<article class="g-item" id="Button">
+  <header class="g-head"><h3 class="subhead">Button</h3><a class="sl-link caption" href="reference/Button.md">Reference</a></header>
+  <p class="body g-sum">A rectangular action with a Slalom Sans Regular label in sentence case.</p>
+  <div class="g-demo">
+<button type="button" class="sl-btn sl-btn-primary">Explore the roadmap</button>
+<button type="button" class="sl-btn sl-btn-secondary">Let’s talk</button>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;button type=&quot;button&quot; class=&quot;sl-btn sl-btn-primary&quot;&gt;Explore the roadmap&lt;/button&gt;
+&lt;button type=&quot;button&quot; class=&quot;sl-btn sl-btn-secondary&quot;&gt;Let’s talk&lt;/button&gt;</code></pre></details>
+</article>
+<article class="g-item" id="AnimatedButton">
+  <header class="g-head"><h3 class="subhead">AnimatedButton</h3><a class="sl-link caption" href="reference/AnimatedButton.md">Reference</a></header>
+  <p class="body g-sum">An outlined call to action: a Slalom Blue line in a 240 × 56 pill with tracked caps.</p>
+  <div class="g-demo">
+<a class="sl-lbtn sl-lbtn-cyan" href="#">
+  <span class="sl-lbtn-line" aria-hidden="true"></span><span class="sl-lbtn-line" aria-hidden="true"></span>
+  <span class="sl-lbtn-text">Let’s talk</span>
+  <span class="sl-lbtn-drow1" aria-hidden="true"></span><span class="sl-lbtn-drow2" aria-hidden="true"></span>
+</a>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;a class=&quot;sl-lbtn sl-lbtn-cyan&quot; href=&quot;#&quot;&gt;
+  &lt;span class=&quot;sl-lbtn-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span class=&quot;sl-lbtn-line&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;
+  &lt;span class=&quot;sl-lbtn-text&quot;&gt;Let’s talk&lt;/span&gt;
+  &lt;span class=&quot;sl-lbtn-drow1&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span class=&quot;sl-lbtn-drow2&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;
+&lt;/a&gt;</code></pre></details>
+</article>
+<article class="g-item" id="PushButton">
+  <header class="g-head"><h3 class="subhead">PushButton</h3><a class="sl-link caption" href="reference/PushButton.md">Reference</a></header>
+  <p class="body g-sum">A chunky block button: white face, 6px Slalom Blue border and Slalom Dark Blue label on a solid 8px Slalom Dark Blue base that it drops onto when pressed.</p>
+  <div class="g-demo">
+<button type="button" class="sl-push">Join the session</button>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;button type=&quot;button&quot; class=&quot;sl-push&quot;&gt;Join the session&lt;/button&gt;</code></pre></details>
+</article>
+<article class="g-item" id="Link">
+  <header class="g-head"><h3 class="subhead">Link</h3><a class="sl-link caption" href="reference/Link.md">Reference</a></header>
+  <p class="body g-sum">An inline link in the link color: Slalom Blue on white, white and underlined on black.</p>
+  <div class="g-demo">
+<p class="body">Read <a class="sl-link" href="#">how we approach data strategy</a>.</p>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;p class=&quot;body&quot;&gt;Read &lt;a class=&quot;sl-link&quot; href=&quot;#&quot;&gt;how we approach data strategy&lt;/a&gt;.&lt;/p&gt;</code></pre></details>
+</article>
+</section><section class="g-group" id="forms"><h2 class="headline-l">Forms</h2>
+<article class="g-item" id="Toggle">
+  <header class="g-head"><h3 class="subhead">Toggle</h3><a class="sl-link caption" href="reference/Toggle.md">Reference</a></header>
+  <p class="body g-sum">An on/off switch: a rectangular track with a square thumb that shows a check when on, so state never relies on color alone.</p>
+  <div class="g-demo">
+<label class="sl-toggle"><input class="sl-toggle-input" type="checkbox" role="switch" checked><span class="sl-toggle-track" aria-hidden="true"><span class="sl-toggle-thumb"></span></span><span class="sl-toggle-label body-strong">Show sources</span></label>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;label class=&quot;sl-toggle&quot;&gt;&lt;input class=&quot;sl-toggle-input&quot; type=&quot;checkbox&quot; role=&quot;switch&quot; checked&gt;&lt;span class=&quot;sl-toggle-track&quot; aria-hidden=&quot;true&quot;&gt;&lt;span class=&quot;sl-toggle-thumb&quot;&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;sl-toggle-label body-strong&quot;&gt;Show sources&lt;/span&gt;&lt;/label&gt;</code></pre></details>
+</article>
+<article class="g-item" id="Checkbox">
+  <header class="g-head"><h3 class="subhead">Checkbox</h3><a class="sl-link caption" href="reference/Checkbox.md">Reference</a></header>
+  <p class="body g-sum">A 24px square with a 2px ink border that fills Slalom Blue with a white check when checked.</p>
+  <div class="g-demo">
+<label class="sl-check"><input class="sl-check-input" type="checkbox" checked><span class="sl-check-box" aria-hidden="true"></span><span class="sl-check-label body">Include appendix</span></label>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;label class=&quot;sl-check&quot;&gt;&lt;input class=&quot;sl-check-input&quot; type=&quot;checkbox&quot; checked&gt;&lt;span class=&quot;sl-check-box&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&lt;span class=&quot;sl-check-label body&quot;&gt;Include appendix&lt;/span&gt;&lt;/label&gt;</code></pre></details>
+</article>
+<article class="g-item" id="MenuToggle">
+  <header class="g-head"><h3 class="subhead">MenuToggle</h3><a class="sl-link caption" href="reference/MenuToggle.md">Reference</a></header>
+  <p class="body g-sum">A 40px button whose three bars become an X.</p>
+  <div class="g-demo">
+<button type="button" class="sl-menu" data-sl="menu-toggle" aria-label="Open menu" aria-controls="site-menu"></button>
+<nav id="site-menu" hidden>…</nav>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;button type=&quot;button&quot; class=&quot;sl-menu&quot; data-sl=&quot;menu-toggle&quot; aria-label=&quot;Open menu&quot; aria-controls=&quot;site-menu&quot;&gt;&lt;/button&gt;
+&lt;nav id=&quot;site-menu&quot; hidden&gt;…&lt;/nav&gt;</code></pre></details>
+</article>
+</section><section class="g-group" id="surfaces"><h2 class="headline-l">Surfaces</h2>
+<article class="g-item" id="Card">
+  <header class="g-head"><h3 class="subhead">Card</h3><a class="sl-link caption" href="reference/Card.md">Reference</a></header>
+  <p class="body g-sum">The brand&#x27;s one-rounded-corner surface.</p>
+  <div class="g-demo">
+<div class="sl-card sl-card-surface sl-corner-br sl-radius-m">
+  <p class="sl-card-eyebrow eyebrow">Discover</p>
+  <h3 class="sl-card-title headline-m">Listen first</h3>
+  <p class="body">Understand people before process.</p>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-card sl-card-surface sl-corner-br sl-radius-m&quot;&gt;
+  &lt;p class=&quot;sl-card-eyebrow eyebrow&quot;&gt;Discover&lt;/p&gt;
+  &lt;h3 class=&quot;sl-card-title headline-m&quot;&gt;Listen first&lt;/h3&gt;
+  &lt;p class=&quot;body&quot;&gt;Understand people before process.&lt;/p&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+<article class="g-item" id="HoverCard">
+  <header class="g-head"><h3 class="subhead">HoverCard</h3><a class="sl-link caption" href="reference/HoverCard.md">Reference</a></header>
+  <p class="body g-sum">A white card with a hairline border that fills Slalom Blue on hover or keyboard focus.</p>
+  <div class="g-demo">
+<a class="sl-hcard sl-corner-br sl-radius-m" href="#">
+  <p class="sl-hcard-eyebrow eyebrow">Service</p>
+  <h3 class="sl-hcard-title headline-m">Artificial intelligence</h3>
+  <div class="sl-hcard-body body"><p>Machine learning, generative AI and intelligent products.</p></div>
+  <span class="sl-hcard-cta body-strong">Explore →</span>
+</a>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;a class=&quot;sl-hcard sl-corner-br sl-radius-m&quot; href=&quot;#&quot;&gt;
+  &lt;p class=&quot;sl-hcard-eyebrow eyebrow&quot;&gt;Service&lt;/p&gt;
+  &lt;h3 class=&quot;sl-hcard-title headline-m&quot;&gt;Artificial intelligence&lt;/h3&gt;
+  &lt;div class=&quot;sl-hcard-body body&quot;&gt;&lt;p&gt;Machine learning, generative AI and intelligent products.&lt;/p&gt;&lt;/div&gt;
+  &lt;span class=&quot;sl-hcard-cta body-strong&quot;&gt;Explore →&lt;/span&gt;
+&lt;/a&gt;</code></pre></details>
+</article>
+</section><section class="g-group" id="typography"><h2 class="headline-l">Typography</h2>
+<article class="g-item" id="Headline">
+  <header class="g-head"><h3 class="subhead">Headline</h3><a class="sl-link caption" href="reference/Headline.md">Reference</a></header>
+  <p class="body g-sum">An eyebrow, a headline and a dek, flush left.</p>
+  <div class="g-demo">
+<header class="sl-headline">
+  <p class="sl-eyebrow eyebrow">Our approach</p>
+  <h2 class="sl-headline-text headline-l">Better tomorrows, built together</h2>
+  <p class="sl-dek body">We help people and organizations dream bigger, move faster, and build better tomorrows for all.</p>
+</header>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;header class=&quot;sl-headline&quot;&gt;
+  &lt;p class=&quot;sl-eyebrow eyebrow&quot;&gt;Our approach&lt;/p&gt;
+  &lt;h2 class=&quot;sl-headline-text headline-l&quot;&gt;Better tomorrows, built together&lt;/h2&gt;
+  &lt;p class=&quot;sl-dek body&quot;&gt;We help people and organizations dream bigger, move faster, and build better tomorrows for all.&lt;/p&gt;
+&lt;/header&gt;</code></pre></details>
+</article>
+<article class="g-item" id="PullQuote">
+  <header class="g-head"><h3 class="subhead">PullQuote</h3><a class="sl-link caption" href="reference/PullQuote.md">Reference</a></header>
+  <p class="body g-sum">A quotation with its attribution and a 2px Slalom Blue rule.</p>
+  <div class="g-demo">
+<figure class="sl-quote">
+  <blockquote class="sl-quote-text quote">“They listened first. The plan felt like ours from day one.”</blockquote>
+  <figcaption class="sl-quote-by"><span class="sl-quote-name quote-name">Sam Okafor</span><span class="sl-quote-title quote-title">Chief people officer</span></figcaption>
+</figure>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;figure class=&quot;sl-quote&quot;&gt;
+  &lt;blockquote class=&quot;sl-quote-text quote&quot;&gt;“They listened first. The plan felt like ours from day one.”&lt;/blockquote&gt;
+  &lt;figcaption class=&quot;sl-quote-by&quot;&gt;&lt;span class=&quot;sl-quote-name quote-name&quot;&gt;Sam Okafor&lt;/span&gt;&lt;span class=&quot;sl-quote-title quote-title&quot;&gt;Chief people officer&lt;/span&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre></details>
+</article>
+</section><section class="g-group" id="storytelling"><h2 class="headline-l">Storytelling</h2>
+<article class="g-item" id="KineticHeadline">
+  <header class="g-head"><h3 class="subhead">KineticHeadline</h3><a class="sl-link caption" href="reference/KineticHeadline.md">Reference</a></header>
+  <p class="body g-sum">A hero headline whose words rise out of a mask one after another, then a block of the composition&#x27;s secondary color wipes in behind the words named in data-highlight (one to three words, space-separated).</p>
+  <div class="g-demo">
+<header data-sl="kinetic" data-highlight="together">
+  <p class="sl-kh-eyebrow sl-eyebrow eyebrow">Our approach</p>
+  <h1 class="headline-xl">Better tomorrows, built together</h1>
+  <p class="sl-kh-dek sl-dek body">We help people and organizations dream bigger, move faster, and build better tomorrows for all.</p>
+</header>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;header data-sl=&quot;kinetic&quot; data-highlight=&quot;together&quot;&gt;
+  &lt;p class=&quot;sl-kh-eyebrow sl-eyebrow eyebrow&quot;&gt;Our approach&lt;/p&gt;
+  &lt;h1 class=&quot;headline-xl&quot;&gt;Better tomorrows, built together&lt;/h1&gt;
+  &lt;p class=&quot;sl-kh-dek sl-dek body&quot;&gt;We help people and organizations dream bigger, move faster, and build better tomorrows for all.&lt;/p&gt;
+&lt;/header&gt;</code></pre></details>
+</article>
+<article class="g-item" id="Reveal">
+  <header class="g-head"><h3 class="subhead">Reveal</h3><a class="sl-link caption" href="reference/Reveal.md">Reference</a></header>
+  <p class="body g-sum">Fades and rises any block into place as it scrolls into view.</p>
+  <div class="g-demo">
+<div class="sl-row" data-sl="reveal" data-stagger="120">
+  <div class="sl-card sl-card-surface sl-corner-br sl-radius-m"><p class="sl-card-eyebrow eyebrow">Discover</p><h3 class="sl-card-title headline-m">Listen first</h3></div>
+  <div class="sl-card sl-card-cyan sl-corner-br sl-radius-m"><p class="sl-card-eyebrow eyebrow">Define</p><h3 class="sl-card-title headline-m">Shape it together</h3></div>
+  <div class="sl-card sl-card-surface sl-corner-br sl-radius-m"><p class="sl-card-eyebrow eyebrow">Deliver</p><h3 class="sl-card-title headline-m">Build momentum</h3></div>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-row&quot; data-sl=&quot;reveal&quot; data-stagger=&quot;120&quot;&gt;
+  &lt;div class=&quot;sl-card sl-card-surface sl-corner-br sl-radius-m&quot;&gt;&lt;p class=&quot;sl-card-eyebrow eyebrow&quot;&gt;Discover&lt;/p&gt;&lt;h3 class=&quot;sl-card-title headline-m&quot;&gt;Listen first&lt;/h3&gt;&lt;/div&gt;
+  &lt;div class=&quot;sl-card sl-card-cyan sl-corner-br sl-radius-m&quot;&gt;&lt;p class=&quot;sl-card-eyebrow eyebrow&quot;&gt;Define&lt;/p&gt;&lt;h3 class=&quot;sl-card-title headline-m&quot;&gt;Shape it together&lt;/h3&gt;&lt;/div&gt;
+  &lt;div class=&quot;sl-card sl-card-surface sl-corner-br sl-radius-m&quot;&gt;&lt;p class=&quot;sl-card-eyebrow eyebrow&quot;&gt;Deliver&lt;/p&gt;&lt;h3 class=&quot;sl-card-title headline-m&quot;&gt;Build momentum&lt;/h3&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+<article class="g-item" id="ChapterMarker">
+  <header class="g-head"><h3 class="subhead">ChapterMarker</h3><a class="sl-link caption" href="reference/ChapterMarker.md">Reference</a></header>
+  <p class="body g-sum">A chapter opener: a huge outlined number in Slalom Blue fills from the bottom up, then the title rises in and a rule in the secondary color draws across.</p>
+  <div class="g-demo">
+<div class="sl-chapter" data-sl="chapter" data-number="2">
+  <div class="sl-chapter-body">
+    <p class="sl-chapter-eyebrow eyebrow">Where we are today</p>
+    <h2 class="sl-chapter-title headline-l">What we heard from your teams</h2>
+  </div>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-chapter&quot; data-sl=&quot;chapter&quot; data-number=&quot;2&quot;&gt;
+  &lt;div class=&quot;sl-chapter-body&quot;&gt;
+    &lt;p class=&quot;sl-chapter-eyebrow eyebrow&quot;&gt;Where we are today&lt;/p&gt;
+    &lt;h2 class=&quot;sl-chapter-title headline-l&quot;&gt;What we heard from your teams&lt;/h2&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+<article class="g-item" id="SplitHero">
+  <header class="g-head"><h3 class="subhead">SplitHero</h3><a class="sl-link caption" href="reference/SplitHero.md">Reference</a></header>
+  <p class="body g-sum">The opening section of a microsite: a kinetic headline beside a photo that wipes open while a flat block of the secondary color settles in behind it, offset to the bottom right.</p>
+  <div class="g-demo">
+<section class="sl-hero" data-sl="hero">
+  <div class="sl-hero-copy">
+    <header data-sl="kinetic" data-highlight="momentum">
+      <p class="sl-kh-eyebrow sl-eyebrow eyebrow">Data strategy</p>
+      <h1 class="headline-xl">Turn your data into momentum</h1>
+    </header>
+    <p class="sl-hero-dek descriptor">A 12-week roadmap to put trusted data in the hands of every team.</p>
+    <div class="sl-hero-actions"><a class="sl-btn sl-btn-primary" href="#">Explore the roadmap</a><a class="sl-btn sl-btn-secondary" href="#">Let’s talk</a></div>
+  </div>
+  <div class="sl-hero-media">
+    <div class="sl-hero-frame sl-corner-br sl-radius-l"><img src="../assets/photography/horizon.jpg" alt="A horizon at sunrise"></div>
+  </div>
+</section>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;section class=&quot;sl-hero&quot; data-sl=&quot;hero&quot;&gt;
+  &lt;div class=&quot;sl-hero-copy&quot;&gt;
+    &lt;header data-sl=&quot;kinetic&quot; data-highlight=&quot;momentum&quot;&gt;
+      &lt;p class=&quot;sl-kh-eyebrow sl-eyebrow eyebrow&quot;&gt;Data strategy&lt;/p&gt;
+      &lt;h1 class=&quot;headline-xl&quot;&gt;Turn your data into momentum&lt;/h1&gt;
+    &lt;/header&gt;
+    &lt;p class=&quot;sl-hero-dek descriptor&quot;&gt;A 12-week roadmap to put trusted data in the hands of every team.&lt;/p&gt;
+    &lt;div class=&quot;sl-hero-actions&quot;&gt;&lt;a class=&quot;sl-btn sl-btn-primary&quot; href=&quot;#&quot;&gt;Explore the roadmap&lt;/a&gt;&lt;a class=&quot;sl-btn sl-btn-secondary&quot; href=&quot;#&quot;&gt;Let’s talk&lt;/a&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;sl-hero-media&quot;&gt;
+    &lt;div class=&quot;sl-hero-frame sl-corner-br sl-radius-l&quot;&gt;&lt;img src=&quot;../assets/photography/horizon.jpg&quot; alt=&quot;A horizon at sunrise&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</code></pre></details>
+</article>
+<article class="g-item" id="Marquee">
+  <header class="g-head"><h3 class="subhead">Marquee</h3><a class="sl-link caption" href="reference/Marquee.md">Reference</a></header>
+  <p class="body g-sum">A slow band of short phrases looping across the page, separated by squares in the secondary color.</p>
+  <div class="g-demo">
+<div class="sl-mq sl-mq-accent" data-sl="marquee" aria-label="Capabilities" style="--sl-mq-dur:30s">
+  <ul class="sl-mq-group"><li>Strategy</li><li>Data and AI</li><li>Customer experience</li><li>Modern engineering</li><li>Change that sticks</li></ul>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-mq sl-mq-accent&quot; data-sl=&quot;marquee&quot; aria-label=&quot;Capabilities&quot; style=&quot;--sl-mq-dur:30s&quot;&gt;
+  &lt;ul class=&quot;sl-mq-group&quot;&gt;&lt;li&gt;Strategy&lt;/li&gt;&lt;li&gt;Data and AI&lt;/li&gt;&lt;li&gt;Customer experience&lt;/li&gt;&lt;li&gt;Modern engineering&lt;/li&gt;&lt;li&gt;Change that sticks&lt;/li&gt;&lt;/ul&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+</section><section class="g-group" id="data"><h2 class="headline-l">Data</h2>
+<article class="g-item" id="StatCounter">
+  <header class="g-head"><h3 class="subhead">StatCounter</h3><a class="sl-link caption" href="reference/StatCounter.md">Reference</a></header>
+  <p class="body g-sum">A big Slalom Blue figure that counts up once in view.</p>
+  <div class="g-demo">
+<div class="sl-stat" data-sl="stat" data-value="44" data-suffix="%" data-bar="44">
+  <p class="sl-stat-label eyebrow">Faster onboarding</p>
+  <p class="sl-stat-num">44%</p>
+  <p class="sl-stat-caption body">New hires reach full productivity in five weeks, down from nine.</p>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-stat&quot; data-sl=&quot;stat&quot; data-value=&quot;44&quot; data-suffix=&quot;%&quot; data-bar=&quot;44&quot;&gt;
+  &lt;p class=&quot;sl-stat-label eyebrow&quot;&gt;Faster onboarding&lt;/p&gt;
+  &lt;p class=&quot;sl-stat-num&quot;&gt;44%&lt;/p&gt;
+  &lt;p class=&quot;sl-stat-caption body&quot;&gt;New hires reach full productivity in five weeks, down from nine.&lt;/p&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+<article class="g-item" id="WaffleStat">
+  <header class="g-head"><h3 class="subhead">WaffleStat</h3><a class="sl-link caption" href="reference/WaffleStat.md">Reference</a></header>
+  <p class="body g-sum">A 10 × 10 grid of squares where the share fills in Slalom Blue cell by cell, beside a counting figure.</p>
+  <div class="g-demo">
+<figure class="sl-waffle" data-sl="waffle" data-value="62">
+  <figcaption class="sl-waffle-text">
+    <span class="sl-waffle-num">62<span class="sl-stat-suffix">%</span></span>
+    <span class="sl-waffle-label subhead">of customers</span>
+    <span class="sl-waffle-caption body">say they would switch providers after one poor digital experience.</span>
+  </figcaption>
+</figure>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;figure class=&quot;sl-waffle&quot; data-sl=&quot;waffle&quot; data-value=&quot;62&quot;&gt;
+  &lt;figcaption class=&quot;sl-waffle-text&quot;&gt;
+    &lt;span class=&quot;sl-waffle-num&quot;&gt;62&lt;span class=&quot;sl-stat-suffix&quot;&gt;%&lt;/span&gt;&lt;/span&gt;
+    &lt;span class=&quot;sl-waffle-label subhead&quot;&gt;of customers&lt;/span&gt;
+    &lt;span class=&quot;sl-waffle-caption body&quot;&gt;say they would switch providers after one poor digital experience.&lt;/span&gt;
+  &lt;/figcaption&gt;
+&lt;/figure&gt;</code></pre></details>
+</article>
+<article class="g-item" id="MetricBars">
+  <header class="g-head"><h3 class="subhead">MetricBars</h3><a class="sl-link caption" href="reference/MetricBars.md">Reference</a></header>
+  <p class="body g-sum">Labelled horizontal bars that grow in turn once in view.</p>
+  <div class="g-demo">
+<ul class="sl-mbars" data-sl="bars" data-max="100">
+  <li class="sl-mbar" data-value="38"><div class="sl-mbar-head"><span class="sl-mbar-label body-strong">Self-service analytics</span><span class="sl-mbar-value body-strong">38%</span></div></li>
+  <li class="sl-mbar sl-mbar-hi" data-value="72"><div class="sl-mbar-head"><span class="sl-mbar-label body-strong">Trusted executive reporting</span><span class="sl-mbar-value body-strong">72%</span></div></li>
+  <li class="sl-mbar" data-value="54"><div class="sl-mbar-head"><span class="sl-mbar-label body-strong">Automated data quality</span><span class="sl-mbar-value body-strong">54%</span></div></li>
+</ul>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;ul class=&quot;sl-mbars&quot; data-sl=&quot;bars&quot; data-max=&quot;100&quot;&gt;
+  &lt;li class=&quot;sl-mbar&quot; data-value=&quot;38&quot;&gt;&lt;div class=&quot;sl-mbar-head&quot;&gt;&lt;span class=&quot;sl-mbar-label body-strong&quot;&gt;Self-service analytics&lt;/span&gt;&lt;span class=&quot;sl-mbar-value body-strong&quot;&gt;38%&lt;/span&gt;&lt;/div&gt;&lt;/li&gt;
+  &lt;li class=&quot;sl-mbar sl-mbar-hi&quot; data-value=&quot;72&quot;&gt;&lt;div class=&quot;sl-mbar-head&quot;&gt;&lt;span class=&quot;sl-mbar-label body-strong&quot;&gt;Trusted executive reporting&lt;/span&gt;&lt;span class=&quot;sl-mbar-value body-strong&quot;&gt;72%&lt;/span&gt;&lt;/div&gt;&lt;/li&gt;
+  &lt;li class=&quot;sl-mbar&quot; data-value=&quot;54&quot;&gt;&lt;div class=&quot;sl-mbar-head&quot;&gt;&lt;span class=&quot;sl-mbar-label body-strong&quot;&gt;Automated data quality&lt;/span&gt;&lt;span class=&quot;sl-mbar-value body-strong&quot;&gt;54%&lt;/span&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;</code></pre></details>
+</article>
+<article class="g-item" id="CompareSlider">
+  <header class="g-head"><h3 class="subhead">CompareSlider</h3><a class="sl-link caption" href="reference/CompareSlider.md">Reference</a></header>
+  <p class="body g-sum">Two panels in one frame with a handle the reader drags to wipe between them: before on the left, after on the right.</p>
+  <div class="g-demo">
+<div class="sl-cmp" data-sl="compare" data-before-label="Today" data-after-label="Tomorrow">
+  <div class="sl-cmp-layer sl-cmp-after"><div style="background:var(--slalom-blue);color:var(--white);padding:var(--space-6) var(--space-5);display:flex;flex-direction:column;align-items:flex-end;text-align:right"><p class="headline-m" style="max-width:40%">Five weeks to onboard</p><p class="body" style="max-width:40%">One portal, guided from day one.</p></div></div>
+  <div class="sl-cmp-layer sl-cmp-before"><div style="background:var(--light-gray);color:var(--black);padding:var(--space-6) var(--space-5)"><p class="headline-m" style="max-width:40%">Nine weeks to onboard</p><p class="body" style="max-width:40%">Five systems, three logins and a binder of how-tos.</p></div></div>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-cmp&quot; data-sl=&quot;compare&quot; data-before-label=&quot;Today&quot; data-after-label=&quot;Tomorrow&quot;&gt;
+  &lt;div class=&quot;sl-cmp-layer sl-cmp-after&quot;&gt;&lt;div style=&quot;background:var(--slalom-blue);color:var(--white);padding:var(--space-6) var(--space-5);display:flex;flex-direction:column;align-items:flex-end;text-align:right&quot;&gt;&lt;p class=&quot;headline-m&quot; style=&quot;max-width:40%&quot;&gt;Five weeks to onboard&lt;/p&gt;&lt;p class=&quot;body&quot; style=&quot;max-width:40%&quot;&gt;One portal, guided from day one.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;sl-cmp-layer sl-cmp-before&quot;&gt;&lt;div style=&quot;background:var(--light-gray);color:var(--black);padding:var(--space-6) var(--space-5)&quot;&gt;&lt;p class=&quot;headline-m&quot; style=&quot;max-width:40%&quot;&gt;Nine weeks to onboard&lt;/p&gt;&lt;p class=&quot;body&quot; style=&quot;max-width:40%&quot;&gt;Five systems, three logins and a binder of how-tos.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+</section><section class="g-group" id="navigation"><h2 class="headline-l">Navigation</h2>
+<article class="g-item" id="PhaseExplorer">
+  <header class="g-head"><h3 class="subhead">PhaseExplorer</h3><a class="sl-link caption" href="reference/PhaseExplorer.md">Reference</a></header>
+  <p class="body g-sum">A clickable roadmap: numbered phases joined by connectors that fill Slalom Blue up to the active phase; each phase opens a panel with its timing, title, sentence and outcomes.</p>
+  <div class="g-demo">
+<div class="sl-px" data-sl="phases" data-default="1" aria-label="Engagement phases">
+  <section data-label="Discover" data-meta="Weeks 1–3"><h3>Listen to the people closest to the work</h3><p>Interviews, ride-alongs and a data audit.</p><ul><li>Stakeholder interviews</li><li>Current-state map</li></ul></section>
+  <section data-label="Define" data-meta="Weeks 4–6"><h3>Agree on where you are going</h3><p>Shape the target state and business case together.</p><ul><li>Target-state vision</li><li>Prioritized backlog</li></ul></section>
+  <section data-label="Deliver" data-meta="Weeks 7–10"><h3>Build the first release</h3><p>Ship a working slice with your team.</p><ul><li>MVP release</li><li>Success metrics</li></ul></section>
+  <section data-label="Transition" data-meta="Weeks 11–12"><h3>Hand over with confidence</h3><p>Train, document and step back.</p><ul><li>Training</li><li>Run book</li></ul></section>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-px&quot; data-sl=&quot;phases&quot; data-default=&quot;1&quot; aria-label=&quot;Engagement phases&quot;&gt;
+  &lt;section data-label=&quot;Discover&quot; data-meta=&quot;Weeks 1–3&quot;&gt;&lt;h3&gt;Listen to the people closest to the work&lt;/h3&gt;&lt;p&gt;Interviews, ride-alongs and a data audit.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Stakeholder interviews&lt;/li&gt;&lt;li&gt;Current-state map&lt;/li&gt;&lt;/ul&gt;&lt;/section&gt;
+  &lt;section data-label=&quot;Define&quot; data-meta=&quot;Weeks 4–6&quot;&gt;&lt;h3&gt;Agree on where you are going&lt;/h3&gt;&lt;p&gt;Shape the target state and business case together.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Target-state vision&lt;/li&gt;&lt;li&gt;Prioritized backlog&lt;/li&gt;&lt;/ul&gt;&lt;/section&gt;
+  &lt;section data-label=&quot;Deliver&quot; data-meta=&quot;Weeks 7–10&quot;&gt;&lt;h3&gt;Build the first release&lt;/h3&gt;&lt;p&gt;Ship a working slice with your team.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;MVP release&lt;/li&gt;&lt;li&gt;Success metrics&lt;/li&gt;&lt;/ul&gt;&lt;/section&gt;
+  &lt;section data-label=&quot;Transition&quot; data-meta=&quot;Weeks 11–12&quot;&gt;&lt;h3&gt;Hand over with confidence&lt;/h3&gt;&lt;p&gt;Train, document and step back.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;Training&lt;/li&gt;&lt;li&gt;Run book&lt;/li&gt;&lt;/ul&gt;&lt;/section&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+<article class="g-item" id="Timeline">
+  <header class="g-head"><h3 class="subhead">Timeline</h3><a class="sl-link caption" href="reference/Timeline.md">Reference</a></header>
+  <p class="body g-sum">A vertical timeline whose Slalom Blue rail draws itself down as each milestone scrolls in, stopping at the last marker.</p>
+  <div class="g-demo">
+<ol class="sl-tl" data-sl="timeline">
+  <li data-date="Jan 2026"><h3 class="sl-tl-title subhead">Kickoff</h3><p class="sl-tl-body body">Teams aligned on goals and success measures.</p></li>
+  <li data-date="Mar 2026"><h3 class="sl-tl-title subhead">Pilot in two regions</h3><p class="sl-tl-body body">Field teams tested the new tool.</p></li>
+  <li data-date="Jun 2026" class="sl-tl-current"><h3 class="sl-tl-title subhead">National rollout</h3><p class="sl-tl-body body">1,200 technicians moved onto the platform.</p></li>
+  <li data-date="Q4 2026"><h3 class="sl-tl-title subhead">Predictive maintenance</h3><p class="sl-tl-body body">Models flag issues before customers notice.</p></li>
+</ol>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;ol class=&quot;sl-tl&quot; data-sl=&quot;timeline&quot;&gt;
+  &lt;li data-date=&quot;Jan 2026&quot;&gt;&lt;h3 class=&quot;sl-tl-title subhead&quot;&gt;Kickoff&lt;/h3&gt;&lt;p class=&quot;sl-tl-body body&quot;&gt;Teams aligned on goals and success measures.&lt;/p&gt;&lt;/li&gt;
+  &lt;li data-date=&quot;Mar 2026&quot;&gt;&lt;h3 class=&quot;sl-tl-title subhead&quot;&gt;Pilot in two regions&lt;/h3&gt;&lt;p class=&quot;sl-tl-body body&quot;&gt;Field teams tested the new tool.&lt;/p&gt;&lt;/li&gt;
+  &lt;li data-date=&quot;Jun 2026&quot; class=&quot;sl-tl-current&quot;&gt;&lt;h3 class=&quot;sl-tl-title subhead&quot;&gt;National rollout&lt;/h3&gt;&lt;p class=&quot;sl-tl-body body&quot;&gt;1,200 technicians moved onto the platform.&lt;/p&gt;&lt;/li&gt;
+  &lt;li data-date=&quot;Q4 2026&quot;&gt;&lt;h3 class=&quot;sl-tl-title subhead&quot;&gt;Predictive maintenance&lt;/h3&gt;&lt;p class=&quot;sl-tl-body body&quot;&gt;Models flag issues before customers notice.&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;</code></pre></details>
+</article>
+<article class="g-item" id="Accordion">
+  <header class="g-head"><h3 class="subhead">Accordion</h3><a class="sl-link caption" href="reference/Accordion.md">Reference</a></header>
+  <p class="body g-sum">Hairline rows with a numbered title; the square plus turns to a minus and fills Slalom Blue as the panel eases open.</p>
+  <div class="g-demo">
+<div class="sl-acc" data-sl="accordion" data-open="0">
+  <div class="sl-acc-item"><h3 class="sl-acc-h">What does the first month look like?</h3><div class="sl-acc-panel"><div class="sl-acc-inner body"><p>We spend it listening: interviews, a look at your data, and a shared view of success.</p></div></div></div>
+  <div class="sl-acc-item"><h3 class="sl-acc-h">Who will we work with?</h3><div class="sl-acc-panel"><div class="sl-acc-inner body"><p>A small, senior Slalom team alongside your product owners.</p></div></div></div>
+  <div class="sl-acc-item"><h3 class="sl-acc-h">How do we measure progress?</h3><div class="sl-acc-panel"><div class="sl-acc-inner body"><p>Three to five measures agreed in week two, reported every sprint review.</p></div></div></div>
+</div>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;div class=&quot;sl-acc&quot; data-sl=&quot;accordion&quot; data-open=&quot;0&quot;&gt;
+  &lt;div class=&quot;sl-acc-item&quot;&gt;&lt;h3 class=&quot;sl-acc-h&quot;&gt;What does the first month look like?&lt;/h3&gt;&lt;div class=&quot;sl-acc-panel&quot;&gt;&lt;div class=&quot;sl-acc-inner body&quot;&gt;&lt;p&gt;We spend it listening: interviews, a look at your data, and a shared view of success.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;sl-acc-item&quot;&gt;&lt;h3 class=&quot;sl-acc-h&quot;&gt;Who will we work with?&lt;/h3&gt;&lt;div class=&quot;sl-acc-panel&quot;&gt;&lt;div class=&quot;sl-acc-inner body&quot;&gt;&lt;p&gt;A small, senior Slalom team alongside your product owners.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;sl-acc-item&quot;&gt;&lt;h3 class=&quot;sl-acc-h&quot;&gt;How do we measure progress?&lt;/h3&gt;&lt;div class=&quot;sl-acc-panel&quot;&gt;&lt;div class=&quot;sl-acc-inner body&quot;&gt;&lt;p&gt;Three to five measures agreed in week two, reported every sprint review.&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre></details>
+</article>
+</section><section class="g-group" id="people"><h2 class="headline-l">People</h2>
+<article class="g-item" id="ProfileCard">
+  <header class="g-head"><h3 class="subhead">ProfileCard</h3><a class="sl-link caption" href="reference/ProfileCard.md">Reference</a></header>
+  <p class="body g-sum">A team member card: a portrait with one rounded corner, or a large monogram on the secondary color when there is no &lt;img&gt; (the script makes it from the name), with a Slalom Blue bio panel that slides up on hover.</p>
+  <div class="g-demo">
+<article class="sl-pcard" data-sl="profile">
+  <div class="sl-pcard-media sl-corner-br sl-radius-l"><div class="sl-pcard-bio body">Alex has led customer experience programs for 12 years and starts every project by riding along with frontline teams.</div></div>
+  <div class="sl-pcard-meta"><h3 class="sl-pcard-name subhead">Alex Rivera</h3><p class="sl-pcard-title body-small">Engagement lead</p></div>
+</article>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;article class=&quot;sl-pcard&quot; data-sl=&quot;profile&quot;&gt;
+  &lt;div class=&quot;sl-pcard-media sl-corner-br sl-radius-l&quot;&gt;&lt;div class=&quot;sl-pcard-bio body&quot;&gt;Alex has led customer experience programs for 12 years and starts every project by riding along with frontline teams.&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;sl-pcard-meta&quot;&gt;&lt;h3 class=&quot;sl-pcard-name subhead&quot;&gt;Alex Rivera&lt;/h3&gt;&lt;p class=&quot;sl-pcard-title body-small&quot;&gt;Engagement lead&lt;/p&gt;&lt;/div&gt;
+&lt;/article&gt;</code></pre></details>
+</article>
+<article class="g-item" id="QuoteCarousel">
+  <header class="g-head"><h3 class="subhead">QuoteCarousel</h3><a class="sl-link caption" href="reference/QuoteCarousel.md">Reference</a></header>
+  <p class="body g-sum">One large quote at a time under an oversized Slalom Blue quotation mark, cross-fading to the next, with segment progress, a counter and square previous and next buttons.</p>
+  <div class="g-demo">
+<section class="sl-qc" data-sl="quotes" data-interval="7000" aria-label="Customer quotes">
+  <figure class="sl-qc-slide"><blockquote class="sl-qc-text">For the first time, our field teams and our data teams are looking at the same numbers.</blockquote><figcaption class="sl-qc-by"><span class="quote-name">Jordan Lee</span><span class="sl-qc-title quote-title">VP of operations</span></figcaption></figure>
+  <figure class="sl-qc-slide"><blockquote class="sl-qc-text">They listened first. The plan felt like ours from day one.</blockquote><figcaption class="sl-qc-by"><span class="quote-name">Sam Okafor</span><span class="sl-qc-title quote-title">Chief people officer</span></figcaption></figure>
+  <figure class="sl-qc-slide"><blockquote class="sl-qc-text">We shipped in ten weeks what we had been talking about for two years.</blockquote><figcaption class="sl-qc-by"><span class="quote-name">Maria Chen</span><span class="sl-qc-title quote-title">Head of digital</span></figcaption></figure>
+</section>
+  </div>
+  <details class="g-code"><summary class="caption">Markup</summary><pre><code>&lt;section class=&quot;sl-qc&quot; data-sl=&quot;quotes&quot; data-interval=&quot;7000&quot; aria-label=&quot;Customer quotes&quot;&gt;
+  &lt;figure class=&quot;sl-qc-slide&quot;&gt;&lt;blockquote class=&quot;sl-qc-text&quot;&gt;For the first time, our field teams and our data teams are looking at the same numbers.&lt;/blockquote&gt;&lt;figcaption class=&quot;sl-qc-by&quot;&gt;&lt;span class=&quot;quote-name&quot;&gt;Jordan Lee&lt;/span&gt;&lt;span class=&quot;sl-qc-title quote-title&quot;&gt;VP of operations&lt;/span&gt;&lt;/figcaption&gt;&lt;/figure&gt;
+  &lt;figure class=&quot;sl-qc-slide&quot;&gt;&lt;blockquote class=&quot;sl-qc-text&quot;&gt;They listened first. The plan felt like ours from day one.&lt;/blockquote&gt;&lt;figcaption class=&quot;sl-qc-by&quot;&gt;&lt;span class=&quot;quote-name&quot;&gt;Sam Okafor&lt;/span&gt;&lt;span class=&quot;sl-qc-title quote-title&quot;&gt;Chief people officer&lt;/span&gt;&lt;/figcaption&gt;&lt;/figure&gt;
+  &lt;figure class=&quot;sl-qc-slide&quot;&gt;&lt;blockquote class=&quot;sl-qc-text&quot;&gt;We shipped in ten weeks what we had been talking about for two years.&lt;/blockquote&gt;&lt;figcaption class=&quot;sl-qc-by&quot;&gt;&lt;span class=&quot;quote-name&quot;&gt;Maria Chen&lt;/span&gt;&lt;span class=&quot;sl-qc-title quote-title&quot;&gt;Head of digital&lt;/span&gt;&lt;/figcaption&gt;&lt;/figure&gt;
+&lt;/section&gt;</code></pre></details>
+</article>
+</section>
+</div>
+<script src="slalom-components.js"></script>
+<script>
+  document.getElementById('g-dark').addEventListener('change', function (e) {
+    document.documentElement.setAttribute('data-theme', e.target.checked ? 'dark' : 'light');
+    Array.prototype.forEach.call(document.querySelectorAll('.g-top img, .g-demo .sl-logo img'), function (img) {
+      img.src = img.src.replace(e.target.checked ? 'blue-RGB' : 'white-RGB', e.target.checked ? 'white-RGB' : 'blue-RGB');
+    });
+  });
+</script>
+</body>
+</html>
