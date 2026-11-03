@@ -36,6 +36,8 @@ class VisualReviewTest(unittest.TestCase):
         self.validation = importlib.import_module("validate_updates")
         self.store = importlib.import_module("review_store")
         self.server_module = importlib.import_module("review_server")
+        self.platform_patch = mock.patch.object(self.server_module, "platform", "linux")
+        self.platform_patch.start()
         self.trackers.init_trackers()
         meeting = self.root / "workspace" / "meetings" / "2026-08-27 - Review.md"
         meeting.parent.mkdir(parents=True, exist_ok=True)
@@ -43,6 +45,7 @@ class VisualReviewTest(unittest.TestCase):
         self.paths.PROPOSED_UPDATES_DIR.mkdir(parents=True, exist_ok=True)
 
     def tearDown(self):
+        self.platform_patch.stop()
         self.tmp.cleanup()
 
     def proposal(self, updates: list[dict], name: str = "review.yaml") -> Path:
@@ -147,6 +150,35 @@ class VisualReviewTest(unittest.TestCase):
         with mock.patch.object(self.server_module.sys, "executable", temporary_python), \
                 mock.patch.object(self.server_module, "read_state", side_effect=AssertionError("read state")):
             self.assertEqual(self.server_module.start(self.root), 2)
+
+    def test_mac_service_keeps_port_and_token_across_registration(self):
+        service = self.server_module
+        with mock.patch.object(service, "platform", "darwin"), \
+                mock.patch.object(service, "cache_dir", return_value=self.root / "cache"), \
+                mock.patch.object(service, "agent_path", return_value=self.root / "agent.plist"), \
+                mock.patch.object(service, "choose_port", return_value=12345), \
+                mock.patch.object(service, "launchctl"):
+            service.install_service(self.root)
+            first = json.loads(service.service_path(self.root).read_text())
+            service.install_service(self.root)
+            second = json.loads(service.service_path(self.root).read_text())
+        self.assertEqual(first, second)
+        self.assertGreater(first["port"], 0)
+        self.assertIn("KeepAlive", self.root.joinpath("agent.plist").read_text())
+
+    def test_windows_service_registers_login_task(self):
+        service = self.server_module
+        completed = mock.Mock(returncode=0, stdout="", stderr="")
+        with mock.patch.object(service, "platform", "win32"), \
+                mock.patch.object(service, "cache_dir", return_value=self.root / "cache"), \
+                mock.patch.object(service, "choose_port", return_value=12345), \
+                mock.patch.object(service.subprocess, "run", return_value=completed) as run:
+            service.install_service(self.root)
+        self.assertEqual(run.call_args_list[0].args[0][:3], ["schtasks", "/Create", "/XML"])
+        self.assertEqual(run.call_args_list[1].args[0][:3], ["schtasks", "/Run", "/TN"])
+        task_xml = (self.root / "cache" / "review-task.xml").read_text(encoding="utf-16")
+        self.assertIn("<ExecutionTimeLimit>PT0S</ExecutionTimeLimit>", task_xml)
+        self.assertIn("<RestartOnFailure>", task_xml)
 
     def test_trackers_only_sync_exports_accepted_values_without_document_scan(self):
         self.proposal([self.risk(), self.risk(fields={"Name": "Pending risk", "Description": "Still pending."})])
@@ -269,6 +301,8 @@ class VisualReviewTest(unittest.TestCase):
         self.store.update_accepted("risk", accepted["tracker_id"], {"Description": "Test data may arrive two weeks late."})
         row = self.trackers.read_rows("risk", schema)[0]
         self.assertEqual(row["Description"], "Test data may arrive two weeks late.")
+        copy = yaml.safe_load((self.paths.TRACKER_COPIES_DIR / "risk.yaml").read_text())
+        self.assertEqual(copy["rows"][0]["Description"], row["Description"])
         for bad in ({"Status": "finished"}, {"Name": ""}, {"Relationships": "caused_by: RSK-001"}):
             with self.subTest(fields=bad), self.assertRaises(self.store.ValidationFailure):
                 self.store.update_accepted("risk", accepted["tracker_id"], bad)

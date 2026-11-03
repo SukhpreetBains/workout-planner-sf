@@ -1,0 +1,29 @@
+# Importance picklist. Fill and check it as described in README.md.
+label: Importance
+meaning: Materiality of a dependency to the work that receives it.
+tabs: [dependencies]
+values:
+  - value: Critical
+    color: red
+    squares: 2
+    definition: >-
+      A hard prerequisite with no stated workaround: the receiving
+      milestone, deliverable, or workstream cannot start or finish without it.
+    aliases: [critical, essential, blocking, must have]
+  - value: High
+    color: red
+    definition: >-
+      Required for a significant part of the receiving work; a delay would
+      move a dated milestone or deliverable.
+    aliases: [high, important, major]
+  - value: Medium
+    color: amber
+    definition: >-
+      Needed, but partial progress or a workaround is possible while it
+      is outstanding.
+    aliases: [medium, med, moderate]
+  - value: Low
+    color: amber
+    definition: >-
+      A helpful input; the receiving work can proceed without it.
+    aliases: [low, minor, nice to have]

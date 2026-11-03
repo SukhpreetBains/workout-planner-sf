@@ -60,6 +60,12 @@ Start or reuse the loopback-only inbox with:
 PY <plugin-root>/shared/scripts/review_server.py start --root "$ASCENT_PROJECT_ROOT"
 ```
 
+On macOS and Windows, the first start registers a per-project user service
+(LaunchAgent or Scheduled Task). It keeps the inbox running outside this chat,
+restarts it after sign-in, and preserves the same localhost URL across service
+restarts. Starting from another chat reuses that service. `stop` removes the
+registration. On other systems, start uses a detached process.
+
 Always use `shared/scripts/py` or `py.cmd` for review server commands. A server
 started with `uv run` can inherit a temporary Python path that disappears while
 the inbox is open, causing approval to fail during tracker sync. Startup rejects
@@ -71,12 +77,16 @@ The server serves the inbox from a persistent local review cache at
 `~/.ascent/review-cache/<project-hash>/project/`. The Project folder in OneDrive
 remains canonical. Review actions save locally first, and a background task
 reconciles review-owned files to OneDrive every five minutes while the server is
-running. The page shows sync status and has a `Sync now` button. If OneDrive is
-unavailable, keep reviewing locally. Do not remove the cache or claim the work
-has reached OneDrive until sync status says `synced`. When both copies of the
-same review file changed, sync pauses and lists the conflicting paths. Preserve
-both versions, inspect the conflict, and ask the user which change to keep
-before resolving it. Source documents refresh independently, so a slow source
+running. The page shows sync status. `Sync now` completes a sync attempt and
+reports its result. When OneDrive changed since the last snapshot, it warns
+without showing a file diff and lets the reviewer sync safely or explicitly
+overwrite the cloud with local copies. If OneDrive is unavailable, keep
+reviewing locally. Do not remove the cache or claim the work has reached
+OneDrive until sync status says `synced`. When both copies of the same review
+file changed, sync pauses and lists the conflicting paths. Preserve both
+versions and inspect the conflict. Ask the user which change to keep unless
+they explicitly chose an overwrite in the inbox or conversation. Source
+documents refresh independently, so a slow source
 file cannot block tracker publishing.
 
 Before posting the URL, request that exact URL over loopback and confirm it
@@ -84,8 +94,8 @@ returns the HTML review page, not a JSON error. If the page fails this check,
 stop and start the server through the launcher above, then check the new URL.
 If it still fails, inspect `~/.ascent/review-cache/<project-hash>/review-server.log` and use the chat
 review fallback. Post only a working URL in chat and let the user open it.
-Never open the browser automatically. The server assigns an ephemeral port,
-recovers from stale state, and requires its session token for every mutation.
+Never open the browser automatically. The server selects a free port on first
+start, recovers from stale state, and requires its session token for every mutation.
 
 If an approval reports a missing Python executable, stop and start the inbox
 through the launcher above. Before retrying the approval, check the proposal,

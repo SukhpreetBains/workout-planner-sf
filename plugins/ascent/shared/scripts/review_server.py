@@ -12,20 +12,26 @@ from __future__ import annotations
 
 import argparse
 import errno
+import getpass
 import json
 import mimetypes
 import os
+import plistlib
 import secrets
+import socket
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from sys import platform
+from xml.etree import ElementTree
 
 from review_cache import ReviewCache, cache_dir
 
@@ -73,6 +79,113 @@ def configure_root(root: Path) -> None:
 
 def state_path(root: Path) -> Path:
     return cache_dir(root) / "review-server.json"
+
+
+def service_path(root: Path) -> Path:
+    return cache_dir(root) / "review-service.json"
+
+
+def service_label(root: Path) -> str:
+    return f"com.slalom.ascent.review.{cache_dir(root).name}"
+
+
+def agent_path(root: Path) -> Path:
+    return Path.home() / "Library" / "LaunchAgents" / f"{service_label(root)}.plist"
+
+
+def launchctl(*args: str) -> None:
+    result = subprocess.run(["launchctl", *args], capture_output=True, text=True)
+    if result.returncode:
+        raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "launchctl failed")
+
+
+def choose_port() -> int:
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+def install_service(root: Path) -> None:
+    """Register a per-project login service with a stable URL and secret."""
+    config_path = service_path(root)
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        config = {}
+    if not isinstance(config, dict):
+        config = {}
+    if not config.get("port"):
+        config["port"] = choose_port()
+    config.setdefault("token", secrets.token_urlsafe(32))
+    config.setdefault("instance_id", secrets.token_hex(16))
+    temporary_config = config_path.with_suffix(".tmp")
+    temporary_config.write_text(json.dumps(config), encoding="utf-8")
+    os.chmod(temporary_config, 0o600)
+    os.replace(temporary_config, config_path)
+    if platform == "win32":
+        task = service_label(root)
+        username = os.environ.get("USERNAME") or getpass.getuser()
+        domain = os.environ.get("USERDOMAIN")
+        user_id = f"{domain}\\{username}" if domain else username
+        namespace = "http://schemas.microsoft.com/windows/2004/02/mit/task"
+        ElementTree.register_namespace("", namespace)
+        def element(parent: ElementTree.Element, name: str, value: str | None = None) -> ElementTree.Element:
+            child = ElementTree.SubElement(parent, f"{{{namespace}}}{name}")
+            child.text = value
+            return child
+        document = ElementTree.Element(f"{{{namespace}}}Task", {"version": "1.2"})
+        triggers = element(document, "Triggers")
+        trigger = element(triggers, "LogonTrigger")
+        element(trigger, "Enabled", "true")
+        element(trigger, "UserId", user_id)
+        principals = element(document, "Principals")
+        principal = element(principals, "Principal", None)
+        principal.set("id", "Author")
+        element(principal, "UserId", user_id)
+        element(principal, "LogonType", "InteractiveToken")
+        element(principal, "RunLevel", "LeastPrivilege")
+        settings = element(document, "Settings")
+        restart = element(settings, "RestartOnFailure")
+        element(restart, "Interval", "PT1M")
+        element(restart, "Count", "999")
+        element(settings, "MultipleInstancesPolicy", "IgnoreNew")
+        element(settings, "DisallowStartIfOnBatteries", "false")
+        element(settings, "StopIfGoingOnBatteries", "false")
+        element(settings, "ExecutionTimeLimit", "PT0S")
+        actions = element(document, "Actions")
+        actions.set("Context", "Author")
+        action = element(actions, "Exec")
+        element(action, "Command", sys.executable)
+        element(action, "Arguments", subprocess.list2cmdline([str(SCRIPT), "service", "--root", str(root)]))
+        task_xml = cache_dir(root) / "review-task.xml"
+        ElementTree.ElementTree(document).write(task_xml, encoding="utf-16", xml_declaration=True)
+        result = subprocess.run(["schtasks", "/Create", "/XML", str(task_xml), "/TN", task,
+                                 "/F"], capture_output=True, text=True)
+        if result.returncode:
+            raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "task registration failed")
+        result = subprocess.run(["schtasks", "/Run", "/TN", task], capture_output=True, text=True)
+        if result.returncode:
+            raise RuntimeError(result.stderr.strip() or result.stdout.strip() or "task start failed")
+        return
+    plist_path = agent_path(root)
+    plist_path.parent.mkdir(parents=True, exist_ok=True)
+    plist = {
+        "Label": service_label(root),
+        "ProgramArguments": [sys.executable, str(SCRIPT), "service", "--root", str(root)],
+        "RunAtLoad": True,
+        "KeepAlive": True,
+        "StandardOutPath": str(cache_dir(root) / "review-server.log"),
+        "StandardErrorPath": str(cache_dir(root) / "review-server.log"),
+    }
+    target = f"gui/{os.getuid()}"
+    if plist_path.exists():
+        subprocess.run(["launchctl", "bootout", f"{target}/{service_label(root)}"],
+                       capture_output=True)
+    temporary = plist_path.with_suffix(".tmp")
+    temporary.write_bytes(plistlib.dumps(plist))
+    os.replace(temporary, plist_path)
+    launchctl("bootstrap", target, str(plist_path))
 
 
 def read_state(root: Path) -> dict | None:
@@ -217,7 +330,7 @@ class ReviewHandler(BaseHTTPRequestHandler):
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Content-Security-Policy",
-                         "default-src 'self'; script-src 'self'; style-src 'self'; "
+                         "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
                          "font-src 'self'; img-src 'self' data:; connect-src 'self'; "
                          "object-src 'none'; base-uri 'none'; frame-ancestors 'none'")
         if length is not None:
@@ -418,8 +531,7 @@ class ReviewHandler(BaseHTTPRequestHandler):
                 str(body.get("rejected_id", ""))),
         }
         if path == "/api/sync-now":
-            self.server.cache.request_sync()
-            self.json(202, self.server.cache.status_json())
+            self.json(200, self.server.cache.sync_now())
             return
         if path == "/api/sync-overwrite-all":
             from review_cache import SyncConflictError
@@ -462,7 +574,7 @@ class ReviewHandler(BaseHTTPRequestHandler):
     do_DELETE = do_PUT
 
 
-def serve(root: Path, token: str, instance_id: str) -> int:
+def serve(root: Path, token: str, instance_id: str, port: int = 0) -> int:
     if disposable_python(sys.executable):
         print(RUNTIME_HINT, file=sys.stderr)
         return 2
@@ -474,7 +586,7 @@ def serve(root: Path, token: str, instance_id: str) -> int:
         return 1
     configure_root(cache.local_root)
     try:
-        server = ReviewServer(("127.0.0.1", 0), token, cache.local_root, instance_id, cache)
+        server = ReviewServer(("127.0.0.1", port), token, cache.local_root, instance_id, cache)
     except PermissionError:
         print(PERMISSION_HINT, file=sys.stderr)
         return PERMISSION_EXIT
@@ -509,13 +621,29 @@ def start(root: Path) -> int:
     if healthy(state):
         previous_python = state.get("python_executable", "")
         if (previous_python and not disposable_python(previous_python)
-                and state.get("server_script") == str(SCRIPT) and review_app_ready(state)):
+                and state.get("server_script") == str(SCRIPT) and review_app_ready(state)
+                and (platform not in ("darwin", "win32") or service_path(root).exists())):
             print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
             return 0
         print("restarting review inbox with a working page and persistent Python environment", file=sys.stderr)
         if stop(root):
             return 1
     state_path(root).unlink(missing_ok=True)
+    if platform in ("darwin", "win32"):
+        try:
+            install_service(root)
+        except (OSError, RuntimeError) as exc:
+            print(f"review service could not start: {exc}", file=sys.stderr)
+            return 1
+        deadline = time.monotonic() + 45
+        while time.monotonic() < deadline:
+            state = read_state(root)
+            if healthy(state) and review_app_ready(state):
+                print(f"review inbox ready: http://127.0.0.1:{state['port']}/?session={state['token']}")
+                return 0
+            time.sleep(0.2)
+        print(f"review service did not become healthy; see {cache_dir(root) / 'review-server.log'}", file=sys.stderr)
+        return 1
     token = secrets.token_urlsafe(32)
     instance_id = str(secrets.token_hex(16))
     log = cache_dir(root) / "review-server.log"
@@ -559,6 +687,27 @@ def status(root: Path) -> int:
 
 
 def stop(root: Path) -> int:
+    if platform == "darwin" and agent_path(root).exists():
+        try:
+            launchctl("bootout", f"gui/{os.getuid()}/{service_label(root)}")
+        except RuntimeError as exc:
+            print(f"could not stop review service: {exc}", file=sys.stderr)
+            return 1
+        agent_path(root).unlink()
+        state_path(root).unlink(missing_ok=True)
+        print("review server stopped")
+        return 0
+    if platform == "win32" and service_path(root).exists():
+        task = service_label(root)
+        subprocess.run(["schtasks", "/End", "/TN", task], capture_output=True)
+        result = subprocess.run(["schtasks", "/Delete", "/TN", task, "/F"],
+                                capture_output=True, text=True)
+        if result.returncode:
+            print(f"could not remove review service: {result.stderr.strip()}", file=sys.stderr)
+            return 1
+        state_path(root).unlink(missing_ok=True)
+        print("review server stopped")
+        return 0
     state = read_state(root)
     if not healthy(state):
         state_path(root).unlink(missing_ok=True)
@@ -612,10 +761,19 @@ def main() -> int:
     server.add_argument("--root", type=Path, required=True)
     server.add_argument("--token", required=True)
     server.add_argument("--instance-id", required=True)
+    service = subparsers.add_parser("service", help=argparse.SUPPRESS)
+    service.add_argument("--root", type=Path, required=True)
     args = parser.parse_args()
     root = args.root.resolve()
     if args.command == "serve":
         return serve(root, args.token, args.instance_id)
+    if args.command == "service":
+        config = json.loads(service_path(root).read_text(encoding="utf-8"))
+        if platform == "win32":
+            with (cache_dir(root) / "review-server.log").open("a", encoding="utf-8") as output:
+                with redirect_stdout(output), redirect_stderr(output):
+                    return serve(root, config["token"], config["instance_id"], int(config["port"]))
+        return serve(root, config["token"], config["instance_id"], int(config["port"]))
     if args.command == "start":
         return start(root)
     if args.command == "status":

@@ -306,6 +306,15 @@ extend Salesforce's standard model before building a custom one. The
 validator rejects a missing name, a name that repeats the description, and
 one that ends in "…".
 
+**Keep descriptions about the finding itself.** Do not append source-note
+metadata such as "Gada; timing not stated", "owner not assigned", "today",
+or "in progress" to Description. Put people in `owned_by` relationships,
+statuses in `Status`, and calendar deadlines in `Target Date`. Resolve a
+relative deadline such as "today" only when the dated source makes the
+calendar date clear. Otherwise leave Target Date blank and retain the exact
+timing in the evidence excerpt. Keep a dependency such as "after the merge"
+in Description when it explains the task's sequence or meaning.
+
 **Classify by what the finding is:**
 
 - Caps, limits, and commercial terms are constraints. "Up to" limits,
@@ -359,14 +368,77 @@ not inventing unsupported findings or field values.
 **Reconcile signal lifecycles.** Compare new findings with existing open
 questions, proposals, risks, issues, dependencies, and actions. When evidence
 answers an open question, propose an update with `Status: answered` (the
-schema's closed outcome) and the answer in Description. When that answer
+schema's closed outcome) and the answer in Resolution. When that answer
 records a choice, also create or reuse a decision and link it to the question
 with `addresses: <question ID>`. For example, a transcript selecting Okta
 answers the identity-provider question, creates the decision to use Okta,
 and connects the two. A factual answer without a choice closes the question
 without manufacturing a decision. Likewise propose supported completion,
 resolution, or supersession of other signals, using their allowed statuses.
+Whenever you propose a closing status for a risk, assumption, issue,
+dependency, open question, or action item, also fill Resolution with how it
+ended, as the source reports it: how the risk was mitigated or what happened
+when it was realized, what the assumption was confirmed or replaced by, what
+fixed the issue, how the dependency was met or waived, the answer, or what the
+completed action produced. When the source confirms closure but not how, say
+so in Resolution ("Closed; the source gives no detail") rather than guessing.
+Never fill Resolution on an open item. A planned response is not a
+Resolution; it is an action item that addresses the item.
 Preserve existing relationships and evidence while adding the new support.
+
+**Link each RAID item to its response.** RAID items are risks, assumptions,
+issues, decisions, dependencies, and open questions. For each one you propose
+or reconcile, look for the action that responds to it: a task to mitigate the
+risk, validate the assumption, fix the issue, carry out the decision, secure
+the dependency, or answer the question. When the action is tracked or
+proposed, put `addresses: <RAID item ID>` on the action. When the source
+states the response with an owner or a commitment but no action exists,
+propose the action too, following the action item bar. Do not invent an
+action to fill the gap: an open RAID item with no stated response stays
+unlinked.
+
+**Every action responds to something raised.** An action exists because of a
+risk, assumption, issue, decision, dependency, or open question, so every
+action item you propose carries at least one `addresses` link. Check the
+tracker copies and pending proposals for the item it acts on and link it.
+When the source states the reason for the action but that reason is not yet
+tracked, propose it as well, in the category whose bar it clears (for example
+the problem the task fixes as an issue, or the unknown it answers as an open
+question), and link the action to its `proposal_id`. Use `addresses` only when
+the action works on that item; an action that merely happens near it in a
+meeting gets no link. When neither the trackers nor the source show why the
+action exists, propose it unlinked and list it in the handoff for the user to
+link; never invent a reason.
+
+**Categorize every RAID item.** Every risk, assumption, issue, decision,
+dependency, open question, and action item you propose gets a `Category`:
+the one value whose definition in the schema's `enum_definitions` matches the
+item's central concern. Judge each item on its own content and say why it
+fits in the evidence `rationale`. Use `unknown_tbd` only when the evidence is
+insufficient or contradictory, and name the clarification needed in the
+rationale. When you propose an update to an approved RAID row that has no
+Category, add one.
+
+**Backfill existing RAID items on request.** When the user asks to
+categorize, link, or tidy up existing RAID items, work through the approved
+RAID rows in the tracker copies and propose one `update` per row that needs
+it, citing the row's own source documents: a `Category` for every row
+without one, and an `addresses` link for every action item without one,
+following the rules above. Do both in the same pass unless the user asks for
+only one. This is the whole task: finish it in this turn and write the
+proposals, rather than stopping to report how many rows need work.
+
+Judge each row from what is already approved: its Name, Description, Status,
+and Relationships, the other RAID rows, and its approved evidence excerpts in
+`workspace/.system/applied-updates/`. These settle most rows. Open a source
+document only when they leave the category or the linked item unclear, and
+leave a row unchanged when even the source does not settle it, listing it in
+the handoff. Cite the row's Source Refs as the update's `source_refs`, and
+reuse an approved excerpt as evidence with a `rationale` explaining the
+category or link. Work tracker by tracker, writing one proposal file per
+tracker category (for example `<date>-raid-backfill-risk.yaml`) and validating
+each before the next. Judge every row individually; never apply one category
+to a group by keyword or with a script.
 
 On every later ingestion, actively reassess `Target Date` and `Completed Date`
 against new evidence. Populate or revise Target Date when a deadline is agreed
@@ -376,7 +448,7 @@ or closed, an assumption validated, a dependency satisfied, a question answered,
 a milestone achieved, a deliverable delivered, or an objective achieved.
 Use the actual outcome date, not today's ingestion date or a former target.
 Resolve relative dates only when the source date makes the calendar date clear;
-otherwise leave the date blank and preserve the timing in Description. Explain
+otherwise leave the date blank and preserve the timing in evidence. Explain
 contextual inferences in evidence rationale. Never infer completion merely
 because a deadline passed. Keep the original Date and planned Target Date
 when adding Completed Date so planned and actual timing can be compared.
@@ -415,7 +487,8 @@ deliberately; meetings are the richest source for those five.
   need to assign one. Link the owner with `owned_by`, using a pending
   person's `proposal_id` if needed. Fill `Target Date` whenever the source
   gives a calendar date ("at the August 17 onboarding"); keep relative
-  timing such as "before kickoff" in the Description.
+  timing such as "before kickoff" in evidence, and include it in Description
+  only when it explains a task dependency.
 - **Risks** — propose each stated risk that clears the bar, with any
   mitigation the source gives in its Description. Leave `Probability` and
   `Impact` empty unless the source supports them.
@@ -498,6 +571,11 @@ step implicit. State:
   could not be decided;
 - any documents filed without proposals and why, and any milestones whose
   date has passed with no source confirming the outcome;
+- how many open RAID items (risks, assumptions, issues, dependencies, and open
+  questions, approved or pending) still have no action addressing them, so
+  the user can assign responses, the action items (approved or pending) that
+  address no RAID item, by ID and name, and how many approved RAID rows still
+  have no Category;
 - that these are proposed facts, not yet the project's official working
   record, and need their approval before they are added; and
 - the exact next action in user language: for example, “I have 16 items

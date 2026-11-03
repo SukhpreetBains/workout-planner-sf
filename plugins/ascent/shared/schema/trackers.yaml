@@ -25,6 +25,20 @@
 #     determined from source context when first proposed and preserved across
 #     later updates. Target Date is a planned
 #     deadline; Completed Date is an evidence-backed actual outcome date.
+#   - Signals that can close (risk, assumption, issue, dependency,
+#     open_question, action_item) have Resolution: how the item actually
+#     ended, as the source reports it, such as how a risk was mitigated, what
+#     fixed an issue, the answer to a question, or what a completed action
+#     produced. Fill it only with a closing status; a plan to respond is an
+#     action_item that addresses the item, not a Resolution.
+#   - RAID signals (risk, assumption, issue, decision, dependency,
+#     open_question, action_item) have Category: the one area of the project
+#     the item mainly concerns, from the standard Ascent RAID category
+#     ontology. Choose the value whose `enum_definitions` entry matches the
+#     item's central concern. Use unknown_tbd only when the evidence is
+#     insufficient or contradictory, and say in the evidence rationale what
+#     clarification is needed. A column's `enum_labels` gives each value's
+#     display name; either the key or the label is accepted on input.
 #   - The Relationships column holds "; "-separated "<meaning>: <ID>" entries,
 #     e.g. "owned_by: PER-001; depends_on: DEP-004". The meaning is a key of
 #     `relationships` below; the ID is any row ID or pending proposal_id. A
@@ -206,6 +220,7 @@ relationships:
     definition: >-
       A measure, action, requirement, or decision → the problem, need, risk,
       question, or dependency it acts on, whether or not it has worked yet.
+      An action that carries out a decision addresses that decision.
       Record the outcome in the target's Status (an issue becomes resolved, a
       risk mitigated), not in the link.
     ontology_types: [addresses, mitigates, resolves]
@@ -217,6 +232,7 @@ relationships:
       - supports — contributes to an outcome or claim rather than acting on a problem.
     examples:
       - '"Maria will investigate the outage." → action addresses outage issue.'
+      - '"Now that we chose Okta, IT will configure SSO." → action addresses the Okta decision.'
       - '"A backup supplier would reduce the risk of vendor delay." → proposal addresses vendor-delay risk.'
       - '"The SSO requirement removes the double login agents complain about." → requirement addresses pain point.'
   supports:
@@ -829,6 +845,85 @@ categories:
       - *signal_description
       - {name: Status, required: true, default: identified,
          enum: [identified, active, mitigated, realized, closed]}
+      - &resolution {name: Resolution}
+      - &raid_category
+        name: Category
+        label: Category / impact area
+        enum: [scope, timeline_schedule, budget_resourcing, solution_design, security_compliance, access_onboarding, governance_stakeholder_alignment, change_adoption_training, experience_strategy_design, delivery_quality, unknown_tbd]
+        enum_labels:
+          scope: Scope
+          timeline_schedule: Timeline / Schedule
+          budget_resourcing: Budget & Resourcing
+          solution_design: Solution & Design
+          security_compliance: Security & Compliance
+          access_onboarding: Access & Onboarding
+          governance_stakeholder_alignment: Governance & Stakeholder Alignment
+          change_adoption_training: Change Adoption & Training
+          experience_strategy_design: Experience Strategy & Design
+          delivery_quality: Delivery Quality
+          unknown_tbd: Unknown / TBD
+        enum_definitions:
+          scope: >-
+            Work, capabilities, deliverables, or populations included or
+            excluded. Choose when the central concern is an unclear boundary,
+            disputed inclusion, or change to agreed coverage.
+          timeline_schedule: >-
+            Timing, sequencing, milestones, or deadlines. Choose when the plan
+            or timing itself is the central concern.
+          budget_resourcing: >-
+            Project funding, spending limits, cost estimates, or overruns.
+            Choose when the money available or required is the central
+            concern. Availability, capacity, skills, or allocation of people
+            and delivery resources. Choose for staffing shortages, unavailable
+            specialists, or insufficient allocated capacity.
+          solution_design: >-
+            Solution structure, component boundaries, design patterns, or
+            technical feasibility. Choose when the concern requires a
+            structural design choice or assessment. Application or platform
+            functionality, configuration, availability, compatibility, or
+            technical limits. Choose for a technical concern that does not fit
+            a more specific category. Obtaining, evaluating, or synthesizing
+            evidence needed to understand users, needs, or the current state.
+            Choose for research execution, interview coverage, or missing
+            findings. Interfaces and exchanges between systems, including API
+            contracts, connectivity, synchronization, or orchestration. Choose
+            when the connection or exchange is the primary concern. Business
+            workflows, operating procedures, handoffs, or responsibilities
+            within a process. Choose when how work is performed or coordinated
+            is the main subject. Data quality, completeness, definitions,
+            ownership, mapping, lineage, or migration content. Choose when the
+            information itself is the concern.
+          security_compliance: >-
+            Protection against unauthorized access, disclosure, modification,
+            or misuse. Choose for vulnerabilities, excessive permissions, or
+            missing security controls. Legal, regulatory, privacy, or
+            mandatory policy obligations and required reviews. Choose when
+            satisfying a binding obligation is the central concern.
+          access_onboarding: >-
+            Provisioning accounts, permissions, credentials, tools, or initial
+            working access. Choose when required access or onboarding prevents
+            someone from starting or performing work.
+          governance_stakeholder_alignment: >-
+            Decision rights, approvals, escalation routes, oversight, or
+            stakeholder authority and alignment. Choose when the concern is
+            who decides, who approves, or how decisions are reached.
+          change_adoption_training: >-
+            Readiness and willingness to use a changed solution or way of
+            working, including training, communications, behavior change, and
+            competing change demands.
+          experience_strategy_design: >-
+            User journeys, interaction flows, usability, prototypes, or
+            experience direction. Choose when the concern is what users
+            experience or how the design meets their needs.
+          delivery_quality: >-
+            Verification, defects against expected behavior, test coverage,
+            acceptance evidence, or readiness to pass quality checks. Choose
+            when validation or demonstrated conformance is the central
+            concern.
+          unknown_tbd: >-
+            Evidence is insufficient, contradictory, or does not support a
+            reliable category. Use temporarily and record the clarification
+            needed.
       - {name: Probability, type: number, minimum: 0.1, maximum: 0.9}
       - {name: Impact, enum: [very_low, low, moderate, medium, high, very_high, critical],
          weights: {very_low: 0.05, low: 0.1, moderate: 0.2, medium: 0.2,
@@ -869,6 +964,8 @@ categories:
       - *signal_description
       - {name: Status, required: true, default: unvalidated,
          enum: [unvalidated, validated, invalidated, superseded]}
+      - *resolution
+      - *raid_category
       - *relationships
 
   issue:
@@ -900,6 +997,8 @@ categories:
       - *name
       - *signal_description
       - {name: Status, required: true, default: open, enum: [open, in_progress, resolved, closed]}
+      - *resolution
+      - *raid_category
       - &target_date {name: Target Date, type: date}
       - *relationships
 
@@ -933,6 +1032,8 @@ categories:
       - *name
       - *signal_description
       - {name: Status, required: true, default: pending, enum: [pending, satisfied, blocked, waived]}
+      - *resolution
+      - *raid_category
       - *target_date
       - *relationships
 
@@ -1012,6 +1113,7 @@ categories:
       - *name
       - *signal_description
       - {name: Status, required: true, default: decided, enum: [decided, superseded, reversed]}
+      - *raid_category
       - *relationships
 
   open_question:
@@ -1027,7 +1129,7 @@ categories:
       Material and unresolved with a downstream effect. Judge by intent and
       context, not punctuation: a polite request that assigns a task is an
       action item. Casual brainstorming and rhetorical questions stay out.
-      Put the answer in the Description when it arrives; an answer does not
+      Put the answer in Resolution when it arrives; an answer does not
       automatically make a decision.
     lookalikes:
       - proposal — advocates an approach. "Could we use Okta?" can be either; if context cannot tell, do not propose it.
@@ -1043,6 +1145,8 @@ categories:
       - *name
       - *signal_description
       - {name: Status, required: true, default: open, enum: [open, answered, deferred, superseded]}
+      - *resolution
+      - *raid_category
       - *target_date
       - *relationships
 
@@ -1128,15 +1232,20 @@ categories:
     bar_to_clear: >-
       A concrete, verb-led task with an owner, or with a clearly stated need
       to assign one. Link the owner with owned_by. Fill Target Date only when
-      the source gives a calendar date; keep relative timing ("by Thursday",
-      "before kickoff") in the Description.
+      the source gives a calendar date, including a relative date that can be
+      resolved from a dated source. Otherwise retain timing in the evidence
+      excerpt, not as a trailing Description annotation. Keep dependencies
+      such as "before kickoff" in Description when they explain the task.
+      Every action responds to something raised: link it with addresses to
+      the risk, assumption, issue, decision, dependency, or open question it
+      acts on or carries out.
     lookalikes:
       - governance_rule — a standing, repeated duty.
       - deliverable — naming a due output does not create an action to deliver it; propose an action only for a distinct activity such as preparing, reviewing, or sending it.
       - proposal — a casual suggestion with no assignment.
       - milestone — an event, not a task.
     examples:
-      - '"David will send the data dictionary by Thursday." → action owned_by David, committed, "by Thursday" in the Description.'
+      - '"David will send the data dictionary by Thursday." → action owned_by David, committed, with Target Date when the source date resolves Thursday; otherwise keep the timing in evidence.'
       - '"Maria will correct this dictionary entry Friday." → action owned_by Maria.'
       - '"Could you send the access list by noon?" recorded as an assignment to David → action owned_by David, assigned.'
     columns:
@@ -1146,6 +1255,8 @@ categories:
       - *signal_description
       - {name: Status, required: true, default: assigned,
          enum: [assigned, committed, in_progress, completed, cancelled]}
+      - *resolution
+      - *raid_category
       - *target_date
       - *relationships
 

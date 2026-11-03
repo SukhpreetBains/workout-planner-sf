@@ -1,0 +1,9 @@
+# Category / impact area picklist. The values and their definitions are the
+# standard Ascent RAID category ontology, kept in one place: the Category
+# column in shared/schema/trackers.yaml. picklists.py reads them from there.
+# The category is chosen at ingestion and approved in the review inbox, so the
+# log only ever records it; it is never stated or assessed here.
+label: Category / impact area
+meaning: The area of the project the item mainly concerns.
+tabs: [risks, assumptions, issues, decisions, dependencies, actions]
+tracker_column: Category

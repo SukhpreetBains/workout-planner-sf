@@ -1,0 +1,1062 @@
+{
+  "project": "Northstar delivery",
+  "asOf": "2026-10-28",
+  "sample": true,
+  "secondaryColor": {
+    "name": "Coral Red",
+    "hex": "#FF4D5F"
+  },
+  "coverageNote": "Fictional sample only. No real project evidence, tracker rows, or review inbox items were used.",
+  "omitted": [],
+  "items": [
+    {
+      "key": "RSK-001",
+      "id": "RSK-001",
+      "category": "risk",
+      "tab": "risks",
+      "title": "Sandbox credentials may arrive after UAT starts",
+      "description": "Client IT has not confirmed when QA testers will receive sandbox credentials. If access arrives after November 10, UAT may slip by one week.",
+      "status": "active",
+      "source": [
+        "RSK-001"
+      ],
+      "owner": {
+        "value": "Jordan Lee",
+        "basis": "recorded",
+        "from": [
+          "RSK-001"
+        ]
+      },
+      "impactArea": {
+        "value": "Access & Onboarding",
+        "basis": "recorded",
+        "from": [
+          "RSK-001"
+        ]
+      },
+      "raisedBy": {
+        "value": "Testing lead",
+        "basis": "recorded",
+        "from": [
+          "RSK-001"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-02",
+        "basis": "recorded",
+        "from": [
+          "RSK-001"
+        ]
+      },
+      "target": {
+        "value": "2026-11-10",
+        "basis": "recorded",
+        "from": [
+          "RSK-001"
+        ]
+      },
+      "priority": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "RSK-001"
+        ]
+      },
+      "severity": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "RSK-001"
+        ]
+      },
+      "outcome": null,
+      "nextAction": {
+        "value": "Confirm QA sandbox access with client IT",
+        "basis": "recorded",
+        "from": [
+          "ACT-004"
+        ]
+      }
+    },
+    {
+      "key": "RSK-002",
+      "id": "RSK-002",
+      "category": "risk",
+      "tab": "risks",
+      "title": "Limited SME availability during design validation",
+      "description": "Finance subject matter experts are committed to quarter-end close through November 6 and may not attend all design validation sessions.",
+      "status": "identified",
+      "source": [
+        "RSK-002"
+      ],
+      "owner": null,
+      "impactArea": {
+        "value": "Solution & Design",
+        "basis": "recorded",
+        "from": [
+          "RSK-002"
+        ]
+      },
+      "raisedBy": {
+        "value": "Priya Raman",
+        "basis": "recorded",
+        "from": [
+          "RSK-002"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-09",
+        "basis": "recorded",
+        "from": [
+          "RSK-002"
+        ]
+      },
+      "target": {
+        "value": "2026-11-06",
+        "basis": "recorded",
+        "from": [
+          "RSK-002"
+        ]
+      },
+      "priority": {
+        "value": "Medium",
+        "basis": "assessed",
+        "reason": "Two of five validation sessions fall in the close window; the plan has float for one rescheduled session.",
+        "source": [
+          "RSK-002"
+        ]
+      },
+      "severity": {
+        "value": "Medium",
+        "basis": "assessed",
+        "reason": "Source states a possible delay to design validation but no downstream milestone impact.",
+        "source": [
+          "RSK-002"
+        ]
+      },
+      "outcome": null,
+      "nextAction": null
+    },
+    {
+      "key": "RSK-003",
+      "id": "RSK-003",
+      "category": "risk",
+      "tab": "risks",
+      "title": "Reporting tool licence renewal",
+      "description": "The licence for the interim reporting tool was due to lapse before cutover. Procurement renewed it for twelve months.",
+      "status": "closed",
+      "source": [
+        "RSK-003"
+      ],
+      "owner": {
+        "value": "Procurement",
+        "basis": "recorded",
+        "from": [
+          "RSK-003"
+        ]
+      },
+      "impactArea": {
+        "value": "Budget & Resourcing",
+        "basis": "recorded",
+        "from": [
+          "RSK-003"
+        ]
+      },
+      "raisedBy": {
+        "value": "Delivery lead",
+        "basis": "recorded",
+        "from": [
+          "RSK-003"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-09-18",
+        "basis": "recorded",
+        "from": [
+          "RSK-003"
+        ]
+      },
+      "target": {
+        "value": "2026-10-15",
+        "basis": "recorded",
+        "from": [
+          "RSK-003"
+        ]
+      },
+      "priority": {
+        "value": "Low",
+        "basis": "recorded",
+        "from": [
+          "RSK-003"
+        ]
+      },
+      "severity": {
+        "value": "Low",
+        "basis": "recorded",
+        "from": [
+          "RSK-003"
+        ]
+      },
+      "outcome": {
+        "value": "Licence renewed through October 2027.",
+        "basis": "recorded",
+        "from": [
+          "RSK-003"
+        ]
+      },
+      "nextAction": null
+    },
+    {
+      "key": "ASM-001",
+      "id": "ASM-001",
+      "category": "assumption",
+      "tab": "assumptions",
+      "title": "Every customer record has a unique enterprise ID",
+      "description": "Sizing for the matching rules assumes each customer record carries a unique enterprise ID. The export has not yet been profiled.",
+      "status": "unvalidated",
+      "source": [
+        "ASM-001"
+      ],
+      "owner": {
+        "value": "Data lead",
+        "basis": "recorded",
+        "from": [
+          "ASM-001"
+        ]
+      },
+      "impactArea": {
+        "value": "Solution & Design",
+        "basis": "recorded",
+        "from": [
+          "ASM-001"
+        ]
+      },
+      "raisedBy": {
+        "value": "Solution architect",
+        "basis": "recorded",
+        "from": [
+          "ASM-001"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-09-30",
+        "basis": "recorded",
+        "from": [
+          "ASM-001"
+        ]
+      },
+      "target": {
+        "value": "2026-11-07",
+        "basis": "recorded",
+        "from": [
+          "ASM-001"
+        ]
+      },
+      "priority": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "ASM-001"
+        ]
+      },
+      "outcome": null,
+      "nextAction": {
+        "value": "Profile the first full export for duplicate IDs",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      }
+    },
+    {
+      "key": "ASM-002",
+      "id": "ASM-002",
+      "category": "assumption",
+      "tab": "assumptions",
+      "title": "Billing timestamps are in UTC",
+      "description": "For planning, billing timestamps were treated as UTC until the export was inspected.",
+      "status": "validated",
+      "source": [
+        "ASM-002"
+      ],
+      "owner": {
+        "value": "Data lead",
+        "basis": "recorded",
+        "from": [
+          "ASM-002"
+        ]
+      },
+      "impactArea": {
+        "value": "Solution & Design",
+        "basis": "recorded",
+        "from": [
+          "ASM-002"
+        ]
+      },
+      "raisedBy": {
+        "value": "Solution architect",
+        "basis": "recorded",
+        "from": [
+          "ASM-002"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-09-30",
+        "basis": "recorded",
+        "from": [
+          "ASM-002"
+        ]
+      },
+      "target": {
+        "value": "2026-10-20",
+        "basis": "recorded",
+        "from": [
+          "ASM-002"
+        ]
+      },
+      "priority": {
+        "value": "Medium",
+        "basis": "recorded",
+        "from": [
+          "ASM-002"
+        ]
+      },
+      "outcome": {
+        "value": "Export inspection on October 19 confirmed UTC timestamps.",
+        "basis": "recorded",
+        "from": [
+          "ASM-002"
+        ]
+      },
+      "nextAction": null
+    },
+    {
+      "key": "ISS-001",
+      "id": "ISS-001",
+      "category": "issue",
+      "tab": "issues",
+      "title": "QA users cannot access the sandbox",
+      "description": "Four QA testers receive an authorization error when signing in to the sandbox. Test preparation is paused.",
+      "status": "in_progress",
+      "source": [
+        "ISS-001"
+      ],
+      "owner": {
+        "value": "Jordan Lee",
+        "basis": "recorded",
+        "from": [
+          "ISS-001"
+        ]
+      },
+      "impactArea": {
+        "value": "Access & Onboarding",
+        "basis": "recorded",
+        "from": [
+          "ISS-001"
+        ]
+      },
+      "raisedBy": {
+        "value": "Testing lead",
+        "basis": "recorded",
+        "from": [
+          "ISS-001"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-21",
+        "basis": "recorded",
+        "from": [
+          "ISS-001"
+        ]
+      },
+      "target": {
+        "value": "2026-10-24",
+        "basis": "recorded",
+        "from": [
+          "ISS-001"
+        ]
+      },
+      "priority": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "ISS-001"
+        ]
+      },
+      "severity": {
+        "value": "High",
+        "basis": "assessed",
+        "reason": "Source states test preparation is paused and UAT starts November 10.",
+        "source": [
+          "ISS-001"
+        ]
+      },
+      "outcome": null,
+      "nextAction": {
+        "value": "Confirm QA sandbox access with client IT",
+        "basis": "recorded",
+        "from": [
+          "ACT-004"
+        ]
+      },
+      "resolutionPlan": {
+        "value": "Submit the access request, assign the tester role, verify sign-in for all four testers.",
+        "basis": "recorded",
+        "from": [
+          "ISS-001"
+        ]
+      }
+    },
+    {
+      "key": "ISS-002",
+      "id": "ISS-002",
+      "category": "issue",
+      "tab": "issues",
+      "title": "Design review room unavailable",
+      "description": "The booked room for the design review was double-booked. The session moved online.",
+      "status": "resolved",
+      "source": [
+        "ISS-002"
+      ],
+      "owner": {
+        "value": "Delivery lead",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      },
+      "impactArea": {
+        "value": "Timeline / Schedule",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      },
+      "raisedBy": {
+        "value": "Delivery lead",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-14",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      },
+      "target": {
+        "value": "2026-10-15",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      },
+      "priority": {
+        "value": "Low",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      },
+      "severity": {
+        "value": "Low",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      },
+      "outcome": {
+        "value": "Review held online on October 15.",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      },
+      "nextAction": null,
+      "resolutionPlan": {
+        "value": "Move session online and resend the invitation.",
+        "basis": "recorded",
+        "from": [
+          "ISS-002"
+        ]
+      }
+    },
+    {
+      "key": "DEC-001",
+      "id": "DEC-001",
+      "category": "decision",
+      "tab": "decisions",
+      "title": "Use a message queue for invoice events",
+      "description": "The sponsor selected a queue over direct API calls for invoice events, citing retry handling and vendor rate limits.",
+      "status": "decided",
+      "source": [
+        "DEC-001"
+      ],
+      "owner": {
+        "value": "Executive sponsor",
+        "basis": "recorded",
+        "from": [
+          "DEC-001"
+        ]
+      },
+      "impactArea": {
+        "value": "Solution & Design",
+        "basis": "recorded",
+        "from": [
+          "DEC-001"
+        ]
+      },
+      "raisedBy": {
+        "value": "Solution architect",
+        "basis": "recorded",
+        "from": [
+          "DEC-001"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-08",
+        "basis": "recorded",
+        "from": [
+          "DEC-001"
+        ]
+      },
+      "target": null,
+      "priority": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "DEC-001"
+        ]
+      },
+      "outcome": {
+        "value": "Queue-based integration adopted for Phase 1.",
+        "basis": "recorded",
+        "from": [
+          "DEC-001"
+        ]
+      },
+      "nextAction": null
+    },
+    {
+      "key": "QST-003",
+      "id": "QST-003",
+      "category": "open_question",
+      "tab": "decisions",
+      "title": "Migrate closed cases in Phase 1?",
+      "description": "The team still needs to decide whether closed cases older than two years are migrated in Phase 1 or archived.",
+      "status": "open",
+      "source": [
+        "QST-003"
+      ],
+      "owner": {
+        "value": "Product owner",
+        "basis": "recorded",
+        "from": [
+          "QST-003"
+        ]
+      },
+      "impactArea": {
+        "value": "Scope",
+        "basis": "recorded",
+        "from": [
+          "QST-003"
+        ]
+      },
+      "raisedBy": {
+        "value": "Data lead",
+        "basis": "recorded",
+        "from": [
+          "QST-003"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-16",
+        "basis": "recorded",
+        "from": [
+          "QST-003"
+        ]
+      },
+      "target": {
+        "value": "2026-11-04",
+        "basis": "recorded",
+        "from": [
+          "QST-003"
+        ]
+      },
+      "priority": {
+        "value": "High",
+        "basis": "assessed",
+        "reason": "Migration build sizing for sprint 6 depends on the answer; sprint planning is November 4.",
+        "source": [
+          "QST-003"
+        ]
+      },
+      "outcome": null,
+      "nextAction": {
+        "value": "Prepare archive cost estimate for closed cases",
+        "basis": "recorded",
+        "from": [
+          "ACT-006"
+        ]
+      }
+    },
+    {
+      "key": "DEP-001",
+      "id": "DEP-001",
+      "category": "dependency",
+      "tab": "dependencies",
+      "title": "UAT requires a provisioned sandbox",
+      "description": "UAT cannot start until client IT provisions the sandbox with production-like data.",
+      "status": "pending",
+      "source": [
+        "DEP-001"
+      ],
+      "owner": {
+        "value": "Client IT",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      },
+      "impactArea": {
+        "value": "Access & Onboarding",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      },
+      "raisedBy": {
+        "value": "Testing lead",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-02",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      },
+      "target": {
+        "value": "2026-11-10",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      },
+      "priority": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      },
+      "importance": {
+        "value": "Critical",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      },
+      "outcome": null,
+      "nextAction": {
+        "value": "Confirm the sandbox provisioning date with client IT",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      }
+    },
+    {
+      "key": "DEP-002",
+      "id": "DEP-002",
+      "category": "dependency",
+      "tab": "dependencies",
+      "title": "Data dictionary from the billing vendor",
+      "description": "Mapping design requires the vendor’s current data dictionary.",
+      "status": "satisfied",
+      "source": [
+        "DEP-002"
+      ],
+      "owner": {
+        "value": "Billing vendor",
+        "basis": "recorded",
+        "from": [
+          "DEP-002"
+        ]
+      },
+      "impactArea": {
+        "value": "Solution & Design",
+        "basis": "recorded",
+        "from": [
+          "DEP-002"
+        ]
+      },
+      "raisedBy": {
+        "value": "Data lead",
+        "basis": "recorded",
+        "from": [
+          "DEP-002"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-09-25",
+        "basis": "recorded",
+        "from": [
+          "DEP-002"
+        ]
+      },
+      "target": {
+        "value": "2026-10-09",
+        "basis": "recorded",
+        "from": [
+          "DEP-002"
+        ]
+      },
+      "priority": {
+        "value": "Medium",
+        "basis": "recorded",
+        "from": [
+          "DEP-002"
+        ]
+      },
+      "importance": {
+        "value": "High",
+        "basis": "assessed",
+        "reason": "Mapping design for three of four domains cites the dictionary as an input.",
+        "source": [
+          "DEP-002"
+        ]
+      },
+      "outcome": {
+        "value": "Dictionary received October 8.",
+        "basis": "recorded",
+        "from": [
+          "DEP-002"
+        ]
+      },
+      "nextAction": null
+    },
+    {
+      "key": "ACT-004",
+      "id": "ACT-004",
+      "category": "action_item",
+      "tab": "actions",
+      "title": "Confirm QA sandbox access with client IT",
+      "description": "Follow up with client IT on the four QA testers’ access and confirm a credential date.",
+      "status": "in_progress",
+      "source": [
+        "ACT-004"
+      ],
+      "owner": {
+        "value": "Jordan Lee",
+        "basis": "recorded",
+        "from": [
+          "ACT-004"
+        ]
+      },
+      "impactArea": {
+        "value": "Access & Onboarding",
+        "basis": "recorded",
+        "from": [
+          "ACT-004"
+        ]
+      },
+      "raisedBy": {
+        "value": "Testing lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-004"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-21",
+        "basis": "recorded",
+        "from": [
+          "ACT-004"
+        ]
+      },
+      "target": {
+        "value": "2026-10-24",
+        "basis": "recorded",
+        "from": [
+          "ACT-004"
+        ]
+      },
+      "priority": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "ACT-004"
+        ]
+      },
+      "outcome": null,
+      "addresses": {
+        "value": "Sandbox credentials may arrive after UAT starts; QA users cannot access the sandbox",
+        "basis": "recorded",
+        "from": [
+          "RSK-001",
+          "ISS-001"
+        ]
+      }
+    },
+    {
+      "key": "ACT-006",
+      "id": "ACT-006",
+      "category": "action_item",
+      "tab": "actions",
+      "title": "Prepare archive cost estimate for closed cases",
+      "description": "Estimate storage and retrieval cost of archiving closed cases instead of migrating them.",
+      "status": "committed",
+      "source": [
+        "ACT-006"
+      ],
+      "owner": {
+        "value": "Data lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-006"
+        ]
+      },
+      "impactArea": {
+        "value": "Scope",
+        "basis": "recorded",
+        "from": [
+          "ACT-006"
+        ]
+      },
+      "raisedBy": {
+        "value": "Product owner",
+        "basis": "recorded",
+        "from": [
+          "ACT-006"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-16",
+        "basis": "recorded",
+        "from": [
+          "ACT-006"
+        ]
+      },
+      "target": {
+        "value": "2026-11-03",
+        "basis": "recorded",
+        "from": [
+          "ACT-006"
+        ]
+      },
+      "priority": {
+        "value": "Medium",
+        "basis": "recorded",
+        "from": [
+          "ACT-006"
+        ]
+      },
+      "outcome": null,
+      "addresses": {
+        "value": "Migrate closed cases in Phase 1?",
+        "basis": "recorded",
+        "from": [
+          "QST-003"
+        ]
+      }
+    },
+    {
+      "key": "ACT-007",
+      "id": "ACT-007",
+      "category": "action_item",
+      "tab": "actions",
+      "title": "Profile the first full export for duplicate IDs",
+      "description": "Run a duplicate check on enterprise IDs in the first full customer export.",
+      "status": "assigned",
+      "source": [
+        "ACT-007"
+      ],
+      "owner": {
+        "value": "Data lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "impactArea": {
+        "value": "Solution & Design",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "raisedBy": {
+        "value": "Solution architect",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-27",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "target": {
+        "value": "2026-11-05",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "priority": {
+        "value": "Medium",
+        "basis": "recorded",
+        "from": [
+          "ACT-007"
+        ]
+      },
+      "outcome": null,
+      "addresses": {
+        "value": "Every customer record has a unique enterprise ID",
+        "basis": "recorded",
+        "from": [
+          "ASM-001"
+        ]
+      }
+    },
+    {
+      "key": "ACT-008",
+      "id": "ACT-008",
+      "category": "action_item",
+      "tab": "actions",
+      "title": "Confirm the sandbox provisioning date with client IT",
+      "description": "Ask for a firm provisioning date at the weekly IT sync.",
+      "status": "committed",
+      "source": [
+        "ACT-008"
+      ],
+      "owner": {
+        "value": "Testing lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "impactArea": {
+        "value": "Access & Onboarding",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "raisedBy": {
+        "value": "Delivery lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-23",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "target": {
+        "value": "2026-10-30",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "priority": {
+        "value": "High",
+        "basis": "recorded",
+        "from": [
+          "ACT-008"
+        ]
+      },
+      "outcome": null,
+      "addresses": {
+        "value": "UAT requires a provisioned sandbox",
+        "basis": "recorded",
+        "from": [
+          "DEP-001"
+        ]
+      }
+    },
+    {
+      "key": "ACT-002",
+      "id": "ACT-002",
+      "category": "action_item",
+      "tab": "actions",
+      "title": "Share design review recording",
+      "description": "Post the design review recording to the project site so finance subject matter experts who miss a validation session can catch up.",
+      "status": "completed",
+      "source": [
+        "ACT-002"
+      ],
+      "owner": {
+        "value": "Delivery lead",
+        "basis": "recorded",
+        "from": [
+          "ACT-002"
+        ]
+      },
+      "impactArea": {
+        "value": "Change Adoption & Training",
+        "basis": "recorded",
+        "from": [
+          "ACT-002"
+        ]
+      },
+      "raisedBy": {
+        "value": "Executive sponsor",
+        "basis": "recorded",
+        "from": [
+          "ACT-002"
+        ]
+      },
+      "dateRaised": {
+        "value": "2026-10-15",
+        "basis": "recorded",
+        "from": [
+          "ACT-002"
+        ]
+      },
+      "target": {
+        "value": "2026-10-16",
+        "basis": "recorded",
+        "from": [
+          "ACT-002"
+        ]
+      },
+      "priority": {
+        "value": "Low",
+        "basis": "recorded",
+        "from": [
+          "ACT-002"
+        ]
+      },
+      "outcome": {
+        "value": "Recording posted October 16.",
+        "basis": "recorded",
+        "from": [
+          "ACT-002"
+        ]
+      },
+      "addresses": {
+        "value": "Limited SME availability during design validation",
+        "basis": "recorded",
+        "from": [
+          "RSK-002"
+        ]
+      }
+    }
+  ]
+}

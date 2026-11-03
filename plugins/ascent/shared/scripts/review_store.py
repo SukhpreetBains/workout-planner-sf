@@ -846,6 +846,12 @@ def update_accepted(category: str, tracker_id: str, fields: object) -> dict:
         if problems:
             raise ValidationFailure(problems)
         upsert_row(category, {**update["fields"], id_column(category, schema): tracker_id}, schema)
+        sync = subprocess.run(
+            [sys.executable, str(Path(__file__).with_name("sync.py")), "--trackers-only"],
+            capture_output=True, text=True, cwd=REPO_ROOT,
+        )
+        if sync.returncode:
+            raise ReviewError(sync.stderr.strip() or sync.stdout.strip() or "sync failed")
         return {"category": category, "tracker_id": tracker_id, "validation": []}
 
 

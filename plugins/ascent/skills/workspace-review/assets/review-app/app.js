@@ -19,7 +19,6 @@ const loading = document.querySelector("#loading");
 const errorState = document.querySelector("#error-state");
 const toast = document.querySelector("#toast");
 const siteHeader = document.querySelector(".site-header");
-const headerCount = document.querySelector("#header-count");
 const headerControls = document.querySelector("#header-controls");
 const reviewStates = { pending: "Pending", accepted: "Accepted", rejected: "Rejected" };
 let records = [];
@@ -101,7 +100,7 @@ function icon(...paths) {
   });
   return svg;
 }
-const filterIcon = () => icon("M4 6h16M7 12h10M10 18h4");
+const funnelIcon = () => icon("M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z");
 const pencilIcon = () => icon("M4 20h4L19 9l-4-4L4 16v4z", "M13.5 6.5l4 4");
 const trashIcon = () => icon("M4 7h16", "M9 7V4h6v3", "M6 7l1 13h10l1-13", "M10 11v6", "M14 11v6");
 
@@ -136,8 +135,19 @@ function ownIds(record) {
   return [];
 }
 
+// A pending update carries only the fields it changes; show the tracker's current values for the rest.
+function shownFields(record) {
+  if (record.state !== "pending" || record.action !== "update" || !record.current_row) return record.fields || {};
+  const current = Object.fromEntries(Object.entries(record.current_row).filter(([, value]) => value !== "" && value != null));
+  return { ...current, ...record.fields };
+}
+
+function isProposedChange(record, name) {
+  return record.state === "pending" && record.action === "update" && Object.hasOwn(record.fields || {}, name);
+}
+
 function recordTitle(record) {
-  return String(record.fields?.Name || record.title || "").trim() || `${record.category_label} item`;
+  return String(shownFields(record).Name || record.title || "").trim() || `${record.category_label} item`;
 }
 
 function selectedRecord() {
@@ -145,13 +155,12 @@ function selectedRecord() {
 }
 
 function setHeaderCount(count) {
-  headerCount.textContent = String(count);
-  headerCount.setAttribute("aria-label", `${count} ${count === 1 ? "item" : "items"}`);
+  document.title = `Workspace review inbox (${count})`;
 }
 
 function missingRequired(record) {
   return (record.field_schema || []).filter(definition => definition.required
-    && String(record.fields?.[definition.name] ?? "").trim() === "").length;
+    && String(shownFields(record)[definition.name] ?? "").trim() === "").length;
 }
 
 function recordSearchText(record) {
@@ -172,7 +181,7 @@ function matchesReviewFilter(record) {
 
 // Signal Date comes from source context; metadata keeps undated items sortable.
 function recordDate(record) {
-  return normalizeDate(record.fields?.Date || record.created_at || record.fields?.["Created At"] || "");
+  return normalizeDate(shownFields(record).Date || record.created_at || record.fields?.["Created At"] || "");
 }
 
 function visibleRecords() {
@@ -244,8 +253,9 @@ function triageControls() {
 function dateSortControl() {
   const sort = enumPicker("filter-sort", "sort-filter", [
     { value: "oldest", text: "Date: oldest first" }, { value: "newest", text: "Date: newest first" },
-  ], sortMode, { ariaLabel: "Sort by date", includeEmpty: false });
+  ], sortMode, { ariaLabel: "Sort by date", includeEmpty: false, buttonIcon: funnelIcon });
   sort.input.addEventListener("input", () => { sortMode = sort.input.value; flushSave(); scheduleFilterRender({ focusSort: true }); });
+  sort.control.classList.add("sort-picker");
   return sort.control;
 }
 
@@ -366,7 +376,8 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
       if (!inCategory.length) return;
       list.append(el("h3", { class: "link-picker-category" }, category.label));
       inCategory.forEach(record => {
-        const details = [record.fields.Status && label(record.fields.Status), String(record.fields.Description || "").slice(0, 160)].filter(Boolean).join(" · ");
+        const shown = shownFields(record);
+        const details = [shown.Status && label(shown.Status), String(shown.Description || "").slice(0, 160)].filter(Boolean).join(" · ");
         const choice = el("input", { type: editing ? "radio" : "checkbox", name: "relationship-target", value: record.id });
         choice.checked = selected.has(record.id);
         const item = el("div", { class: "link-picker-item" }, [
@@ -440,10 +451,12 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
 function relationshipsSection(record, definition, onChange) {
   const ids = ownIds(record);
   const readOnly = record.state === "rejected";
-  const input = el("input", { type: "hidden", name: definition.name, value: record.fields?.[definition.name] ?? "" });
+  const input = el("input", { type: "hidden", name: definition.name, value: shownFields(record)[definition.name] ?? "" });
   if (onChange) input.addEventListener("input", onChange);
   const outgoing = el("ul", { class: "relationship-list" });
   const incoming = el("ul", { class: "relationship-list" });
+  const outgoingHeading = el("p", { class: "relationship-subheading" }, "From this record");
+  const incomingHeading = el("p", { class: "relationship-subheading" }, "Pointing to this record");
   const add = el("button", { class: "quiet relationship-add", type: "button" }, "Add relationships");
   const change = entries => {
     input.value = formatRelationships(entries);
@@ -452,7 +465,8 @@ function relationshipsSection(record, definition, onChange) {
   };
   const render = () => {
     const entries = parseRelationships(input.value);
-    outgoing.replaceChildren(...(entries.length ? entries.map((entry, index) => {
+    outgoingHeading.hidden = outgoing.hidden = entries.length === 0;
+    outgoing.replaceChildren(...entries.map((entry, index) => {
       const meaningLabel = relationshipType(entry.meaning)?.label || entry.meaning || "Unspecified meaning";
       const actions = readOnly ? [] : [
         el("button", { class: "quiet icon-button", type: "button", title: "Edit relationship",
@@ -465,12 +479,12 @@ function relationshipsSection(record, definition, onChange) {
           onclick: () => change(entries.filter((_, position) => position !== index)) }, trashIcon()),
       ];
       return relationshipRow(meaningLabel, entry.target, actions);
-    }) : [el("li", { class: "relationship-empty" }, "This record does not point to any other record yet.")]));
+    }));
     const pointing = ids.length ? knownRecords().flatMap(other => parseRelationships(relationshipsValue(other.category, other.fields))
       .filter(entry => ids.includes(entry.target)).map(entry => ({ other, meaning: entry.meaning }))) : [];
-    incoming.replaceChildren(...(pointing.length ? pointing.map(({ other, meaning }) =>
-      relationshipRow(relationshipType(meaning)?.inverse_label || meaning, other.id, [], { incoming: true }))
-      : [el("li", { class: "relationship-empty" }, "No other record points to this one yet.")]));
+    incomingHeading.hidden = incoming.hidden = pointing.length === 0;
+    incoming.replaceChildren(...pointing.map(({ other, meaning }) =>
+      relationshipRow(relationshipType(meaning)?.inverse_label || meaning, other.id, [], { incoming: true })));
   };
   add.addEventListener("click", () => openRelationshipPicker({
     ownIds: ids, trigger: add,
@@ -480,14 +494,14 @@ function relationshipsSection(record, definition, onChange) {
   return el("section", { class: "relationships-section field-wide", "aria-label": "Relationships" }, [
     input,
     el("h3", {}, "Relationships"),
-    el("p", { class: "relationship-subheading" }, "From this record"), outgoing, ...(readOnly ? [] : [add]),
-    el("p", { class: "relationship-subheading" }, "Pointing to this record"), incoming,
+    outgoingHeading, outgoing, ...(readOnly ? [] : [add]),
+    incomingHeading, incoming,
   ]);
 }
 
 // ---------------------------------------------------------------- fields
 
-function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true, emptyLabel = "Select an option", disabled = false } = {}) {
+function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true, emptyLabel = "Select an option", disabled = false, buttonIcon = null } = {}) {
   const input = el("input", { id, name, type: "hidden", value });
   const button = el("button", {
     id: `${id}-button`, class: "field-picker-button", type: "button",
@@ -499,12 +513,15 @@ function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true, 
   const open = () => { list.hidden = false; button.setAttribute("aria-expanded", "true"); };
   const choices = options.map(option => typeof option === "string" ? { value: option, text: label(option) } : option);
   if (includeEmpty) choices.unshift({ value: "", text: emptyLabel });
-  button.textContent = choices.find(option => option.value === value)?.text || emptyLabel;
+  const selectedText = choices.find(option => option.value === value)?.text || emptyLabel;
+  button.replaceChildren(buttonIcon ? buttonIcon() : selectedText);
+  if (buttonIcon) button.title = selectedText;
   choices
     .forEach(option => list.append(el("button", {
-      type: "button", role: "option", "aria-selected": String(option.value === value), onclick: () => {
+      type: "button", role: "option", "aria-selected": String(option.value === value), title: option.title, onclick: () => {
         input.value = option.value;
-        button.textContent = option.text;
+        button.replaceChildren(buttonIcon ? buttonIcon() : option.text);
+        if (buttonIcon) button.title = option.text;
         input.dispatchEvent(new Event("input", { bubbles: true }));
         close();
         button.focus();
@@ -519,12 +536,17 @@ function fieldControl(record, definition) {
   const name = definition.name;
   const readOnly = record.state === "rejected";
   const id = `field-${record.key.replace(/[^a-z0-9]/gi, "-")}-${name.replace(/[^a-z0-9]/gi, "-")}`;
-  const value = record.fields?.[name] ?? "";
+  const value = shownFields(record)[name] ?? "";
   let input;
   let control;
   let labelFor = id;
   if (definition.enum) {
-    const picker = enumPicker(id, name, definition.enum, value, { disabled: readOnly });
+    // A column may name its values (enum_labels) and define them (enum_definitions, shown on hover).
+    const names = definition.enum_labels || {};
+    const options = definition.enum.map(option => ({ value: option, text: names[option] || label(option),
+      title: definition.enum_definitions?.[option] }));
+    const current = definition.enum.find(option => String(names[option] || "").toLowerCase() === String(value).toLowerCase()) || value;
+    const picker = enumPicker(id, name, options, current, { disabled: readOnly });
     input = picker.input;
     control = picker.control;
     labelFor = picker.labelFor;
@@ -555,6 +577,7 @@ function fieldControl(record, definition) {
     updateFieldGroupStatus();
   });
   const labelChildren = [name === "Probability" ? "Probability (%)" : fieldLabel(definition)];
+  if (isProposedChange(record, name)) labelChildren.push(el("span", { class: "proposed-tag" }, "Proposed change"));
   if (definition.required) {
     labelChildren.push(
       el("span", { class: "required-marker", "aria-hidden": "true" }, " *"),
@@ -563,7 +586,7 @@ function fieldControl(record, definition) {
   }
   const fieldName = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const quickClass = name === "Name" ? "field-quick-title" : name === "Status" ? "field-quick-status" : name === "Description" ? "field-quick-statement" : "";
-  const wrapper = el("div", { class: `field field-${fieldName} ${quickClass} ${control.tagName === "TEXTAREA" ? "field-wide" : ""}`,
+  const wrapper = el("div", { class: `field field-${fieldName} ${quickClass} ${control.tagName === "TEXTAREA" ? "field-wide" : ""} ${isProposedChange(record, name) ? "field-proposed" : ""}`,
     "data-required": definition.required ? "true" : "false" }, [
     el("label", { for: labelFor }, labelChildren), control,
   ]);
@@ -599,7 +622,12 @@ function collectFields(record) {
     const input = form.elements.namedItem(definition.name);
     if (!input) continue;
     if (input.value !== "" || Object.hasOwn(record.fields, definition.name)) {
-      fields[definition.name] = definition.name === "Probability" && input.value !== "" ? Number(input.value) / 100 : definition.type === "number" && input.value !== "" ? Number(input.value) : input.value;
+      const value = definition.name === "Probability" && input.value !== "" ? Number(input.value) / 100 : definition.type === "number" && input.value !== "" ? Number(input.value) : input.value;
+      // Keep an update to the fields it changes: a value still matching the tracker row is not saved into it.
+      const current = record.action === "update" ? record.current_row?.[definition.name] : undefined;
+      const same = definition.type === "date" ? normalizeDate(current) === normalizeDate(value) : String(current ?? "") === String(value);
+      if (!Object.hasOwn(record.fields, definition.name) && current != null && same) continue;
+      fields[definition.name] = value;
     }
   }
   return fields;
@@ -825,7 +853,6 @@ function categoryNavigation(visible) {
         if (collapsed) collapsedGroups.delete(group.id); else collapsedGroups.add(group.id);
         renderCategory();
       } }, [
-      el("span", { class: "category-nav-chevron", "aria-hidden": "true" }, collapsed ? "▸" : "▾"),
       el("span", {}, group.label),
       el("span", { class: "category-nav-count", "aria-label": `${total} shown` }, String(total)),
     ]);
@@ -854,7 +881,10 @@ function categoryNavigation(visible) {
 function listHeader(count) {
   const name = categoryLabel(activeCategory);
   return el("div", { class: "proposal-list-header" }, [
-    el("h2", { class: "proposal-list-heading" }, [name, el("span", { class: "category-nav-count" }, String(count))]),
+    el("h2", { class: "proposal-list-heading", title: name }, [
+      el("span", { class: "proposal-list-category-name" }, name),
+      el("span", { class: "category-nav-count" }, String(count)),
+    ]),
     dateSortControl(),
     el("button", { class: "quiet proposal-list-new", type: "button", title: `Create a ${name} proposal`,
       "aria-label": `Create a ${name} proposal`, onclick: () => createManualProposal(activeCategory) }, "+ New"),
@@ -881,17 +911,11 @@ function stateBadge(record) {
 function renderProposalListItem(record, selected) {
   const article = el("article", { class: `proposal-list-item category-${record.category} state-${record.state}${selected ? " is-selected" : ""}`,
     "aria-label": `${record.category_label} ${reviewStates[record.state].toLowerCase()} item: ${recordTitle(record)}` });
-  const missing = missingRequired(record);
-  const sources = (record.evidence?.length || record.source_refs?.length || 0);
   article.append(el("button", { class: "proposal-list-title", type: "button", "aria-current": selected ? "true" : undefined,
     onclick: () => { flushSave(); selectedKey = record.key; renderCategory(); } }, [
     el("span", { class: "proposal-title-copy" }, recordTitle(record)),
     el("span", { class: "proposal-list-meta" }, [
-      ...(reviewFilter.size > 1 ? [stateBadge(record)] : []),
-      el("span", { class: "proposal-date" }, `Date: ${normalizeDate(record.fields?.Date) || "Unknown"}`),
-      ...(record.created_at ? [el("span", { class: "proposal-created" }, `Added: ${normalizeDate(record.created_at)}`)] : []),
-      ...(missing ? [el("span", { class: "proposal-badge needs-attention" }, `${missing} required`)] : []),
-      el("span", {}, `${sources} ${sources === 1 ? "source" : "sources"}`),
+        stateBadge(record),
     ]),
   ]));
   return article;
@@ -948,12 +972,13 @@ function expandedCardContent(record) {
   const trackerType = categoryControl(record);
   const stickyHeader = el("header", { class: "review-sticky-header" }, [
     el("div", { class: "review-heading" }, [
-      el("p", { class: "eyebrow review-state-line" }, ["Review state ", stateBadge(record)]),
-      el("h2", { title: recordTitle(record) }, recordTitle(record)),
-      ...(trackerType ? [trackerType] : []),
+      el("div", { class: "review-title-row" }, [
+        el("h2", { title: recordTitle(record) }, recordTitle(record)),
+        stateBadge(record),
+      ]),
     ]),
     el("div", { class: "review-sticky-actions" }, [
-      el("span", { class: "save-state", id: "save-state", role: "status" }, record.state === "rejected" ? "Read-only" : "All changes saved"),
+      el("span", { class: "save-state sr-only", id: "save-state", role: "status" }, record.state === "rejected" ? "Read-only" : "All changes saved"),
       reviewActions(record),
     ]),
   ]);
@@ -961,6 +986,7 @@ function expandedCardContent(record) {
   const quickGrid = el("div", { class: "quick-field-grid" });
   const quick = quickDefinitions(record);
   quick.forEach(definition => quickGrid.append(fieldControl(record, definition)));
+  if (trackerType) form.append(trackerType);
   form.append(quickGrid);
 
   const quickNames = new Set(quick.map(definition => definition.name));
@@ -1156,75 +1182,119 @@ async function loadInbox() {
   }
 }
 
-const syncIndicator = el("span", { class: "sync-indicator", role: "status" }, "Working locally");
-const syncTime = value => value ? new Date(value).toLocaleString() : "Not present";
+const syncIndicator = el("span", { class: "sync-indicator sr-only", role: "status" }, "Working locally");
+async function syncPreview() {
+  try {
+    return await api("/api/sync-preview");
+  } catch (error) {
+    if (error.status !== 503) throw error;
+    return api("/api/sync-preview");
+  }
+}
 
-function openSyncModal(preview, trigger) {
+function reportSyncResult(status) {
+  if (status.state === "synced") showToast("Synced to OneDrive.");
+  else if (status.state === "conflict") showToast("Sync paused because OneDrive changed since the last sync. Your local work is saved.");
+  else if (status.state === "offline") showToast(`Sync failed: ${status.error || "OneDrive is unavailable."}`);
+  else showToast(`${status.pending || 0} local change${status.pending === 1 ? "" : "s"} still waiting to sync.`);
+}
+
+async function runSyncNow() {
+  syncIndicator.textContent = "Syncing to OneDrive";
+  const status = await api("/api/sync-now", { method: "POST", body: "{}" });
+  await refreshSyncStatus();
+  reportSyncResult(status);
+  return status;
+}
+
+function openSyncWarning(preview, trigger) {
   const modal = el("div", { class: "review-note-modal sync-modal", role: "dialog",
     "aria-modal": "true", "aria-labelledby": "sync-modal-title" });
   const close = el("button", { class: "quiet", type: "button",
     onclick: () => closeModal(modal, trigger) }, "Close");
-  const list = el("div", { class: "sync-file-list" });
-  const intro = el("p", {}, "Review the local and cloud versions, then overwrite the cloud with every available local copy.");
-  const action = el("button", { type: "button" }, "Overwrite cloud with all local files");
-  let comparedItems = [];
-  const render = items => {
+  const warning = el("p");
+  const safeSync = el("button", { class: "quiet", type: "button" }, "Sync safely");
+  const overwrite = el("button", { type: "button" }, "Overwrite OneDrive with local changes");
+  let comparedItems = preview.items || [];
+  const updateWarning = items => {
     comparedItems = items;
-    list.replaceChildren();
-    action.disabled = !items.some(item => item.local.exists);
-    if (!items.length) {
-      list.append(el("p", { class: "sync-empty" }, "Local and cloud review files match."));
-      return;
-    }
-    items.forEach(item => {
-      const local = item.local;
-      const cloud = item.cloud;
-      const details = el("div", { class: "sync-versions" }, [
-        el("div", {}, [el("strong", {}, "Local"),
-          el("span", {}, syncTime(local.modified_at)),
-          el("span", {}, `By ${local.modified_by}`)]),
-        el("div", {}, [el("strong", {}, "Cloud"),
-          el("span", {}, syncTime(cloud.modified_at)),
-          el("span", {}, `By ${cloud.modified_by}`)]),
-      ]);
-      list.append(el("section", { class: "sync-file" }, [
-        el("h3", {}, item.path), details,
-        ...(!local.exists ? [el("p", { class: "sync-file-note" }, "No local copy to upload.")] : []),
-      ]));
-    });
+    const changed = items.filter(item => item.cloud_changed).length;
+    warning.textContent = changed
+      ? `${changed} OneDrive file${changed === 1 ? " has" : "s have"} changed since the last sync. Your local changes are saved. You can try a safe sync or overwrite OneDrive with the local copies.`
+      : "The file list changed. Review the current sync status before overwriting OneDrive.";
+    overwrite.disabled = !items.some(item => item.local.exists);
   };
-  action.addEventListener("click", async () => {
-    action.disabled = true;
+  safeSync.addEventListener("click", async () => {
+    safeSync.disabled = true;
+    overwrite.disabled = true;
     try {
-      const result = await api("/api/sync-overwrite-all", { method: "POST",
-        body: JSON.stringify({ items: comparedItems }) });
-      showToast(`${result.updated.length} cloud file${result.updated.length === 1 ? "" : "s"} updated.`);
-      render((await api("/api/sync-preview")).items || []);
-      refreshSyncStatus();
+      const status = await runSyncNow();
+      if (status.state === "synced") closeModal(modal, trigger);
     } catch (error) {
-      showToast(error.message || "The cloud files were not updated.");
-      try { render((await api("/api/sync-preview")).items || []); }
-      catch { action.disabled = false; }
+      showToast(error.message || "Sync failed.");
+    } finally {
+      safeSync.disabled = false;
+      overwrite.disabled = !comparedItems.some(item => item.local.exists);
     }
   });
-  const form = el("form", {}, [el("h2", { id: "sync-modal-title" }, "Review sync"), intro, list,
-    el("div", { class: "modal-actions" }, close, action)]);
+  overwrite.addEventListener("click", async () => {
+    overwrite.disabled = true;
+    safeSync.disabled = true;
+    try {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          await api("/api/sync-overwrite-all", { method: "POST",
+            body: JSON.stringify({ items: comparedItems }) });
+          break;
+        } catch (error) {
+          if (error.status !== 409 || attempt === 2) throw error;
+          const latest = (await syncPreview()).items || [];
+          const priorCloud = new Map(comparedItems.map(item => [item.path, item.cloud.fingerprint]));
+          const newCloudChanges = latest.some(item => item.cloud_changed
+            && priorCloud.get(item.path) !== item.cloud.fingerprint);
+          if (newCloudChanges) {
+            updateWarning(latest);
+            throw new Error("OneDrive changed again. Review this warning before overwriting.");
+          }
+          comparedItems = latest;
+        }
+      }
+      const status = await runSyncNow();
+      if (status.state === "synced") closeModal(modal, trigger);
+    } catch (error) {
+      showToast(error.message || "OneDrive was not updated.");
+      try { updateWarning((await syncPreview()).items || []); }
+      catch { overwrite.disabled = false; }
+    } finally {
+      safeSync.disabled = false;
+    }
+  });
+  const form = el("form", {}, [el("h2", { id: "sync-modal-title" }, "OneDrive changed"), warning,
+    el("div", { class: "modal-actions" }, [close, safeSync, overwrite])]);
   form.addEventListener("submit", event => event.preventDefault());
   modal.append(form);
-  render(preview.items || []);
+  updateWarning(comparedItems);
   showModal(modal, close, trigger);
 }
 
-const syncButton = el("button", { class: "quiet sync-button", type: "button", onclick: async () => {
+const syncButton = el("button", { class: "quiet sync-button", type: "button", title: "Sync now with OneDrive", onclick: async () => {
   syncButton.disabled = true;
   try {
-    openSyncModal(await api("/api/sync-preview"), syncButton);
+    const selected = records.find(record => record.key === selectedKey);
+    if (selected) await ensureSaved(selected);
+    const preview = await syncPreview();
+    if ((preview.items || []).some(item => item.cloud_changed)) {
+      openSyncWarning(preview, syncButton);
+    } else {
+      const status = await runSyncNow();
+      if (status.state === "conflict") openSyncWarning(await syncPreview(), syncButton);
+    }
   } catch (error) {
-    showToast(error.message || "Could not compare local and cloud files.");
+    showToast(error.message || "Could not sync with OneDrive.");
   } finally {
     syncButton.disabled = false;
   }
-} }, "Sync now");
+} }, "Sync");
 siteHeader.append(syncIndicator, syncButton);
 
 async function refreshSyncStatus() {
