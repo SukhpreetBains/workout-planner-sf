@@ -26,6 +26,7 @@ screenshots, portals, dashboards, and web experiences.
 | Describing Slalom — pitch, values, services | `messaging.md` |
 | Judging whether something feels on-brand | `creative-lens.md` |
 | Reviewing a finished deliverable | `review-checklist.md` |
+| Building a microsite or HTML deliverable from ready-made patterns (heroes, stats, roadmaps, timelines, team cards, quotes) | `../components/README.md` |
 
 ## Non-negotiables
 
@@ -46,6 +47,7 @@ These hold everywhere. Everything else is in the references.
 - `../assets/illustrations/` — 116 people illustrations across 37 subjects, indexed in its README.
 - `../assets/color-bars/` — reference artwork for the framing and underline bars.
 - `../assets/fonts/` — Slalom Sans (10 styles, woff2/woff/otf), indexed in its README. Self-host from here for web and digital work. Avenir Next LT Pro is not bundled by design — it is PowerPoint-only. Lora, the optional supporting serif, is not bundled either, so anything needing a serif must be composed in Slalom Sans and the substitution disclosed.
+- `../components/` — 32 framework-free HTML/CSS/JS patterns for web deliverables (`slalom-components.css`, `slalom-components.js`), with a live `gallery.html` and one reference file per pattern. They use only the tokens, fonts and assets above.
 - `../assets/branding-guide/Slalom Brand Guide.pdf` — the February 2025 guide, the authority behind every reference here. Open it only to confirm something the references do not cover.
 
 Beyond this pack: **brand.slalom.com** (Brand Hub) is the front door; the **Creative Library** holds photos, video, color bar EPS files, Adobe swatch palettes, and the "True Color" preset; the **Figma style guide** covers slalom.com's web palette and Services icon colors; the **writing style guide** and **ERG Style Guide** cover prose and ERG sub-brands.

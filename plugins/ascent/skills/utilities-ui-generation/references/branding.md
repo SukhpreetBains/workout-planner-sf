@@ -26,7 +26,10 @@ Slalom's own brand ships as the default pack, `../branding/packs/slalom/`.
 3. Take artwork only from the active pack's `assets/`, never from an
    outside set and never from a different pack than the one that's
    active.
-4. Check the result against the active pack's non-negotiables, or its
+4. For web deliverables, start from the active pack's `components/`
+   when it has them (see its `components/README.md`) rather than
+   restyling from scratch.
+5. Check the result against the active pack's non-negotiables, or its
    `review-checklist.md` for a full review.
 
 ## Adding a new pack
@@ -43,6 +46,9 @@ branding/packs/<name>/
     color-bars/
     fonts/
     branding-guide/          # optional — the source brand guide, if there is one
+  components/                # optional — ready-made HTML/CSS/JS patterns built from this pack
+    README.md                 # how to load them, catalog, page-level rules
+    reference/<Pattern>.md
   docs/
     README.md                 # this pack's quick start, non-negotiables, asset index
     color.md
