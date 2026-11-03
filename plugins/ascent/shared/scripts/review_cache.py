@@ -28,6 +28,9 @@ SKIP = {
     "workspace/.system/review.lock",
     "workspace/.system/.venv-path",
 }
+# Snapshots kept for recovery. Review never reads them, and OneDrive often keeps
+# them online-only, where reading one can stall the first local copy.
+SKIP_DIRS = {"workspace/.system/backups"}
 WRITE_PREFIXES = (
     "workspace/trackers/",
     "workspace/.system/proposed-updates/",
@@ -61,7 +64,8 @@ def files(root: Path, review_only: bool = False) -> dict[str, Path]:
     def fail(error: OSError) -> None:
         raise error
     for directory, names, filenames in os.walk(workspace, onerror=fail):
-        names[:] = [name for name in names if not (Path(directory) / name).is_symlink()]
+        names[:] = [name for name in names if not (Path(directory) / name).is_symlink()
+                    and (Path(directory) / name).relative_to(root).as_posix() not in SKIP_DIRS]
         for name in filenames:
             path = Path(directory) / name
             relative = path.relative_to(root).as_posix()

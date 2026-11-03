@@ -135,8 +135,19 @@ function ownIds(record) {
   return [];
 }
 
+// A pending update carries only the fields it changes; show the tracker's current values for the rest.
+function shownFields(record) {
+  if (record.state !== "pending" || record.action !== "update" || !record.current_row) return record.fields || {};
+  const current = Object.fromEntries(Object.entries(record.current_row).filter(([, value]) => value !== "" && value != null));
+  return { ...current, ...record.fields };
+}
+
+function isProposedChange(record, name) {
+  return record.state === "pending" && record.action === "update" && Object.hasOwn(record.fields || {}, name);
+}
+
 function recordTitle(record) {
-  return String(record.fields?.Name || record.title || "").trim() || `${record.category_label} item`;
+  return String(shownFields(record).Name || record.title || "").trim() || `${record.category_label} item`;
 }
 
 function selectedRecord() {
@@ -149,7 +160,7 @@ function setHeaderCount(count) {
 
 function missingRequired(record) {
   return (record.field_schema || []).filter(definition => definition.required
-    && String(record.fields?.[definition.name] ?? "").trim() === "").length;
+    && String(shownFields(record)[definition.name] ?? "").trim() === "").length;
 }
 
 function recordSearchText(record) {
@@ -170,7 +181,7 @@ function matchesReviewFilter(record) {
 
 // Signal Date comes from source context; metadata keeps undated items sortable.
 function recordDate(record) {
-  return normalizeDate(record.fields?.Date || record.created_at || record.fields?.["Created At"] || "");
+  return normalizeDate(shownFields(record).Date || record.created_at || record.fields?.["Created At"] || "");
 }
 
 function visibleRecords() {
@@ -365,7 +376,8 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
       if (!inCategory.length) return;
       list.append(el("h3", { class: "link-picker-category" }, category.label));
       inCategory.forEach(record => {
-        const details = [record.fields.Status && label(record.fields.Status), String(record.fields.Description || "").slice(0, 160)].filter(Boolean).join(" · ");
+        const shown = shownFields(record);
+        const details = [shown.Status && label(shown.Status), String(shown.Description || "").slice(0, 160)].filter(Boolean).join(" · ");
         const choice = el("input", { type: editing ? "radio" : "checkbox", name: "relationship-target", value: record.id });
         choice.checked = selected.has(record.id);
         const item = el("div", { class: "link-picker-item" }, [
@@ -439,7 +451,7 @@ function openRelationshipPicker({ ownIds: excluded, trigger, onSave, existing = 
 function relationshipsSection(record, definition, onChange) {
   const ids = ownIds(record);
   const readOnly = record.state === "rejected";
-  const input = el("input", { type: "hidden", name: definition.name, value: record.fields?.[definition.name] ?? "" });
+  const input = el("input", { type: "hidden", name: definition.name, value: shownFields(record)[definition.name] ?? "" });
   if (onChange) input.addEventListener("input", onChange);
   const outgoing = el("ul", { class: "relationship-list" });
   const incoming = el("ul", { class: "relationship-list" });
@@ -506,7 +518,7 @@ function enumPicker(id, name, options, value, { ariaLabel, includeEmpty = true, 
   if (buttonIcon) button.title = selectedText;
   choices
     .forEach(option => list.append(el("button", {
-      type: "button", role: "option", "aria-selected": String(option.value === value), onclick: () => {
+      type: "button", role: "option", "aria-selected": String(option.value === value), title: option.title, onclick: () => {
         input.value = option.value;
         button.replaceChildren(buttonIcon ? buttonIcon() : option.text);
         if (buttonIcon) button.title = option.text;
@@ -524,12 +536,17 @@ function fieldControl(record, definition) {
   const name = definition.name;
   const readOnly = record.state === "rejected";
   const id = `field-${record.key.replace(/[^a-z0-9]/gi, "-")}-${name.replace(/[^a-z0-9]/gi, "-")}`;
-  const value = record.fields?.[name] ?? "";
+  const value = shownFields(record)[name] ?? "";
   let input;
   let control;
   let labelFor = id;
   if (definition.enum) {
-    const picker = enumPicker(id, name, definition.enum, value, { disabled: readOnly });
+    // A column may name its values (enum_labels) and define them (enum_definitions, shown on hover).
+    const names = definition.enum_labels || {};
+    const options = definition.enum.map(option => ({ value: option, text: names[option] || label(option),
+      title: definition.enum_definitions?.[option] }));
+    const current = definition.enum.find(option => String(names[option] || "").toLowerCase() === String(value).toLowerCase()) || value;
+    const picker = enumPicker(id, name, options, current, { disabled: readOnly });
     input = picker.input;
     control = picker.control;
     labelFor = picker.labelFor;
@@ -560,6 +577,7 @@ function fieldControl(record, definition) {
     updateFieldGroupStatus();
   });
   const labelChildren = [name === "Probability" ? "Probability (%)" : fieldLabel(definition)];
+  if (isProposedChange(record, name)) labelChildren.push(el("span", { class: "proposed-tag" }, "Proposed change"));
   if (definition.required) {
     labelChildren.push(
       el("span", { class: "required-marker", "aria-hidden": "true" }, " *"),
@@ -568,7 +586,7 @@ function fieldControl(record, definition) {
   }
   const fieldName = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   const quickClass = name === "Name" ? "field-quick-title" : name === "Status" ? "field-quick-status" : name === "Description" ? "field-quick-statement" : "";
-  const wrapper = el("div", { class: `field field-${fieldName} ${quickClass} ${control.tagName === "TEXTAREA" ? "field-wide" : ""}`,
+  const wrapper = el("div", { class: `field field-${fieldName} ${quickClass} ${control.tagName === "TEXTAREA" ? "field-wide" : ""} ${isProposedChange(record, name) ? "field-proposed" : ""}`,
     "data-required": definition.required ? "true" : "false" }, [
     el("label", { for: labelFor }, labelChildren), control,
   ]);
@@ -604,7 +622,12 @@ function collectFields(record) {
     const input = form.elements.namedItem(definition.name);
     if (!input) continue;
     if (input.value !== "" || Object.hasOwn(record.fields, definition.name)) {
-      fields[definition.name] = definition.name === "Probability" && input.value !== "" ? Number(input.value) / 100 : definition.type === "number" && input.value !== "" ? Number(input.value) : input.value;
+      const value = definition.name === "Probability" && input.value !== "" ? Number(input.value) / 100 : definition.type === "number" && input.value !== "" ? Number(input.value) : input.value;
+      // Keep an update to the fields it changes: a value still matching the tracker row is not saved into it.
+      const current = record.action === "update" ? record.current_row?.[definition.name] : undefined;
+      const same = definition.type === "date" ? normalizeDate(current) === normalizeDate(value) : String(current ?? "") === String(value);
+      if (!Object.hasOwn(record.fields, definition.name) && current != null && same) continue;
+      fields[definition.name] = value;
     }
   }
   return fields;

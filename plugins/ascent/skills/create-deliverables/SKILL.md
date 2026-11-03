@@ -1,6 +1,6 @@
 ---
 name: create-deliverables
-description: Create source-backed, reviewable draft deliverables using a deliverable-type workflow or helps creates new workflows when the asked for deliverable-type does not exist.
+description: Create source-backed, reviewable draft project deliverables from the Ascent workspace, including weekly status reports, project kickoff presentations, and RAID logs (risks, assumptions, issues, decisions, dependencies, and actions, with an Excel export). Use for any request to create, build, or refresh one of these. Also helps create a workflow when the requested deliverable type does not exist.
 ---
 
 # Create deliverables
@@ -16,6 +16,7 @@ another type's format, data schema, or design process onto it.
 | --- | --- | --- |
 | Weekly status | The user wants a status report for a reporting period. | [Weekly status](types/weekly-status/workflow.md) |
 | Project kickoff | The user wants to align sponsors and the delivery team at the start of an engagement. | [Project kickoff](types/project-kickoff/workflow.md) |
+| RAID log | The user wants a register of the project's risks, assumptions, issues, decisions, dependencies, and actions. | [RAID log](types/raid-log/workflow.md) |
 
 Each type owns its editorial contract, visual directions, templates, assets,
 preparation, and verification. Follow the selected type's instructions together
@@ -40,7 +41,7 @@ present an unimplemented type as available for generation.
 ## Align content before creating any microsite
 
 For every deliverable microsite, including weekly status, project kickoff, and
-new types, gather the relevant evidence for every planned section before visual
+new types, unless the type's workflow exempts itself (the RAID log does), gather the relevant evidence for every planned section before visual
 generation. Follow the type's source refresh and outline steps first. Present a
 concise section-by-section proposal with the intended message, supporting facts
 and sources, gaps, and unresolved proposals. Use available project information

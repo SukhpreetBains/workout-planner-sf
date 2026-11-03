@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RAID log</title>
+  <link rel="stylesheet" href="raid.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to RAID log</a>
+  <header class="topbar"><img class="wordmark" src="assets/logo.svg" alt="Slalom"><div class="top-actions"><button class="quiet" id="sources-toggle" type="button" aria-pressed="false">Show sources</button><div class="color-picker"><button class="quiet" id="color-toggle" type="button" aria-haspopup="menu" aria-controls="color-menu" aria-expanded="false">Color</button><div id="color-menu" class="color-menu" role="menu" aria-label="Secondary color" hidden></div></div><button class="quiet" id="print-button" type="button">Print</button><a class="quiet" id="export-link" href="#" download aria-label="Export to Excel"><span class="wide-only">Export to&nbsp;</span>Excel</a></div></header>
+  <main id="main" class="shell">
+    <p id="sample-banner" class="sample-banner" hidden>Fictional sample RAID log</p>
+    <header class="log-head"><div><p class="eyebrow">RAID log</p><h1 id="project"></h1><p id="as-of" class="muted"></p></div><dl id="totals" class="totals"></dl></header>
+    <div class="tabs" role="tablist" aria-label="RAID categories" id="tabs"></div>
+    <div class="toolbar">
+      <label class="search"><span class="sr-only">Search items</span><input id="search" type="search" placeholder="Search ID, title, owner"></label>
+      <div class="filter"><span class="filter-label" id="state-label">Status</span><div class="seg" id="state-filter" role="group" aria-labelledby="state-label"></div></div>
+      <div class="filter" id="kind-group" hidden><span class="filter-label" id="kind-label">Decision</span><div class="seg" id="kind-filter" role="group" aria-labelledby="kind-label"></div></div>
+      <p id="result-count" class="muted" aria-live="polite"></p>
+    </div>
+    <div id="panels"></div>
+  </main>
+  <dialog id="source-dialog" class="source-dialog" aria-labelledby="source-dialog-title"><h2 id="source-dialog-title">Source</h2><p id="source-label" class="muted"></p><div id="source-details"></div><p><a id="source-document" href="#" target="_blank" rel="noopener" hidden>Open source document</a></p><button id="close-source" class="close" type="button">Close</button></dialog>
+  <script src="report.js"></script>
+  <script src="raid.js"></script>
+</body>
+</html>

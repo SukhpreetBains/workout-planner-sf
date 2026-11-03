@@ -29,7 +29,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from paths import PROPOSED_UPDATES_DIR, REPO_ROOT, load_schema
-from trackers import id_column, is_relationships, normalize_enum, parse_relationships, read_rows, preserve_retired_fields
+from trackers import enum_key, id_column, is_relationships, parse_relationships, read_rows, preserve_retired_fields
 
 USER_SUBMITTED_SOURCE = "User Submitted"
 
@@ -93,10 +93,17 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
     existing_ids: dict[str, set[str]] = {}
     pending_ids = pending_ids or {}
 
+    existing_rows: dict[str, dict[str, dict]] = {}
+
+    def rows_for(category: str) -> dict[str, dict]:
+        if category not in existing_rows:
+            col = id_column(category, schema)
+            existing_rows[category] = {str(r.get(col, "")): r for r in read_rows(category, schema)}
+        return existing_rows[category]
+
     def ids_for(category: str) -> set[str]:
         if category not in existing_ids:
-            col = id_column(category, schema)
-            existing_ids[category] = {r.get(col, "") for r in read_rows(category, schema)}
+            existing_ids[category] = set(rows_for(category))
         return existing_ids[category]
 
     linkable: set[str] = set()
@@ -154,7 +161,7 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
             if not value:
                 continue
             if "enum" in col:
-                normalized = normalize_enum(value)
+                normalized = enum_key(col, value)
                 fields[name] = normalized
                 value = normalized
             if "enum" in col and value not in col["enum"]:
@@ -187,6 +194,15 @@ def validate(doc: dict, schema: dict, pending_ids: dict[str, set[str]] | None = 
                     elif target not in linkable_ids():
                         problems.append(f"{where}: '{name}' points at '{target}' which is not "
                                         "an existing row ID or pending proposal")
+                # An approved update replaces the whole cell, so it must keep the row's current links.
+                current = rows_for(cat_name).get(str(upd.get("id") or "")) if action == "update" else None
+                if current:
+                    dropped = [f"{m}: {t}" for m, t in parse_relationships(current.get(name))
+                               if (m, t) not in set(parse_relationships(value))]
+                    if dropped:
+                        problems.append(f"{where}: '{name}' would remove existing entries "
+                                        f"({'; '.join(dropped)}); include them, since the update "
+                                        "replaces the whole cell")
 
         refs = upd.get("source_refs") or default_refs
         if not refs:
