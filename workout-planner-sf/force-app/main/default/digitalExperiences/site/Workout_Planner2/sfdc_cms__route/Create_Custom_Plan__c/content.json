@@ -1,0 +1,12 @@
+{
+  "type" : "sfdc_cms__route",
+  "title" : "Create Custom Plan",
+  "contentBody" : {
+    "activeViewId" : "createCustomPlan",
+    "configurationTags" : [ ],
+    "pageAccess" : "UseParent",
+    "routeType" : "custom-workout-plan",
+    "urlPrefix" : "create-custom-plan"
+  },
+  "urlName" : "create-custom-plan"
+}

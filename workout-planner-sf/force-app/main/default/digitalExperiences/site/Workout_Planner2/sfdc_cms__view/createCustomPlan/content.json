@@ -1,0 +1,59 @@
+{
+  "type" : "sfdc_cms__view",
+  "title" : "Create Custom Plan",
+  "contentBody" : {
+    "component" : {
+      "children" : [ {
+        "children" : [ {
+          "attributes" : {
+            "sectionConfig" : "{\"UUID\":\"a1f3784a-c752-4e8d-a730-e7d939a14725\",\"columns\":[{\"UUID\":\"60a92f57-4de5-4db4-818b-4dc36b01b0a7\",\"columnName\":\"Column 1\",\"columnKey\":\"col1\",\"columnWidth\":\"12\",\"seedComponents\":null}]}"
+          },
+          "children" : [ {
+            "children" : [ {
+              "attributes" : {
+                "experienceCloudMode" : true
+              },
+              "definition" : "c:createWorkoutPlan",
+              "id" : "b67d97f4-9862-4e16-bc5f-d4f450e69066",
+              "type" : "component"
+            } ],
+            "id" : "60a92f57-4de5-4db4-818b-4dc36b01b0a7",
+            "name" : "col1",
+            "title" : "Column 1",
+            "type" : "region"
+          } ],
+          "definition" : "community_layout:section",
+          "id" : "a1f3784a-c752-4e8d-a730-e7d939a14725",
+          "type" : "component"
+        } ],
+        "id" : "c86ad9a5-65a4-4c54-9821-7fd214893646",
+        "name" : "content",
+        "title" : "Content",
+        "type" : "region"
+      }, {
+        "children" : [ {
+          "attributes" : {
+            "customHeadTags" : "",
+            "description" : "",
+            "pageTitle" : "Create Custom Plan",
+            "recordId" : "{!recordId}"
+          },
+          "definition" : "community_builder:seoAssistant",
+          "id" : "d514266f-19cb-4d7f-9f62-2da61e45b79c",
+          "type" : "component"
+        } ],
+        "id" : "0a529abe-74b5-48c6-aabf-68204a7f61c3",
+        "name" : "sfdcHiddenRegion",
+        "title" : "sfdcHiddenRegion",
+        "type" : "region"
+      } ],
+      "definition" : "community_layout:sldsFlexibleLayout",
+      "id" : "4c3a7aec-c56d-421c-bd2a-0da0d4c57892",
+      "type" : "component"
+    },
+    "dataProviders" : [ ],
+    "themeLayoutType" : "Inner",
+    "viewType" : "custom-workout-plan"
+  },
+  "urlName" : "create-custom-plan"
+}

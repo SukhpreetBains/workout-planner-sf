@@ -1,0 +1,297 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0" applyHtmlTag="false" applyBodyTag="false">
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workout Planner | Peak Training</title>
+    <style>
+        :root { --ink:#172b4d; --muted:#5f6b7a; --line:#dfe3e8; --surface:#fff; --canvas:#f3f5f8; --blue:#1769aa; --blue-dark:#0b4f82; --blue-soft:#eaf3fa; --lime:#d9e862; --coral:#c9553c; --green:#27835a; --red:#b5473c; }
+        * { box-sizing:border-box; }
+        body { margin:0; color:var(--ink); background:var(--canvas); font:14px/1.45 "Salesforce Sans","Aptos","Helvetica Neue",sans-serif; }
+        button,input,select,textarea { font:inherit; }
+        button { cursor:pointer; }
+        .topbar { height:58px; display:flex; align-items:center; justify-content:space-between; padding:0 28px; background:var(--surface); border-bottom:1px solid var(--line); }
+        .brand { display:flex; align-items:center; gap:10px; color:var(--ink); text-decoration:none; font-weight:700; }
+        .brand-mark { width:30px; height:30px; display:grid; place-items:center; border-radius:6px; background:var(--blue); color:white; font-size:17px; }
+        .environment { color:var(--muted); font-size:12px; }
+        .environment:before { content:""; display:inline-block; width:7px; height:7px; margin-right:8px; border-radius:50%; background:var(--green); }
+        main { width:min(1180px,calc(100% - 40px)); margin:0 auto; }
+        .hero { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:32px 0 24px; }
+        .eyebrow { margin:0; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:1.2px; }
+        h1 { margin:8px 0 5px; font-size:32px; line-height:1.15; }
+        h1 span { color:var(--blue); }
+        .intro { margin:0; color:var(--muted); }
+        .badge { padding:8px 10px; border:1px solid #d5dfaa; border-radius:4px; background:#f7f9e9; color:#596615; font-size:10px; font-weight:700; white-space:nowrap; }
+        .layout { display:grid; grid-template-columns:minmax(260px,.78fr) minmax(0,1.7fr); gap:16px; align-items:start; }
+        .panel { min-width:0; padding:22px; border:1px solid var(--line); border-radius:5px; background:var(--surface); box-shadow:0 1px 2px rgb(23 43 77 / 5%); }
+        h2 { margin:5px 0 18px; font-size:19px; }
+        h3 { margin:0 0 4px; font-size:14px; }
+        label { display:block; margin:0 0 6px; font-size:12px; font-weight:700; }
+        .field { margin-bottom:18px; }
+        .field select,.field input,.field textarea { width:100%; min-height:38px; padding:8px 10px; border:1px solid #c9d0d8; border-radius:4px; background:white; color:var(--ink); }
+        .field textarea { min-height:88px; resize:vertical; }
+        .field-help { display:block; margin-top:5px; color:var(--muted); font-size:10px; }
+        .primary,.secondary { min-height:39px; padding:0 12px; border:1px solid var(--blue); border-radius:4px; font-size:12px; font-weight:700; }
+        .primary { background:var(--blue); color:white; }
+        .primary:hover { background:var(--blue-dark); }
+        .secondary { border-color:#c9d0d8; background:white; color:var(--blue-dark); }
+        .secondary:hover { border-color:var(--blue); }
+        .builder-actions { display:grid; gap:9px; }
+        .builder-actions button { width:100%; }
+        .plan-head { display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+        .plan-status { color:var(--green); font-size:10px; font-weight:700; }
+        .summary { margin:6px 0 0; color:var(--muted); font-size:11px; }
+        .tabs { display:flex; gap:4px; margin-top:16px; border-bottom:1px solid var(--line); }
+        .tab { min-height:38px; padding:0 13px; border:0; border-bottom:2px solid transparent; background:transparent; color:var(--muted); font-size:11px; font-weight:600; }
+        .tab[aria-selected="true"] { border-bottom-color:var(--blue); color:var(--blue-dark); font-weight:700; }
+        .sessions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding-top:14px; }
+        .session { min-width:0; overflow:hidden; border:1px solid var(--line); border-radius:4px; }
+        .session-head { padding:11px 12px; border-bottom:1px solid var(--line); background:#fafbfc; }
+        .session-head p { margin:2px 0 0; color:var(--muted); font-size:10px; }
+        table { width:100%; border-collapse:collapse; table-layout:fixed; }
+        th,td { padding:8px 7px; border-bottom:1px solid #edf0f3; font-size:10px; text-align:left; overflow-wrap:anywhere; }
+        th { color:var(--muted); font-size:9px; text-transform:uppercase; }
+        th:first-child,td:first-child { width:60%; padding-left:11px; }
+        th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3) { text-align:center; }
+        .note { margin:15px 0 0; padding-top:12px; border-top:1px solid var(--line); color:var(--muted); font-size:10px; }
+        .message { margin:14px 0 0; padding:10px 12px; border:1px solid #e8c7c3; border-radius:4px; background:#fff8f7; color:#80392f; font-size:11px; }
+        .message[hidden],[hidden] { display:none !important; }
+        .loading { margin-top:12px; color:var(--blue-dark); font-size:11px; }
+        footer { display:flex; justify-content:space-between; gap:12px; padding:20px 2px; color:#8993a2; font-size:9px; letter-spacing:.5px; }
+        @media(max-width:760px) { .layout { grid-template-columns:1fr; } .sessions { grid-template-columns:1fr; } .hero { align-items:flex-start; } h1 { font-size:27px; } .panel { padding:18px; } }
+        @media(max-width:500px) { main { width:calc(100% - 24px); } .topbar { padding:0 12px; } .environment { font-size:10px; } .badge { font-size:0; padding:8px; } .badge:after { content:"AI"; font-size:10px; } .tab { flex:1; padding:0 4px; font-size:10px; } footer { flex-direction:column; } }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="#planner" aria-label="Peak Training">
+            <span class="brand-mark" aria-hidden="true">P</span>
+            <span>Peak Training</span>
+        </a>
+        <span class="environment">Workout Planner</span>
+    </header>
+    <main id="planner">
+        <section class="hero">
+            <div>
+                <p class="eyebrow">TRAINING STUDIO / WEEKLY PLANNING</p>
+                <h1>Your week, <span>well trained.</span></h1>
+                <p class="intro">Explore a plan tailored to your goal, experience, and schedule.</p>
+            </div>
+            <span class="badge">AI PLAN BUILDER</span>
+        </section>
+        <div class="layout">
+            <section class="panel" aria-labelledby="preferences-title">
+                <p class="eyebrow">PLAN PREFERENCES</p>
+                <h2 id="preferences-title">Shape your week</h2>
+                <div class="field">
+                    <label for="goal">Training goal</label>
+                    <select id="goal">
+                        <option value="strength">Get stronger</option>
+                        <option value="muscle" selected="selected">Build muscle</option>
+                        <option value="fitness">Improve fitness</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="days">Workout days per week</label>
+                    <input id="days" type="number" min="1" max="7" value="3" />
+                </div>
+                <div class="builder-actions">
+                    <button id="custom-toggle" class="secondary" type="button" aria-expanded="false">Create a custom plan</button>
+                    <button id="regenerate" class="primary" type="button">Another plan</button>
+                </div>
+                <p class="note">Start with a weight you can control. Rest between sets and adjust as needed.</p>
+                <form id="custom-form" hidden="hidden">
+                    <hr />
+                    <h3>Custom plan details</h3>
+                    <div class="field">
+                        <label for="plan-name">Plan name</label>
+                        <input id="plan-name" type="text" maxlength="80" value="My workout plan" />
+                    </div>
+                    <div class="field">
+                        <label for="custom-goal">Goal</label>
+                        <select id="custom-goal">
+                            <option value="strength">Get stronger</option>
+                            <option value="muscle" selected="selected">Build muscle</option>
+                            <option value="fitness">Improve fitness</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="experience">Experience level</label>
+                        <select id="experience">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate" selected="selected">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="equipment">Available equipment</label>
+                        <select id="equipment">
+                            <option value="gym">Full gym</option>
+                            <option value="bodyweight">Bodyweight only</option>
+                            <option value="dumbbells">Dumbbells</option>
+                            <option value="bands">Resistance bands</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="notes">Additional preferences</label>
+                        <textarea id="notes" maxlength="1000" rows="3" placeholder="Schedule preferences or focus areas"></textarea>
+                        <span class="field-help">Do not include medical information.</span>
+                    </div>
+                    <button class="primary" type="submit">Preview custom plan</button>
+                </form>
+            </section>
+
+            <section class="panel" aria-labelledby="plan-title" aria-live="polite">
+                <div class="plan-head">
+                    <div>
+                        <p class="eyebrow">YOUR TRAINING OUTLOOK</p>
+                        <h2 id="plan-title">Your beginner plan</h2>
+                        <p id="plan-summary" class="summary">3 sessions / Build muscle / Beginner</p>
+                    </div>
+                    <span class="plan-status">PREVIEW</span>
+                </div>
+                <div class="tabs" role="tablist" aria-label="Experience level">
+                    <button class="tab" type="button" role="tab" data-level="beginner" aria-selected="true">Beginner</button>
+                    <button class="tab" type="button" role="tab" data-level="intermediate" aria-selected="false">Intermediate</button>
+                    <button class="tab" type="button" role="tab" data-level="advanced" aria-selected="false">Advanced</button>
+                </div>
+                <div id="loading" class="loading" role="status" hidden="hidden">Building your plan...</div>
+                <div id="error" class="message" role="alert" hidden="hidden"></div>
+                <div id="sessions" class="sessions"></div>
+                <p class="note">Preview page: workouts shown here are sample data. The live Prompt Builder flow is available in the authenticated Lightning component.</p>
+            </section>
+        </div>
+        <footer>
+            <span>PEAK TRAINING / WORKOUT PLANNER</span>
+            <span>Salesforce Site Visualforce preview</span>
+        </footer>
+    </main>
+    <script>
+        (function () {
+            var routines = {
+                strength: {
+                    beginner: ['Goblet squat', 'Incline push-up', 'Seated cable row', 'Glute bridge'],
+                    intermediate: ['Barbell squat', 'Bench press', 'Lat pulldown', 'Romanian deadlift'],
+                    advanced: ['Trap-bar deadlift', 'Barbell bench press', 'Weighted pull-up', 'Bulgarian split squat']
+                },
+                muscle: {
+                    beginner: ['Leg press', 'Dumbbell bench press', 'Lat pulldown', 'Leg curl'],
+                    intermediate: ['Incline dumbbell press', 'Chest-supported row', 'Hip thrust', 'Lateral raise'],
+                    advanced: ['Barbell bench press', 'Weighted pull-up', 'Front squat', 'Barbell hip thrust']
+                },
+                fitness: {
+                    beginner: ['Box squat', 'Wall push-up', 'Step-up', 'Dead bug'],
+                    intermediate: ['Goblet squat', 'Dumbbell push press', 'Reverse lunge', 'Mountain climber'],
+                    advanced: ['Front squat', 'Walking lunge', 'Renegade row', 'Pull-up']
+                }
+            };
+            var labels = { strength: 'Get stronger', muscle: 'Build muscle', fitness: 'Improve fitness' };
+            var levelLabels = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' };
+            var levels = ['beginner', 'intermediate', 'advanced'];
+            var selectedLevel = 'beginner';
+            var variations = { beginner: 0, intermediate: 1, advanced: 2 };
+            var sessions = document.getElementById('sessions');
+            var loading = document.getElementById('loading');
+            var error = document.getElementById('error');
+            var goal = document.getElementById('goal');
+            var days = document.getElementById('days');
+            var customForm = document.getElementById('custom-form');
+            var planTitle = document.getElementById('plan-title');
+
+            function safeText(parent, tag, text, className) {
+                var element = document.createElement(tag);
+                if (className) element.className = className;
+                element.textContent = text;
+                parent.appendChild(element);
+                return element;
+            }
+
+            function render(selectedGoal, selectedDays, level, title) {
+                var count = parseInt(selectedDays, 10);
+                if ([1, 2, 3, 4, 5, 6, 7].indexOf(count) === -1) {
+                    error.textContent = 'Choose between 1 and 7 workout days.';
+                    error.hidden = false;
+                    return;
+                }
+                error.hidden = true;
+                sessions.textContent = '';
+                var moves = routines[selectedGoal][level];
+                var sets = level === 'beginner' ? 2 : (level === 'intermediate' ? 3 : 4);
+                var reps = selectedGoal === 'strength' ? (level === 'beginner' ? '6-8' : (level === 'intermediate' ? '4-6' : '3-5')) : (level === 'advanced' ? '6-10' : '8-12');
+                var index = 0;
+                while (index !== count) {
+                    var card = document.createElement('article');
+                    card.className = 'session';
+                    var header = document.createElement('header');
+                    header.className = 'session-head';
+                    safeText(header, 'h3', levelLabels[level] + ' session ' + (index + 1));
+                    safeText(header, 'p', 'Session ' + (index + 1));
+                    card.appendChild(header);
+                    var table = document.createElement('table');
+                    var head = document.createElement('thead');
+                    var headRow = document.createElement('tr');
+                    ['Exercise', 'Sets', 'Reps'].forEach(function (name) { safeText(headRow, 'th', name); });
+                    head.appendChild(headRow);
+                    table.appendChild(head);
+                    var body = document.createElement('tbody');
+                    moves.forEach(function (move) {
+                        var row = document.createElement('tr');
+                        safeText(row, 'td', move);
+                        safeText(row, 'td', String(sets));
+                        safeText(row, 'td', reps);
+                        body.appendChild(row);
+                    });
+                    table.appendChild(body);
+                    card.appendChild(table);
+                    sessions.appendChild(card);
+                    index += 1;
+                }
+                planTitle.textContent = title || ('Your ' + level + ' plan');
+                document.getElementById('plan-summary').textContent = count + (count === 1 ? ' session / ' : ' sessions / ') + labels[selectedGoal] + ' / ' + levelLabels[level];
+            }
+
+            function generate(level) {
+                selectedLevel = level;
+                loading.hidden = false;
+                window.setTimeout(function () {
+                    loading.hidden = true;
+                    variations[level] += 1;
+                    render(goal.value, days.value, level);
+                }, 450);
+            }
+
+            Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
+                tab.addEventListener('click', function () {
+                    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (item) {
+                        item.setAttribute('aria-selected', String(item === tab));
+                    });
+                    generate(tab.getAttribute('data-level'));
+                });
+            });
+            document.getElementById('regenerate').addEventListener('click', function () { generate(selectedLevel); });
+            goal.addEventListener('change', function () { generate(selectedLevel); });
+            days.addEventListener('change', function () { render(goal.value, days.value, selectedLevel); });
+            document.getElementById('custom-toggle').addEventListener('click', function (event) {
+                customForm.hidden = !customForm.hidden;
+                event.currentTarget.setAttribute('aria-expanded', String(!customForm.hidden));
+            });
+            customForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                var chosenTitle = document.getElementById('plan-name').value.trim();
+                var chosenGoal = document.getElementById('custom-goal').value;
+                var chosenLevel = document.getElementById('experience').value;
+                if (!chosenTitle) {
+                    error.textContent = 'Enter a plan name.';
+                    error.hidden = false;
+                    return;
+                }
+                goal.value = chosenGoal;
+                selectedLevel = chosenLevel;
+                render(chosenGoal, days.value, chosenLevel, chosenTitle);
+            });
+            render('muscle', 3, 'beginner');
+        }());
+    </script>
+</body>
+</html>
+</apex:page>

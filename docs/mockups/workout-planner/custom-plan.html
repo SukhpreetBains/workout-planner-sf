@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Create a Custom Plan | Peak Training</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="custom-plan.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Peak Training home">
+      <span class="brand-mark" aria-hidden="true">P</span>
+      <span class="brand-name">Peak <strong>Training</strong></span>
+    </a>
+    <div class="app-context">
+      <span class="app-context-label">APP</span>
+      <span>Workout Planner</span>
+    </div>
+    <div class="topbar-end">
+      <span class="environment-label"><span class="environment-dot"></span>Demo workspace</span>
+    </div>
+  </header>
+
+  <nav class="tabbar" aria-label="Current workspace">
+    <a class="workspace-tab" href="index.html">Workout Planner</a>
+    <a class="workspace-tab" href="custom-plan.html" aria-current="page">Create Custom Plan</a>
+  </nav>
+
+  <main class="page-shell custom-page">
+    <section class="page-heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">TRAINING STUDIO <span aria-hidden="true">/</span> CUSTOM PLAN</p>
+        <h1 id="page-title">Make it <span>your plan.</span></h1>
+        <p class="page-intro">Add your preferences and we'll shape a weekly plan around them.</p>
+      </div>
+      <a class="back-link" href="index.html">Back to plans</a>
+    </section>
+
+    <section class="builder-panel custom-form-panel" aria-labelledby="custom-form-title">
+      <div class="panel-heading">
+        <div>
+          <p class="section-kicker">YOUR TRAINING DETAILS</p>
+          <h2 id="custom-form-title">Plan preferences</h2>
+        </div>
+        <span class="step-number" aria-hidden="true">01</span>
+      </div>
+
+      <form id="custom-plan-form" novalidate>
+        <div class="custom-form-grid">
+          <div class="custom-field">
+            <label for="plan-name">Plan name <span aria-hidden="true">*</span></label>
+            <input id="plan-name" name="planName" type="text" maxlength="80" value="My workout plan" required>
+          </div>
+          <div class="custom-field">
+            <label for="goal">Workout goal</label>
+            <select id="goal" name="goal" required>
+              <option value="strength">Get stronger</option>
+              <option value="muscle" selected>Build muscle</option>
+              <option value="fitness">Improve fitness</option>
+            </select>
+          </div>
+          <div class="custom-field">
+            <label for="experience">Experience level</label>
+            <select id="experience" name="experience" required>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate" selected>Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </div>
+          <div class="custom-field">
+            <label for="equipment">Available equipment</label>
+            <select id="equipment" name="equipment" required>
+              <option value="full-gym" selected>Full gym</option>
+              <option value="dumbbells">Dumbbells</option>
+              <option value="bodyweight">Bodyweight only</option>
+              <option value="bands">Resistance bands</option>
+            </select>
+          </div>
+          <div class="custom-field custom-field-short">
+            <label for="days">Workout days per week</label>
+            <input id="days" name="days" type="number" min="1" max="7" step="1" value="3" required>
+          </div>
+          <div class="custom-field custom-field-full">
+            <label for="notes">Additional preferences</label>
+            <textarea id="notes" name="notes" maxlength="1000" rows="4" placeholder="Schedule preferences, focus areas, or other non-medical details"></textarea>
+            <small>Up to 1,000 characters. Do not include medical information.</small>
+          </div>
+        </div>
+
+        <div class="custom-form-actions">
+          <button id="create-button" class="primary-button" type="submit">
+            <span class="button-label">Create my plan</span>
+            <span class="button-arrow" aria-hidden="true">&#8594;</span>
+          </button>
+          <a class="secondary-button" href="index.html">Cancel</a>
+        </div>
+        <div id="custom-loading" class="loading-notice" role="status" hidden>Building a plan around your preferences...</div>
+        <div id="custom-error" class="plan-message" role="alert" hidden></div>
+      </form>
+    </section>
+
+    <section id="custom-result" class="plan-panel custom-result" aria-labelledby="result-title" aria-live="polite" hidden>
+      <div class="plan-header">
+        <div>
+          <div class="plan-title-row">
+            <p class="section-kicker">YOUR TRAINING OUTLOOK</p>
+            <span class="plan-status is-ready"><span class="status-dot"></span><span class="status-text">Preview ready</span></span>
+          </div>
+          <h2 id="result-title">Your plan</h2>
+          <p id="result-summary" class="plan-summary"></p>
+        </div>
+        <a class="secondary-button" href="index.html">Back to plans</a>
+      </div>
+      <div id="custom-workouts" class="workout-list"></div>
+      <div class="plan-footer">
+        <span class="footer-mark" aria-hidden="true">&#10003;</span>
+        <p>Start with a weight you can control. Rest between sets and adjust as needed.</p>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <span>PEAK TRAINING <span aria-hidden="true">/</span> WORKOUT PLANNER</span>
+      <span>Preview experience <span class="footer-separator" aria-hidden="true">&middot;</span> No account required</span>
+    </footer>
+  </main>
+</body>
+</html>

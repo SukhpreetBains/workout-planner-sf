@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Section__c</fullName>
+    <label>Workout Section</label>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Warm-ups</fullName>
+                <default>false</default>
+                <label>Warm-ups</label>
+            </value>
+            <value>
+                <fullName>Strength</fullName>
+                <default>false</default>
+                <label>Strength</label>
+            </value>
+            <value>
+                <fullName>Core Conditioning</fullName>
+                <default>false</default>
+                <label>Core Conditioning</label>
+            </value>
+            <value>
+                <fullName>Stretching</fullName>
+                <default>false</default>
+                <label>Stretching</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

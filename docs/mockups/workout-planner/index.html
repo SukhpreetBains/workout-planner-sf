@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Workout Planner | Peak Training</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#main" aria-label="Peak Training home">
+      <span class="brand-mark" aria-hidden="true">P</span>
+      <span class="brand-name">Peak <strong>Training</strong></span>
+    </a>
+    <div class="app-context">
+      <span class="app-context-label">APP</span>
+      <span>Workout Planner</span>
+    </div>
+    <div class="topbar-end">
+      <span class="environment-label"><span class="environment-dot"></span>Demo workspace</span>
+    </div>
+  </header>
+
+  <nav class="tabbar" aria-label="Current workspace">
+    <a class="workspace-tab" href="#main" aria-current="page">Workout Planner</a>
+    <a class="workspace-tab" href="custom-plan.html">Create Custom Plan</a>
+  </nav>
+
+  <main id="main" class="page-shell">
+    <section class="page-heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">TRAINING STUDIO <span aria-hidden="true">/</span> WEEKLY PLANNING</p>
+        <h1 id="page-title">Your week, <span>well trained.</span></h1>
+        <p class="page-intro">Choose a training goal and explore a plan tailored to each experience level.</p>
+      </div>
+      <div class="heading-badge"><span class="sparkle" aria-hidden="true">✳</span> AI PLAN BUILDER</div>
+    </section>
+
+    <div class="workspace-grid">
+      <section class="builder-panel" aria-labelledby="builder-title">
+        <div class="panel-heading">
+          <div>
+            <p class="section-kicker">PLAN PREFERENCES</p>
+            <h2 id="builder-title">Shape your week</h2>
+          </div>
+          <span class="step-number" aria-hidden="true">01</span>
+        </div>
+
+        <form id="preferences-form">
+          <fieldset class="choice-group">
+            <legend>What are you working toward?</legend>
+            <div class="choice-list goal-list">
+              <label class="choice-option">
+                <input type="radio" name="goal" value="strength">
+                <span class="choice-content"><span class="choice-symbol strength-symbol" aria-hidden="true">S</span><span><strong>Get stronger</strong><small>Build foundational strength</small></span></span>
+                <span class="choice-check" aria-hidden="true"></span>
+              </label>
+              <label class="choice-option">
+                <input type="radio" name="goal" value="muscle" checked>
+                <span class="choice-content"><span class="choice-symbol muscle-symbol" aria-hidden="true">M</span><span><strong>Build muscle</strong><small>Focus on muscle growth</small></span></span>
+                <span class="choice-check" aria-hidden="true"></span>
+              </label>
+              <label class="choice-option">
+                <input type="radio" name="goal" value="fitness">
+                <span class="choice-content"><span class="choice-symbol fitness-symbol" aria-hidden="true">F</span><span><strong>Improve fitness</strong><small>Train your whole body</small></span></span>
+                <span class="choice-check" aria-hidden="true"></span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="days-control">
+            <div class="days-copy">
+              <label for="days">Days per week</label>
+              <span>Choose your training frequency</span>
+            </div>
+            <div class="stepper" aria-label="Workout days per week">
+              <button class="stepper-button" type="button" data-step="-1" aria-label="Fewer workout days">-</button>
+              <input id="days" name="days" type="number" min="1" max="7" value="3" inputmode="numeric" aria-describedby="days-suffix">
+              <span id="days-suffix">days</span>
+              <button class="stepper-button" type="button" data-step="1" aria-label="More workout days">+</button>
+            </div>
+          </div>
+
+          <p class="form-note"><span class="note-mark" aria-hidden="true">i</span> Each level uses a different training approach. Plans include rest days where possible.</p>
+          <a class="primary-button custom-plan-link" href="custom-plan.html">
+            <span class="button-label">Create a custom plan</span>
+            <span class="button-arrow" aria-hidden="true">&#8594;</span>
+          </a>
+        </form>
+      </section>
+
+      <section class="plan-panel" aria-labelledby="plan-title" aria-live="polite">
+        <div class="plan-header">
+          <div>
+            <div class="plan-title-row">
+              <p class="section-kicker">YOUR TRAINING OUTLOOK</p>
+              <span id="plan-status" class="plan-status"><span class="status-dot"></span><span class="status-text">Preview ready</span></span>
+            </div>
+            <h2 id="plan-title">Your beginner plan</h2>
+            <p id="plan-summary" class="plan-summary">3 sessions <span aria-hidden="true">/</span> Build muscle <span aria-hidden="true">/</span> Beginner</p>
+          </div>
+          <button id="regenerate-button" class="secondary-button" type="button" title="Generate a different plan">
+            <span aria-hidden="true">&#8635;</span> Another plan
+          </button>
+        </div>
+
+        <div class="experience-tabs" role="tablist" aria-label="Experience level">
+          <button class="experience-tab is-active" id="tab-beginner" type="button" role="tab" aria-selected="true" aria-controls="workout-list" data-experience="beginner">Beginner</button>
+          <button class="experience-tab" id="tab-intermediate" type="button" role="tab" aria-selected="false" aria-controls="workout-list" data-experience="intermediate" tabindex="-1">Intermediate</button>
+          <button class="experience-tab" id="tab-advanced" type="button" role="tab" aria-selected="false" aria-controls="workout-list" data-experience="advanced" tabindex="-1">Advanced</button>
+        </div>
+
+        <div id="plan-message" class="plan-message" role="status" hidden></div>
+        <div id="workout-list" class="workout-list"></div>
+
+        <div class="plan-footer">
+          <span class="footer-mark" aria-hidden="true">&#10003;</span>
+          <p>Start with a weight you can control. Rest between sets and adjust as needed.</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="page-footer">
+      <span>PEAK TRAINING <span aria-hidden="true">/</span> WORKOUT PLANNER</span>
+      <span>Preview experience <span class="footer-separator" aria-hidden="true">&middot;</span> No account required</span>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Workout_Session__c</fullName>
+    <label>Workout Session</label>
+    <referenceTo>Workout_Session__c</referenceTo>
+    <relationshipLabel>Exercises</relationshipLabel>
+    <relationshipName>Workout_Exercises</relationshipName>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+</CustomField>

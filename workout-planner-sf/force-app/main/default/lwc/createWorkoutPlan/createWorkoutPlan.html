@@ -1,0 +1,109 @@
+<template>
+    <lightning-card title="Create a Custom Workout Plan" icon-name="utility:edit">
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <p class="slds-text-body_regular slds-m-bottom_medium">Set the training preferences and the AI will build a plan around them.</p>
+            <div class="slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-input
+                        type="text"
+                        name="planTitle"
+                        label="Plan name"
+                        value={planTitle}
+                        maxlength="80"
+                        onchange={handlePlanTitleChange}
+                        disabled={isLoading}
+                        required>
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox
+                        name="goal"
+                        label="Workout goal"
+                        options={goalOptions}
+                        value={goal}
+                        onchange={handleGoalChange}
+                        disabled={isLoading}
+                        required>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox
+                        name="experience"
+                        label="Experience level"
+                        options={experienceOptions}
+                        value={experience}
+                        onchange={handleExperienceChange}
+                        disabled={isLoading}
+                        required>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox
+                        name="equipment"
+                        label="Available equipment"
+                        options={equipmentOptions}
+                        value={equipmentPreference}
+                        onchange={handleEquipmentChange}
+                        disabled={isLoading}
+                        required>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-input
+                        type="number"
+                        name="daysPerWeek"
+                        label="Workout days per week"
+                        min="1"
+                        max="7"
+                        step="1"
+                        value={daysPerWeek}
+                        onchange={handleDaysChange}
+                        disabled={isLoading}
+                        required>
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1">
+                    <lightning-textarea
+                        name="additionalNotes"
+                        label="Additional preferences"
+                        value={additionalNotes}
+                        max-length="1000"
+                        message-when-too-long="Keep notes to 1,000 characters or fewer."
+                        help-text="Add schedule preferences, focus areas, or other non-medical details."
+                        onchange={handleNotesChange}
+                        disabled={isLoading}>
+                    </lightning-textarea>
+                </div>
+            </div>
+
+            <div class="slds-m-top_medium slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-shrink-none">
+                    <lightning-button
+                        variant="brand"
+                        label={submitLabel}
+                        onclick={handleCreate}
+                        disabled={isSubmitDisabled}>
+                    </lightning-button>
+                </div>
+                <div class="slds-col slds-shrink-none">
+                    <lightning-button label="Back to Workout Planner" onclick={handleBack} disabled={isLoading}></lightning-button>
+                </div>
+            </div>
+
+            <template lwc:if={isLoading}>
+                <div class="slds-is-relative loading-region slds-m-top_medium" aria-live="polite">
+                    <lightning-spinner alternative-text="Generating custom workout plan" size="medium"></lightning-spinner>
+                    <p class="slds-text-body_small slds-text-color_weak">Creating your custom plan...</p>
+                </div>
+            </template>
+            <template lwc:if={hasError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium" role="alert">{errorMessage}</div>
+            </template>
+            <template lwc:if={hasPlan}>
+                <div class="slds-m-top_large">
+                    <c-workout-plan-results plan={plan}></c-workout-plan-results>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <formFactors>Large</formFactors>
+    <formFactors>Small</formFactors>
+    <label>Workout Planner</label>
+    <navType>Standard</navType>
+    <tabs>standard-home</tabs>
+    <tabs>Workout_Planner</tabs>
+    <tabs>Workout_Planner_Custom_Plan</tabs>
+    <uiType>Lightning</uiType>
+</CustomApplication>

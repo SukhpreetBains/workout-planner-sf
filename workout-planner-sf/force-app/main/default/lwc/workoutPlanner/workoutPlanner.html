@@ -1,0 +1,126 @@
+<template>
+    <template lwc:if={isCustomPlanOpen}>
+        <c-create-workout-plan
+            experience-cloud-mode={experienceCloudMode}
+            in-place-mode
+            onback={handleCustomPlanBack}>
+        </c-create-workout-plan>
+    </template>
+    <template lwc:else>
+        <lightning-card title="Workout Planner" icon-name="utility:activity">
+            <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <div class="slds-grid slds-wrap slds-gutters slds-grid_vertical-align-end slds-m-bottom_large">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox
+                        name="goal"
+                        label="What are you working toward?"
+                        options={goalOptions}
+                        value={goal}
+                        onchange={handleGoalChange}
+                        disabled={isLoading}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                    <lightning-input
+                        type="number"
+                        name="daysPerWeek"
+                        label="Days per week"
+                        min="1"
+                        max="7"
+                        step="1"
+                        value={daysPerWeek}
+                        onchange={handleDaysChange}
+                        disabled={isLoading}
+                        required>
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                    <lightning-button
+                        label="Create a custom plan"
+                        icon-name="utility:add"
+                        onclick={handleCreateCustomPlan}
+                        disabled={isLoading}>
+                    </lightning-button>
+                </div>
+            </div>
+
+            <lightning-tabset active-tab-value={activeExperience}>
+                <lightning-tab label="Beginner" value="Beginner" onactive={handleExperienceTab}>
+                    <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-m-vertical_medium">
+                        <div class="slds-col slds-grow">
+                            <p class="slds-text-body_small slds-text-color_weak">A gradual plan with foundational movements and manageable volume.</p>
+                        </div>
+                        <div class="slds-col slds-shrink-none">
+                            <lightning-button label={beginnerButtonLabel} data-experience="Beginner" onclick={handleRegenerate} disabled={isLoading}></lightning-button>
+                        </div>
+                    </div>
+                    <template lwc:if={beginnerIsLoading}>
+                        <div class="slds-is-relative loading-region" aria-live="polite">
+                            <lightning-spinner alternative-text="Generating a beginner workout plan" size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+                    <template lwc:if={beginnerHasError}>
+                        <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">{errorMessage}</div>
+                    </template>
+                    <template lwc:if={beginnerHasPlan}>
+                        <c-workout-plan-results plan={beginnerPlan}></c-workout-plan-results>
+                    </template>
+                    <template lwc:if={beginnerNeedsPlan}>
+                        <p class="slds-text-body_small slds-text-color_weak">Choose Generate beginner plan to create a plan for newcomers.</p>
+                    </template>
+                </lightning-tab>
+
+                <lightning-tab label="Intermediate" value="Intermediate" onactive={handleExperienceTab}>
+                    <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-m-vertical_medium">
+                        <div class="slds-col slds-grow">
+                            <p class="slds-text-body_small slds-text-color_weak">A progressive plan for people comfortable with regular strength training.</p>
+                        </div>
+                        <div class="slds-col slds-shrink-none">
+                            <lightning-button label={intermediateButtonLabel} data-experience="Intermediate" onclick={handleRegenerate} disabled={isLoading}></lightning-button>
+                        </div>
+                    </div>
+                    <template lwc:if={intermediateIsLoading}>
+                        <div class="slds-is-relative loading-region" aria-live="polite">
+                            <lightning-spinner alternative-text="Generating an intermediate workout plan" size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+                    <template lwc:if={intermediateHasError}>
+                        <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">{errorMessage}</div>
+                    </template>
+                    <template lwc:if={intermediateHasPlan}>
+                        <c-workout-plan-results plan={intermediatePlan}></c-workout-plan-results>
+                    </template>
+                    <template lwc:if={intermediateNeedsPlan}>
+                        <p class="slds-text-body_small slds-text-color_weak">Choose Generate intermediate plan to create a progressive plan.</p>
+                    </template>
+                </lightning-tab>
+
+                <lightning-tab label="Advanced" value="Advanced" onactive={handleExperienceTab}>
+                    <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-m-vertical_medium">
+                        <div class="slds-col slds-grow">
+                            <p class="slds-text-body_small slds-text-color_weak">A higher-volume plan for experienced, consistent lifters.</p>
+                        </div>
+                        <div class="slds-col slds-shrink-none">
+                            <lightning-button label={advancedButtonLabel} data-experience="Advanced" onclick={handleRegenerate} disabled={isLoading}></lightning-button>
+                        </div>
+                    </div>
+                    <template lwc:if={advancedIsLoading}>
+                        <div class="slds-is-relative loading-region" aria-live="polite">
+                            <lightning-spinner alternative-text="Generating an advanced workout plan" size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+                    <template lwc:if={advancedHasError}>
+                        <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">{errorMessage}</div>
+                    </template>
+                    <template lwc:if={advancedHasPlan}>
+                        <c-workout-plan-results plan={advancedPlan}></c-workout-plan-results>
+                    </template>
+                    <template lwc:if={advancedNeedsPlan}>
+                        <p class="slds-text-body_small slds-text-color_weak">Choose Generate advanced plan to create a higher-volume plan.</p>
+                    </template>
+                </lightning-tab>
+            </lightning-tabset>
+            </div>
+        </lightning-card>
+    </template>
+</template>
